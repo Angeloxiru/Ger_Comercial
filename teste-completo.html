@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testes Completos - Ger Comercial</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-value.success { color: #28a745; }
+        .stat-value.error { color: #dc3545; }
+        .stat-value.info { color: #17a2b8; }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .test-list {
+            margin-top: 20px;
+        }
+
+        .test-item {
+            background: #f8f9fa;
+            border-left: 4px solid #999;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .test-item.running {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+            animation: pulse 1.5s infinite;
+        }
+
+        .test-item.success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+
+        .test-item.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .test-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        .test-icon {
+            font-size: 1.5em;
+        }
+
+        .test-name {
+            font-weight: bold;
+            color: #333;
+            flex: 1;
+        }
+
+        .test-message {
+            color: #666;
+            font-size: 0.9em;
+            margin-left: 34px;
+        }
+
+        .test-data {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Testes Completos</h1>
+        <p class="subtitle">Suite de testes para validar todas as funcionalidades do banco de dados</p>
+
+        <div id="configAlert" class="alert alert-warning" style="display: none;">
+            <strong>⚠️ Configuração Necessária!</strong><br>
+            Configure suas credenciais do Turso no arquivo <code>js/config.js</code>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar">0%</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value info" id="totalTests">0</div>
+                <div class="stat-label">Total de Testes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value success" id="passedTests">0</div>
+                <div class="stat-label">Aprovados</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value error" id="failedTests">0</div>
+                <div class="stat-label">Falharam</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value info" id="successRate">0%</div>
+                <div class="stat-label">Taxa de Sucesso</div>
+            </div>
+        </div>
+
+        <button class="btn" id="runTestsBtn" onclick="runAllTests()">
+            🚀 Executar Todos os Testes
+        </button>
+
+        <div class="test-list" id="testList"></div>
+    </div>
+
+    <script type="module">
+        import { TestSuite } from './js/test.js';
+        import { config } from './js/config.js';
+
+        window.testSuite = null;
+        window.currentTestIndex = 0;
+
+        // Verifica configuração
+        if (!config.authToken || config.authToken === 'SEU_TOKEN_AQUI') {
+            document.getElementById('configAlert').style.display = 'block';
+            document.getElementById('runTestsBtn').disabled = true;
+        }
+
+        const testNames = [
+            'Conexão ao Banco',
+            'Query Simples',
+            'Listar Tabelas',
+            'Criar Tabela',
+            'Inserir Dados',
+            'Selecionar Dados',
+            'Atualizar Dados',
+            'Batch Query',
+            'Estrutura da Tabela',
+            'Limpeza'
+        ];
+
+        function createTestItem(name, index) {
+            const item = document.createElement('div');
+            item.className = 'test-item';
+            item.id = `test-${index}`;
+            item.innerHTML = `
+                <div class="test-header">
+                    <div class="test-icon">⏳</div>
+                    <div class="test-name">${name}</div>
+                </div>
+                <div class="test-message">Aguardando execução...</div>
+            `;
+            return item;
+        }
+
+        function updateTestItem(index, status, message, data = null) {
+            const item = document.getElementById(`test-${index}`);
+            if (!item) return;
+
+            const icons = {
+                running: '⏳',
+                success: '✅',
+                error: '❌'
+            };
+
+            item.className = `test-item ${status}`;
+            item.querySelector('.test-icon').textContent = icons[status];
+            item.querySelector('.test-message').textContent = message;
+
+            if (data && status === 'success') {
+                const existing = item.querySelector('.test-data');
+                if (existing) existing.remove();
+
+                const dataDiv = document.createElement('div');
+                dataDiv.className = 'test-data';
+                dataDiv.textContent = JSON.stringify(data, null, 2);
+                item.appendChild(dataDiv);
+            }
+        }
+
+        function updateStats(passed, failed, total) {
+            document.getElementById('totalTests').textContent = total;
+            document.getElementById('passedTests').textContent = passed;
+            document.getElementById('failedTests').textContent = failed;
+
+            const rate = total > 0 ? (passed / total * 100).toFixed(1) : 0;
+            document.getElementById('successRate').textContent = `${rate}%`;
+
+            const progress = total > 0 ? (passed + failed) / total * 100 : 0;
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = `${progress}%`;
+            progressBar.textContent = `${progress.toFixed(0)}%`;
+        }
+
+        window.runAllTests = async function() {
+            const btn = document.getElementById('runTestsBtn');
+            const testList = document.getElementById('testList');
+
+            btn.disabled = true;
+            testList.innerHTML = '';
+
+            // Cria todos os itens de teste
+            testNames.forEach((name, index) => {
+                testList.appendChild(createTestItem(name, index));
+            });
+
+            // Cria nova suite de testes
+            window.testSuite = new TestSuite();
+
+            // Override do método addResult para atualizar UI
+            const originalAddResult = window.testSuite.addResult.bind(window.testSuite);
+            window.testSuite.addResult = function(name, success, message, data) {
+                originalAddResult(name, success, message, data);
+
+                const index = testNames.indexOf(name);
+                if (index !== -1) {
+                    updateTestItem(index, success ? 'success' : 'error', message, data);
+                }
+
+                updateStats(this.passed, this.failed, this.passed + this.failed);
+            };
+
+            // Executa testes com feedback visual
+            const tests = [
+                () => window.testSuite.testConnection(),
+                () => window.testSuite.testSimpleQuery(),
+                () => window.testSuite.testListTables(),
+                () => window.testSuite.testCreateTable(),
+                () => window.testSuite.testInsert(),
+                () => window.testSuite.testSelect(),
+                () => window.testSuite.testUpdate(),
+                () => window.testSuite.testBatch(),
+                () => window.testSuite.testTableStructure(),
+                () => window.testSuite.testCleanup()
+            ];
+
+            for (let i = 0; i < tests.length; i++) {
+                updateTestItem(i, 'running', 'Executando teste...');
+                await tests[i]();
+                await new Promise(resolve => setTimeout(resolve, 300)); // Pequena pausa para visualização
+            }
+
+            btn.disabled = false;
+
+            // Mostra resumo final
+            const summary = window.testSuite.getSummary();
+            console.log('📊 Testes finalizados:', summary);
+        };
+    </script>
+</body>
+</html>

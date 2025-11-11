@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemplo de Uso - Ger Comercial</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 1px solid #dee2e6;
+        }
+
+        .result-box h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .result-box pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .table th {
+            background: #667eea;
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .table td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            display: inline-block;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 Exemplo Prático - Gerenciamento de Produtos</h1>
+
+        <!-- Seção: Conexão -->
+        <div class="section">
+            <h2>1. Conexão com Banco de Dados</h2>
+            <div class="btn-group">
+                <button class="btn" onclick="conectarBanco()">🔌 Conectar ao Banco</button>
+                <button class="btn" onclick="verificarStatus()">📊 Verificar Status</button>
+            </div>
+            <div id="statusConexao"></div>
+        </div>
+
+        <!-- Seção: Criar Tabela -->
+        <div class="section">
+            <h2>2. Criar Tabela de Produtos</h2>
+            <button class="btn" onclick="criarTabela()" style="width: 100%;">
+                🏗️ Criar Tabela "produtos"
+            </button>
+            <div id="resultCriarTabela"></div>
+        </div>
+
+        <!-- Seção: Inserir Produto -->
+        <div class="section">
+            <h2>3. Inserir Produto</h2>
+            <div class="form-group">
+                <label>Nome do Produto:</label>
+                <input type="text" id="nomeProduto" placeholder="Ex: Notebook Dell">
+            </div>
+            <div class="form-group">
+                <label>Preço:</label>
+                <input type="number" id="precoProduto" placeholder="Ex: 2500.00" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>Estoque:</label>
+                <input type="number" id="estoqueProduto" placeholder="Ex: 10">
+            </div>
+            <button class="btn" onclick="inserirProduto()" style="width: 100%;">
+                ➕ Adicionar Produto
+            </button>
+            <div id="resultInserir"></div>
+        </div>
+
+        <!-- Seção: Listar Produtos -->
+        <div class="section">
+            <h2>4. Listar Produtos</h2>
+            <button class="btn" onclick="listarProdutos()" style="width: 100%;">
+                📋 Carregar Lista de Produtos
+            </button>
+            <div id="resultListar"></div>
+        </div>
+
+        <!-- Seção: Estatísticas -->
+        <div class="section">
+            <h2>5. Estatísticas</h2>
+            <button class="btn" onclick="obterEstatisticas()" style="width: 100%;">
+                📈 Gerar Estatísticas
+            </button>
+            <div id="resultEstatisticas"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from './js/db.js';
+
+        window.db = db;
+
+        function showResult(elementId, content, isError = false) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `
+                <div class="result-box">
+                    <span class="status ${isError ? 'error' : 'success'}">
+                        ${isError ? '❌ Erro' : '✅ Sucesso'}
+                    </span>
+                    ${content}
+                </div>
+            `;
+        }
+
+        window.conectarBanco = async function() {
+            try {
+                await db.connect();
+                showResult('statusConexao', '<h3>Conectado!</h3><p>Conexão estabelecida com o banco de dados Turso.</p>');
+            } catch (error) {
+                showResult('statusConexao', `<h3>Erro ao Conectar</h3><p>${error.message}</p>`, true);
+            }
+        };
+
+        window.verificarStatus = function() {
+            const conectado = db.isConnected();
+            showResult('statusConexao', `
+                <h3>Status da Conexão</h3>
+                <p>${conectado ? '🟢 Conectado' : '🔴 Desconectado'}</p>
+            `, !conectado);
+        };
+
+        window.criarTabela = async function() {
+            try {
+                if (!db.isConnected()) await db.connect();
+
+                await db.createTable('produtos', {
+                    id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
+                    nome: 'TEXT NOT NULL',
+                    preco: 'REAL NOT NULL',
+                    estoque: 'INTEGER DEFAULT 0',
+                    criado_em: 'DATETIME DEFAULT CURRENT_TIMESTAMP',
+                    atualizado_em: 'DATETIME DEFAULT CURRENT_TIMESTAMP'
+                });
+
+                showResult('resultCriarTabela', `
+                    <h3>Tabela Criada!</h3>
+                    <p>A tabela "produtos" foi criada com sucesso.</p>
+                    <pre>Estrutura:
+- id: INTEGER PRIMARY KEY AUTOINCREMENT
+- nome: TEXT NOT NULL
+- preco: REAL NOT NULL
+- estoque: INTEGER DEFAULT 0
+- criado_em: DATETIME DEFAULT CURRENT_TIMESTAMP
+- atualizado_em: DATETIME DEFAULT CURRENT_TIMESTAMP</pre>
+                `);
+            } catch (error) {
+                showResult('resultCriarTabela', `<h3>Erro</h3><p>${error.message}</p>`, true);
+            }
+        };
+
+        window.inserirProduto = async function() {
+            try {
+                if (!db.isConnected()) await db.connect();
+
+                const nome = document.getElementById('nomeProduto').value;
+                const preco = parseFloat(document.getElementById('precoProduto').value);
+                const estoque = parseInt(document.getElementById('estoqueProduto').value);
+
+                if (!nome || isNaN(preco) || isNaN(estoque)) {
+                    throw new Error('Preencha todos os campos corretamente');
+                }
+
+                const result = await db.insert('produtos', {
+                    nome: nome,
+                    preco: preco,
+                    estoque: estoque
+                });
+
+                showResult('resultInserir', `
+                    <h3>Produto Inserido!</h3>
+                    <p><strong>${nome}</strong> foi adicionado ao banco de dados.</p>
+                    <p>Preço: R$ ${preco.toFixed(2)} | Estoque: ${estoque} unidades</p>
+                `);
+
+                // Limpa os campos
+                document.getElementById('nomeProduto').value = '';
+                document.getElementById('precoProduto').value = '';
+                document.getElementById('estoqueProduto').value = '';
+
+            } catch (error) {
+                showResult('resultInserir', `<h3>Erro</h3><p>${error.message}</p>`, true);
+            }
+        };
+
+        window.listarProdutos = async function() {
+            try {
+                if (!db.isConnected()) await db.connect();
+
+                const produtos = await db.select('produtos', {
+                    orderBy: 'criado_em DESC'
+                });
+
+                if (produtos.length === 0) {
+                    showResult('resultListar', '<h3>Nenhum Produto</h3><p>Não há produtos cadastrados ainda.</p>');
+                    return;
+                }
+
+                let html = '<h3>Lista de Produtos</h3>';
+                html += '<table class="table">';
+                html += '<tr><th>ID</th><th>Nome</th><th>Preço</th><th>Estoque</th><th>Criado em</th></tr>';
+
+                produtos.forEach(p => {
+                    const data = new Date(p.criado_em).toLocaleString('pt-BR');
+                    html += `
+                        <tr>
+                            <td>${p.id}</td>
+                            <td>${p.nome}</td>
+                            <td>R$ ${parseFloat(p.preco).toFixed(2)}</td>
+                            <td>${p.estoque} un.</td>
+                            <td>${data}</td>
+                        </tr>
+                    `;
+                });
+
+                html += '</table>';
+
+                document.getElementById('resultListar').innerHTML = `<div class="result-box">${html}</div>`;
+
+            } catch (error) {
+                showResult('resultListar', `<h3>Erro</h3><p>${error.message}</p>`, true);
+            }
+        };
+
+        window.obterEstatisticas = async function() {
+            try {
+                if (!db.isConnected()) await db.connect();
+
+                const statements = [
+                    { sql: 'SELECT COUNT(*) as total FROM produtos' },
+                    { sql: 'SELECT SUM(preco * estoque) as valor_total FROM produtos' },
+                    { sql: 'SELECT AVG(preco) as preco_medio FROM produtos' },
+                    { sql: 'SELECT SUM(estoque) as estoque_total FROM produtos' }
+                ];
+
+                const results = await db.batch(statements);
+
+                const total = results[0].rows[0].total;
+                const valorTotal = results[1].rows[0].valor_total || 0;
+                const precoMedio = results[2].rows[0].preco_medio || 0;
+                const estoqueTotal = results[3].rows[0].estoque_total || 0;
+
+                showResult('resultEstatisticas', `
+                    <h3>Estatísticas do Estoque</h3>
+                    <table class="table">
+                        <tr><td><strong>Total de Produtos:</strong></td><td>${total}</td></tr>
+                        <tr><td><strong>Valor Total em Estoque:</strong></td><td>R$ ${parseFloat(valorTotal).toFixed(2)}</td></tr>
+                        <tr><td><strong>Preço Médio:</strong></td><td>R$ ${parseFloat(precoMedio).toFixed(2)}</td></tr>
+                        <tr><td><strong>Total de Unidades:</strong></td><td>${estoqueTotal} unidades</td></tr>
+                    </table>
+                `);
+
+            } catch (error) {
+                showResult('resultEstatisticas', `<h3>Erro</h3><p>${error.message}</p>`, true);
+            }
+        };
+    </script>
+</body>
+</html>
