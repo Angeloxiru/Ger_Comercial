@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ger Comercial - Teste de Conexão Turso</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .status-box {
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .status-box.pending {
+            background: #f0f0f0;
+            border-left: 5px solid #999;
+        }
+
+        .status-box.loading {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            animation: pulse 2s infinite;
+        }
+
+        .status-box.success {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+        }
+
+        .status-box.error {
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .status-icon {
+            font-size: 2em;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .status-content {
+            flex: 1;
+        }
+
+        .status-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        .status-message {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .config-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .config-info h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .config-item {
+            display: flex;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .config-label {
+            font-weight: bold;
+            color: #555;
+            min-width: 120px;
+        }
+
+        .config-value {
+            color: #666;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .test-results {
+            margin-top: 30px;
+        }
+
+        .test-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #999;
+        }
+
+        .test-item.success {
+            border-left-color: #28a745;
+        }
+
+        .test-item.error {
+            border-left-color: #dc3545;
+        }
+
+        .test-item h4 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .test-item p {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #17a2b8;
+            color: #0c5460;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗄️ Ger Comercial</h1>
+        <p class="subtitle">Sistema de Gerenciamento Comercial</p>
+
+        <div id="configAlert" class="alert alert-warning" style="display: none;">
+            <strong>⚠️ Configuração Necessária!</strong><br>
+            Por favor, configure suas credenciais do Turso no arquivo <code>js/config.js</code>
+        </div>
+
+        <div class="config-info">
+            <h3>📋 Configuração do Banco de Dados</h3>
+            <div class="config-item">
+                <span class="config-label">Database:</span>
+                <span class="config-value" id="dbName">-</span>
+            </div>
+            <div class="config-item">
+                <span class="config-label">URL:</span>
+                <span class="config-value" id="dbUrl">-</span>
+            </div>
+            <div class="config-item">
+                <span class="config-label">Status:</span>
+                <span class="config-value" id="dbStatus">Aguardando teste...</span>
+            </div>
+        </div>
+
+        <div class="status-box pending" id="connectionStatus">
+            <div class="status-icon">⏳</div>
+            <div class="status-content">
+                <div class="status-title">Aguardando Teste</div>
+                <div class="status-message">Clique no botão abaixo para testar a conexão com o banco de dados</div>
+            </div>
+        </div>
+
+        <button class="btn" id="testBtn" onclick="runTests()">
+            🚀 Testar Conexão com Turso
+        </button>
+
+        <div class="test-results" id="testResults" style="display: none;">
+            <h3 style="color: #333; margin-bottom: 15px;">📊 Resultados dos Testes</h3>
+            <div id="testsList"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@libsql/client@0.4.0/web';
+        import { config } from './js/config.js';
+
+        // Torna disponível globalmente para o onclick
+        window.dbClient = null;
+        window.config = config;
+
+        // Atualiza informações de configuração
+        document.getElementById('dbName').textContent = config.dbName;
+        document.getElementById('dbUrl').textContent = config.url;
+
+        // Verifica se está configurado
+        if (!config.authToken || config.authToken === 'SEU_TOKEN_AQUI') {
+            document.getElementById('configAlert').style.display = 'block';
+            document.getElementById('testBtn').disabled = true;
+        }
+
+        function updateStatus(status, title, message, icon) {
+            const statusBox = document.getElementById('connectionStatus');
+            const dbStatus = document.getElementById('dbStatus');
+
+            statusBox.className = `status-box ${status}`;
+            statusBox.querySelector('.status-title').textContent = title;
+            statusBox.querySelector('.status-message').textContent = message;
+            statusBox.querySelector('.status-icon').textContent = icon;
+
+            dbStatus.textContent = title;
+        }
+
+        function addTestResult(title, message, success) {
+            const testsList = document.getElementById('testsList');
+            const testItem = document.createElement('div');
+            testItem.className = `test-item ${success ? 'success' : 'error'}`;
+            testItem.innerHTML = `
+                <h4>${success ? '✅' : '❌'} ${title}</h4>
+                <p>${message}</p>
+            `;
+            testsList.appendChild(testItem);
+        }
+
+        window.runTests = async function() {
+            const testBtn = document.getElementById('testBtn');
+            const testResults = document.getElementById('testResults');
+            const testsList = document.getElementById('testsList');
+
+            testBtn.disabled = true;
+            testsList.innerHTML = '';
+            testResults.style.display = 'block';
+
+            updateStatus('loading', 'Testando Conexão...', 'Conectando ao banco de dados Turso', '⏳');
+
+            try {
+                // Teste 1: Criar cliente
+                updateStatus('loading', 'Criando Cliente...', 'Inicializando cliente do Turso', '🔄');
+                window.dbClient = createClient({
+                    url: config.url,
+                    authToken: config.authToken
+                });
+                addTestResult('Cliente Criado', 'Cliente do Turso inicializado com sucesso', true);
+
+                // Teste 2: Executar query simples
+                updateStatus('loading', 'Testando Conexão...', 'Executando query de teste', '🔄');
+                const result = await window.dbClient.execute('SELECT 1 as test');
+                addTestResult('Query de Teste', `Query executada com sucesso! Resultado: ${JSON.stringify(result.rows)}`, true);
+
+                // Teste 3: Listar tabelas
+                updateStatus('loading', 'Listando Tabelas...', 'Verificando estrutura do banco', '🔄');
+                const tables = await window.dbClient.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+                );
+
+                if (tables.rows.length > 0) {
+                    const tableNames = tables.rows.map(row => row.name).join(', ');
+                    addTestResult('Tabelas Encontradas', `${tables.rows.length} tabela(s): ${tableNames}`, true);
+                } else {
+                    addTestResult('Tabelas', 'Nenhuma tabela encontrada. O banco está vazio.', true);
+                }
+
+                // Teste 4: Verificar versão do SQLite
+                const version = await window.dbClient.execute('SELECT sqlite_version() as version');
+                addTestResult('Versão SQLite', `Versão: ${version.rows[0].version}`, true);
+
+                updateStatus('success', 'Conexão Estabelecida!', '✨ Todos os testes passaram com sucesso', '✅');
+
+            } catch (error) {
+                console.error('Erro nos testes:', error);
+                updateStatus('error', 'Erro de Conexão', error.message, '❌');
+                addTestResult('Erro', error.message, false);
+            } finally {
+                testBtn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>
