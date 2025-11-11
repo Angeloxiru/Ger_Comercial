@@ -22,7 +22,7 @@ export const config = {
 
     // Token de autenticação - SUBSTITUIR PELO SEU TOKEN
     // Para obter: https://turso.tech/app -> seu database -> "Generate Token"
-    authToken: 'SEU_TOKEN_AQUI',
+    authToken: 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NjI4ODQ2ODMsImlkIjoiMmI3NTFkOTQtNGI1ZS00ZjZhLWExMDktNTY0OTg3MzgyOGZhIiwicmlkIjoiOGZiZGQ3ZmMtOThmOC00MmMxLWExNzYtZmJiOTZhYmEwN2I0In0.ZjNIt9GEI01v_Ot9GnzsbS_FJIHjTVjCL9X8TdUJmi0LUfoMXX6xMJlRqNCRZiS6U3iNwkP709K_H8ybU9e3DQ',
 
     // Configurações opcionais
     options: {
