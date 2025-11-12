@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vendas por Região - Ger Comercial</title>
+    <title>Vendas por Equipe Comercial - Ger Comercial</title>
     <style>
         * {
             margin: 0;
@@ -327,7 +327,7 @@
 <body>
     <!-- Header -->
     <div class="header">
-        <h1>📍 Vendas por Região</h1>
+        <h1>👥 Vendas por Equipe Comercial</h1>
         <a href="index.html" class="btn-voltar">← Voltar</a>
     </div>
 
@@ -353,19 +353,19 @@
                 </div>
             </div>
 
-            <!-- Rota -->
+            <!-- Supervisor -->
             <div class="filter-group">
-                <label>🛣️ Rota</label>
-                <select id="filtroRota" multiple size="3">
+                <label>👔 Supervisor</label>
+                <select id="filtroSupervisor" multiple size="3">
                     <option value="">Carregando...</option>
                 </select>
             </div>
 
-            <!-- SubRota -->
+            <!-- Representante -->
             <div class="filter-group">
-                <label>📍 SubRota</label>
-                <select id="filtroSubRota" multiple size="3">
-                    <option value="">Selecione uma Rota primeiro</option>
+                <label>👤 Representante</label>
+                <select id="filtroRepresentante" multiple size="3">
+                    <option value="">Selecione um Supervisor primeiro</option>
                 </select>
             </div>
 
@@ -373,7 +373,7 @@
             <div class="filter-group">
                 <label>🏙️ Cidade</label>
                 <select id="filtroCidade" multiple size="3">
-                    <option value="">Selecione SubRota ou Rota primeiro</option>
+                    <option value="">Selecione Representante ou Supervisor primeiro</option>
                 </select>
             </div>
         </div>
@@ -444,8 +444,8 @@
 
         window.db = db;
         window.dadosAtuais = [];
-        window.todasRotas = [];
-        window.todasSubRotas = [];
+        window.todosSupervisores = [];
+        window.todosRepresentantes = [];
         window.todasCidades = [];
 
         // Verifica configuração
@@ -459,20 +459,20 @@
             try {
                 if (!db.isConnected()) await db.connect();
 
-                // Carregar TODAS as Rotas
-                const rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL ORDER BY rota');
-                window.todasRotas = rotas.rows;
-                preencherSelect('filtroRota', rotas.rows.map(r => r.rota));
+                // Carregar TODOS os Supervisores
+                const supervisores = await db.execute('SELECT DISTINCT rep_supervisor FROM tab_representante WHERE rep_supervisor IS NOT NULL ORDER BY rep_supervisor');
+                window.todosSupervisores = supervisores.rows;
+                preencherSelect('filtroSupervisor', supervisores.rows.map(s => s.rep_supervisor));
 
-                // Carregar TODAS as SubRotas (para usar na cascata)
-                const subRotas = await db.execute('SELECT DISTINCT c.rota, c.sub_rota FROM tab_cliente c WHERE c.sub_rota IS NOT NULL ORDER BY c.sub_rota');
-                window.todasSubRotas = subRotas.rows;
+                // Carregar TODOS os Representantes (para usar na cascata)
+                const representantes = await db.execute('SELECT DISTINCT representante, desc_representante, rep_supervisor FROM tab_representante WHERE desc_representante IS NOT NULL ORDER BY desc_representante');
+                window.todosRepresentantes = representantes.rows;
 
-                // Carregar TODAS as Cidades das vendas
+                // Carregar TODAS as Cidades das vendas com representante
                 const cidades = await db.execute(`
-                    SELECT DISTINCT v.cidade, c.rota, c.sub_rota
+                    SELECT DISTINCT v.cidade, r.representante, r.rep_supervisor
                     FROM vendas v
-                    LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+                    LEFT JOIN tab_representante r ON v.representante = r.representante
                     WHERE v.cidade IS NOT NULL
                     ORDER BY v.cidade
                 `);
@@ -501,30 +501,30 @@
             }
         }
 
-        // CASCATA: Rota → SubRota → Cidade
-        document.getElementById('filtroRota').addEventListener('change', function() {
-            const rotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
+        // CASCATA: Supervisor → Representante → Cidade
+        document.getElementById('filtroSupervisor').addEventListener('change', function() {
+            const supervisoresSelecionados = Array.from(this.selectedOptions).map(o => o.value);
 
             // Limpar seleções dos filtros filhos
-            document.getElementById('filtroSubRota').selectedIndex = -1;
+            document.getElementById('filtroRepresentante').selectedIndex = -1;
             document.getElementById('filtroCidade').selectedIndex = -1;
 
-            if (rotasSelecionadas.length === 0) {
-                // Se nenhuma rota selecionada, desabilitar SubRota e Cidade
-                preencherSelect('filtroSubRota', []);
+            if (supervisoresSelecionados.length === 0) {
+                // Se nenhum supervisor selecionado, desabilitar Representante e Cidade
+                preencherSelect('filtroRepresentante', []);
                 preencherSelect('filtroCidade', []);
             } else {
-                // Filtrar SubRotas das rotas selecionadas
-                const subRotasFiltradas = window.todasSubRotas
-                    .filter(sr => rotasSelecionadas.includes(sr.rota))
-                    .map(sr => sr.sub_rota)
+                // Filtrar Representantes dos supervisores selecionados
+                const representantesFiltrados = window.todosRepresentantes
+                    .filter(r => supervisoresSelecionados.includes(r.rep_supervisor))
+                    .map(r => r.desc_representante)
                     .filter((value, index, self) => self.indexOf(value) === index); // unique
 
-                preencherSelect('filtroSubRota', subRotasFiltradas);
+                preencherSelect('filtroRepresentante', representantesFiltrados);
 
-                // Filtrar Cidades das rotas selecionadas
+                // Filtrar Cidades dos supervisores selecionados
                 const cidadesFiltradas = window.todasCidades
-                    .filter(c => rotasSelecionadas.includes(c.rota))
+                    .filter(c => supervisoresSelecionados.includes(c.rep_supervisor))
                     .map(c => c.cidade)
                     .filter((value, index, self) => self.indexOf(value) === index); // unique
 
@@ -532,27 +532,32 @@
             }
         });
 
-        document.getElementById('filtroSubRota').addEventListener('change', function() {
-            const subRotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
-            const rotasSelecionadas = Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value);
+        document.getElementById('filtroRepresentante').addEventListener('change', function() {
+            const representantesSelecionados = Array.from(this.selectedOptions).map(o => o.value);
+            const supervisoresSelecionados = Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value);
 
             // Limpar seleção de Cidade
             document.getElementById('filtroCidade').selectedIndex = -1;
 
-            if (subRotasSelecionadas.length === 0) {
-                // Se nenhuma SubRota, mostrar cidades das Rotas selecionadas
-                if (rotasSelecionadas.length > 0) {
+            if (representantesSelecionados.length === 0) {
+                // Se nenhum representante, mostrar cidades dos Supervisores selecionados
+                if (supervisoresSelecionados.length > 0) {
                     const cidadesFiltradas = window.todasCidades
-                        .filter(c => rotasSelecionadas.includes(c.rota))
+                        .filter(c => supervisoresSelecionados.includes(c.rep_supervisor))
                         .map(c => c.cidade)
                         .filter((value, index, self) => self.indexOf(value) === index);
 
                     preencherSelect('filtroCidade', cidadesFiltradas);
                 }
             } else {
-                // Filtrar Cidades das SubRotas selecionadas
+                // Filtrar Cidades dos Representantes selecionados
+                // Primeiro, buscar os códigos dos representantes pelos nomes
+                const codigosRepresentantes = window.todosRepresentantes
+                    .filter(r => representantesSelecionados.includes(r.desc_representante))
+                    .map(r => r.representante);
+
                 const cidadesFiltradas = window.todasCidades
-                    .filter(c => subRotasSelecionadas.includes(c.sub_rota))
+                    .filter(c => codigosRepresentantes.includes(c.representante))
                     .map(c => c.cidade)
                     .filter((value, index, self) => self.indexOf(value) === index);
 
@@ -564,12 +569,12 @@
         window.atualizarDados = async function() {
             const dataInicio = document.getElementById('dataInicio').value;
             const dataFim = document.getElementById('dataFim').value;
-            const rotas = Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value);
-            const subRotas = Array.from(document.getElementById('filtroSubRota').selectedOptions).map(o => o.value);
+            const supervisores = Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value);
+            const representantes = Array.from(document.getElementById('filtroRepresentante').selectedOptions).map(o => o.value);
             const cidades = Array.from(document.getElementById('filtroCidade').selectedOptions).map(o => o.value);
 
             // Verificar se pelo menos um filtro foi selecionado
-            if (!dataInicio && !dataFim && rotas.length === 0 && subRotas.length === 0 && cidades.length === 0) {
+            if (!dataInicio && !dataFim && supervisores.length === 0 && representantes.length === 0 && cidades.length === 0) {
                 document.getElementById('resultsSection').style.display = 'block';
                 document.getElementById('emptyState').style.display = 'block';
                 document.getElementById('tableContainer').style.display = 'none';
@@ -592,7 +597,7 @@
                         SUM(v.valor_liquido) as valor,
                         SUM(v.peso_liq) as peso
                     FROM vendas v
-                    LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+                    LEFT JOIN tab_representante r ON v.representante = r.representante
                     WHERE 1=1
                 `;
 
@@ -607,13 +612,13 @@
                     sql += ' AND v.emissao <= ?';
                     params.push(dataFim);
                 }
-                if (rotas.length > 0) {
-                    sql += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
-                    params.push(...rotas);
+                if (supervisores.length > 0) {
+                    sql += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`;
+                    params.push(...supervisores);
                 }
-                if (subRotas.length > 0) {
-                    sql += ` AND c.sub_rota IN (${subRotas.map(() => '?').join(',')})`;
-                    params.push(...subRotas);
+                if (representantes.length > 0) {
+                    sql += ` AND r.desc_representante IN (${representantes.map(() => '?').join(',')})`;
+                    params.push(...representantes);
                 }
                 if (cidades.length > 0) {
                     sql += ` AND v.cidade IN (${cidades.map(() => '?').join(',')})`;
@@ -699,9 +704,9 @@
 
                 const ws = XLSX.utils.json_to_sheet(dados);
                 const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, 'Vendas por Região');
+                XLSX.utils.book_append_sheet(wb, ws, 'Vendas por Equipe');
 
-                XLSX.writeFile(wb, `vendas_regiao_${new Date().toISOString().split('T')[0]}.xlsx`);
+                XLSX.writeFile(wb, `vendas_equipe_${new Date().toISOString().split('T')[0]}.xlsx`);
 
             } catch (error) {
                 console.error('Erro ao exportar Excel:', error);
@@ -723,7 +728,7 @@
 
                 doc.setFontSize(18);
                 doc.setTextColor(220, 20, 60);
-                doc.text('Vendas por Região', 14, 20);
+                doc.text('Vendas por Equipe Comercial', 14, 20);
 
                 doc.setFontSize(10);
                 doc.setTextColor(100);
@@ -752,7 +757,7 @@
                     }
                 });
 
-                doc.save(`vendas_regiao_${new Date().toISOString().split('T')[0]}.pdf`);
+                doc.save(`vendas_equipe_${new Date().toISOString().split('T')[0]}.pdf`);
 
             } catch (error) {
                 console.error('Erro ao exportar PDF:', error);
