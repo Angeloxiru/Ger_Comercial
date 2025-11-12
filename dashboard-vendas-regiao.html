@@ -581,7 +581,7 @@
 
                 sql += ' GROUP BY v.produto, v.complemento ORDER BY qtde DESC';
 
-                const result = await db.execute({ sql, args: params });
+                const result = await db.execute(sql, params);
                 window.dadosAtuais = result.rows;
 
                 mostrarResultados(result.rows);
