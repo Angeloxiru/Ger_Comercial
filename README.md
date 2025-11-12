@@ -4,21 +4,28 @@ Sistema de Gerenciamento Comercial integrado com Turso Database (LibSQL)
 
 ## 📋 Sobre o Projeto
 
-O **Ger_Comercial** é um sistema de gerenciamento comercial desenvolvido para funcionar 100% no navegador (GitHub Pages), integrado com o banco de dados Turso (LibSQL/SQLite). Este projeto foi criado para facilitar o gerenciamento de dados comerciais sem a necessidade de servidor backend.
+O **Ger_Comercial** é um sistema de gerenciamento comercial desenvolvido para funcionar 100% no navegador (GitHub Pages), integrado com o banco de dados Turso (LibSQL/SQLite). Este projeto oferece dashboards visuais, relatórios detalhados e exportação de dados sem necessidade de servidor backend.
 
 ### ✨ Características
 
 - ✅ 100% Frontend (JavaScript ES Modules)
-- ✅ Banco de dados na nuvem (Turso)
-- ✅ Interface visual para testes
-- ✅ Módulo completo de operações CRUD
-- ✅ Testes automatizados
+- ✅ Banco de dados na nuvem (Turso/LibSQL)
+- ✅ Dashboard gerencial com múltiplos relatórios
+- ✅ Filtros avançados com seleção múltipla
+- ✅ Exportação para Excel e PDF
 - ✅ Deploy via GitHub Pages
-- ✅ Sem necessidade de terminal
+- ✅ Interface moderna e responsiva
+- ✅ Sem necessidade de terminal ou backend
 
 ---
 
-## 🚀 Configuração Rápida
+## 🚀 Acesso Rápido
+
+**URL do Sistema:** https://angeloxiru.github.io/Ger_Comercial/
+
+---
+
+## ⚙️ Configuração
 
 ### 1️⃣ Obter Token do Turso
 
@@ -43,13 +50,9 @@ export const config = {
 
 3. Salve o arquivo
 
-### 3️⃣ Testar a Conexão
+### 3️⃣ Acessar o Sistema
 
-Abra um dos arquivos HTML no navegador:
-
-- **`index.html`** - Teste básico de conexão
-- **`teste-completo.html`** - Suite completa de testes
-- **`exemplo.html`** - Exemplo prático com CRUD
+Abra no navegador: https://angeloxiru.github.io/Ger_Comercial/
 
 ---
 
@@ -58,29 +61,85 @@ Abra um dos arquivos HTML no navegador:
 ```
 Ger_Comercial/
 │
-├── index.html              # Página de teste de conexão visual
-├── teste-completo.html     # Suite completa de testes
-├── exemplo.html            # Exemplo prático de CRUD
+├── index.html                    # Dashboard principal
+├── dashboard-vendas-regiao.html  # Relatório de vendas por região
+├── teste-conexao.html            # Teste de conexão (utilitário)
+├── exemplo.html                  # Exemplo de CRUD
 │
 ├── js/
-│   ├── config.js           # Configurações do banco (TOKEN AQUI!)
-│   ├── config.example.js   # Exemplo de configuração
-│   ├── db.js               # Módulo de conexão e operações
-│   └── test.js             # Scripts de teste automatizados
+│   ├── config.js                 # Configurações do banco (TOKEN AQUI!)
+│   ├── config.example.js         # Exemplo de configuração
+│   ├── db.js                     # Módulo de conexão e operações
+│   └── test.js                   # Scripts auxiliares
 │
-├── .gitignore              # Arquivos ignorados pelo Git
-└── README.md               # Este arquivo
+├── .gitignore                    # Arquivos ignorados pelo Git
+└── README.md                     # Este arquivo
 ```
 
 ---
 
-## 🔧 Módulos Disponíveis
+## 📊 Dashboards Disponíveis
+
+### 🎯 Dashboard Principal
+**Arquivo:** `index.html`
+
+Página inicial com cards de acesso aos relatórios:
+- ✅ **Vendas por Região** - Disponível
+- 📈 Análise de Produtos - Em breve
+- 👥 Performance de Clientes - Em breve
+- 💰 Análise Financeira - Em breve
+- 📦 Gestão de Estoque - Em breve
+- 🎯 Metas e KPIs - Em breve
+
+---
+
+### 📍 Vendas por Região
+**Arquivo:** `dashboard-vendas-regiao.html`
+
+Dashboard completo com filtros avançados e exportação de dados.
+
+#### 🔍 Filtros Disponíveis:
+
+| Filtro | Descrição | Tipo |
+|--------|-----------|------|
+| **Período** | Data inicial e final | Seleção de datas |
+| **Rota** | Rotas comerciais | Múltipla seleção |
+| **SubRota** | Sub-rotas | Múltipla seleção |
+| **Cidade** | Cidades | Múltipla seleção |
+| **Supervisor** | Supervisores | Múltipla seleção |
+| **Representante** | Representantes | Múltipla seleção |
+
+#### 📊 Dados Exibidos:
+
+- **Código:** Código do produto
+- **Descrição:** Descrição completa do produto
+- **Quantidade:** Soma total de unidades vendidas
+- **Valor:** Soma total do valor líquido (R$)
+- **Peso:** Soma total do peso líquido (kg)
+
+**Ordenação:** Do maior para o menor por quantidade
+
+#### 📤 Exportações:
+
+- **Excel (.xlsx)** - Planilha formatada pronta para análise
+- **PDF** - Relatório visual com tabela formatada
+
+#### 🔗 Tabelas Relacionadas:
+
+O sistema faz consultas em múltiplas tabelas:
+- `vendas` - Dados das vendas
+- `tab_cliente` - Informações de clientes (rotas)
+- `tab_representante` - Informações de representantes e supervisores
+
+---
+
+## 🔧 Módulos JavaScript
 
 ### 📦 `db.js` - Gerenciador de Banco de Dados
 
 Módulo principal para operações com o banco de dados.
 
-#### Métodos Disponíveis:
+#### Métodos Principais:
 
 ```javascript
 import { db } from './js/db.js';
@@ -88,155 +147,129 @@ import { db } from './js/db.js';
 // Conectar ao banco
 await db.connect();
 
-// Executar query SQL
-const result = await db.execute('SELECT * FROM produtos');
+// Executar query SQL personalizada
+const result = await db.execute('SELECT * FROM vendas');
 
-// Criar tabela
-await db.createTable('produtos', {
-    id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
-    nome: 'TEXT NOT NULL',
-    preco: 'REAL NOT NULL'
+// Executar query com parâmetros
+const result = await db.execute({
+    sql: 'SELECT * FROM vendas WHERE emissao >= ? AND emissao <= ?',
+    args: ['2025-01-01', '2025-01-31']
 });
-
-// Inserir dados
-await db.insert('produtos', {
-    nome: 'Notebook',
-    preco: 2500.00
-});
-
-// Selecionar dados
-const produtos = await db.select('produtos', {
-    where: { preco: 2500 },
-    orderBy: 'nome ASC',
-    limit: 10
-});
-
-// Atualizar dados
-await db.update('produtos',
-    { preco: 2300.00 },  // novos valores
-    { nome: 'Notebook' }  // condição
-);
-
-// Deletar dados
-await db.delete('produtos', { id: 1 });
-
-// Listar todas as tabelas
-const tables = await db.listTables();
-
-// Obter estrutura de uma tabela
-const structure = await db.getTableStructure('produtos');
 
 // Executar múltiplas queries (batch)
 const results = await db.batch([
-    { sql: 'SELECT COUNT(*) FROM produtos' },
-    { sql: 'SELECT SUM(preco) FROM produtos' }
+    { sql: 'SELECT COUNT(*) FROM vendas' },
+    { sql: 'SELECT SUM(valor_liquido) FROM vendas' }
 ]);
-```
 
-### 🧪 `test.js` - Suite de Testes
+// Listar tabelas
+const tables = await db.listTables();
 
-Módulo para executar testes automatizados.
-
-```javascript
-import { TestSuite, runQuickTest } from './js/test.js';
-
-// Executar todos os testes
-const summary = await runQuickTest();
-
-// Ou usar a classe TestSuite diretamente
-const suite = new TestSuite();
-await suite.runAll();
+// Ver estrutura de uma tabela
+const structure = await db.getTableStructure('vendas');
 ```
 
 ---
 
-## 🎯 Páginas de Teste
+## 🎨 Design e Cores
 
-### 1. `index.html` - Teste Visual Simples
+O sistema utiliza um esquema de cores moderno e profissional:
 
-Interface visual para testar rapidamente a conexão com o banco.
+- **Vermelho Vivo:** `#DC143C` (cor principal)
+- **Vermelho Escuro:** `#8B0000` (secundária)
+- **Dourado:** `#FFD700` (destaques)
+- **Dourado Escuro:** `#FFA500` (acentos)
+- **Fundo:** Branco `#FFFFFF`
 
-**Recursos:**
-- ✅ Teste de conexão
-- ✅ Query de exemplo
-- ✅ Listagem de tabelas
-- ✅ Verificação de versão SQLite
-
-**Como usar:**
-1. Abra `index.html` no navegador
-2. Clique em "🚀 Testar Conexão com Turso"
-3. Veja os resultados visuais
-
----
-
-### 2. `teste-completo.html` - Suite Completa
-
-Executa todos os testes automatizados com feedback visual.
-
-**Testes executados:**
-1. ✅ Conexão ao banco
-2. ✅ Query simples
-3. ✅ Listar tabelas
-4. ✅ Criar tabela de teste
-5. ✅ Inserir dados
-6. ✅ Selecionar dados
-7. ✅ Atualizar dados
-8. ✅ Batch queries
-9. ✅ Estrutura da tabela
-10. ✅ Limpeza (remove tabela de teste)
-
-**Como usar:**
-1. Abra `teste-completo.html` no navegador
-2. Clique em "🚀 Executar Todos os Testes"
-3. Acompanhe o progresso em tempo real
-4. Veja estatísticas e resultados
+### Características Visuais:
+- Gradientes suaves
+- Sombras elegantes
+- Animações de hover
+- Cards com efeito de elevação
+- Layout responsivo (desktop, tablet, mobile)
 
 ---
 
-### 3. `exemplo.html` - CRUD Prático
+## 📐 Estrutura do Banco de Dados
 
-Exemplo completo de gerenciamento de produtos.
+### Tabela: `vendas`
 
-**Funcionalidades:**
-- 🔌 Conectar ao banco
-- 🏗️ Criar tabela de produtos
-- ➕ Inserir novos produtos
-- 📋 Listar todos os produtos
-- 📈 Ver estatísticas do estoque
+Tabela principal com dados de vendas:
 
-**Como usar:**
-1. Abra `exemplo.html` no navegador
-2. Clique em "🔌 Conectar ao Banco"
-3. Crie a tabela clicando em "🏗️ Criar Tabela"
-4. Adicione produtos preenchendo o formulário
-5. Veja a lista e estatísticas
+```sql
+CREATE TABLE vendas (
+  chave_primaria INTEGER PRIMARY KEY AUTOINCREMENT,
+  serie TEXT,
+  nota_fiscal TEXT,
+  emissao TEXT,
+  produto TEXT,
+  qtde_faturada NUMERIC,
+  nat_oper TEXT,
+  familia TEXT,
+  complemento TEXT,
+  cliente TEXT,                  -- FK para tab_cliente
+  nome TEXT,
+  fantasia TEXT,
+  representante TEXT,            -- FK para tab_representante
+  uf TEXT,
+  cidade TEXT,
+  peso_liq NUMERIC,
+  preco_unitario NUMERIC,
+  perc_desc NUMERIC,
+  valor_bruto NUMERIC,
+  valor_desconto NUMERIC,
+  valor_liquido NUMERIC,
+  valor_financeiro NUMERIC,
+  grupo_empresa TEXT,
+  preco_unit_liq NUMERIC
+);
+```
+
+### Tabela: `tab_cliente`
+
+Informações dos clientes e rotas:
+
+```sql
+-- Estrutura básica
+-- Chave primária: cliente
+-- Contém: rota, sub_rota, endereço, etc.
+```
+
+### Tabela: `tab_representante`
+
+Informações dos representantes:
+
+```sql
+-- Estrutura básica
+-- Chave primária: representante
+-- Contém: desc_representante, rep_supervisor, etc.
+```
+
+### Relacionamentos:
+
+```
+vendas.cliente → tab_cliente.cliente
+vendas.representante → tab_representante.representante
+```
 
 ---
 
 ## 🌐 Deploy no GitHub Pages
 
-### Configurar GitHub Pages:
+O sistema já está configurado para GitHub Pages!
 
-1. Vá em **Settings** do repositório
-2. Clique em **Pages** no menu lateral
-3. Em **Source**, selecione a branch `main` (ou `master`)
-4. Clique em **Save**
-5. Aguarde alguns minutos
+### Como Atualizar:
 
-Seu site estará disponível em:
+1. Faça suas alterações localmente
+2. Edite `js/config.js` com seu token
+3. Teste localmente
+4. Faça commit e push
+5. GitHub Pages atualiza automaticamente
+
+### URL do Sistema:
 ```
 https://angeloxiru.github.io/Ger_Comercial/
 ```
-
-### ⚠️ Importante sobre Segurança:
-
-**NÃO faça commit do arquivo `js/config.js` com o token!**
-
-Opções de segurança:
-
-1. **Para desenvolvimento:** Use o token no `config.js` localmente
-2. **Para produção:** Implemente autenticação via backend
-3. **Alternativa:** Use GitHub Actions para injetar variáveis de ambiente
 
 ---
 
@@ -246,84 +279,64 @@ Opções de segurança:
 
 1. **Nunca** compartilhe seu token de autenticação
 2. **Não** faça commit do `config.js` com token preenchido
-3. Para produção, considere usar um backend proxy
-4. O token tem acesso total ao seu banco de dados
+3. O token tem acesso total ao seu banco de dados
+4. Para produção, considere usar um backend proxy
 
 ### Protegendo o Token:
 
-Se você já fez commit do token por engano:
+O arquivo `.gitignore` está configurado para proteger suas credenciais. Se você já fez commit do token por engano:
 
 1. **Regenere o token** no Turso Dashboard
-2. Remova o arquivo do histórico:
-   ```bash
-   git filter-branch --force --index-filter \
-   "git rm --cached --ignore-unmatch js/config.js" \
-   --prune-empty --tag-name-filter cat -- --all
-   ```
-3. Adicione `js/config.js` ao `.gitignore`
+2. Remova o arquivo do histórico do Git
+3. Confirme que `js/config.js` está no `.gitignore`
 
 ---
 
-## 📚 Exemplos de Código
+## 📚 Exemplos de Uso
 
-### Exemplo 1: Criar Sistema de Produtos
+### Exemplo 1: Consultar Vendas por Período
 
 ```javascript
 import { db } from './js/db.js';
 
-// Conectar
 await db.connect();
 
-// Criar tabela
-await db.createTable('produtos', {
-    id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
-    nome: 'TEXT NOT NULL',
-    descricao: 'TEXT',
-    preco: 'REAL NOT NULL',
-    estoque: 'INTEGER DEFAULT 0',
-    criado_em: 'DATETIME DEFAULT CURRENT_TIMESTAMP'
+const vendas = await db.execute({
+    sql: `
+        SELECT produto, complemento,
+               SUM(qtde_faturada) as qtde_total,
+               SUM(valor_liquido) as valor_total
+        FROM vendas
+        WHERE emissao >= ? AND emissao <= ?
+        GROUP BY produto, complemento
+        ORDER BY qtde_total DESC
+    `,
+    args: ['2025-01-01', '2025-01-31']
 });
 
-// Inserir produtos
-await db.insert('produtos', {
-    nome: 'Mouse Gamer',
-    descricao: 'RGB, 16000 DPI',
-    preco: 199.90,
-    estoque: 50
-});
-
-// Buscar produtos em estoque
-const produtosEmEstoque = await db.select('produtos', {
-    where: { estoque: 0 },
-    orderBy: 'nome ASC'
-});
-
-console.log('Produtos:', produtosEmEstoque);
+console.table(vendas.rows);
 ```
 
-### Exemplo 2: Sistema de Vendas
+### Exemplo 2: Consultar com JOINs
 
 ```javascript
-// Criar tabela de vendas
-await db.createTable('vendas', {
-    id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
-    produto_id: 'INTEGER NOT NULL',
-    quantidade: 'INTEGER NOT NULL',
-    valor_total: 'REAL NOT NULL',
-    data_venda: 'DATETIME DEFAULT CURRENT_TIMESTAMP'
-});
+const resultado = await db.execute(`
+    SELECT
+        v.produto,
+        v.valor_liquido,
+        c.rota,
+        c.sub_rota,
+        r.desc_representante,
+        r.rep_supervisor
+    FROM vendas v
+    LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+    LEFT JOIN tab_representante r ON v.representante = r.representante
+    WHERE v.emissao >= '2025-01-01'
+    ORDER BY v.valor_liquido DESC
+    LIMIT 100
+`);
 
-// Registrar venda (com atualização de estoque)
-await db.batch([
-    {
-        sql: 'INSERT INTO vendas (produto_id, quantidade, valor_total) VALUES (?, ?, ?)',
-        args: [1, 2, 399.80]
-    },
-    {
-        sql: 'UPDATE produtos SET estoque = estoque - ? WHERE id = ?',
-        args: [2, 1]
-    }
-]);
+console.table(resultado.rows);
 ```
 
 ---
@@ -350,15 +363,20 @@ await db.batch([
 
 ---
 
-### Erro: "CORS policy"
+### Filtros não carregam dados
 
-**Solução:** Abra os arquivos através de um servidor web local ou GitHub Pages, não diretamente pelo sistema de arquivos.
+**Solução:**
+- Verifique se as tabelas `tab_cliente` e `tab_representante` têm dados
+- Confirme os relacionamentos entre as tabelas
 
 ---
 
-### Tabela não encontrada
+### Exportação não funciona
 
-**Solução:** Execute a criação da tabela primeiro usando `db.createTable()` ou a página de exemplo.
+**Solução:**
+- Certifique-se de que está acessando via HTTPS ou localhost
+- Não use protocolo `file://`
+- Verifique se há dados para exportar
 
 ---
 
@@ -367,6 +385,11 @@ await db.batch([
 ### Documentação Turso:
 - [Turso Docs](https://docs.turso.tech/)
 - [LibSQL Client](https://github.com/libsql/libsql-client-ts)
+
+### Bibliotecas Utilizadas:
+- [SheetJS (XLSX)](https://sheetjs.com/) - Exportação Excel
+- [jsPDF](https://github.com/parallax/jsPDF) - Exportação PDF
+- [jsPDF-AutoTable](https://github.com/simonbengtsson/jsPDF-AutoTable) - Tabelas em PDF
 
 ### Tutoriais:
 - [Como usar Turso](https://turso.tech/tutorials)
@@ -382,6 +405,7 @@ Contribuições são bem-vindas! Sinta-se à vontade para:
 - Sugerir melhorias
 - Enviar pull requests
 - Melhorar a documentação
+- Criar novos dashboards
 
 ---
 
@@ -398,19 +422,36 @@ Este projeto é de código aberto e está disponível sob a licença MIT.
 
 ---
 
-## 🎉 Próximos Passos
+## 🎉 Roadmap
 
-Agora que você configurou o projeto:
+### ✅ Implementado:
+- Dashboard principal
+- Vendas por Região
+- Filtros múltiplos
+- Exportação Excel/PDF
+- GitHub Pages
 
-1. ✅ Configure seu token no `js/config.js`
-2. ✅ Teste a conexão em `index.html`
-3. ✅ Execute os testes em `teste-completo.html`
-4. ✅ Experimente o CRUD em `exemplo.html`
-5. ✅ Crie suas próprias tabelas e funcionalidades!
+### 🚧 Em Desenvolvimento:
+- Análise de Produtos
+- Performance de Clientes
+- Análise Financeira
+- Gestão de Estoque
+- Metas e KPIs
 
-**Dúvidas?** Abra uma issue no GitHub!
+### 💡 Futuras Melhorias:
+- Gráficos interativos (Chart.js)
+- Comparativo de períodos
+- Drill-down detalhado
+- Filtros salvos
+- Dashboard personalizável
+- Modo escuro
+- Relatórios agendados
 
 ---
+
+<p align="center">
+  <strong>🚀 Sistema 100% Web | 📊 Dashboards Inteligentes | 🔒 Seguro e Rápido</strong>
+</p>
 
 <p align="center">
   Feito com ❤️ e ☕
