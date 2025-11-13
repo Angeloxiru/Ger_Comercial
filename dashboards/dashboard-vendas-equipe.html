@@ -440,7 +440,7 @@
             </div>
             <h1>👥 Vendas por Equipe Comercial</h1>
         </div>
-        <a href="index.html" class="btn-voltar">← Voltar</a>
+        <a href="../index.html" class="btn-voltar">← Voltar</a>
     </div>
 
     <!-- Alerta de Configuração -->
@@ -676,12 +676,14 @@
 
                 preencherSelect('filtroSupervisor', supervisores.rows.map(s => s.rep_supervisor));
 
-                // Adicionar FilterSearch aos selects
-                window.filterSearches = {
-                    supervisor: new FilterSearch('filtroSupervisor', { placeholder: 'Digite para buscar supervisor...' }),
-                    representante: new FilterSearch('filtroRepresentante', { placeholder: 'Digite para buscar representante...' }),
-                    cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
-                };
+                // Adicionar FilterSearch aos selects (apenas se ainda não existir)
+                if (!window.filterSearches) {
+                    window.filterSearches = {
+                        supervisor: new FilterSearch('filtroSupervisor', { placeholder: 'Digite para buscar supervisor...' }),
+                        representante: new FilterSearch('filtroRepresentante', { placeholder: 'Digite para buscar representante...' }),
+                        cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
+                    };
+                }
 
             } catch (error) {
                 console.error('Erro ao carregar filtros:', error);
