@@ -598,7 +598,7 @@
     <script type="module">
         import { db } from './js/db.js';
         import { config } from './js/config.js';
-        import { CacheManager, CACHE_TTL } from './js/cache.js';
+        import { cache, CACHE_TTL } from './js/cache.js';
         import { Pagination } from './js/pagination.js';
         import { FilterSearch } from './js/filter-search.js';
 
@@ -615,7 +615,6 @@
         window.todasFamilias = [];
         window.todosProdutos = [];
         window.filterSearches = {};
-        window.cache = new CacheManager();
 
         let chart1, chart2;
 
@@ -638,7 +637,7 @@
 
                 // Tenta buscar do cache
                 const cacheKey = 'filtros_produtos';
-                const cached = window.cache.get(cacheKey);
+                const cached = cache.get(cacheKey);
 
                 let origens, familias, produtos;
 
@@ -655,7 +654,7 @@
                     produtos = await db.execute('SELECT produto, desc_produto, desc_familia, desc_origem FROM tab_produto WHERE desc_produto IS NOT NULL ORDER BY desc_produto');
 
                     // Salva no cache (1 hora)
-                    window.cache.set(cacheKey, { origens, familias, produtos }, CACHE_TTL.FILTERS);
+                    cache.set(cacheKey, { origens, familias, produtos }, CACHE_TTL.FILTERS);
                 }
 
                 window.todasOrigens = origens.rows;
@@ -1007,7 +1006,7 @@
         // Inicializar
         window.addEventListener('load', () => {
             carregarFiltros();
-            console.log('📊 Cache Stats:', window.cache.getStats());
+            console.log('📊 Cache Stats:', cache.getStats());
         });
     </script>
 </body>

@@ -557,7 +557,7 @@
     <script type="module">
         import { db } from './js/db.js';
         import { config } from './js/config.js';
-        import { CacheManager, CACHE_TTL } from './js/cache.js';
+        import { cache, CACHE_TTL } from './js/cache.js';
         import { Pagination } from './js/pagination.js';
         import { FilterSearch } from './js/filter-search.js';
 
@@ -571,7 +571,6 @@
         window.todosSupervisores = [];
         window.todosRepresentantes = [];
         window.todasCidades = [];
-        window.cache = new CacheManager();
 
         let chart1, chart2;
 
@@ -594,7 +593,7 @@
 
                 // Cache de 1 hora
                 const cacheKey = 'filtros_equipe';
-                const cachedData = window.cache.get(cacheKey);
+                const cachedData = cache.get(cacheKey);
 
                 let supervisores, representantes, cidades;
 
@@ -613,7 +612,7 @@
                         ORDER BY v.cidade
                     `);
 
-                    window.cache.set(cacheKey, {
+                    cache.set(cacheKey, {
                         supervisores,
                         representantes,
                         cidades
