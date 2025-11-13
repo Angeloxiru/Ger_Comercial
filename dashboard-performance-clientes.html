@@ -645,9 +645,9 @@
                 } else {
                     console.log('🔄 Buscando filtros do banco...');
 
-                    grupos = await db.execute('SELECT DISTINCT desc_grupo FROM tab_cliente WHERE desc_grupo IS NOT NULL ORDER BY desc_grupo');
-                    clientes = await db.execute('SELECT DISTINCT cliente, nome, desc_grupo FROM tab_cliente WHERE nome IS NOT NULL ORDER BY nome');
-                    cidades = await db.execute('SELECT DISTINCT cidade, desc_grupo FROM tab_cliente WHERE cidade IS NOT NULL ORDER BY cidade');
+                    grupos = await db.execute('SELECT DISTINCT grupo_desc FROM tab_cliente WHERE grupo_desc IS NOT NULL ORDER BY grupo_desc');
+                    clientes = await db.execute('SELECT DISTINCT cliente, nome, grupo_desc FROM tab_cliente WHERE nome IS NOT NULL ORDER BY nome');
+                    cidades = await db.execute('SELECT DISTINCT cidade, grupo_desc FROM tab_cliente WHERE cidade IS NOT NULL ORDER BY cidade');
 
                     cache.set(cacheKey, { grupos, clientes, cidades }, CACHE_TTL.FILTERS);
                 }
@@ -656,7 +656,7 @@
                 window.todosClientes = clientes.rows;
                 window.todasCidades = cidades.rows;
 
-                preencherSelect('filtroGrupo', grupos.rows.map(g => g.desc_grupo));
+                preencherSelect('filtroGrupo', grupos.rows.map(g => g.grupo_desc));
 
                 // Inicializa busca nos filtros
                 window.filterSearches = {
@@ -703,12 +703,12 @@
                 preencherSelect('filtroCidade', window.todasCidades.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i));
             } else {
                 const clientesFiltrados = window.todosClientes
-                    .filter(c => gruposSelecionados.includes(c.desc_grupo))
+                    .filter(c => gruposSelecionados.includes(c.grupo_desc))
                     .map(c => c.nome)
                     .filter((v, i, s) => s.indexOf(v) === i);
 
                 const cidadesFiltradas = window.todasCidades
-                    .filter(c => gruposSelecionados.includes(c.desc_grupo))
+                    .filter(c => gruposSelecionados.includes(c.grupo_desc))
                     .map(c => c.cidade)
                     .filter((v, i, s) => s.indexOf(v) === i);
 
@@ -724,7 +724,7 @@
             if (clientesSelecionados.length === 0) {
                 if (gruposSelecionados.length > 0) {
                     const cidadesFiltradas = window.todasCidades
-                        .filter(c => gruposSelecionados.includes(c.desc_grupo))
+                        .filter(c => gruposSelecionados.includes(c.grupo_desc))
                         .map(c => c.cidade)
                         .filter((v, i, s) => s.indexOf(v) === i);
                     preencherSelect('filtroCidade', cidadesFiltradas);
@@ -739,7 +739,7 @@
                 // Busca cidades baseadas nos clientes selecionados via JOIN com vendas
                 const cidadesUnique = new Set();
                 window.todasCidades.forEach(c => {
-                    if (gruposSelecionados.length === 0 || gruposSelecionados.includes(c.desc_grupo)) {
+                    if (gruposSelecionados.length === 0 || gruposSelecionados.includes(c.grupo_desc)) {
                         cidadesUnique.add(c.cidade);
                     }
                 });
@@ -828,7 +828,7 @@
                 const params = [dataInicio, dataFim];
 
                 if (grupos.length > 0) {
-                    sql += ` AND c.desc_grupo IN (${grupos.map(() => '?').join(',')})`;
+                    sql += ` AND c.grupo_desc IN (${grupos.map(() => '?').join(',')})`;
                     params.push(...grupos);
                 }
                 if (clientesNomes.length > 0) {
