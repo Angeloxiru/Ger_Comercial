@@ -544,6 +544,12 @@
         import { cache, CACHE_TTL } from './js/cache.js';
         import { Pagination, injectPaginationStyles } from './js/pagination.js';
         import { FilterSearch, injectFilterSearchStyles } from './js/filter-search.js';
+        import { initDashboard, registerCleanup, preventStaleCache } from './js/dashboard-isolation.js';
+
+        // Inicializa isolamento do dashboard
+        initDashboard('Vendas por Região');
+        registerCleanup();
+        preventStaleCache();
 
         injectPaginationStyles();
         injectFilterSearchStyles();
