@@ -144,13 +144,13 @@
 
         <button class="btn" onclick="limparCache()">🗑️ Limpar Todo o Cache</button>
         <button class="btn btn-secondary" onclick="limparCacheAntigo()">⏰ Limpar Apenas Cache Expirado</button>
-        <button class="btn btn-success" onclick="location.href='index.html'">← Voltar ao Dashboard</button>
+        <button class="btn btn-success" onclick="location.href='../index.html'">← Voltar ao Dashboard</button>
 
         <div id="status"></div>
     </div>
 
     <script type="module">
-        import { CacheManager, CACHE_TTL } from './js/cache.js';
+        import { CacheManager, CACHE_TTL } from '../js/cache.js';
 
         const cache = new CacheManager();
 

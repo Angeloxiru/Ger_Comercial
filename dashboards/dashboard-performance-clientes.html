@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análise de Produtos - Ger Comercial</title>
+    <title>Performance de Clientes - Ger Comercial</title>
     <style>
         * {
             margin: 0;
@@ -192,7 +192,7 @@
             transform: none;
         }
 
-        /* NOVO LAYOUT: 70% Tabela / 30% Dashboard */
+        /* LAYOUT: 70% Tabela / 30% Dashboard */
         .main-content {
             display: grid;
             grid-template-columns: 70% 30%;
@@ -201,7 +201,6 @@
             min-height: calc(100vh - 400px);
         }
 
-        /* SEÇÃO DA TABELA (70%) */
         .table-section {
             display: flex;
             flex-direction: column;
@@ -212,7 +211,7 @@
         }
 
         .table-header {
-            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
             padding: 16px 20px;
             display: flex;
             justify-content: space-between;
@@ -233,7 +232,7 @@
         .table-container {
             flex: 1;
             overflow-y: auto;
-            max-height: calc(25 * 44px + 50px); /* 25 linhas + header */
+            max-height: calc(25 * 44px + 50px);
         }
 
         table {
@@ -294,7 +293,7 @@
         }
 
         .btn-export {
-            background: #fc0303;
+            background: #28a745;
             color: white;
             border: none;
             padding: 10px 24px;
@@ -309,11 +308,10 @@
         }
 
         .btn-export:hover {
-            background: #b50909;
+            background: #1e7e34;
             transform: translateY(-1px);
         }
 
-        /* SEÇÃO DO DASHBOARD (30%) */
         .dashboard-section {
             display: flex;
             flex-direction: column;
@@ -338,7 +336,7 @@
         .kpi-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            border-color: #fc0303;
+            border-color: #28a745;
         }
 
         .kpi-icon {
@@ -397,7 +395,7 @@
 
         .spinner {
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #fc0303;
+            border-top: 3px solid #28a745;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -448,7 +446,7 @@
             <div class="header-logo">
                 <img src="https://static.wixstatic.com/media/ce3165_c01db19c0ef64e2abb8c894c7ecc6f95~mv2.png/v1/fill/w_161,h_69,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/logomarca-Germani-2023-Branca-borda-dour.png" alt="Logo Germani Alimentos">
             </div>
-            <h1>📦 Análise de Produtos</h1>
+            <h1>📊 Performance de Clientes</h1>
         </div>
         <a href="index.html" class="btn-voltar">← Voltar</a>
     </div>
@@ -482,27 +480,27 @@
                 </div>
             </div>
 
-            <!-- Origem -->
+            <!-- Grupo -->
             <div class="filter-group">
-                <label>🏭 Origem</label>
-                <select id="filtroOrigem" multiple size="3">
+                <label>👥 Grupo</label>
+                <select id="filtroGrupo" multiple size="3">
                     <option value="">Carregando...</option>
                 </select>
             </div>
 
-            <!-- Família -->
+            <!-- Cliente -->
             <div class="filter-group">
-                <label>📂 Família</label>
-                <select id="filtroFamilia" multiple size="3">
-                    <option value="">Selecione uma Origem primeiro</option>
+                <label>🏢 Cliente</label>
+                <select id="filtroCliente" multiple size="3">
+                    <option value="">Selecione um Grupo primeiro</option>
                 </select>
             </div>
 
-            <!-- Produto -->
+            <!-- Cidade -->
             <div class="filter-group">
-                <label>📦 Produto</label>
-                <select id="filtroProduto" multiple size="3">
-                    <option value="">Selecione Família ou Origem primeiro</option>
+                <label>🏙️ Cidade</label>
+                <select id="filtroCidade" multiple size="3">
+                    <option value="">Selecione Grupo ou Cliente primeiro</option>
                 </select>
             </div>
         </div>
@@ -519,9 +517,9 @@
         <div class="loading-text" style="font-size: 0.8em; margin-top: 8px;">Isso pode levar alguns segundos</div>
     </div>
 
-    <!-- NOVO LAYOUT: 70% Tabela / 30% Dashboard -->
+    <!-- LAYOUT: 70% Tabela / 30% Dashboard -->
     <div class="main-content" id="mainContent" style="display: none;">
-        <!-- SEÇÃO DA TABELA (70%) -->
+        <!-- TABELA (70%) -->
         <div class="table-section">
             <div class="table-header">
                 <div class="table-title">📊 Resultados da Consulta</div>
@@ -532,9 +530,8 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Cliente</th>
-                            <th>Razão Social</th>
-                            <th>Cidade</th>
+                            <th>Produto</th>
+                            <th>Descrição</th>
                             <th class="text-right">Qtde</th>
                             <th class="text-right">Valor (R$)</th>
                             <th class="text-right">Peso (kg)</th>
@@ -556,7 +553,7 @@
             </div>
         </div>
 
-        <!-- SEÇÃO DO DASHBOARD (30%) -->
+        <!-- DASHBOARD (30%) -->
         <div class="dashboard-section">
             <!-- KPIs 2x2 -->
             <div class="kpi-grid">
@@ -582,19 +579,19 @@
                 </div>
             </div>
 
-            <!-- Gráfico 1: Top 10 Clientes -->
+            <!-- Gráfico 1: Top 10 Produtos -->
             <div class="chart-card">
-                <div class="chart-title">📊 Top 10 Clientes</div>
+                <div class="chart-title">🏆 Top 10 Produtos por Quantidade</div>
                 <div class="chart-container">
-                    <canvas id="chartTopClientes"></canvas>
+                    <canvas id="chartTopProdutos"></canvas>
                 </div>
             </div>
 
-            <!-- Gráfico 2: Vendas por Cidade -->
+            <!-- Gráfico 2: Vendas por Cliente -->
             <div class="chart-card">
-                <div class="chart-title">🗺️ Vendas por Cidade (Top 5)</div>
+                <div class="chart-title">👥 Top 5 Clientes por Valor</div>
                 <div class="chart-container">
-                    <canvas id="chartCidades"></canvas>
+                    <canvas id="chartClientes"></canvas>
                 </div>
             </div>
         </div>
@@ -604,19 +601,19 @@
     <div class="empty-state" id="emptyState">
         <div class="empty-state-icon">📊</div>
         <div style="font-size: 1.1em; margin-bottom: 8px; color: #495057;">Selecione os filtros e clique em Atualizar</div>
-        <p>Configure os filtros acima para visualizar os dados de vendas por produto</p>
+        <p>Configure os filtros acima para visualizar a performance dos clientes</p>
     </div>
 
     <script type="module">
-        import { db } from './js/db.js';
-        import { config } from './js/config.js';
-        import { cache, CACHE_TTL } from './js/cache.js';
-        import { Pagination } from './js/pagination.js';
-        import { FilterSearch } from './js/filter-search.js';
-        import { initDashboard, registerCleanup, preventStaleCache } from './js/dashboard-isolation.js';
+        import { db } from '../js/db.js';
+        import { config } from '../js/config.js';
+        import { cache, CACHE_TTL } from '../js/cache.js';
+        import { Pagination } from '../js/pagination.js';
+        import { FilterSearch } from '../js/filter-search.js';
+        import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
 
         // Inicializa isolamento do dashboard
-        initDashboard('Análise de Produtos');
+        initDashboard('Performance de Clientes');
         registerCleanup();
         preventStaleCache();
 
@@ -627,11 +624,10 @@
 
         // Variáveis globais
         window.db = db;
-        window.dadosAtuais = [];
         window.dadosCompletos = [];
-        window.todasOrigens = [];
-        window.todasFamilias = [];
-        window.todosProdutos = [];
+        window.todosGrupos = [];
+        window.todosClientes = [];
+        window.todasCidades = [];
         window.filterSearches = {};
 
         let chart1, chart2;
@@ -648,44 +644,42 @@
             renderCallback: renderizarTabela
         });
 
-        // Carregar opções dos filtros
+        // Carregar filtros
         async function carregarFiltros() {
             try {
                 if (!db.isConnected()) await db.connect();
 
-                // Tenta buscar do cache
-                const cacheKey = 'filtros_produtos';
+                const cacheKey = 'filtros_clientes';
                 const cached = cache.get(cacheKey);
 
-                let origens, familias, produtos;
+                let grupos, clientes, cidades;
 
                 if (cached) {
                     console.log('✅ Usando filtros do cache');
-                    origens = cached.origens;
-                    familias = cached.familias;
-                    produtos = cached.produtos;
+                    grupos = cached.grupos;
+                    clientes = cached.clientes;
+                    cidades = cached.cidades;
                 } else {
                     console.log('🔄 Buscando filtros do banco...');
 
-                    origens = await db.execute('SELECT DISTINCT desc_origem FROM tab_produto WHERE desc_origem IS NOT NULL ORDER BY desc_origem');
-                    familias = await db.execute('SELECT DISTINCT desc_familia, desc_origem FROM tab_produto WHERE desc_familia IS NOT NULL ORDER BY desc_familia');
-                    produtos = await db.execute('SELECT produto, desc_produto, desc_familia, desc_origem FROM tab_produto WHERE desc_produto IS NOT NULL ORDER BY desc_produto');
+                    grupos = await db.execute('SELECT DISTINCT grupo_desc FROM tab_cliente WHERE grupo_desc IS NOT NULL ORDER BY grupo_desc');
+                    clientes = await db.execute('SELECT DISTINCT cliente, nome, grupo_desc FROM tab_cliente WHERE nome IS NOT NULL ORDER BY nome');
+                    cidades = await db.execute('SELECT DISTINCT cidade, grupo_desc FROM tab_cliente WHERE cidade IS NOT NULL ORDER BY cidade');
 
-                    // Salva no cache (1 hora)
-                    cache.set(cacheKey, { origens, familias, produtos }, CACHE_TTL.FILTERS);
+                    cache.set(cacheKey, { grupos, clientes, cidades }, CACHE_TTL.FILTERS);
                 }
 
-                window.todasOrigens = origens.rows;
-                window.todasFamilias = familias.rows;
-                window.todosProdutos = produtos.rows;
+                window.todosGrupos = grupos.rows;
+                window.todosClientes = clientes.rows;
+                window.todasCidades = cidades.rows;
 
-                preencherSelect('filtroOrigem', origens.rows.map(o => o.desc_origem));
+                preencherSelect('filtroGrupo', grupos.rows.map(g => g.grupo_desc));
 
                 // Inicializa busca nos filtros
                 window.filterSearches = {
-                    origem: new FilterSearch('filtroOrigem', { placeholder: 'Digite para buscar origem...' }),
-                    familia: new FilterSearch('filtroFamilia', { placeholder: 'Digite para buscar família...' }),
-                    produto: new FilterSearch('filtroProduto', { placeholder: 'Digite para buscar produto...' })
+                    grupo: new FilterSearch('filtroGrupo', { placeholder: 'Digite para buscar grupo...' }),
+                    cliente: new FilterSearch('filtroCliente', { placeholder: 'Digite para buscar cliente...' }),
+                    cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
                 };
 
             } catch (error) {
@@ -717,69 +711,57 @@
             }
         }
 
-        // CASCATA FLEXÍVEL: Origem → Família → Produto (permite pular níveis)
-        document.getElementById('filtroOrigem').addEventListener('change', function() {
-            const origensSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
+        // CASCATA FLEXÍVEL: Grupo → Cliente → Cidade
+        document.getElementById('filtroGrupo').addEventListener('change', function() {
+            const gruposSelecionados = Array.from(this.selectedOptions).map(o => o.value);
 
-            // NÃO limpa seleções anteriores automaticamente
-            // document.getElementById('filtroFamilia').selectedIndex = -1;
-            // document.getElementById('filtroProduto').selectedIndex = -1;
-
-            if (origensSelecionadas.length === 0) {
-                // Se nenhuma origem: mostra todas
-                preencherSelect('filtroFamilia', window.todasFamilias.map(f => f.desc_familia).filter((v, i, s) => s.indexOf(v) === i));
-                preencherSelect('filtroProduto', window.todosProdutos.map(p => p.desc_produto).filter((v, i, s) => s.indexOf(v) === i));
+            if (gruposSelecionados.length === 0) {
+                preencherSelect('filtroCliente', window.todosClientes.map(c => c.nome).filter((v, i, s) => s.indexOf(v) === i));
+                preencherSelect('filtroCidade', window.todasCidades.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i));
             } else {
-                // Filtra famílias E produtos pela origem
-                const familiasFiltradas = window.todasFamilias
-                    .filter(f => origensSelecionadas.includes(f.desc_origem))
-                    .map(f => f.desc_familia)
-                    .filter((value, index, self) => self.indexOf(value) === index);
+                const clientesFiltrados = window.todosClientes
+                    .filter(c => gruposSelecionados.includes(c.grupo_desc))
+                    .map(c => c.nome)
+                    .filter((v, i, s) => s.indexOf(v) === i);
 
-                const produtosFiltrados = window.todosProdutos
-                    .filter(p => origensSelecionadas.includes(p.desc_origem))
-                    .map(p => p.desc_produto)
-                    .filter((value, index, self) => self.indexOf(value) === index);
+                const cidadesFiltradas = window.todasCidades
+                    .filter(c => gruposSelecionados.includes(c.grupo_desc))
+                    .map(c => c.cidade)
+                    .filter((v, i, s) => s.indexOf(v) === i);
 
-                preencherSelect('filtroFamilia', familiasFiltradas);
-                preencherSelect('filtroProduto', produtosFiltrados);
+                preencherSelect('filtroCliente', clientesFiltrados);
+                preencherSelect('filtroCidade', cidadesFiltradas);
             }
         });
 
-        document.getElementById('filtroFamilia').addEventListener('change', function() {
-            const familiasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
-            const origensSelecionadas = Array.from(document.getElementById('filtroOrigem').selectedOptions).map(o => o.value);
+        document.getElementById('filtroCliente').addEventListener('change', function() {
+            const clientesSelecionados = Array.from(this.selectedOptions).map(o => o.value);
+            const gruposSelecionados = Array.from(document.getElementById('filtroGrupo').selectedOptions).map(o => o.value);
 
-            // NÃO limpa produtos automaticamente
-            // document.getElementById('filtroProduto').selectedIndex = -1;
-
-            if (familiasSelecionadas.length === 0) {
-                // Se nenhuma família selecionada: filtra apenas por origem (se houver)
-                if (origensSelecionadas.length > 0) {
-                    const produtosFiltrados = window.todosProdutos
-                        .filter(p => origensSelecionadas.includes(p.desc_origem))
-                        .map(p => p.desc_produto)
-                        .filter((value, index, self) => self.indexOf(value) === index);
-
-                    preencherSelect('filtroProduto', produtosFiltrados);
+            if (clientesSelecionados.length === 0) {
+                if (gruposSelecionados.length > 0) {
+                    const cidadesFiltradas = window.todasCidades
+                        .filter(c => gruposSelecionados.includes(c.grupo_desc))
+                        .map(c => c.cidade)
+                        .filter((v, i, s) => s.indexOf(v) === i);
+                    preencherSelect('filtroCidade', cidadesFiltradas);
                 } else {
-                    // Se nem origem nem família: mostra todos
-                    preencherSelect('filtroProduto', window.todosProdutos.map(p => p.desc_produto).filter((v, i, s) => s.indexOf(v) === i));
+                    preencherSelect('filtroCidade', window.todasCidades.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i));
                 }
             } else {
-                // Filtra produtos pela combinação: origem (se houver) E família
-                let produtosFiltrados = window.todosProdutos;
+                const codigosClientes = window.todosClientes
+                    .filter(c => clientesSelecionados.includes(c.nome))
+                    .map(c => c.cliente);
 
-                if (origensSelecionadas.length > 0) {
-                    produtosFiltrados = produtosFiltrados.filter(p => origensSelecionadas.includes(p.desc_origem));
-                }
+                // Busca cidades baseadas nos clientes selecionados via JOIN com vendas
+                const cidadesUnique = new Set();
+                window.todasCidades.forEach(c => {
+                    if (gruposSelecionados.length === 0 || gruposSelecionados.includes(c.grupo_desc)) {
+                        cidadesUnique.add(c.cidade);
+                    }
+                });
 
-                produtosFiltrados = produtosFiltrados
-                    .filter(p => familiasSelecionadas.includes(p.desc_familia))
-                    .map(p => p.desc_produto)
-                    .filter((value, index, self) => self.indexOf(value) === index);
-
-                preencherSelect('filtroProduto', produtosFiltrados);
+                preencherSelect('filtroCidade', Array.from(cidadesUnique));
             }
         });
 
@@ -818,22 +800,21 @@
         window.limparFiltros = function() {
             document.getElementById('dataInicio').value = '';
             document.getElementById('dataFim').value = '';
-            document.getElementById('filtroOrigem').selectedIndex = -1;
-            document.getElementById('filtroFamilia').selectedIndex = -1;
-            document.getElementById('filtroProduto').selectedIndex = -1;
+            document.getElementById('filtroGrupo').selectedIndex = -1;
+            document.getElementById('filtroCliente').selectedIndex = -1;
+            document.getElementById('filtroCidade').selectedIndex = -1;
 
-            // Recarrega todas as opções
-            preencherSelect('filtroFamilia', []);
-            preencherSelect('filtroProduto', []);
+            preencherSelect('filtroCliente', []);
+            preencherSelect('filtroCidade', []);
         };
 
         // Atualizar dados
         window.atualizarDados = async function() {
             const dataInicio = document.getElementById('dataInicio').value;
             const dataFim = document.getElementById('dataFim').value;
-            const origens = Array.from(document.getElementById('filtroOrigem').selectedOptions).map(o => o.value);
-            const familias = Array.from(document.getElementById('filtroFamilia').selectedOptions).map(o => o.value);
-            const produtos = Array.from(document.getElementById('filtroProduto').selectedOptions).map(o => o.value);
+            const grupos = Array.from(document.getElementById('filtroGrupo').selectedOptions).map(o => o.value);
+            const clientesNomes = Array.from(document.getElementById('filtroCliente').selectedOptions).map(o => o.value);
+            const cidades = Array.from(document.getElementById('filtroCidade').selectedOptions).map(o => o.value);
 
             if (!dataInicio || !dataFim) {
                 alert('Por favor, selecione o período (data início e fim)');
@@ -850,33 +831,33 @@
                 // Construir query SQL
                 let sql = `
                     SELECT
-                        v.cliente,
-                        v.nome as razao_social,
-                        v.cidade,
+                        v.produto,
+                        v.complemento as descricao,
                         SUM(v.qtde_faturada) as qtde,
                         SUM(v.valor_liquido) as valor,
-                        SUM(v.peso_liq) as peso
+                        SUM(v.peso_liq) as peso,
+                        c.nome as cliente_nome
                     FROM vendas v
-                    INNER JOIN tab_produto p ON v.produto = p.produto
+                    INNER JOIN tab_cliente c ON v.cliente = c.cliente
                     WHERE v.emissao >= ? AND v.emissao <= ?
                 `;
 
                 const params = [dataInicio, dataFim];
 
-                if (origens.length > 0) {
-                    sql += ` AND p.desc_origem IN (${origens.map(() => '?').join(',')})`;
-                    params.push(...origens);
+                if (grupos.length > 0) {
+                    sql += ` AND c.grupo_desc IN (${grupos.map(() => '?').join(',')})`;
+                    params.push(...grupos);
                 }
-                if (familias.length > 0) {
-                    sql += ` AND p.desc_familia IN (${familias.map(() => '?').join(',')})`;
-                    params.push(...familias);
+                if (clientesNomes.length > 0) {
+                    sql += ` AND c.nome IN (${clientesNomes.map(() => '?').join(',')})`;
+                    params.push(...clientesNomes);
                 }
-                if (produtos.length > 0) {
-                    sql += ` AND p.desc_produto IN (${produtos.map(() => '?').join(',')})`;
-                    params.push(...produtos);
+                if (cidades.length > 0) {
+                    sql += ` AND c.cidade IN (${cidades.map(() => '?').join(',')})`;
+                    params.push(...cidades);
                 }
 
-                sql += ' GROUP BY v.cliente, v.nome, v.cidade ORDER BY qtde DESC';
+                sql += ' GROUP BY v.produto, v.complemento, c.nome ORDER BY qtde DESC';
 
                 const result = await db.execute(sql, params);
                 window.dadosCompletos = result.rows;
@@ -906,7 +887,7 @@
             tbody.innerHTML = '';
 
             if (pageData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #6c757d;">Nenhum resultado encontrado</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #6c757d;">Nenhum resultado encontrado</td></tr>';
                 return;
             }
 
@@ -915,9 +896,8 @@
                 const valor = parseFloat(row.valor || 0);
 
                 tr.innerHTML = `
-                    <td>${row.cliente || '-'}</td>
-                    <td>${row.razao_social || '-'}</td>
-                    <td>${row.cidade || '-'}</td>
+                    <td>${row.produto || '-'}</td>
+                    <td>${row.descricao || '-'}</td>
                     <td class="text-right">${parseFloat(row.qtde || 0).toLocaleString('pt-BR')}</td>
                     <td class="text-right">R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                     <td class="text-right">${parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
@@ -948,19 +928,19 @@
                 return;
             }
 
-            // Gráfico 1: Top 10 Clientes
+            // Gráfico 1: Top 10 Produtos
             const top10 = dados.slice(0, 10);
 
             if (chart1) chart1.destroy();
-            chart1 = new Chart(document.getElementById('chartTopClientes'), {
+            chart1 = new Chart(document.getElementById('chartTopProdutos'), {
                 type: 'bar',
                 data: {
-                    labels: top10.map(d => (d.razao_social || d.cliente).substring(0, 15)),
+                    labels: top10.map(d => (d.descricao || d.produto || '').substring(0, 20)),
                     datasets: [{
                         label: 'Quantidade',
                         data: top10.map(d => parseFloat(d.qtde)),
-                        backgroundColor: 'rgba(252, 3, 3, 0.7)',
-                        borderColor: '#fc0303',
+                        backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                        borderColor: '#28a745',
                         borderWidth: 2
                     }]
                 },
@@ -976,28 +956,28 @@
                 }
             });
 
-            // Gráfico 2: Vendas por Cidade (Top 5)
-            const cidadesMap = {};
+            // Gráfico 2: Top 5 Clientes por Valor
+            const clientesMap = {};
             dados.forEach(d => {
-                if (d.cidade) {
-                    cidadesMap[d.cidade] = (cidadesMap[d.cidade] || 0) + parseFloat(d.valor || 0);
+                if (d.cliente_nome) {
+                    clientesMap[d.cliente_nome] = (clientesMap[d.cliente_nome] || 0) + parseFloat(d.valor || 0);
                 }
             });
 
-            const cidadesArray = Object.entries(cidadesMap)
+            const clientesArray = Object.entries(clientesMap)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 5);
 
             if (chart2) chart2.destroy();
-            chart2 = new Chart(document.getElementById('chartCidades'), {
+            chart2 = new Chart(document.getElementById('chartClientes'), {
                 type: 'pie',
                 data: {
-                    labels: cidadesArray.map(c => c[0]),
+                    labels: clientesArray.map(c => c[0].substring(0, 25)),
                     datasets: [{
-                        data: cidadesArray.map(c => c[1]),
+                        data: clientesArray.map(c => c[1]),
                         backgroundColor: [
-                            'rgba(252, 3, 3, 0.8)',
-                            'rgba(181, 9, 9, 0.8)',
+                            'rgba(40, 167, 69, 0.8)',
+                            'rgba(30, 126, 52, 0.8)',
                             'rgba(3, 255, 28, 0.8)',
                             'rgba(255, 193, 7, 0.8)',
                             'rgba(13, 110, 253, 0.8)'
@@ -1022,9 +1002,9 @@
                 const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
 
                 const dados = window.dadosCompletos.map(row => ({
-                    'Cliente': row.cliente,
-                    'Razão Social': row.razao_social,
-                    'Cidade': row.cidade,
+                    'Produto': row.produto,
+                    'Descrição': row.descricao,
+                    'Cliente': row.cliente_nome,
                     'Quantidade': parseFloat(row.qtde || 0),
                     'Valor': parseFloat(row.valor || 0),
                     'Peso': parseFloat(row.peso || 0)
@@ -1032,11 +1012,11 @@
 
                 const ws = XLSX.utils.json_to_sheet(dados);
                 const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, 'Análise de Produtos');
+                XLSX.utils.book_append_sheet(wb, ws, 'Performance Clientes');
 
                 const dataInicio = document.getElementById('dataInicio').value;
                 const dataFim = document.getElementById('dataFim').value;
-                const filename = `analise_produtos_${dataInicio}_${dataFim}.xlsx`;
+                const filename = `performance_clientes_${dataInicio}_${dataFim}.xlsx`;
 
                 XLSX.writeFile(wb, filename);
 

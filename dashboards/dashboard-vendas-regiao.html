@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Performance de Clientes - Ger Comercial</title>
+    <title>Vendas por Região - Ger Comercial</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -18,7 +19,7 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
+            background: #fc0303;
             color: white;
             padding: 20px 30px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -54,7 +55,6 @@
             font-weight: 500;
             transition: all 0.2s;
             text-decoration: none;
-            display: inline-block;
         }
 
         .btn-voltar:hover {
@@ -75,9 +75,8 @@
             margin-bottom: 20px;
             font-weight: 600;
             display: flex;
-            align-items: center;
-            gap: 10px;
             justify-content: space-between;
+            align-items: center;
         }
 
         .btn-limpar {
@@ -102,20 +101,17 @@
             margin-bottom: 20px;
         }
 
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-        }
-
         .filter-group label {
             color: #495057;
             font-weight: 500;
             margin-bottom: 6px;
             font-size: 0.9em;
+            display: block;
         }
 
         .filter-group input,
         .filter-group select {
+            width: 100%;
             padding: 10px 12px;
             border: 1px solid #dee2e6;
             border-radius: 6px;
@@ -138,6 +134,7 @@
         .filter-group select option:checked {
             background: #03ff1c;
             color: #000;
+            font-weight: 600;
         }
 
         .date-range {
@@ -169,7 +166,7 @@
         }
 
         .btn-atualizar {
-            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
+            background: #fc0303;
             color: white;
             border: none;
             padding: 12px 32px;
@@ -182,17 +179,15 @@
         }
 
         .btn-atualizar:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(252, 3, 3, 0.3);
+            background: #b50909;
         }
 
         .btn-atualizar:disabled {
             opacity: 0.6;
             cursor: not-allowed;
-            transform: none;
         }
 
-        /* LAYOUT: 70% Tabela / 30% Dashboard */
+        /* NOVO LAYOUT: 70% Tabela / 30% Dashboard */
         .main-content {
             display: grid;
             grid-template-columns: 70% 30%;
@@ -202,21 +197,21 @@
         }
 
         .table-section {
-            display: flex;
-            flex-direction: column;
             background: white;
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .table-header {
-            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
             padding: 16px 20px;
+            color: white;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: white;
         }
 
         .table-title {
@@ -225,14 +220,14 @@
         }
 
         .table-stats {
-            font-weight: 500;
             font-size: 0.9em;
+            font-weight: 500;
         }
 
         .table-container {
             flex: 1;
             overflow-y: auto;
-            max-height: calc(25 * 44px + 50px);
+            max-height: calc(25 * 44px + 50px); /* 25 linhas + header */
         }
 
         table {
@@ -279,43 +274,43 @@
         .table-footer {
             padding: 16px 20px;
             background: #f8f9fa;
+            border-top: 2px solid #dee2e6;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
-            border-top: 2px solid #dee2e6;
         }
 
         .total-value {
-            color: #212529;
-            font-weight: 700;
+            color: #495057;
+            font-weight: 600;
             font-size: 1.1em;
         }
 
+        .export-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
         .btn-export {
-            background: #28a745;
+            background: #fc0303;
             color: white;
             border: none;
-            padding: 10px 24px;
+            padding: 10px 20px;
             border-radius: 6px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
             font-size: 0.9em;
         }
 
         .btn-export:hover {
-            background: #1e7e34;
-            transform: translateY(-1px);
+            background: #b50909;
         }
 
         .dashboard-section {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 20px;
         }
 
         .kpi-grid {
@@ -326,7 +321,7 @@
 
         .kpi-card {
             background: white;
-            border-radius: 12px;
+            border-radius: 10px;
             padding: 16px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             border: 2px solid transparent;
@@ -334,14 +329,12 @@
         }
 
         .kpi-card:hover {
+            border-color: #fc0303;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            border-color: #28a745;
         }
 
         .kpi-icon {
             font-size: 2em;
-            line-height: 1;
             margin-bottom: 8px;
         }
 
@@ -351,42 +344,39 @@
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .kpi-value {
             color: #212529;
-            font-size: 1.5em;
+            font-size: 1.4em;
             font-weight: 700;
-            line-height: 1.2;
         }
 
         .chart-card {
             background: white;
             border-radius: 12px;
-            padding: 16px;
+            padding: 20px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .chart-title {
-            color: #495057;
-            font-size: 0.9em;
+            font-size: 1em;
             font-weight: 600;
-            margin-bottom: 12px;
-            text-align: center;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 250px;
+            color: #212529;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .loading {
             display: none;
             text-align: center;
-            padding: 40px;
-            color: #fc0303;
-            font-weight: 500;
+            padding: 60px;
+            background: white;
+            margin: 20px;
+            border-radius: 12px;
         }
 
         .loading.active {
@@ -395,12 +385,12 @@
 
         .spinner {
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #28a745;
+            border-top: 3px solid #fc0303;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 12px;
+            margin: 0 auto 16px;
         }
 
         @keyframes spin {
@@ -408,9 +398,16 @@
             100% { transform: rotate(360deg); }
         }
 
-        .loading-text {
+        .empty-state {
+            padding: 60px;
+            text-align: center;
             color: #6c757d;
-            font-size: 0.9em;
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 16px;
+            opacity: 0.5;
         }
 
         .alert {
@@ -425,18 +422,6 @@
             border: 1px solid #ffc107;
             color: #856404;
         }
-
-        .empty-state {
-            padding: 60px 20px;
-            text-align: center;
-            color: #6c757d;
-        }
-
-        .empty-state-icon {
-            font-size: 3em;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
     </style>
 </head>
 <body>
@@ -446,18 +431,18 @@
             <div class="header-logo">
                 <img src="https://static.wixstatic.com/media/ce3165_c01db19c0ef64e2abb8c894c7ecc6f95~mv2.png/v1/fill/w_161,h_69,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/logomarca-Germani-2023-Branca-borda-dour.png" alt="Logo Germani Alimentos">
             </div>
-            <h1>📊 Performance de Clientes</h1>
+            <h1>📍 Vendas por Região</h1>
         </div>
         <a href="index.html" class="btn-voltar">← Voltar</a>
     </div>
 
-    <!-- Alerta de Configuração -->
+    <!-- Alerta -->
     <div id="configAlert" class="alert alert-warning" style="display: none;">
         <strong>⚠️ Configuração Necessária!</strong><br>
         Configure suas credenciais do Turso no arquivo <code>js/config.js</code>
     </div>
 
-    <!-- Seção de Filtros -->
+    <!-- Filtros -->
     <div class="filters-section">
         <div class="filters-title">
             <span>🔍 Filtros de Pesquisa</span>
@@ -465,7 +450,6 @@
         </div>
 
         <div class="filters-grid">
-            <!-- Período -->
             <div class="filter-group">
                 <label>📅 Período</label>
                 <div class="date-range">
@@ -480,27 +464,24 @@
                 </div>
             </div>
 
-            <!-- Grupo -->
             <div class="filter-group">
-                <label>👥 Grupo</label>
-                <select id="filtroGrupo" multiple size="3">
+                <label>🛣️ Rota</label>
+                <select id="filtroRota" multiple size="3">
                     <option value="">Carregando...</option>
                 </select>
             </div>
 
-            <!-- Cliente -->
             <div class="filter-group">
-                <label>🏢 Cliente</label>
-                <select id="filtroCliente" multiple size="3">
-                    <option value="">Selecione um Grupo primeiro</option>
+                <label>🗺️ SubRota</label>
+                <select id="filtroSubRota" multiple size="3">
+                    <option value="">Selecione uma Rota primeiro</option>
                 </select>
             </div>
 
-            <!-- Cidade -->
             <div class="filter-group">
                 <label>🏙️ Cidade</label>
                 <select id="filtroCidade" multiple size="3">
-                    <option value="">Selecione Grupo ou Cliente primeiro</option>
+                    <option value="">Selecione Rota ou SubRota</option>
                 </select>
             </div>
         </div>
@@ -513,11 +494,10 @@
     <!-- Loading -->
     <div class="loading" id="loading">
         <div class="spinner"></div>
-        <div class="loading-text">Carregando dados do banco...</div>
-        <div class="loading-text" style="font-size: 0.8em; margin-top: 8px;">Isso pode levar alguns segundos</div>
+        <div>Carregando dados do banco...</div>
     </div>
 
-    <!-- LAYOUT: 70% Tabela / 30% Dashboard -->
+    <!-- NOVO LAYOUT: 70% Tabela / 30% Dashboard -->
     <div class="main-content" id="mainContent" style="display: none;">
         <!-- TABELA (70%) -->
         <div class="table-section">
@@ -526,162 +506,120 @@
                 <div class="table-stats" id="tableStats">0 registros</div>
             </div>
 
-            <div class="table-container" id="tableContainer">
+            <div id="emptyState" class="empty-state">
+                <div class="empty-state-icon">📊</div>
+                <div>Selecione os filtros e clique em Atualizar</div>
+            </div>
+
+            <div class="table-container" id="tableContainer" style="display: none;">
                 <table>
                     <thead>
                         <tr>
-                            <th>Produto</th>
+                            <th>Cód</th>
                             <th>Descrição</th>
                             <th class="text-right">Qtde</th>
                             <th class="text-right">Valor (R$)</th>
                             <th class="text-right">Peso (kg)</th>
                         </tr>
                     </thead>
-                    <tbody id="tableBody">
-                    </tbody>
+                    <tbody id="tableBody"></tbody>
                 </table>
             </div>
 
-            <!-- Paginação -->
             <div id="paginationContainer"></div>
 
-            <div class="table-footer">
+            <div class="table-footer" id="tableFooter" style="display: none;">
                 <div class="total-value" id="totalValue">Total: R$ 0,00</div>
-                <button class="btn-export" onclick="exportarDados()">
-                    📊 Exportar Excel
-                </button>
+                <div class="export-buttons">
+                    <button class="btn-export" onclick="exportarExcel()">📊 Excel</button>
+                    <button class="btn-export" onclick="exportarPDF()">📄 PDF</button>
+                </div>
             </div>
         </div>
 
         <!-- DASHBOARD (30%) -->
         <div class="dashboard-section">
-            <!-- KPIs 2x2 -->
-            <div class="kpi-grid">
-                <div class="kpi-card">
-                    <div class="kpi-icon">💰</div>
-                    <div class="kpi-label">Valor Total</div>
-                    <div class="kpi-value" id="kpiValor">R$ 0,00</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon">📦</div>
-                    <div class="kpi-label">Quantidade</div>
-                    <div class="kpi-value" id="kpiQtde">0</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon">⚖️</div>
-                    <div class="kpi-label">Peso Total</div>
-                    <div class="kpi-value" id="kpiPeso">0 kg</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon">📊</div>
-                    <div class="kpi-label">Total Registros</div>
-                    <div class="kpi-value" id="kpiRegistros">0</div>
-                </div>
+            <!-- KPIs em Grid 2x2 -->
+            <div class="kpi-grid" id="kpiGrid"></div>
+
+            <!-- Gráfico 1 -->
+            <div class="chart-card">
+                <div class="chart-title">📊 Top 10 Produtos</div>
+                <canvas id="chartTopProdutos"></canvas>
             </div>
 
-            <!-- Gráfico 1: Top 10 Produtos -->
+            <!-- Gráfico 2 -->
             <div class="chart-card">
-                <div class="chart-title">🏆 Top 10 Produtos por Quantidade</div>
-                <div class="chart-container">
-                    <canvas id="chartTopProdutos"></canvas>
-                </div>
-            </div>
-
-            <!-- Gráfico 2: Vendas por Cliente -->
-            <div class="chart-card">
-                <div class="chart-title">👥 Top 5 Clientes por Valor</div>
-                <div class="chart-container">
-                    <canvas id="chartClientes"></canvas>
-                </div>
+                <div class="chart-title">🗺️ Vendas por Cidade</div>
+                <canvas id="chartCidades"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Estado vazio inicial -->
-    <div class="empty-state" id="emptyState">
-        <div class="empty-state-icon">📊</div>
-        <div style="font-size: 1.1em; margin-bottom: 8px; color: #495057;">Selecione os filtros e clique em Atualizar</div>
-        <p>Configure os filtros acima para visualizar a performance dos clientes</p>
-    </div>
-
     <script type="module">
-        import { db } from './js/db.js';
-        import { config } from './js/config.js';
-        import { cache, CACHE_TTL } from './js/cache.js';
-        import { Pagination } from './js/pagination.js';
-        import { FilterSearch } from './js/filter-search.js';
-        import { initDashboard, registerCleanup, preventStaleCache } from './js/dashboard-isolation.js';
+        import { db } from '../js/db.js';
+        import { config } from '../js/config.js';
+        import { cache, CACHE_TTL } from '../js/cache.js';
+        import { Pagination, injectPaginationStyles } from '../js/pagination.js';
+        import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
+        import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
 
         // Inicializa isolamento do dashboard
-        initDashboard('Performance de Clientes');
+        initDashboard('Vendas por Região');
         registerCleanup();
         preventStaleCache();
 
-        // Chart.js
-        const chartScript = document.createElement('script');
-        chartScript.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0';
-        document.head.appendChild(chartScript);
+        injectPaginationStyles();
+        injectFilterSearchStyles();
 
-        // Variáveis globais
         window.db = db;
         window.dadosCompletos = [];
-        window.todosGrupos = [];
-        window.todosClientes = [];
+        window.todasRotas = [];
+        window.todasSubRotas = [];
         window.todasCidades = [];
         window.filterSearches = {};
+        window.chartTopProdutos = null;
+        window.chartCidades = null;
 
-        let chart1, chart2;
-
-        // Verifica configuração
-        if (!config.authToken || config.authToken === 'SEU_TOKEN_AQUI') {
-            document.getElementById('configAlert').style.display = 'block';
-            document.getElementById('btnAtualizar').disabled = true;
-        }
-
-        // Configurar paginação (25 registros)
         window.pagination = new Pagination('#paginationContainer', {
             pageSize: 25,
             renderCallback: renderizarTabela
         });
 
-        // Carregar filtros
+        if (!config.authToken || config.authToken === 'SEU_TOKEN_AQUI') {
+            document.getElementById('configAlert').style.display = 'block';
+            document.getElementById('btnAtualizar').disabled = true;
+        }
+
         async function carregarFiltros() {
             try {
-                if (!db.isConnected()) await db.connect();
-
-                const cacheKey = 'filtros_clientes';
+                const cacheKey = 'filtros_regiao';
                 const cached = cache.get(cacheKey);
-
-                let grupos, clientes, cidades;
+                let rotas, subRotas, cidades;
 
                 if (cached) {
-                    console.log('✅ Usando filtros do cache');
-                    grupos = cached.grupos;
-                    clientes = cached.clientes;
+                    rotas = cached.rotas;
+                    subRotas = cached.subRotas;
                     cidades = cached.cidades;
                 } else {
-                    console.log('🔄 Buscando filtros do banco...');
-
-                    grupos = await db.execute('SELECT DISTINCT grupo_desc FROM tab_cliente WHERE grupo_desc IS NOT NULL ORDER BY grupo_desc');
-                    clientes = await db.execute('SELECT DISTINCT cliente, nome, grupo_desc FROM tab_cliente WHERE nome IS NOT NULL ORDER BY nome');
-                    cidades = await db.execute('SELECT DISTINCT cidade, grupo_desc FROM tab_cliente WHERE cidade IS NOT NULL ORDER BY cidade');
-
-                    cache.set(cacheKey, { grupos, clientes, cidades }, CACHE_TTL.FILTERS);
+                    if (!db.isConnected()) await db.connect();
+                    rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL ORDER BY rota');
+                    subRotas = await db.execute('SELECT DISTINCT sub_rota, rota FROM tab_cliente WHERE sub_rota IS NOT NULL ORDER BY sub_rota');
+                    cidades = await db.execute('SELECT DISTINCT v.cidade, c.rota, c.sub_rota FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.cidade IS NOT NULL ORDER BY v.cidade');
+                    cache.set(cacheKey, { rotas, subRotas, cidades }, CACHE_TTL.FILTERS);
                 }
 
-                window.todosGrupos = grupos.rows;
-                window.todosClientes = clientes.rows;
+                window.todasRotas = rotas.rows;
+                window.todasSubRotas = subRotas.rows;
                 window.todasCidades = cidades.rows;
 
-                preencherSelect('filtroGrupo', grupos.rows.map(g => g.grupo_desc));
+                preencherSelect('filtroRota', rotas.rows.map(r => r.rota));
 
-                // Inicializa busca nos filtros
                 window.filterSearches = {
-                    grupo: new FilterSearch('filtroGrupo', { placeholder: 'Digite para buscar grupo...' }),
-                    cliente: new FilterSearch('filtroCliente', { placeholder: 'Digite para buscar cliente...' }),
+                    rota: new FilterSearch('filtroRota', { placeholder: 'Digite para buscar rota...' }),
+                    subrota: new FilterSearch('filtroSubRota', { placeholder: 'Digite para buscar subrota...' }),
                     cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
                 };
-
             } catch (error) {
                 console.error('Erro ao carregar filtros:', error);
                 alert('Erro ao carregar filtros: ' + error.message);
@@ -703,73 +641,63 @@
                     select.appendChild(option);
                 });
             }
-
-            // Atualiza FilterSearch se existir
             const searchId = id.replace('filtro', '').toLowerCase();
-            if (window.filterSearches && window.filterSearches[searchId]) {
+            if (window.filterSearches[searchId]) {
                 window.filterSearches[searchId].updateOptions(opcoes);
             }
         }
 
-        // CASCATA FLEXÍVEL: Grupo → Cliente → Cidade
-        document.getElementById('filtroGrupo').addEventListener('change', function() {
-            const gruposSelecionados = Array.from(this.selectedOptions).map(o => o.value);
+        // CASCATA FLEXÍVEL: Rota → SubRota → Cidade (permite pular níveis)
+        document.getElementById('filtroRota').addEventListener('change', function() {
+            const rotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
 
-            if (gruposSelecionados.length === 0) {
-                preencherSelect('filtroCliente', window.todosClientes.map(c => c.nome).filter((v, i, s) => s.indexOf(v) === i));
+            // NÃO limpa seleções anteriores automaticamente
+
+            if (rotasSelecionadas.length === 0) {
+                // Se nenhuma rota: mostra todas
+                preencherSelect('filtroSubRota', window.todasSubRotas.map(s => s.sub_rota).filter((v, i, s) => s.indexOf(v) === i));
                 preencherSelect('filtroCidade', window.todasCidades.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i));
             } else {
-                const clientesFiltrados = window.todosClientes
-                    .filter(c => gruposSelecionados.includes(c.grupo_desc))
-                    .map(c => c.nome)
-                    .filter((v, i, s) => s.indexOf(v) === i);
+                // Filtra sub-rotas E cidades pela rota
+                const subRotasFiltradas = window.todasSubRotas.filter(s => rotasSelecionadas.includes(s.rota)).map(s => s.sub_rota).filter((v, i, s) => s.indexOf(v) === i);
+                preencherSelect('filtroSubRota', subRotasFiltradas);
 
-                const cidadesFiltradas = window.todasCidades
-                    .filter(c => gruposSelecionados.includes(c.grupo_desc))
-                    .map(c => c.cidade)
-                    .filter((v, i, s) => s.indexOf(v) === i);
-
-                preencherSelect('filtroCliente', clientesFiltrados);
+                const cidadesFiltradas = window.todasCidades.filter(c => rotasSelecionadas.includes(c.rota)).map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i);
                 preencherSelect('filtroCidade', cidadesFiltradas);
             }
         });
 
-        document.getElementById('filtroCliente').addEventListener('change', function() {
-            const clientesSelecionados = Array.from(this.selectedOptions).map(o => o.value);
-            const gruposSelecionados = Array.from(document.getElementById('filtroGrupo').selectedOptions).map(o => o.value);
+        document.getElementById('filtroSubRota').addEventListener('change', function() {
+            const subRotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
+            const rotasSelecionadas = Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value);
 
-            if (clientesSelecionados.length === 0) {
-                if (gruposSelecionados.length > 0) {
-                    const cidadesFiltradas = window.todasCidades
-                        .filter(c => gruposSelecionados.includes(c.grupo_desc))
-                        .map(c => c.cidade)
-                        .filter((v, i, s) => s.indexOf(v) === i);
+            // NÃO limpa cidades automaticamente
+
+            if (subRotasSelecionadas.length === 0) {
+                // Se nenhuma sub-rota: filtra apenas por rota (se houver)
+                if (rotasSelecionadas.length > 0) {
+                    const cidadesFiltradas = window.todasCidades.filter(c => rotasSelecionadas.includes(c.rota)).map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i);
                     preencherSelect('filtroCidade', cidadesFiltradas);
                 } else {
+                    // Se nem rota nem sub-rota: mostra todas
                     preencherSelect('filtroCidade', window.todasCidades.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i));
                 }
             } else {
-                const codigosClientes = window.todosClientes
-                    .filter(c => clientesSelecionados.includes(c.nome))
-                    .map(c => c.cliente);
+                // Filtra cidades pela combinação: rota (se houver) E sub-rota
+                let cidadesFiltradas = window.todasCidades.filter(c => subRotasSelecionadas.includes(c.sub_rota));
 
-                // Busca cidades baseadas nos clientes selecionados via JOIN com vendas
-                const cidadesUnique = new Set();
-                window.todasCidades.forEach(c => {
-                    if (gruposSelecionados.length === 0 || gruposSelecionados.includes(c.grupo_desc)) {
-                        cidadesUnique.add(c.cidade);
-                    }
-                });
+                if (rotasSelecionadas.length > 0) {
+                    cidadesFiltradas = cidadesFiltradas.filter(c => rotasSelecionadas.includes(c.rota));
+                }
 
-                preencherSelect('filtroCidade', Array.from(cidadesUnique));
+                cidadesFiltradas = cidadesFiltradas.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i);
+                preencherSelect('filtroCidade', cidadesFiltradas);
             }
         });
 
-        // Datas rápidas
         window.setQuickDate = function(period) {
             const hoje = new Date();
             let inicio, fim;
-
             switch (period) {
                 case '31dias':
                     inicio = new Date(hoje);
@@ -791,29 +719,26 @@
                     fim = hoje;
                     break;
             }
-
             document.getElementById('dataInicio').value = inicio.toISOString().split('T')[0];
             document.getElementById('dataFim').value = fim.toISOString().split('T')[0];
         };
 
-        // Limpar filtros
         window.limparFiltros = function() {
             document.getElementById('dataInicio').value = '';
             document.getElementById('dataFim').value = '';
-            document.getElementById('filtroGrupo').selectedIndex = -1;
-            document.getElementById('filtroCliente').selectedIndex = -1;
+            document.getElementById('filtroRota').selectedIndex = -1;
+            document.getElementById('filtroSubRota').selectedIndex = -1;
             document.getElementById('filtroCidade').selectedIndex = -1;
-
-            preencherSelect('filtroCliente', []);
+            Object.values(window.filterSearches).forEach(fs => fs.clear());
+            preencherSelect('filtroSubRota', []);
             preencherSelect('filtroCidade', []);
         };
 
-        // Atualizar dados
         window.atualizarDados = async function() {
             const dataInicio = document.getElementById('dataInicio').value;
             const dataFim = document.getElementById('dataFim').value;
-            const grupos = Array.from(document.getElementById('filtroGrupo').selectedOptions).map(o => o.value);
-            const clientesNomes = Array.from(document.getElementById('filtroCliente').selectedOptions).map(o => o.value);
+            const rotas = Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value);
+            const subRotas = Array.from(document.getElementById('filtroSubRota').selectedOptions).map(o => o.value);
             const cidades = Array.from(document.getElementById('filtroCidade').selectedOptions).map(o => o.value);
 
             if (!dataInicio || !dataFim) {
@@ -824,56 +749,32 @@
             try {
                 document.getElementById('loading').classList.add('active');
                 document.getElementById('btnAtualizar').disabled = true;
-                document.getElementById('emptyState').style.display = 'none';
-
                 if (!db.isConnected()) await db.connect();
 
-                // Construir query SQL
-                let sql = `
-                    SELECT
-                        v.produto,
-                        v.complemento as descricao,
-                        SUM(v.qtde_faturada) as qtde,
-                        SUM(v.valor_liquido) as valor,
-                        SUM(v.peso_liq) as peso,
-                        c.nome as cliente_nome
-                    FROM vendas v
-                    INNER JOIN tab_cliente c ON v.cliente = c.cliente
-                    WHERE v.emissao >= ? AND v.emissao <= ?
-                `;
-
+                let sql = `SELECT v.produto as cod, v.complemento as descricao, SUM(v.qtde_faturada) as qtde, SUM(v.valor_liquido) as valor, SUM(v.peso_liq) as peso FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.emissao >= ? AND v.emissao <= ?`;
                 const params = [dataInicio, dataFim];
 
-                if (grupos.length > 0) {
-                    sql += ` AND c.grupo_desc IN (${grupos.map(() => '?').join(',')})`;
-                    params.push(...grupos);
+                if (rotas.length > 0) {
+                    sql += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
+                    params.push(...rotas);
                 }
-                if (clientesNomes.length > 0) {
-                    sql += ` AND c.nome IN (${clientesNomes.map(() => '?').join(',')})`;
-                    params.push(...clientesNomes);
+                if (subRotas.length > 0) {
+                    sql += ` AND c.sub_rota IN (${subRotas.map(() => '?').join(',')})`;
+                    params.push(...subRotas);
                 }
                 if (cidades.length > 0) {
-                    sql += ` AND c.cidade IN (${cidades.map(() => '?').join(',')})`;
+                    sql += ` AND v.cidade IN (${cidades.map(() => '?').join(',')})`;
                     params.push(...cidades);
                 }
 
-                sql += ' GROUP BY v.produto, v.complemento, c.nome ORDER BY qtde DESC';
+                sql += ' GROUP BY v.produto, v.complemento ORDER BY qtde DESC';
 
                 const result = await db.execute(sql, params);
                 window.dadosCompletos = result.rows;
-
-                // Configurar paginação
-                window.pagination.setData(result.rows);
-
-                // Renderizar
-                renderizarTabela();
-                atualizarKPIs(result.rows);
-                atualizarGraficos(result.rows);
-
-                document.getElementById('mainContent').style.display = 'grid';
+                mostrarResultados(result.rows);
 
             } catch (error) {
-                console.error('Erro ao buscar dados:', error);
+                console.error('Erro:', error);
                 alert('Erro ao buscar dados: ' + error.message);
             } finally {
                 document.getElementById('loading').classList.remove('active');
@@ -881,158 +782,222 @@
             }
         };
 
-        function renderizarTabela() {
-            const pageData = window.pagination.getCurrentPageData();
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
+        function mostrarResultados(dados) {
+            document.getElementById('mainContent').style.display = dados.length > 0 ? 'grid' : 'none';
 
-            if (pageData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #6c757d;">Nenhum resultado encontrado</td></tr>';
+            if (dados.length === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('tableContainer').style.display = 'none';
+                document.getElementById('tableFooter').style.display = 'none';
                 return;
             }
 
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('tableContainer').style.display = 'block';
+            document.getElementById('tableFooter').style.display = 'flex';
+
+            // KPIs
+            const totalValor = dados.reduce((sum, r) => sum + parseFloat(r.valor || 0), 0);
+            const totalQtde = dados.reduce((sum, r) => sum + parseFloat(r.qtde || 0), 0);
+            const totalPeso = dados.reduce((sum, r) => sum + parseFloat(r.peso || 0), 0);
+
+            document.getElementById('kpiGrid').innerHTML = `
+                <div class="kpi-card">
+                    <div class="kpi-icon">💰</div>
+                    <div class="kpi-label">Valor Total</div>
+                    <div class="kpi-value">R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">📦</div>
+                    <div class="kpi-label">Quantidade</div>
+                    <div class="kpi-value">${totalQtde.toLocaleString('pt-BR')}</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">⚖️</div>
+                    <div class="kpi-label">Peso Total</div>
+                    <div class="kpi-value">${totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2})} kg</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">📊</div>
+                    <div class="kpi-label">Registros</div>
+                    <div class="kpi-value">${dados.length}</div>
+                </div>
+            `;
+
+            window.pagination.setData(dados);
+            renderizarGraficos(dados);
+
+            document.getElementById('tableStats').textContent = `${dados.length} registro(s)`;
+            document.getElementById('totalValue').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        }
+
+        function renderizarTabela(pageData) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
             pageData.forEach(row => {
                 const tr = document.createElement('tr');
-                const valor = parseFloat(row.valor || 0);
-
                 tr.innerHTML = `
-                    <td>${row.produto || '-'}</td>
+                    <td>${row.cod || '-'}</td>
                     <td>${row.descricao || '-'}</td>
                     <td class="text-right">${parseFloat(row.qtde || 0).toLocaleString('pt-BR')}</td>
-                    <td class="text-right">R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    <td class="text-right">R$ ${parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                     <td class="text-right">${parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                 `;
                 tbody.appendChild(tr);
             });
-
-            // Atualizar stats
-            const totalValor = window.dadosCompletos.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
-            document.getElementById('tableStats').textContent = `${window.dadosCompletos.length} registro(s)`;
-            document.getElementById('totalValue').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
         }
 
-        function atualizarKPIs(dados) {
-            const totalValor = dados.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
-            const totalQtde = dados.reduce((sum, row) => sum + parseFloat(row.qtde || 0), 0);
-            const totalPeso = dados.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
-
-            document.getElementById('kpiValor').textContent = 'R$ ' + totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-            document.getElementById('kpiQtde').textContent = totalQtde.toLocaleString('pt-BR');
-            document.getElementById('kpiPeso').textContent = totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg';
-            document.getElementById('kpiRegistros').textContent = dados.length.toLocaleString('pt-BR');
-        }
-
-        function atualizarGraficos(dados) {
-            if (typeof Chart === 'undefined') {
-                setTimeout(() => atualizarGraficos(dados), 500);
-                return;
-            }
-
-            // Gráfico 1: Top 10 Produtos
+        async function renderizarGraficos(dados) {
             const top10 = dados.slice(0, 10);
+            const ctx1 = document.getElementById('chartTopProdutos');
 
-            if (chart1) chart1.destroy();
-            chart1 = new Chart(document.getElementById('chartTopProdutos'), {
+            if (window.chartTopProdutos) window.chartTopProdutos.destroy();
+
+            window.chartTopProdutos = new Chart(ctx1, {
                 type: 'bar',
                 data: {
-                    labels: top10.map(d => (d.descricao || d.produto || '').substring(0, 20)),
+                    labels: top10.map(d => (d.descricao || d.cod).substring(0, 15)),
                     datasets: [{
                         label: 'Quantidade',
                         data: top10.map(d => parseFloat(d.qtde)),
-                        backgroundColor: 'rgba(40, 167, 69, 0.7)',
-                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(252, 3, 3, 0.7)',
+                        borderColor: '#fc0303',
                         borderWidth: 2
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // Gráfico de Cidades - buscar dados reais com os mesmos filtros
+            try {
+                const dataInicio = document.getElementById('dataInicio').value;
+                const dataFim = document.getElementById('dataFim').value;
+                const rotas = Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value);
+                const subRotas = Array.from(document.getElementById('filtroSubRota').selectedOptions).map(o => o.value);
+                const cidades = Array.from(document.getElementById('filtroCidade').selectedOptions).map(o => o.value);
+
+                let sqlCidades = `
+                    SELECT v.cidade, SUM(v.valor_liquido) as valor_total
+                    FROM vendas v
+                    LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+                    WHERE v.emissao >= ? AND v.emissao <= ?
+                    AND v.cidade IS NOT NULL
+                `;
+                const paramsCidades = [dataInicio, dataFim];
+
+                if (rotas.length > 0) {
+                    sqlCidades += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
+                    paramsCidades.push(...rotas);
+                }
+                if (subRotas.length > 0) {
+                    sqlCidades += ` AND c.sub_rota IN (${subRotas.map(() => '?').join(',')})`;
+                    paramsCidades.push(...subRotas);
+                }
+                if (cidades.length > 0) {
+                    sqlCidades += ` AND v.cidade IN (${cidades.map(() => '?').join(',')})`;
+                    paramsCidades.push(...cidades);
+                }
+
+                sqlCidades += ' GROUP BY v.cidade ORDER BY valor_total DESC LIMIT 5';
+
+                const resultCidades = await db.execute(sqlCidades, paramsCidades);
+                const cidadesData = resultCidades.rows;
+
+                const ctx2 = document.getElementById('chartCidades');
+                if (window.chartCidades) window.chartCidades.destroy();
+
+                window.chartCidades = new Chart(ctx2, {
+                    type: 'pie',
+                    data: {
+                        labels: cidadesData.map(c => c.cidade),
+                        datasets: [{
+                            data: cidadesData.map(c => parseFloat(c.valor_total)),
+                            backgroundColor: ['rgba(252, 3, 3, 0.8)', 'rgba(181, 9, 9, 0.8)', 'rgba(3, 255, 28, 0.8)', 'rgba(255, 193, 7, 0.8)', 'rgba(13, 110, 253, 0.8)']
+                        }]
                     },
-                    scales: {
-                        y: { beginAtZero: true }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true
                     }
-                }
-            });
-
-            // Gráfico 2: Top 5 Clientes por Valor
-            const clientesMap = {};
-            dados.forEach(d => {
-                if (d.cliente_nome) {
-                    clientesMap[d.cliente_nome] = (clientesMap[d.cliente_nome] || 0) + parseFloat(d.valor || 0);
-                }
-            });
-
-            const clientesArray = Object.entries(clientesMap)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5);
-
-            if (chart2) chart2.destroy();
-            chart2 = new Chart(document.getElementById('chartClientes'), {
-                type: 'pie',
-                data: {
-                    labels: clientesArray.map(c => c[0].substring(0, 25)),
-                    datasets: [{
-                        data: clientesArray.map(c => c[1]),
-                        backgroundColor: [
-                            'rgba(40, 167, 69, 0.8)',
-                            'rgba(30, 126, 52, 0.8)',
-                            'rgba(3, 255, 28, 0.8)',
-                            'rgba(255, 193, 7, 0.8)',
-                            'rgba(13, 110, 253, 0.8)'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
+                });
+            } catch (error) {
+                console.error('Erro ao carregar gráfico de cidades:', error);
+            }
         }
 
-        // Exportar dados
-        window.exportarDados = async function() {
+        window.exportarExcel = async function() {
             if (window.dadosCompletos.length === 0) {
                 alert('Não há dados para exportar');
                 return;
             }
-
             try {
                 const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
-
                 const dados = window.dadosCompletos.map(row => ({
-                    'Produto': row.produto,
+                    'Código': row.cod,
                     'Descrição': row.descricao,
-                    'Cliente': row.cliente_nome,
                     'Quantidade': parseFloat(row.qtde || 0),
                     'Valor': parseFloat(row.valor || 0),
                     'Peso': parseFloat(row.peso || 0)
                 }));
-
                 const ws = XLSX.utils.json_to_sheet(dados);
                 const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, 'Performance Clientes');
-
+                XLSX.utils.book_append_sheet(wb, ws, 'Vendas por Região');
                 const dataInicio = document.getElementById('dataInicio').value;
                 const dataFim = document.getElementById('dataFim').value;
-                const filename = `performance_clientes_${dataInicio}_${dataFim}.xlsx`;
-
-                XLSX.writeFile(wb, filename);
-
+                XLSX.writeFile(wb, `vendas_regiao_${dataInicio}_${dataFim}.xlsx`);
             } catch (error) {
                 console.error('Erro ao exportar:', error);
                 alert('Erro ao exportar: ' + error.message);
             }
         };
 
-        // Inicializar - carrega filtros na primeira vez E ao voltar (pageshow para bfcache)
-        const initFiltros = () => {
-            carregarFiltros();
-            console.log('📊 Cache Stats:', cache.getStats());
+        window.exportarPDF = async function() {
+            if (window.dadosCompletos.length === 0) {
+                alert('Não há dados para exportar');
+                return;
+            }
+            try {
+                const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                const doc = new jsPDF();
+                doc.setFontSize(18);
+                doc.setTextColor(252, 3, 3);
+                doc.text('Vendas por Região', 14, 20);
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+                const tableData = window.dadosCompletos.map(row => [
+                    row.cod,
+                    row.descricao,
+                    parseFloat(row.qtde || 0).toLocaleString('pt-BR'),
+                    'R$ ' + parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                    parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg'
+                ]);
+                doc.autoTable({
+                    head: [['Código', 'Descrição', 'Qtde', 'Valor', 'Peso']],
+                    body: tableData,
+                    startY: 35,
+                    theme: 'striped',
+                    headStyles: { fillColor: [252, 3, 3], textColor: [255, 255, 255], fontStyle: 'bold' },
+                    alternateRowStyles: { fillColor: [248, 249, 250] }
+                });
+                const dataInicio = document.getElementById('dataInicio').value;
+                const dataFim = document.getElementById('dataFim').value;
+                doc.save(`vendas_regiao_${dataInicio}_${dataFim}.pdf`);
+            } catch (error) {
+                console.error('Erro ao exportar:', error);
+                alert('Erro ao exportar: ' + error.message);
+            }
         };
-        window.addEventListener('load', initFiltros);
-        window.addEventListener('pageshow', initFiltros);
+
+        // Carrega filtros na primeira vez E ao voltar (pageshow para bfcache)
+        window.addEventListener('load', carregarFiltros);
+        window.addEventListener('pageshow', carregarFiltros);
     </script>
 </body>
 </html>
