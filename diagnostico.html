@@ -149,6 +149,9 @@
 
         <h2>📅 7. Datas Disponíveis</h2>
         <div id="testeDatas"></div>
+
+        <h2>🔍 8. DEBUG: Filtros (IMPORTANTE!)</h2>
+        <div id="testeFiltros"></div>
     </div>
 
     <script type="module">
@@ -185,8 +188,8 @@
             try {
                 const tables = await db.listTables();
                 let html = '<table><tr><th>#</th><th>Tabela</th></tr>';
-                tables.forEach((table, i) => {
-                    html += `<tr><td>${i+1}</td><td>${table.name}</td></tr>`;
+                tables.forEach((tableName, i) => {
+                    html += `<tr><td>${i+1}</td><td>${tableName}</td></tr>`;
                 });
                 html += '</table>';
                 showResult('tables', html);
@@ -432,6 +435,80 @@
             }
         }
 
+        async function testFiltros() {
+            try {
+                let html = '<div class="test-result">';
+
+                html += '<h3>🔍 DEBUG: Por que os filtros não aparecem?</h3>';
+
+                // Teste 1: Rotas (Vendas por Região)
+                html += '<h4 style="color: #ffd700;">1. Teste: Rotas (Dashboard Vendas por Região)</h4>';
+                try {
+                    const rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL ORDER BY rota');
+                    html += `<strong>✅ Query executada com sucesso!</strong><br>`;
+                    html += `<strong>Total de rotas encontradas:</strong> ${rotas.rows.length}<br>`;
+                    html += `<strong>Primeiras 10 rotas:</strong><br>`;
+                    html += `<pre>${JSON.stringify(rotas.rows.slice(0, 10), null, 2)}</pre>`;
+
+                    if (rotas.rows.length === 0) {
+                        html += '<div style="background: #4a1e1e; padding: 10px; border-radius: 5px; color: #fc0303; margin: 10px 0;"><strong>⚠️ PROBLEMA:</strong> Nenhuma rota encontrada! A coluna "rota" está vazia ou NULL.</div>';
+                    }
+                } catch (error) {
+                    html += `<div style="background: #4a1e1e; padding: 10px; border-radius: 5px; color: #fc0303;"><strong>❌ ERRO:</strong> ${error.message}</div>`;
+                }
+
+                // Teste 2: Supervisores (Vendas por Equipe)
+                html += '<h4 style="color: #ffd700;">2. Teste: Supervisores (Dashboard Vendas por Equipe)</h4>';
+                try {
+                    const supervisores = await db.execute('SELECT DISTINCT rep_supervisor FROM tab_representante WHERE rep_supervisor IS NOT NULL ORDER BY rep_supervisor');
+                    html += `<strong>✅ Query executada com sucesso!</strong><br>`;
+                    html += `<strong>Total de supervisores encontrados:</strong> ${supervisores.rows.length}<br>`;
+                    html += `<strong>Primeiros 10 supervisores:</strong><br>`;
+                    html += `<pre>${JSON.stringify(supervisores.rows.slice(0, 10), null, 2)}</pre>`;
+
+                    if (supervisores.rows.length === 0) {
+                        html += '<div style="background: #4a1e1e; padding: 10px; border-radius: 5px; color: #fc0303; margin: 10px 0;"><strong>⚠️ PROBLEMA:</strong> Nenhum supervisor encontrado! A coluna "rep_supervisor" está vazia ou NULL.</div>';
+                    }
+                } catch (error) {
+                    html += `<div style="background: #4a1e1e; padding: 10px; border-radius: 5px; color: #fc0303;"><strong>❌ ERRO:</strong> ${error.message}</div>`;
+                }
+
+                // Teste 3: Origens (Análise de Produtos)
+                html += '<h4 style="color: #ffd700;">3. Teste: Origens (Dashboard Análise de Produtos)</h4>';
+                try {
+                    const origens = await db.execute('SELECT DISTINCT desc_origem FROM tab_produto WHERE desc_origem IS NOT NULL ORDER BY desc_origem');
+                    html += `<strong>✅ Query executada com sucesso!</strong><br>`;
+                    html += `<strong>Total de origens encontradas:</strong> ${origens.rows.length}<br>`;
+                    html += `<strong>Primeiras 10 origens:</strong><br>`;
+                    html += `<pre>${JSON.stringify(origens.rows.slice(0, 10), null, 2)}</pre>`;
+
+                    if (origens.rows.length === 0) {
+                        html += '<div style="background: #4a1e1e; padding: 10px; border-radius: 5px; color: #fc0303; margin: 10px 0;"><strong>⚠️ PROBLEMA:</strong> Nenhuma origem encontrada! A coluna "desc_origem" está vazia ou NULL.</div>';
+                    }
+                } catch (error) {
+                    html += `<div style="background: #4a1e1e; padding: 10px; border-radius: 5px; color: #fc0303;"><strong>❌ ERRO:</strong> ${error.message}</div>`;
+                }
+
+                // Resumo
+                html += '<h4 style="color: #03ff1c; margin-top: 30px;">📋 Resumo e Próximos Passos:</h4>';
+                html += '<div style="background: #1e4620; padding: 15px; border-radius: 5px; color: #03ff1c;">';
+                html += '<strong>Se todas as queries acima retornaram dados (> 0):</strong><br>';
+                html += '✅ O banco está OK!<br>';
+                html += '✅ O problema está no JavaScript dos dashboards<br>';
+                html += '✅ Abra o Console do navegador (F12) e procure por erros<br>';
+                html += '<br><strong>Se alguma query retornou 0 resultados:</strong><br>';
+                html += '❌ Os campos estão vazios ou NULL no banco<br>';
+                html += '❌ Você precisa popular esses campos primeiro<br>';
+                html += '❌ Ou ajustar os filtros para usar outros campos disponíveis<br>';
+                html += '</div>';
+
+                html += '</div>';
+                showResult('testeFiltros', html);
+            } catch (error) {
+                showResult('testeFiltros', `<div class="status error">❌ Erro: ${error.message}</div>`);
+            }
+        }
+
         window.runAllTests = async function() {
             showStatus('🔄 Executando testes...', 'warning');
 
@@ -445,6 +522,7 @@
             await testAnaliseProdutos();
             await testJoins();
             await testDatas();
+            await testFiltros(); // NOVO TESTE CRÍTICO!
 
             showStatus('✅ Todos os testes concluídos!', 'success');
         };
