@@ -12,23 +12,18 @@ const DASHBOARD_ID = window.location.pathname;
 export function initDashboard(dashboardName) {
     console.log(`🚀 Inicializando dashboard: ${dashboardName}`);
 
-    // Limpa dados globais de outros dashboards
+    // Evita inicializar mais de uma vez o mesmo dashboard
+    if (window._currentDashboard === dashboardName) {
+        console.log(`⏭️ Dashboard ${dashboardName} já inicializado, pulando...`);
+        return;
+    }
+
+    window._currentDashboard = dashboardName;
+
+    // Limpa apenas dados de RESULTADOS (não filtros!)
     const keysToClean = [
         'dadosCompletos',
-        'dadosAtuais',
-        'todasRotas',
-        'todasSubRotas',
-        'todasCidades',
-        'todosSupervisores',
-        'todosRepresentantes',
-        'todasOrigens',
-        'todasFamilias',
-        'todosProdutos',
-        'chartTopProdutos',
-        'chartCidades',
-        'chartTopClientes',
-        'chartDistribuicao',
-        'chartTop10'
+        'dadosAtuais'
     ];
 
     keysToClean.forEach(key => {
