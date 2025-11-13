@@ -118,6 +118,28 @@
             gap: 8px;
         }
 
+        .quick-dates {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quick-date-btn {
+            background: #e9ecef;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-date-btn:hover {
+            background: #fc0303;
+            color: white;
+        }
+
         .btn-atualizar {
             background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
             color: white;
@@ -424,6 +446,12 @@
                     <input type="date" id="dataInicio">
                     <input type="date" id="dataFim">
                 </div>
+                <div class="quick-dates">
+                    <button class="quick-date-btn" onclick="setQuickDate('31dias')">Últimos 31 Dias</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('mes')">Mês Atual</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('trimestre')">Trimestre</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('ano')">Ano Atual</button>
+                </div>
             </div>
 
             <!-- Supervisor -->
@@ -725,6 +753,35 @@
                 preencherSelect('filtroCidade', cidadesFiltradas);
             }
         });
+
+        // Datas rápidas
+        window.setQuickDate = function(period) {
+            const hoje = new Date();
+            let inicio, fim;
+            switch (period) {
+                case '31dias':
+                    inicio = new Date(hoje);
+                    inicio.setDate(hoje.getDate() - 31);
+                    fim = hoje;
+                    break;
+                case 'mes':
+                    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+                    fim = hoje;
+                    break;
+                case 'trimestre':
+                    const mesAtual = hoje.getMonth();
+                    const inicioTrimestre = Math.floor(mesAtual / 3) * 3;
+                    inicio = new Date(hoje.getFullYear(), inicioTrimestre, 1);
+                    fim = hoje;
+                    break;
+                case 'ano':
+                    inicio = new Date(hoje.getFullYear(), 0, 1);
+                    fim = hoje;
+                    break;
+            }
+            document.getElementById('dataInicio').value = inicio.toISOString().split('T')[0];
+            document.getElementById('dataFim').value = fim.toISOString().split('T')[0];
+        };
 
         // Atualizar dados
         window.atualizarDados = async function() {
