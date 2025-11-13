@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Análise de Produtos - Ger Comercial</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -18,7 +19,7 @@
         }
 
         .header {
-            background: #dc143c;
+            background: #fc0303;
             color: white;
             padding: 20px 30px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -34,7 +35,7 @@
 
         .btn-voltar {
             background: white;
-            color: #dc143c;
+            color: #fc0303;
             border: none;
             padding: 10px 20px;
             border-radius: 6px;
@@ -65,6 +66,22 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            justify-content: space-between;
+        }
+
+        .btn-limpar {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-limpar:hover {
+            background: #5a6268;
         }
 
         .filters-grid {
@@ -99,12 +116,18 @@
         .filter-group input:focus,
         .filter-group select:focus {
             outline: none;
-            border-color: #dc143c;
-            box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.1);
+            border-color: #fc0303;
+            box-shadow: 0 0 0 3px rgba(252, 3, 3, 0.1);
         }
 
         .filter-group select {
             cursor: pointer;
+        }
+
+        .filter-group select option:checked {
+            background: #03ff1c;
+            color: #000;
+            font-weight: 600;
         }
 
         .date-range {
@@ -113,8 +136,30 @@
             gap: 8px;
         }
 
+        .quick-dates {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quick-date-btn {
+            background: #e9ecef;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-date-btn:hover {
+            background: #fc0303;
+            color: white;
+        }
+
         .btn-atualizar {
-            background: #dc143c;
+            background: #fc0303;
             color: white;
             border: none;
             padding: 12px 32px;
@@ -127,7 +172,7 @@
         }
 
         .btn-atualizar:hover {
-            background: #b8102e;
+            background: #b50909;
         }
 
         .btn-atualizar:disabled {
@@ -144,15 +189,15 @@
         }
 
         .results-header {
-            background: #ffd700;
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
             padding: 16px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            color: white;
         }
 
         .results-title {
-            color: #212529;
             font-size: 1.1em;
             font-weight: 600;
         }
@@ -160,7 +205,6 @@
         .results-stats {
             display: flex;
             gap: 20px;
-            color: #495057;
             font-weight: 500;
             font-size: 0.9em;
         }
@@ -236,11 +280,12 @@
             justify-content: space-between;
             align-items: center;
             gap: 12px;
+            border-top: 2px solid #dee2e6;
         }
 
         .btn-export {
-            background: #ffd700;
-            color: #212529;
+            background: #fc0303;
+            color: white;
             border: none;
             padding: 10px 24px;
             border-radius: 6px;
@@ -254,7 +299,7 @@
         }
 
         .btn-export:hover {
-            background: #ffc800;
+            background: #b50909;
         }
 
         .btn-export:disabled {
@@ -266,7 +311,7 @@
             display: none;
             text-align: center;
             padding: 40px;
-            color: #dc143c;
+            color: #fc0303;
             font-weight: 500;
         }
 
@@ -276,7 +321,7 @@
 
         .spinner {
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #dc143c;
+            border-top: 3px solid #fc0303;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -287,6 +332,11 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #6c757d;
+            font-size: 0.9em;
         }
 
         .alert {
@@ -300,6 +350,30 @@
             background: #fff3cd;
             border: 1px solid #ffc107;
             color: #856404;
+        }
+
+        .charts-section {
+            margin: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         @media (max-width: 768px) {
@@ -321,6 +395,10 @@
             .footer-actions {
                 flex-direction: column;
             }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -337,10 +415,14 @@
         Configure suas credenciais do Turso no arquivo <code>js/config.js</code>
     </div>
 
+    <!-- KPIs Container -->
+    <div id="kpiContainer"></div>
+
     <!-- Seção de Filtros -->
     <div class="filters-section">
         <div class="filters-title">
-            🔍 Filtros de Pesquisa
+            <span>🔍 Filtros de Pesquisa</span>
+            <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar Filtros</button>
         </div>
 
         <div class="filters-grid">
@@ -350,6 +432,11 @@
                 <div class="date-range">
                     <input type="date" id="dataInicio" placeholder="Data Inicial">
                     <input type="date" id="dataFim" placeholder="Data Final">
+                </div>
+                <div class="quick-dates">
+                    <button class="quick-date-btn" onclick="setQuickDate('mes')">Mês Atual</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('trimestre')">Trimestre</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('ano')">Ano Atual</button>
                 </div>
             </div>
 
@@ -386,13 +473,26 @@
     <!-- Loading -->
     <div class="loading" id="loading">
         <div class="spinner"></div>
-        <div>Carregando dados...</div>
+        <div class="loading-text">Carregando dados do banco...</div>
+        <div class="loading-text" style="font-size: 0.8em; margin-top: 8px;">Isso pode levar alguns segundos</div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="charts-section" id="chartsSection" style="display: none;">
+        <div class="chart-card">
+            <div class="chart-title">📊 Top 10 Clientes</div>
+            <canvas id="chartTopClientes"></canvas>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">🗺️ Vendas por Cidade</div>
+            <canvas id="chartCidades"></canvas>
+        </div>
     </div>
 
     <!-- Seção de Resultados -->
     <div class="results-section" id="resultsSection" style="display: none;">
         <div class="results-header">
-            <div class="results-title">📊 Resultados</div>
+            <div class="results-title">📊 Resultados da Consulta</div>
             <div class="results-stats">
                 <span id="totalRegistros">0 registros</span>
             </div>
@@ -423,13 +523,16 @@
             </table>
         </div>
 
+        <!-- Paginação -->
+        <div id="paginationContainer"></div>
+
         <!-- Footer com Botão de Exportação -->
         <div class="footer-actions" id="footerActions" style="display: none;">
             <div style="color: #495057; font-weight: 500;">
                 <strong id="totalValor">Total: R$ 0,00</strong>
             </div>
             <button class="btn-export" id="btnExportar" onclick="exportarDados()">
-                📊 Exportar
+                📊 Exportar Excel
             </button>
         </div>
     </div>
@@ -437,12 +540,36 @@
     <script type="module">
         import { db } from './js/db.js';
         import { config } from './js/config.js';
+        import { cache, CACHE_TTL } from './js/cache.js';
+        import { Pagination, injectPaginationStyles } from './js/pagination.js';
+        import { FilterSearch, injectFilterSearchStyles } from './js/filter-search.js';
+        import { KPICards, injectKPIStyles } from './js/kpi-cards.js';
 
+        // Injeta estilos
+        injectPaginationStyles();
+        injectFilterSearchStyles();
+        injectKPIStyles();
+
+        // Variáveis globais
         window.db = db;
         window.dadosAtuais = [];
+        window.dadosCompletos = [];
         window.todasOrigens = [];
         window.todasFamilias = [];
         window.todosProdutos = [];
+        window.filterSearches = {};
+        window.kpiCards = new KPICards('#kpiContainer');
+        window.chartTopClientes = null;
+        window.chartCidades = null;
+
+        // Paginação
+        window.pagination = new Pagination('#paginationContainer', {
+            pageSize: 50,
+            renderCallback: renderizarTabela,
+            onPageChange: (info) => {
+                console.log(`Página ${info.currentPage}/${info.totalPages}`);
+            }
+        });
 
         // Verifica configuração
         if (!config.authToken || config.authToken === 'SEU_TOKEN_AQUI') {
@@ -453,20 +580,42 @@
         // Carregar opções dos filtros
         async function carregarFiltros() {
             try {
-                if (!db.isConnected()) await db.connect();
+                // Tenta buscar do cache
+                const cacheKey = 'filtros_produtos';
+                const cached = cache.get(cacheKey);
 
-                // Carregar TODAS as Origens
-                const origens = await db.execute('SELECT DISTINCT desc_origem FROM tab_produto WHERE desc_origem IS NOT NULL ORDER BY desc_origem');
+                let origens, familias, produtos;
+
+                if (cached) {
+                    console.log('✅ Usando filtros do cache');
+                    origens = cached.origens;
+                    familias = cached.familias;
+                    produtos = cached.produtos;
+                } else {
+                    console.log('🔄 Buscando filtros do banco...');
+                    if (!db.isConnected()) await db.connect();
+
+                    // Carregar do banco
+                    origens = await db.execute('SELECT DISTINCT desc_origem FROM tab_produto WHERE desc_origem IS NOT NULL ORDER BY desc_origem');
+                    familias = await db.execute('SELECT DISTINCT desc_familia, desc_origem FROM tab_produto WHERE desc_familia IS NOT NULL ORDER BY desc_familia');
+                    produtos = await db.execute('SELECT produto, desc_produto, desc_familia, desc_origem FROM tab_produto WHERE desc_produto IS NOT NULL ORDER BY desc_produto');
+
+                    // Salva no cache (1 hora)
+                    cache.set(cacheKey, { origens, familias, produtos }, CACHE_TTL.FILTERS);
+                }
+
                 window.todasOrigens = origens.rows;
+                window.todasFamilias = familias.rows;
+                window.todosProdutos = produtos.rows;
+
                 preencherSelect('filtroOrigem', origens.rows.map(o => o.desc_origem));
 
-                // Carregar TODAS as Famílias (para usar na cascata)
-                const familias = await db.execute('SELECT DISTINCT desc_familia, desc_origem FROM tab_produto WHERE desc_familia IS NOT NULL ORDER BY desc_familia');
-                window.todasFamilias = familias.rows;
-
-                // Carregar TODOS os Produtos (para usar na cascata)
-                const produtos = await db.execute('SELECT produto, desc_produto, desc_familia, desc_origem FROM tab_produto WHERE desc_produto IS NOT NULL ORDER BY desc_produto');
-                window.todosProdutos = produtos.rows;
+                // Inicializa busca nos filtros
+                window.filterSearches = {
+                    origem: new FilterSearch('filtroOrigem', { placeholder: 'Digite para buscar origem...' }),
+                    familia: new FilterSearch('filtroFamilia', { placeholder: 'Digite para buscar família...' }),
+                    produto: new FilterSearch('filtroProduto', { placeholder: 'Digite para buscar produto...' })
+                };
 
             } catch (error) {
                 console.error('Erro ao carregar filtros:', error);
@@ -489,34 +638,36 @@
                     select.appendChild(option);
                 });
             }
+
+            // Atualiza o FilterSearch se existir
+            const searchId = id.replace('filtro', '').toLowerCase();
+            if (window.filterSearches[searchId]) {
+                window.filterSearches[searchId].updateOptions(opcoes);
+            }
         }
 
         // CASCATA: Origem → Família → Produto
         document.getElementById('filtroOrigem').addEventListener('change', function() {
             const origensSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
 
-            // Limpar seleções dos filtros filhos
             document.getElementById('filtroFamilia').selectedIndex = -1;
             document.getElementById('filtroProduto').selectedIndex = -1;
 
             if (origensSelecionadas.length === 0) {
-                // Se nenhuma origem selecionada, desabilitar Família e Produto
                 preencherSelect('filtroFamilia', []);
                 preencherSelect('filtroProduto', []);
             } else {
-                // Filtrar Famílias das origens selecionadas
                 const familiasFiltradas = window.todasFamilias
                     .filter(f => origensSelecionadas.includes(f.desc_origem))
                     .map(f => f.desc_familia)
-                    .filter((value, index, self) => self.indexOf(value) === index); // unique
+                    .filter((value, index, self) => self.indexOf(value) === index);
 
                 preencherSelect('filtroFamilia', familiasFiltradas);
 
-                // Filtrar Produtos das origens selecionadas
                 const produtosFiltrados = window.todosProdutos
                     .filter(p => origensSelecionadas.includes(p.desc_origem))
                     .map(p => p.desc_produto)
-                    .filter((value, index, self) => self.indexOf(value) === index); // unique
+                    .filter((value, index, self) => self.indexOf(value) === index);
 
                 preencherSelect('filtroProduto', produtosFiltrados);
             }
@@ -526,11 +677,9 @@
             const familiasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
             const origensSelecionadas = Array.from(document.getElementById('filtroOrigem').selectedOptions).map(o => o.value);
 
-            // Limpar seleção de Produto
             document.getElementById('filtroProduto').selectedIndex = -1;
 
             if (familiasSelecionadas.length === 0) {
-                // Se nenhuma família, mostrar produtos das Origens selecionadas
                 if (origensSelecionadas.length > 0) {
                     const produtosFiltrados = window.todosProdutos
                         .filter(p => origensSelecionadas.includes(p.desc_origem))
@@ -540,7 +689,6 @@
                     preencherSelect('filtroProduto', produtosFiltrados);
                 }
             } else {
-                // Filtrar Produtos das Famílias selecionadas
                 const produtosFiltrados = window.todosProdutos
                     .filter(p => familiasSelecionadas.includes(p.desc_familia))
                     .map(p => p.desc_produto)
@@ -550,6 +698,48 @@
             }
         });
 
+        // Datas rápidas
+        window.setQuickDate = function(period) {
+            const hoje = new Date();
+            let inicio, fim;
+
+            switch (period) {
+                case 'mes':
+                    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+                    fim = hoje;
+                    break;
+                case 'trimestre':
+                    const mesAtual = hoje.getMonth();
+                    const inicioTrimestre = Math.floor(mesAtual / 3) * 3;
+                    inicio = new Date(hoje.getFullYear(), inicioTrimestre, 1);
+                    fim = hoje;
+                    break;
+                case 'ano':
+                    inicio = new Date(hoje.getFullYear(), 0, 1);
+                    fim = hoje;
+                    break;
+            }
+
+            document.getElementById('dataInicio').value = inicio.toISOString().split('T')[0];
+            document.getElementById('dataFim').value = fim.toISOString().split('T')[0];
+        };
+
+        // Limpar filtros
+        window.limparFiltros = function() {
+            document.getElementById('dataInicio').value = '';
+            document.getElementById('dataFim').value = '';
+            document.getElementById('filtroOrigem').selectedIndex = -1;
+            document.getElementById('filtroFamilia').selectedIndex = -1;
+            document.getElementById('filtroProduto').selectedIndex = -1;
+
+            // Limpa as buscas
+            Object.values(window.filterSearches).forEach(fs => fs.clear());
+
+            // Recarrega todas as opções
+            preencherSelect('filtroFamilia', []);
+            preencherSelect('filtroProduto', []);
+        };
+
         // Atualizar dados
         window.atualizarDados = async function() {
             const dataInicio = document.getElementById('dataInicio').value;
@@ -558,7 +748,6 @@
             const familias = Array.from(document.getElementById('filtroFamilia').selectedOptions).map(o => o.value);
             const produtos = Array.from(document.getElementById('filtroProduto').selectedOptions).map(o => o.value);
 
-            // Verificar se pelo menos o período foi selecionado
             if (!dataInicio || !dataFim) {
                 alert('Por favor, selecione o período (data início e fim)');
                 return;
@@ -570,7 +759,7 @@
 
                 if (!db.isConnected()) await db.connect();
 
-                // Construir query SQL com JOINs
+                // Construir query SQL
                 let sql = `
                     SELECT
                         v.cliente,
@@ -581,20 +770,11 @@
                         SUM(v.peso_liq) as peso
                     FROM vendas v
                     INNER JOIN tab_produto p ON v.produto = p.produto
-                    WHERE 1=1
+                    WHERE v.emissao >= ? AND v.emissao <= ?
                 `;
 
-                const params = [];
+                const params = [dataInicio, dataFim];
 
-                // Adicionar filtros
-                if (dataInicio) {
-                    sql += ' AND v.emissao >= ?';
-                    params.push(dataInicio);
-                }
-                if (dataFim) {
-                    sql += ' AND v.emissao <= ?';
-                    params.push(dataFim);
-                }
                 if (origens.length > 0) {
                     sql += ` AND p.desc_origem IN (${origens.map(() => '?').join(',')})`;
                     params.push(...origens);
@@ -611,7 +791,7 @@
                 sql += ' GROUP BY v.cliente, v.nome, v.cidade ORDER BY qtde DESC';
 
                 const result = await db.execute(sql, params);
-                window.dadosAtuais = result.rows;
+                window.dadosCompletos = result.rows;
 
                 mostrarResultados(result.rows);
 
@@ -636,22 +816,43 @@
                 document.getElementById('emptyState').style.display = 'block';
                 document.getElementById('tableContainer').style.display = 'none';
                 document.getElementById('footerActions').style.display = 'none';
+                document.getElementById('chartsSection').style.display = 'none';
                 return;
             }
 
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('tableContainer').style.display = 'block';
             document.getElementById('footerActions').style.display = 'flex';
+            document.getElementById('chartsSection').style.display = 'grid';
 
+            // Atualiza KPIs
+            const kpis = KPICards.calculateFromData(dados, {
+                totalValue: 'valor',
+                totalQuantity: 'qtde',
+                totalWeight: 'peso',
+                count: true
+            });
+            window.kpiCards.setKPIs(kpis);
+
+            // Configura paginação
+            window.pagination.setData(dados);
+
+            // Renderiza gráficos
+            renderizarGraficos(dados);
+
+            // Atualiza total
+            const totalValor = dados.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
+            document.getElementById('totalValor').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('totalRegistros').textContent = `${dados.length} registro(s)`;
+        }
+
+        function renderizarTabela(pageData) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
-            let totalValor = 0;
-
-            dados.forEach(row => {
+            pageData.forEach(row => {
                 const tr = document.createElement('tr');
                 const valor = parseFloat(row.valor || 0);
-                totalValor += valor;
 
                 tr.innerHTML = `
                     <td>${row.cliente || '-'}</td>
@@ -663,14 +864,84 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }
 
-            document.getElementById('totalRegistros').textContent = `${dados.length} registro(s)`;
-            document.getElementById('totalValor').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        function renderizarGraficos(dados) {
+            // Top 10 Clientes
+            const top10 = dados.slice(0, 10);
+            const ctxClientes = document.getElementById('chartTopClientes');
+
+            if (window.chartTopClientes) {
+                window.chartTopClientes.destroy();
+            }
+
+            window.chartTopClientes = new Chart(ctxClientes, {
+                type: 'bar',
+                data: {
+                    labels: top10.map(d => (d.razao_social || d.cliente).substring(0, 20)),
+                    datasets: [{
+                        label: 'Quantidade',
+                        data: top10.map(d => parseFloat(d.qtde)),
+                        backgroundColor: 'rgba(252, 3, 3, 0.7)',
+                        borderColor: '#fc0303',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            // Vendas por Cidade (Top 5)
+            const cidadesMap = {};
+            dados.forEach(d => {
+                if (d.cidade) {
+                    cidadesMap[d.cidade] = (cidadesMap[d.cidade] || 0) + parseFloat(d.valor || 0);
+                }
+            });
+
+            const cidadesArray = Object.entries(cidadesMap)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            const ctxCidades = document.getElementById('chartCidades');
+
+            if (window.chartCidades) {
+                window.chartCidades.destroy();
+            }
+
+            window.chartCidades = new Chart(ctxCidades, {
+                type: 'pie',
+                data: {
+                    labels: cidadesArray.map(c => c[0]),
+                    datasets: [{
+                        data: cidadesArray.map(c => c[1]),
+                        backgroundColor: [
+                            'rgba(252, 3, 3, 0.8)',
+                            'rgba(181, 9, 9, 0.8)',
+                            'rgba(3, 255, 28, 0.8)',
+                            'rgba(255, 193, 7, 0.8)',
+                            'rgba(13, 110, 253, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
         }
 
         // Exportar dados
         window.exportarDados = async function() {
-            if (window.dadosAtuais.length === 0) {
+            if (window.dadosCompletos.length === 0) {
                 alert('Não há dados para exportar');
                 return;
             }
@@ -678,7 +949,7 @@
             try {
                 const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
 
-                const dados = window.dadosAtuais.map(row => ({
+                const dados = window.dadosCompletos.map(row => ({
                     'Cliente': row.cliente,
                     'Razão Social': row.razao_social,
                     'Cidade': row.cidade,
@@ -691,7 +962,11 @@
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, 'Análise de Produtos');
 
-                XLSX.writeFile(wb, `analise_produtos_${new Date().toISOString().split('T')[0]}.xlsx`);
+                const dataInicio = document.getElementById('dataInicio').value;
+                const dataFim = document.getElementById('dataFim').value;
+                const filename = `analise_produtos_${dataInicio}_${dataFim}.xlsx`;
+
+                XLSX.writeFile(wb, filename);
 
             } catch (error) {
                 console.error('Erro ao exportar:', error);
@@ -700,7 +975,12 @@
         };
 
         // Inicializar
-        window.addEventListener('load', carregarFiltros);
+        window.addEventListener('load', () => {
+            carregarFiltros();
+
+            // Mostra estatísticas do cache no console
+            console.log('📊 Cache Stats:', cache.getStats());
+        });
     </script>
 </body>
 </html>
