@@ -38,23 +38,23 @@ export function initDashboard(dashboardName) {
     });
 
     // Destrói gráficos Chart.js existentes
-    if (window.chartTopProdutos) {
+    if (window.chartTopProdutos && typeof window.chartTopProdutos.destroy === 'function') {
         window.chartTopProdutos.destroy();
         window.chartTopProdutos = null;
     }
-    if (window.chartCidades) {
+    if (window.chartCidades && typeof window.chartCidades.destroy === 'function') {
         window.chartCidades.destroy();
         window.chartCidades = null;
     }
-    if (window.chartTopClientes) {
+    if (window.chartTopClientes && typeof window.chartTopClientes.destroy === 'function') {
         window.chartTopClientes.destroy();
         window.chartTopClientes = null;
     }
-    if (window.chartDistribuicao) {
+    if (window.chartDistribuicao && typeof window.chartDistribuicao.destroy === 'function') {
         window.chartDistribuicao.destroy();
         window.chartDistribuicao = null;
     }
-    if (window.chartTop10) {
+    if (window.chartTop10 && typeof window.chartTop10.destroy === 'function') {
         window.chartTop10.destroy();
         window.chartTop10 = null;
     }
@@ -69,11 +69,21 @@ export function cleanupDashboard() {
     console.log('🧹 Limpando dados do dashboard atual...');
 
     // Limpa gráficos
-    if (window.chartTopProdutos) window.chartTopProdutos.destroy();
-    if (window.chartCidades) window.chartCidades.destroy();
-    if (window.chartTopClientes) window.chartTopClientes.destroy();
-    if (window.chartDistribuicao) window.chartDistribuicao.destroy();
-    if (window.chartTop10) window.chartTop10.destroy();
+    if (window.chartTopProdutos && typeof window.chartTopProdutos.destroy === 'function') {
+        window.chartTopProdutos.destroy();
+    }
+    if (window.chartCidades && typeof window.chartCidades.destroy === 'function') {
+        window.chartCidades.destroy();
+    }
+    if (window.chartTopClientes && typeof window.chartTopClientes.destroy === 'function') {
+        window.chartTopClientes.destroy();
+    }
+    if (window.chartDistribuicao && typeof window.chartDistribuicao.destroy === 'function') {
+        window.chartDistribuicao.destroy();
+    }
+    if (window.chartTop10 && typeof window.chartTop10.destroy === 'function') {
+        window.chartTop10.destroy();
+    }
 
     // Limpa paginação
     if (window.pagination) {
