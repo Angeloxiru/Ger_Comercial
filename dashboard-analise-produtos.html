@@ -458,6 +458,7 @@
                     <input type="date" id="dataFim">
                 </div>
                 <div class="quick-dates">
+                    <button class="quick-date-btn" onclick="setQuickDate('31dias')">Últimos 31 Dias</button>
                     <button class="quick-date-btn" onclick="setQuickDate('mes')">Mês Atual</button>
                     <button class="quick-date-btn" onclick="setQuickDate('trimestre')">Trimestre</button>
                     <button class="quick-date-btn" onclick="setQuickDate('ano')">Ano Atual</button>
@@ -765,6 +766,11 @@
             let inicio, fim;
 
             switch (period) {
+                case '31dias':
+                    inicio = new Date(hoje);
+                    inicio.setDate(hoje.getDate() - 31);
+                    fim = hoje;
+                    break;
                 case 'mes':
                     inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
                     fim = hoje;
