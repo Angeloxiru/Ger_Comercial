@@ -25,6 +25,23 @@
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .header-logo {
+            flex-shrink: 0;
+        }
+
+        .header-logo img {
+            height: 80px;
+            width: auto;
+        }
+
+        .header-content {
+            flex: 1;
+            text-align: center;
         }
 
         .header h1 {
@@ -119,6 +136,16 @@
         }
 
         @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                padding: 30px 20px;
+            }
+
+            .header-logo img {
+                height: 60px;
+            }
+
             .header h1 {
                 font-size: 1.8em;
             }
@@ -132,8 +159,13 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Dashboard Gerencial</h1>
-            <p>Sistema de Gerenciamento Comercial</p>
+            <div class="header-logo">
+                <img src="/wmwvendas/resources/images/logoSistemaLogin.png" alt="Logo Germani Alimentos">
+            </div>
+            <div class="header-content">
+                <h1>📊 Dashboard Germani Alimentos</h1>
+                <p>Sistema Integrado de Gerenciamento</p>
+            </div>
         </div>
 
         <div class="cards-grid">
