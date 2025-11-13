@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Produtos - Ger Comercial</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #dc143c;
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.6em;
+            font-weight: 600;
+        }
+
+        .btn-voltar {
+            background: white;
+            color: #dc143c;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-voltar:hover {
+            background: #f8f9fa;
+        }
+
+        .filters-section {
+            background: white;
+            padding: 24px;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .filters-title {
+            color: #212529;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            color: #495057;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 0.9em;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.95em;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #dc143c;
+            box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.1);
+        }
+
+        .filter-group select {
+            cursor: pointer;
+        }
+
+        .date-range {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .btn-atualizar {
+            background: #dc143c;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .btn-atualizar:hover {
+            background: #b8102e;
+        }
+
+        .btn-atualizar:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .results-section {
+            margin: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .results-header {
+            background: #ffd700;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .results-title {
+            color: #212529;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .results-stats {
+            display: flex;
+            gap: 20px;
+            color: #495057;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            color: #495057;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 600px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9em;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        th.text-right,
+        td.text-right {
+            text-align: right;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f1f3f5;
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        td {
+            padding: 12px 16px;
+            color: #212529;
+            font-size: 0.9em;
+        }
+
+        .footer-actions {
+            padding: 16px 20px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-export {
+            background: #ffd700;
+            color: #212529;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+
+        .btn-export:hover {
+            background: #ffc800;
+        }
+
+        .btn-export:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #dc143c;
+            font-weight: 500;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #dc143c;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 20px;
+            font-size: 0.9em;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .results-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .footer-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>📦 Análise de Produtos</h1>
+        <a href="index.html" class="btn-voltar">← Voltar</a>
+    </div>
+
+    <!-- Alerta de Configuração -->
+    <div id="configAlert" class="alert alert-warning" style="display: none;">
+        <strong>⚠️ Configuração Necessária!</strong><br>
+        Configure suas credenciais do Turso no arquivo <code>js/config.js</code>
+    </div>
+
+    <!-- Seção de Filtros -->
+    <div class="filters-section">
+        <div class="filters-title">
+            🔍 Filtros de Pesquisa
+        </div>
+
+        <div class="filters-grid">
+            <!-- Período -->
+            <div class="filter-group">
+                <label>📅 Período</label>
+                <div class="date-range">
+                    <input type="date" id="dataInicio" placeholder="Data Inicial">
+                    <input type="date" id="dataFim" placeholder="Data Final">
+                </div>
+            </div>
+
+            <!-- Origem -->
+            <div class="filter-group">
+                <label>🏭 Origem</label>
+                <select id="filtroOrigem" multiple size="3">
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+
+            <!-- Família -->
+            <div class="filter-group">
+                <label>📂 Família</label>
+                <select id="filtroFamilia" multiple size="3">
+                    <option value="">Selecione uma Origem primeiro</option>
+                </select>
+            </div>
+
+            <!-- Produto -->
+            <div class="filter-group">
+                <label>📦 Produto</label>
+                <select id="filtroProduto" multiple size="3">
+                    <option value="">Selecione Família ou Origem primeiro</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">
+            🔄 Atualizar Dados
+        </button>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Carregando dados...</div>
+    </div>
+
+    <!-- Seção de Resultados -->
+    <div class="results-section" id="resultsSection" style="display: none;">
+        <div class="results-header">
+            <div class="results-title">📊 Resultados</div>
+            <div class="results-stats">
+                <span id="totalRegistros">0 registros</span>
+            </div>
+        </div>
+
+        <!-- Estado Vazio -->
+        <div class="empty-state" id="emptyState">
+            <div class="empty-state-icon">📊</div>
+            <div class="empty-state-text">Selecione os filtros e clique em Atualizar</div>
+            <p>Configure os filtros acima para visualizar os dados de vendas por produto</p>
+        </div>
+
+        <!-- Tabela de Resultados -->
+        <div class="table-container" id="tableContainer" style="display: none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Razão Social</th>
+                        <th>Cidade</th>
+                        <th class="text-right">Qtde</th>
+                        <th class="text-right">Valor (R$)</th>
+                        <th class="text-right">Peso (kg)</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer com Botão de Exportação -->
+        <div class="footer-actions" id="footerActions" style="display: none;">
+            <div style="color: #495057; font-weight: 500;">
+                <strong id="totalValor">Total: R$ 0,00</strong>
+            </div>
+            <button class="btn-export" id="btnExportar" onclick="exportarDados()">
+                📊 Exportar
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from './js/db.js';
+        import { config } from './js/config.js';
+
+        window.db = db;
+        window.dadosAtuais = [];
+        window.todasOrigens = [];
+        window.todasFamilias = [];
+        window.todosProdutos = [];
+
+        // Verifica configuração
+        if (!config.authToken || config.authToken === 'SEU_TOKEN_AQUI') {
+            document.getElementById('configAlert').style.display = 'block';
+            document.getElementById('btnAtualizar').disabled = true;
+        }
+
+        // Carregar opções dos filtros
+        async function carregarFiltros() {
+            try {
+                if (!db.isConnected()) await db.connect();
+
+                // Carregar TODAS as Origens
+                const origens = await db.execute('SELECT DISTINCT desc_origem FROM tab_produto WHERE desc_origem IS NOT NULL ORDER BY desc_origem');
+                window.todasOrigens = origens.rows;
+                preencherSelect('filtroOrigem', origens.rows.map(o => o.desc_origem));
+
+                // Carregar TODAS as Famílias (para usar na cascata)
+                const familias = await db.execute('SELECT DISTINCT desc_familia, desc_origem FROM tab_produto WHERE desc_familia IS NOT NULL ORDER BY desc_familia');
+                window.todasFamilias = familias.rows;
+
+                // Carregar TODOS os Produtos (para usar na cascata)
+                const produtos = await db.execute('SELECT produto, desc_produto, desc_familia, desc_origem FROM tab_produto WHERE desc_produto IS NOT NULL ORDER BY desc_produto');
+                window.todosProdutos = produtos.rows;
+
+            } catch (error) {
+                console.error('Erro ao carregar filtros:', error);
+                alert('Erro ao carregar filtros: ' + error.message);
+            }
+        }
+
+        function preencherSelect(id, opcoes) {
+            const select = document.getElementById(id);
+            select.innerHTML = '';
+            if (opcoes.length === 0) {
+                select.innerHTML = '<option value="">Nenhuma opção disponível</option>';
+                select.disabled = true;
+            } else {
+                select.disabled = false;
+                opcoes.forEach(opcao => {
+                    const option = document.createElement('option');
+                    option.value = opcao;
+                    option.textContent = opcao;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        // CASCATA: Origem → Família → Produto
+        document.getElementById('filtroOrigem').addEventListener('change', function() {
+            const origensSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
+
+            // Limpar seleções dos filtros filhos
+            document.getElementById('filtroFamilia').selectedIndex = -1;
+            document.getElementById('filtroProduto').selectedIndex = -1;
+
+            if (origensSelecionadas.length === 0) {
+                // Se nenhuma origem selecionada, desabilitar Família e Produto
+                preencherSelect('filtroFamilia', []);
+                preencherSelect('filtroProduto', []);
+            } else {
+                // Filtrar Famílias das origens selecionadas
+                const familiasFiltradas = window.todasFamilias
+                    .filter(f => origensSelecionadas.includes(f.desc_origem))
+                    .map(f => f.desc_familia)
+                    .filter((value, index, self) => self.indexOf(value) === index); // unique
+
+                preencherSelect('filtroFamilia', familiasFiltradas);
+
+                // Filtrar Produtos das origens selecionadas
+                const produtosFiltrados = window.todosProdutos
+                    .filter(p => origensSelecionadas.includes(p.desc_origem))
+                    .map(p => p.desc_produto)
+                    .filter((value, index, self) => self.indexOf(value) === index); // unique
+
+                preencherSelect('filtroProduto', produtosFiltrados);
+            }
+        });
+
+        document.getElementById('filtroFamilia').addEventListener('change', function() {
+            const familiasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
+            const origensSelecionadas = Array.from(document.getElementById('filtroOrigem').selectedOptions).map(o => o.value);
+
+            // Limpar seleção de Produto
+            document.getElementById('filtroProduto').selectedIndex = -1;
+
+            if (familiasSelecionadas.length === 0) {
+                // Se nenhuma família, mostrar produtos das Origens selecionadas
+                if (origensSelecionadas.length > 0) {
+                    const produtosFiltrados = window.todosProdutos
+                        .filter(p => origensSelecionadas.includes(p.desc_origem))
+                        .map(p => p.desc_produto)
+                        .filter((value, index, self) => self.indexOf(value) === index);
+
+                    preencherSelect('filtroProduto', produtosFiltrados);
+                }
+            } else {
+                // Filtrar Produtos das Famílias selecionadas
+                const produtosFiltrados = window.todosProdutos
+                    .filter(p => familiasSelecionadas.includes(p.desc_familia))
+                    .map(p => p.desc_produto)
+                    .filter((value, index, self) => self.indexOf(value) === index);
+
+                preencherSelect('filtroProduto', produtosFiltrados);
+            }
+        });
+
+        // Atualizar dados
+        window.atualizarDados = async function() {
+            const dataInicio = document.getElementById('dataInicio').value;
+            const dataFim = document.getElementById('dataFim').value;
+            const origens = Array.from(document.getElementById('filtroOrigem').selectedOptions).map(o => o.value);
+            const familias = Array.from(document.getElementById('filtroFamilia').selectedOptions).map(o => o.value);
+            const produtos = Array.from(document.getElementById('filtroProduto').selectedOptions).map(o => o.value);
+
+            // Verificar se pelo menos o período foi selecionado
+            if (!dataInicio || !dataFim) {
+                alert('Por favor, selecione o período (data início e fim)');
+                return;
+            }
+
+            try {
+                document.getElementById('loading').classList.add('active');
+                document.getElementById('btnAtualizar').disabled = true;
+
+                if (!db.isConnected()) await db.connect();
+
+                // Construir query SQL com JOINs
+                let sql = `
+                    SELECT
+                        v.cliente,
+                        v.nome as razao_social,
+                        v.cidade,
+                        SUM(v.qtde_faturada) as qtde,
+                        SUM(v.valor_liquido) as valor,
+                        SUM(v.peso_liq) as peso
+                    FROM vendas v
+                    INNER JOIN tab_produto p ON v.produto = p.produto
+                    WHERE 1=1
+                `;
+
+                const params = [];
+
+                // Adicionar filtros
+                if (dataInicio) {
+                    sql += ' AND v.emissao >= ?';
+                    params.push(dataInicio);
+                }
+                if (dataFim) {
+                    sql += ' AND v.emissao <= ?';
+                    params.push(dataFim);
+                }
+                if (origens.length > 0) {
+                    sql += ` AND p.desc_origem IN (${origens.map(() => '?').join(',')})`;
+                    params.push(...origens);
+                }
+                if (familias.length > 0) {
+                    sql += ` AND p.desc_familia IN (${familias.map(() => '?').join(',')})`;
+                    params.push(...familias);
+                }
+                if (produtos.length > 0) {
+                    sql += ` AND p.desc_produto IN (${produtos.map(() => '?').join(',')})`;
+                    params.push(...produtos);
+                }
+
+                sql += ' GROUP BY v.cliente, v.nome, v.cidade ORDER BY qtde DESC';
+
+                const result = await db.execute(sql, params);
+                window.dadosAtuais = result.rows;
+
+                mostrarResultados(result.rows);
+
+            } catch (error) {
+                console.error('Erro ao buscar dados:', error);
+                alert('Erro ao buscar dados: ' + error.message);
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('btnAtualizar').disabled = false;
+            }
+        };
+
+        function mostrarResultados(dados) {
+            document.getElementById('resultsSection').style.display = 'block';
+
+            if (dados.length === 0) {
+                document.getElementById('emptyState').innerHTML = `
+                    <div class="empty-state-icon">🔍</div>
+                    <div class="empty-state-text">Nenhum resultado encontrado</div>
+                    <p>Tente ajustar os filtros de pesquisa</p>
+                `;
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('tableContainer').style.display = 'none';
+                document.getElementById('footerActions').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('tableContainer').style.display = 'block';
+            document.getElementById('footerActions').style.display = 'flex';
+
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            let totalValor = 0;
+
+            dados.forEach(row => {
+                const tr = document.createElement('tr');
+                const valor = parseFloat(row.valor || 0);
+                totalValor += valor;
+
+                tr.innerHTML = `
+                    <td>${row.cliente || '-'}</td>
+                    <td>${row.razao_social || '-'}</td>
+                    <td>${row.cidade || '-'}</td>
+                    <td class="text-right">${parseFloat(row.qtde || 0).toLocaleString('pt-BR')}</td>
+                    <td class="text-right">R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    <td class="text-right">${parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('totalRegistros').textContent = `${dados.length} registro(s)`;
+            document.getElementById('totalValor').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        }
+
+        // Exportar dados
+        window.exportarDados = async function() {
+            if (window.dadosAtuais.length === 0) {
+                alert('Não há dados para exportar');
+                return;
+            }
+
+            try {
+                const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
+
+                const dados = window.dadosAtuais.map(row => ({
+                    'Cliente': row.cliente,
+                    'Razão Social': row.razao_social,
+                    'Cidade': row.cidade,
+                    'Quantidade': parseFloat(row.qtde || 0),
+                    'Valor': parseFloat(row.valor || 0),
+                    'Peso': parseFloat(row.peso || 0)
+                }));
+
+                const ws = XLSX.utils.json_to_sheet(dados);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Análise de Produtos');
+
+                XLSX.writeFile(wb, `analise_produtos_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+            } catch (error) {
+                console.error('Erro ao exportar:', error);
+                alert('Erro ao exportar: ' + error.message);
+            }
+        };
+
+        // Inicializar
+        window.addEventListener('load', carregarFiltros);
+    </script>
+</body>
+</html>
