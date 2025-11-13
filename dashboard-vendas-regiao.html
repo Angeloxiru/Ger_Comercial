@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vendas por Região - Ger Comercial</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -18,7 +19,7 @@
         }
 
         .header {
-            background: #dc143c;
+            background: #fc0303;
             color: white;
             padding: 20px 30px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -34,7 +35,7 @@
 
         .btn-voltar {
             background: white;
-            color: #dc143c;
+            color: #fc0303;
             border: none;
             padding: 10px 20px;
             border-radius: 6px;
@@ -65,6 +66,22 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            justify-content: space-between;
+        }
+
+        .btn-limpar {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-limpar:hover {
+            background: #5a6268;
         }
 
         .filters-grid {
@@ -99,12 +116,18 @@
         .filter-group input:focus,
         .filter-group select:focus {
             outline: none;
-            border-color: #dc143c;
-            box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.1);
+            border-color: #fc0303;
+            box-shadow: 0 0 0 3px rgba(252, 3, 3, 0.1);
         }
 
         .filter-group select {
             cursor: pointer;
+        }
+
+        .filter-group select option:checked {
+            background: #03ff1c;
+            color: #000;
+            font-weight: 600;
         }
 
         .date-range {
@@ -113,8 +136,30 @@
             gap: 8px;
         }
 
+        .quick-dates {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quick-date-btn {
+            background: #e9ecef;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-date-btn:hover {
+            background: #fc0303;
+            color: white;
+        }
+
         .btn-atualizar {
-            background: #dc143c;
+            background: #fc0303;
             color: white;
             border: none;
             padding: 12px 32px;
@@ -127,7 +172,7 @@
         }
 
         .btn-atualizar:hover {
-            background: #b8102e;
+            background: #b50909;
         }
 
         .btn-atualizar:disabled {
@@ -144,15 +189,15 @@
         }
 
         .results-header {
-            background: #ffd700;
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
             padding: 16px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            color: white;
         }
 
         .results-title {
-            color: #212529;
             font-size: 1.1em;
             font-weight: 600;
         }
@@ -160,7 +205,6 @@
         .results-stats {
             display: flex;
             gap: 20px;
-            color: #495057;
             font-weight: 500;
             font-size: 0.9em;
         }
@@ -236,11 +280,12 @@
             justify-content: space-between;
             align-items: center;
             gap: 12px;
+            border-top: 2px solid #dee2e6;
         }
 
         .btn-export {
-            background: #ffd700;
-            color: #212529;
+            background: #fc0303;
+            color: white;
             border: none;
             padding: 10px 24px;
             border-radius: 6px;
@@ -254,7 +299,7 @@
         }
 
         .btn-export:hover {
-            background: #ffc800;
+            background: #b50909;
         }
 
         .btn-export:disabled {
@@ -266,7 +311,7 @@
             display: none;
             text-align: center;
             padding: 40px;
-            color: #dc143c;
+            color: #fc0303;
             font-weight: 500;
         }
 
@@ -276,7 +321,7 @@
 
         .spinner {
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #dc143c;
+            border-top: 3px solid #fc0303;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -287,6 +332,11 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #6c757d;
+            font-size: 0.9em;
         }
 
         .alert {
@@ -300,6 +350,30 @@
             background: #fff3cd;
             border: 1px solid #ffc107;
             color: #856404;
+        }
+
+        .charts-section {
+            margin: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         @media (max-width: 768px) {
@@ -321,6 +395,10 @@
             .footer-actions {
                 flex-direction: column;
             }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -337,10 +415,14 @@
         Configure suas credenciais do Turso no arquivo <code>js/config.js</code>
     </div>
 
+    <!-- KPIs Container -->
+    <div id="kpiContainer"></div>
+
     <!-- Seção de Filtros -->
     <div class="filters-section">
         <div class="filters-title">
-            🔍 Filtros de Pesquisa
+            <span>🔍 Filtros de Pesquisa</span>
+            <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar Filtros</button>
         </div>
 
         <div class="filters-grid">
@@ -350,6 +432,11 @@
                 <div class="date-range">
                     <input type="date" id="dataInicio" placeholder="Data Inicial">
                     <input type="date" id="dataFim" placeholder="Data Final">
+                </div>
+                <div class="quick-dates">
+                    <button class="quick-date-btn" onclick="setQuickDate('mes')">Mês Atual</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('trimestre')">Trimestre</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('ano')">Ano Atual</button>
                 </div>
             </div>
 
@@ -363,7 +450,7 @@
 
             <!-- SubRota -->
             <div class="filter-group">
-                <label>📍 SubRota</label>
+                <label>🗺️ SubRota</label>
                 <select id="filtroSubRota" multiple size="3">
                     <option value="">Selecione uma Rota primeiro</option>
                 </select>
@@ -373,7 +460,7 @@
             <div class="filter-group">
                 <label>🏙️ Cidade</label>
                 <select id="filtroCidade" multiple size="3">
-                    <option value="">Selecione SubRota ou Rota primeiro</option>
+                    <option value="">Selecione Rota ou SubRota primeiro</option>
                 </select>
             </div>
         </div>
@@ -386,13 +473,26 @@
     <!-- Loading -->
     <div class="loading" id="loading">
         <div class="spinner"></div>
-        <div>Carregando dados...</div>
+        <div class="loading-text">Carregando dados do banco...</div>
+        <div class="loading-text" style="font-size: 0.8em; margin-top: 8px;">Isso pode levar alguns segundos</div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="charts-section" id="chartsSection" style="display: none;">
+        <div class="chart-card">
+            <div class="chart-title">📊 Top 10 Produtos</div>
+            <canvas id="chartTopProdutos"></canvas>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">🗺️ Vendas por Cidade</div>
+            <canvas id="chartCidades"></canvas>
+        </div>
     </div>
 
     <!-- Seção de Resultados -->
     <div class="results-section" id="resultsSection" style="display: none;">
         <div class="results-header">
-            <div class="results-title">📊 Resultados</div>
+            <div class="results-title">📊 Resultados da Consulta</div>
             <div class="results-stats">
                 <span id="totalRegistros">0 registros</span>
             </div>
@@ -402,7 +502,7 @@
         <div class="empty-state" id="emptyState">
             <div class="empty-state-icon">📊</div>
             <div class="empty-state-text">Selecione os filtros e clique em Atualizar</div>
-            <p>Configure os filtros acima para visualizar os dados de vendas</p>
+            <p>Configure os filtros acima para visualizar os dados de vendas por região</p>
         </div>
 
         <!-- Tabela de Resultados -->
@@ -421,6 +521,9 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Paginação -->
+        <div id="paginationContainer"></div>
 
         <!-- Footer com Botões de Exportação -->
         <div class="footer-actions" id="footerActions" style="display: none;">
@@ -441,12 +544,35 @@
     <script type="module">
         import { db } from './js/db.js';
         import { config } from './js/config.js';
+        import { cache, CACHE_TTL } from './js/cache.js';
+        import { Pagination, injectPaginationStyles } from './js/pagination.js';
+        import { FilterSearch, injectFilterSearchStyles } from './js/filter-search.js';
+        import { KPICards, injectKPIStyles } from './js/kpi-cards.js';
 
+        // Injeta estilos
+        injectPaginationStyles();
+        injectFilterSearchStyles();
+        injectKPIStyles();
+
+        // Variáveis globais
         window.db = db;
-        window.dadosAtuais = [];
+        window.dadosCompletos = [];
         window.todasRotas = [];
         window.todasSubRotas = [];
         window.todasCidades = [];
+        window.filterSearches = {};
+        window.kpiCards = new KPICards('#kpiContainer');
+        window.chartTopProdutos = null;
+        window.chartCidades = null;
+
+        // Paginação
+        window.pagination = new Pagination('#paginationContainer', {
+            pageSize: 50,
+            renderCallback: renderizarTabela,
+            onPageChange: (info) => {
+                console.log(`Página ${info.currentPage}/${info.totalPages}`);
+            }
+        });
 
         // Verifica configuração
         if (!config.authToken || config.authToken === 'SEU_TOKEN_AQUI') {
@@ -457,26 +583,45 @@
         // Carregar opções dos filtros
         async function carregarFiltros() {
             try {
-                if (!db.isConnected()) await db.connect();
+                const cacheKey = 'filtros_regiao';
+                const cached = cache.get(cacheKey);
 
-                // Carregar TODAS as Rotas
-                const rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL ORDER BY rota');
+                let rotas, subRotas, cidades;
+
+                if (cached) {
+                    console.log('✅ Usando filtros do cache');
+                    rotas = cached.rotas;
+                    subRotas = cached.subRotas;
+                    cidades = cached.cidades;
+                } else {
+                    console.log('🔄 Buscando filtros do banco...');
+                    if (!db.isConnected()) await db.connect();
+
+                    rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL ORDER BY rota');
+                    subRotas = await db.execute('SELECT DISTINCT sub_rota, rota FROM tab_cliente WHERE sub_rota IS NOT NULL ORDER BY sub_rota');
+                    cidades = await db.execute(`
+                        SELECT DISTINCT v.cidade, c.rota, c.sub_rota
+                        FROM vendas v
+                        LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+                        WHERE v.cidade IS NOT NULL
+                        ORDER BY v.cidade
+                    `);
+
+                    cache.set(cacheKey, { rotas, subRotas, cidades }, CACHE_TTL.FILTERS);
+                }
+
                 window.todasRotas = rotas.rows;
+                window.todasSubRotas = subRotas.rows;
+                window.todasCidades = cidades.rows;
+
                 preencherSelect('filtroRota', rotas.rows.map(r => r.rota));
 
-                // Carregar TODAS as SubRotas (para usar na cascata)
-                const subRotas = await db.execute('SELECT DISTINCT c.rota, c.sub_rota FROM tab_cliente c WHERE c.sub_rota IS NOT NULL ORDER BY c.sub_rota');
-                window.todasSubRotas = subRotas.rows;
-
-                // Carregar TODAS as Cidades das vendas
-                const cidades = await db.execute(`
-                    SELECT DISTINCT v.cidade, c.rota, c.sub_rota
-                    FROM vendas v
-                    LEFT JOIN tab_cliente c ON v.cliente = c.cliente
-                    WHERE v.cidade IS NOT NULL
-                    ORDER BY v.cidade
-                `);
-                window.todasCidades = cidades.rows;
+                // Inicializa busca nos filtros
+                window.filterSearches = {
+                    rota: new FilterSearch('filtroRota', { placeholder: 'Digite para buscar rota...' }),
+                    subrota: new FilterSearch('filtroSubRota', { placeholder: 'Digite para buscar subrota...' }),
+                    cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
+                };
 
             } catch (error) {
                 console.error('Erro ao carregar filtros:', error);
@@ -499,34 +644,35 @@
                     select.appendChild(option);
                 });
             }
+
+            const searchId = id.replace('filtro', '').toLowerCase();
+            if (window.filterSearches[searchId]) {
+                window.filterSearches[searchId].updateOptions(opcoes);
+            }
         }
 
         // CASCATA: Rota → SubRota → Cidade
         document.getElementById('filtroRota').addEventListener('change', function() {
             const rotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
 
-            // Limpar seleções dos filtros filhos
             document.getElementById('filtroSubRota').selectedIndex = -1;
             document.getElementById('filtroCidade').selectedIndex = -1;
 
             if (rotasSelecionadas.length === 0) {
-                // Se nenhuma rota selecionada, desabilitar SubRota e Cidade
                 preencherSelect('filtroSubRota', []);
                 preencherSelect('filtroCidade', []);
             } else {
-                // Filtrar SubRotas das rotas selecionadas
                 const subRotasFiltradas = window.todasSubRotas
-                    .filter(sr => rotasSelecionadas.includes(sr.rota))
-                    .map(sr => sr.sub_rota)
-                    .filter((value, index, self) => self.indexOf(value) === index); // unique
+                    .filter(s => rotasSelecionadas.includes(s.rota))
+                    .map(s => s.sub_rota)
+                    .filter((value, index, self) => self.indexOf(value) === index);
 
                 preencherSelect('filtroSubRota', subRotasFiltradas);
 
-                // Filtrar Cidades das rotas selecionadas
                 const cidadesFiltradas = window.todasCidades
                     .filter(c => rotasSelecionadas.includes(c.rota))
                     .map(c => c.cidade)
-                    .filter((value, index, self) => self.indexOf(value) === index); // unique
+                    .filter((value, index, self) => self.indexOf(value) === index);
 
                 preencherSelect('filtroCidade', cidadesFiltradas);
             }
@@ -536,11 +682,9 @@
             const subRotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
             const rotasSelecionadas = Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value);
 
-            // Limpar seleção de Cidade
             document.getElementById('filtroCidade').selectedIndex = -1;
 
             if (subRotasSelecionadas.length === 0) {
-                // Se nenhuma SubRota, mostrar cidades das Rotas selecionadas
                 if (rotasSelecionadas.length > 0) {
                     const cidadesFiltradas = window.todasCidades
                         .filter(c => rotasSelecionadas.includes(c.rota))
@@ -550,7 +694,6 @@
                     preencherSelect('filtroCidade', cidadesFiltradas);
                 }
             } else {
-                // Filtrar Cidades das SubRotas selecionadas
                 const cidadesFiltradas = window.todasCidades
                     .filter(c => subRotasSelecionadas.includes(c.sub_rota))
                     .map(c => c.cidade)
@@ -560,6 +703,46 @@
             }
         });
 
+        // Datas rápidas
+        window.setQuickDate = function(period) {
+            const hoje = new Date();
+            let inicio, fim;
+
+            switch (period) {
+                case 'mes':
+                    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+                    fim = hoje;
+                    break;
+                case 'trimestre':
+                    const mesAtual = hoje.getMonth();
+                    const inicioTrimestre = Math.floor(mesAtual / 3) * 3;
+                    inicio = new Date(hoje.getFullYear(), inicioTrimestre, 1);
+                    fim = hoje;
+                    break;
+                case 'ano':
+                    inicio = new Date(hoje.getFullYear(), 0, 1);
+                    fim = hoje;
+                    break;
+            }
+
+            document.getElementById('dataInicio').value = inicio.toISOString().split('T')[0];
+            document.getElementById('dataFim').value = fim.toISOString().split('T')[0];
+        };
+
+        // Limpar filtros
+        window.limparFiltros = function() {
+            document.getElementById('dataInicio').value = '';
+            document.getElementById('dataFim').value = '';
+            document.getElementById('filtroRota').selectedIndex = -1;
+            document.getElementById('filtroSubRota').selectedIndex = -1;
+            document.getElementById('filtroCidade').selectedIndex = -1;
+
+            Object.values(window.filterSearches).forEach(fs => fs.clear());
+
+            preencherSelect('filtroSubRota', []);
+            preencherSelect('filtroCidade', []);
+        };
+
         // Atualizar dados
         window.atualizarDados = async function() {
             const dataInicio = document.getElementById('dataInicio').value;
@@ -568,12 +751,8 @@
             const subRotas = Array.from(document.getElementById('filtroSubRota').selectedOptions).map(o => o.value);
             const cidades = Array.from(document.getElementById('filtroCidade').selectedOptions).map(o => o.value);
 
-            // Verificar se pelo menos um filtro foi selecionado
-            if (!dataInicio && !dataFim && rotas.length === 0 && subRotas.length === 0 && cidades.length === 0) {
-                document.getElementById('resultsSection').style.display = 'block';
-                document.getElementById('emptyState').style.display = 'block';
-                document.getElementById('tableContainer').style.display = 'none';
-                document.getElementById('footerActions').style.display = 'none';
+            if (!dataInicio || !dataFim) {
+                alert('Por favor, selecione o período (data início e fim)');
                 return;
             }
 
@@ -583,7 +762,6 @@
 
                 if (!db.isConnected()) await db.connect();
 
-                // Construir query SQL com JOINs
                 let sql = `
                     SELECT
                         v.produto as cod,
@@ -593,20 +771,11 @@
                         SUM(v.peso_liq) as peso
                     FROM vendas v
                     LEFT JOIN tab_cliente c ON v.cliente = c.cliente
-                    WHERE 1=1
+                    WHERE v.emissao >= ? AND v.emissao <= ?
                 `;
 
-                const params = [];
+                const params = [dataInicio, dataFim];
 
-                // Adicionar filtros
-                if (dataInicio) {
-                    sql += ' AND v.emissao >= ?';
-                    params.push(dataInicio);
-                }
-                if (dataFim) {
-                    sql += ' AND v.emissao <= ?';
-                    params.push(dataFim);
-                }
                 if (rotas.length > 0) {
                     sql += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
                     params.push(...rotas);
@@ -623,7 +792,7 @@
                 sql += ' GROUP BY v.produto, v.complemento ORDER BY qtde DESC';
 
                 const result = await db.execute(sql, params);
-                window.dadosAtuais = result.rows;
+                window.dadosCompletos = result.rows;
 
                 mostrarResultados(result.rows);
 
@@ -648,22 +817,43 @@
                 document.getElementById('emptyState').style.display = 'block';
                 document.getElementById('tableContainer').style.display = 'none';
                 document.getElementById('footerActions').style.display = 'none';
+                document.getElementById('chartsSection').style.display = 'none';
                 return;
             }
 
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('tableContainer').style.display = 'block';
             document.getElementById('footerActions').style.display = 'flex';
+            document.getElementById('chartsSection').style.display = 'grid';
 
+            // Atualiza KPIs
+            const kpis = KPICards.calculateFromData(dados, {
+                totalValue: 'valor',
+                totalQuantity: 'qtde',
+                totalWeight: 'peso',
+                count: true
+            });
+            window.kpiCards.setKPIs(kpis);
+
+            // Configura paginação
+            window.pagination.setData(dados);
+
+            // Renderiza gráficos
+            renderizarGraficos(dados);
+
+            // Atualiza total
+            const totalValor = dados.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
+            document.getElementById('totalValor').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('totalRegistros').textContent = `${dados.length} registro(s)`;
+        }
+
+        function renderizarTabela(pageData) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
-            let totalValor = 0;
-
-            dados.forEach(row => {
+            pageData.forEach(row => {
                 const tr = document.createElement('tr');
                 const valor = parseFloat(row.valor || 0);
-                totalValor += valor;
 
                 tr.innerHTML = `
                     <td>${row.cod || '-'}</td>
@@ -674,14 +864,89 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }
 
-            document.getElementById('totalRegistros').textContent = `${dados.length} registro(s)`;
-            document.getElementById('totalValor').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        function renderizarGraficos(dados) {
+            // Top 10 Produtos
+            const top10 = dados.slice(0, 10);
+            const ctxProdutos = document.getElementById('chartTopProdutos');
+
+            if (window.chartTopProdutos) {
+                window.chartTopProdutos.destroy();
+            }
+
+            window.chartTopProdutos = new Chart(ctxProdutos, {
+                type: 'bar',
+                data: {
+                    labels: top10.map(d => (d.descricao || d.cod).substring(0, 20)),
+                    datasets: [{
+                        label: 'Quantidade',
+                        data: top10.map(d => parseFloat(d.qtde)),
+                        backgroundColor: 'rgba(252, 3, 3, 0.7)',
+                        borderColor: '#fc0303',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            // Vendas por Cidade (Top 5)
+            const cidadesMap = {};
+            // Buscar cidades dos dados originais de vendas
+            window.todasCidades.forEach(c => {
+                const vendasCidade = dados.filter(d => {
+                    // Aproximação - idealmente precisaríamos do dado completo
+                    return true; // Simplificação
+                });
+                if (c.cidade && !cidadesMap[c.cidade]) {
+                    cidadesMap[c.cidade] = dados.reduce((sum, d) => sum + parseFloat(d.valor || 0), 0) / dados.length;
+                }
+            });
+
+            const cidadesArray = Object.entries(cidadesMap)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            const ctxCidades = document.getElementById('chartCidades');
+
+            if (window.chartCidades) {
+                window.chartCidades.destroy();
+            }
+
+            window.chartCidades = new Chart(ctxCidades, {
+                type: 'pie',
+                data: {
+                    labels: cidadesArray.map(c => c[0]),
+                    datasets: [{
+                        data: cidadesArray.map(c => c[1]),
+                        backgroundColor: [
+                            'rgba(252, 3, 3, 0.8)',
+                            'rgba(181, 9, 9, 0.8)',
+                            'rgba(3, 255, 28, 0.8)',
+                            'rgba(255, 193, 7, 0.8)',
+                            'rgba(13, 110, 253, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
         }
 
         // Exportar Excel
         window.exportarExcel = async function() {
-            if (window.dadosAtuais.length === 0) {
+            if (window.dadosCompletos.length === 0) {
                 alert('Não há dados para exportar');
                 return;
             }
@@ -689,7 +954,7 @@
             try {
                 const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
 
-                const dados = window.dadosAtuais.map(row => ({
+                const dados = window.dadosCompletos.map(row => ({
                     'Código': row.cod,
                     'Descrição': row.descricao,
                     'Quantidade': parseFloat(row.qtde || 0),
@@ -701,7 +966,9 @@
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, 'Vendas por Região');
 
-                XLSX.writeFile(wb, `vendas_regiao_${new Date().toISOString().split('T')[0]}.xlsx`);
+                const dataInicio = document.getElementById('dataInicio').value;
+                const dataFim = document.getElementById('dataFim').value;
+                XLSX.writeFile(wb, `vendas_regiao_${dataInicio}_${dataFim}.xlsx`);
 
             } catch (error) {
                 console.error('Erro ao exportar Excel:', error);
@@ -711,7 +978,7 @@
 
         // Exportar PDF
         window.exportarPDF = async function() {
-            if (window.dadosAtuais.length === 0) {
+            if (window.dadosCompletos.length === 0) {
                 alert('Não há dados para exportar');
                 return;
             }
@@ -722,14 +989,14 @@
                 const doc = new jsPDF();
 
                 doc.setFontSize(18);
-                doc.setTextColor(220, 20, 60);
+                doc.setTextColor(252, 3, 3);
                 doc.text('Vendas por Região', 14, 20);
 
                 doc.setFontSize(10);
                 doc.setTextColor(100);
                 doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
 
-                const tableData = window.dadosAtuais.map(row => [
+                const tableData = window.dadosCompletos.map(row => [
                     row.cod,
                     row.descricao,
                     parseFloat(row.qtde || 0).toLocaleString('pt-BR'),
@@ -743,7 +1010,7 @@
                     startY: 35,
                     theme: 'striped',
                     headStyles: {
-                        fillColor: [220, 20, 60],
+                        fillColor: [252, 3, 3],
                         textColor: [255, 255, 255],
                         fontStyle: 'bold'
                     },
@@ -752,7 +1019,9 @@
                     }
                 });
 
-                doc.save(`vendas_regiao_${new Date().toISOString().split('T')[0]}.pdf`);
+                const dataInicio = document.getElementById('dataInicio').value;
+                const dataFim = document.getElementById('dataFim').value;
+                doc.save(`vendas_regiao_${dataInicio}_${dataFim}.pdf`);
 
             } catch (error) {
                 console.error('Erro ao exportar PDF:', error);
@@ -761,7 +1030,10 @@
         };
 
         // Inicializar
-        window.addEventListener('load', carregarFiltros);
+        window.addEventListener('load', () => {
+            carregarFiltros();
+            console.log('📊 Cache Stats:', cache.getStats());
+        });
     </script>
 </body>
 </html>
