@@ -26,6 +26,18 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-logo img {
+            height: 60px;
+            width: auto;
         }
 
         .header h1 {
@@ -127,7 +139,7 @@
 
         .date-range {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 8px;
         }
 
@@ -415,7 +427,12 @@
 <body>
     <!-- Header -->
     <div class="header">
-        <h1>📍 Vendas por Região</h1>
+        <div class="header-left">
+            <div class="header-logo">
+                <img src="https://static.wixstatic.com/media/ce3165_c01db19c0ef64e2abb8c894c7ecc6f95~mv2.png/v1/fill/w_161,h_69,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/logomarca-Germani-2023-Branca-borda-dour.png" alt="Logo Germani Alimentos">
+            </div>
+            <h1>📍 Vendas por Região</h1>
+        </div>
         <a href="index.html" class="btn-voltar">← Voltar</a>
     </div>
 
@@ -978,7 +995,9 @@
             }
         };
 
+        // Carrega filtros na primeira vez E ao voltar (pageshow para bfcache)
         window.addEventListener('load', carregarFiltros);
+        window.addEventListener('pageshow', carregarFiltros);
     </script>
 </body>
 </html>

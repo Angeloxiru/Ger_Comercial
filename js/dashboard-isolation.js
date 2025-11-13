@@ -12,12 +12,8 @@ const DASHBOARD_ID = window.location.pathname;
 export function initDashboard(dashboardName) {
     console.log(`🚀 Inicializando dashboard: ${dashboardName}`);
 
-    // Evita inicializar mais de uma vez o mesmo dashboard
-    if (window._currentDashboard === dashboardName) {
-        console.log(`⏭️ Dashboard ${dashboardName} já inicializado, pulando...`);
-        return;
-    }
-
+    // Remove a verificação de dashboard já inicializado
+    // para permitir reinicialização ao voltar
     window._currentDashboard = dashboardName;
 
     // Limpa apenas dados de RESULTADOS (não filtros!)

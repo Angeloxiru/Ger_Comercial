@@ -25,6 +25,18 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-logo img {
+            height: 60px;
+            width: auto;
         }
 
         .header h1 {
@@ -114,7 +126,7 @@
 
         .date-range {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 8px;
         }
 
@@ -422,7 +434,12 @@
 <body>
     <!-- Header -->
     <div class="header">
-        <h1>👥 Vendas por Equipe Comercial</h1>
+        <div class="header-left">
+            <div class="header-logo">
+                <img src="https://static.wixstatic.com/media/ce3165_c01db19c0ef64e2abb8c894c7ecc6f95~mv2.png/v1/fill/w_161,h_69,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/logomarca-Germani-2023-Branca-borda-dour.png" alt="Logo Germani Alimentos">
+            </div>
+            <h1>👥 Vendas por Equipe Comercial</h1>
+        </div>
         <a href="index.html" class="btn-voltar">← Voltar</a>
     </div>
 
@@ -660,9 +677,11 @@
                 preencherSelect('filtroSupervisor', supervisores.rows.map(s => s.rep_supervisor));
 
                 // Adicionar FilterSearch aos selects
-                new FilterSearch('filtroSupervisor', { placeholder: 'Digite para buscar supervisor...' });
-                new FilterSearch('filtroRepresentante', { placeholder: 'Digite para buscar representante...' });
-                new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' });
+                window.filterSearches = {
+                    supervisor: new FilterSearch('filtroSupervisor', { placeholder: 'Digite para buscar supervisor...' }),
+                    representante: new FilterSearch('filtroRepresentante', { placeholder: 'Digite para buscar representante...' }),
+                    cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
+                };
 
             } catch (error) {
                 console.error('Erro ao carregar filtros:', error);
@@ -684,6 +703,12 @@
                     option.textContent = opcao;
                     select.appendChild(option);
                 });
+            }
+
+            // Atualiza FilterSearch se existir
+            const searchId = id.replace('filtro', '').toLowerCase();
+            if (window.filterSearches && window.filterSearches[searchId]) {
+                window.filterSearches[searchId].updateOptions(opcoes);
             }
         }
 
@@ -1056,8 +1081,9 @@
             }
         };
 
-        // Inicializar
+        // Inicializar - carrega filtros na primeira vez E ao voltar (pageshow para bfcache)
         window.addEventListener('load', carregarFiltros);
+        window.addEventListener('pageshow', carregarFiltros);
     </script>
 </body>
 </html>

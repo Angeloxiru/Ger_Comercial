@@ -25,13 +25,14 @@
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             margin-bottom: 40px;
-            display: flex;
+            display: grid;
+            grid-template-columns: 150px 1fr 150px;
             align-items: center;
             gap: 30px;
         }
 
         .header-logo {
-            flex-shrink: 0;
+            justify-self: start;
         }
 
         .header-logo img {
@@ -40,8 +41,8 @@
         }
 
         .header-content {
-            flex: 1;
             text-align: center;
+            justify-self: center;
         }
 
         .header h1 {
