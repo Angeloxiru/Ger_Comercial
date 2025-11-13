@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Análise de Produtos - Ger Comercial</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -19,7 +18,7 @@
         }
 
         .header {
-            background: #fc0303;
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
             color: white;
             padding: 20px 30px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -127,7 +126,6 @@
         .filter-group select option:checked {
             background: #03ff1c;
             color: #000;
-            font-weight: 600;
         }
 
         .date-range {
@@ -159,7 +157,7 @@
         }
 
         .btn-atualizar {
-            background: #fc0303;
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
             color: white;
             border: none;
             padding: 12px 32px;
@@ -172,23 +170,36 @@
         }
 
         .btn-atualizar:hover {
-            background: #b50909;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(252, 3, 3, 0.3);
         }
 
         .btn-atualizar:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+            transform: none;
         }
 
-        .results-section {
+        /* NOVO LAYOUT: 70% Tabela / 30% Dashboard */
+        .main-content {
+            display: grid;
+            grid-template-columns: 70% 30%;
+            gap: 20px;
             margin: 20px;
+            min-height: calc(100vh - 400px);
+        }
+
+        /* SEÇÃO DA TABELA (70%) */
+        .table-section {
+            display: flex;
+            flex-direction: column;
             background: white;
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
 
-        .results-header {
+        .table-header {
             background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
             padding: 16px 20px;
             display: flex;
@@ -197,39 +208,20 @@
             color: white;
         }
 
-        .results-title {
+        .table-title {
             font-size: 1.1em;
             font-weight: 600;
         }
 
-        .results-stats {
-            display: flex;
-            gap: 20px;
+        .table-stats {
             font-weight: 500;
             font-size: 0.9em;
         }
 
-        .empty-state {
-            padding: 60px 20px;
-            text-align: center;
-            color: #6c757d;
-        }
-
-        .empty-state-icon {
-            font-size: 3em;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
-
-        .empty-state-text {
-            font-size: 1.1em;
-            margin-bottom: 8px;
-            color: #495057;
-        }
-
         .table-container {
-            overflow-x: auto;
-            max-height: 600px;
+            flex: 1;
+            overflow-y: auto;
+            max-height: calc(25 * 44px + 50px); /* 25 linhas + header */
         }
 
         table {
@@ -273,7 +265,7 @@
             font-size: 0.9em;
         }
 
-        .footer-actions {
+        .table-footer {
             padding: 16px 20px;
             background: #f8f9fa;
             display: flex;
@@ -281,6 +273,12 @@
             align-items: center;
             gap: 12px;
             border-top: 2px solid #dee2e6;
+        }
+
+        .total-value {
+            color: #212529;
+            font-weight: 700;
+            font-size: 1.1em;
         }
 
         .btn-export {
@@ -300,11 +298,77 @@
 
         .btn-export:hover {
             background: #b50909;
+            transform: translateY(-1px);
         }
 
-        .btn-export:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        /* SEÇÃO DO DASHBOARD (30%) */
+        .dashboard-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-color: #fc0303;
+        }
+
+        .kpi-icon {
+            font-size: 2em;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .kpi-label {
+            color: #6c757d;
+            font-size: 0.75em;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .kpi-value {
+            color: #212529;
+            font-size: 1.5em;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            color: #495057;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
         }
 
         .loading {
@@ -352,53 +416,22 @@
             color: #856404;
         }
 
-        .charts-section {
-            margin: 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 20px;
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #6c757d;
         }
 
-        .chart-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .chart-title {
-            font-size: 1.1em;
-            font-weight: 600;
-            color: #212529;
+        .empty-state-icon {
+            font-size: 3em;
             margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            opacity: 0.5;
         }
 
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 12px;
-                text-align: center;
-            }
-
-            .filters-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .results-header {
-                flex-direction: column;
-                gap: 12px;
-            }
-
-            .footer-actions {
-                flex-direction: column;
-            }
-
-            .charts-section {
-                grid-template-columns: 1fr;
-            }
+        /* Paginação */
+        #paginationContainer {
+            padding: 12px 20px;
+            border-top: 1px solid #dee2e6;
         }
     </style>
 </head>
@@ -415,9 +448,6 @@
         Configure suas credenciais do Turso no arquivo <code>js/config.js</code>
     </div>
 
-    <!-- KPIs Container -->
-    <div id="kpiContainer"></div>
-
     <!-- Seção de Filtros -->
     <div class="filters-section">
         <div class="filters-title">
@@ -430,8 +460,8 @@
             <div class="filter-group">
                 <label>📅 Período</label>
                 <div class="date-range">
-                    <input type="date" id="dataInicio" placeholder="Data Inicial">
-                    <input type="date" id="dataFim" placeholder="Data Final">
+                    <input type="date" id="dataInicio">
+                    <input type="date" id="dataFim">
                 </div>
                 <div class="quick-dates">
                     <button class="quick-date-btn" onclick="setQuickDate('mes')">Mês Atual</button>
@@ -477,78 +507,105 @@
         <div class="loading-text" style="font-size: 0.8em; margin-top: 8px;">Isso pode levar alguns segundos</div>
     </div>
 
-    <!-- Gráficos -->
-    <div class="charts-section" id="chartsSection" style="display: none;">
-        <div class="chart-card">
-            <div class="chart-title">📊 Top 10 Clientes</div>
-            <canvas id="chartTopClientes"></canvas>
+    <!-- NOVO LAYOUT: 70% Tabela / 30% Dashboard -->
+    <div class="main-content" id="mainContent" style="display: none;">
+        <!-- SEÇÃO DA TABELA (70%) -->
+        <div class="table-section">
+            <div class="table-header">
+                <div class="table-title">📊 Resultados da Consulta</div>
+                <div class="table-stats" id="tableStats">0 registros</div>
+            </div>
+
+            <div class="table-container" id="tableContainer">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Razão Social</th>
+                            <th>Cidade</th>
+                            <th class="text-right">Qtde</th>
+                            <th class="text-right">Valor (R$)</th>
+                            <th class="text-right">Peso (kg)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginação -->
+            <div id="paginationContainer"></div>
+
+            <div class="table-footer">
+                <div class="total-value" id="totalValue">Total: R$ 0,00</div>
+                <button class="btn-export" onclick="exportarDados()">
+                    📊 Exportar Excel
+                </button>
+            </div>
         </div>
-        <div class="chart-card">
-            <div class="chart-title">🗺️ Vendas por Cidade</div>
-            <canvas id="chartCidades"></canvas>
+
+        <!-- SEÇÃO DO DASHBOARD (30%) -->
+        <div class="dashboard-section">
+            <!-- KPIs 2x2 -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon">💰</div>
+                    <div class="kpi-label">Valor Total</div>
+                    <div class="kpi-value" id="kpiValor">R$ 0,00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">📦</div>
+                    <div class="kpi-label">Quantidade</div>
+                    <div class="kpi-value" id="kpiQtde">0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">⚖️</div>
+                    <div class="kpi-label">Peso Total</div>
+                    <div class="kpi-value" id="kpiPeso">0 kg</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">📊</div>
+                    <div class="kpi-label">Total Registros</div>
+                    <div class="kpi-value" id="kpiRegistros">0</div>
+                </div>
+            </div>
+
+            <!-- Gráfico 1: Top 10 Clientes -->
+            <div class="chart-card">
+                <div class="chart-title">📊 Top 10 Clientes</div>
+                <div class="chart-container">
+                    <canvas id="chartTopClientes"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico 2: Vendas por Cidade -->
+            <div class="chart-card">
+                <div class="chart-title">🗺️ Vendas por Cidade (Top 5)</div>
+                <div class="chart-container">
+                    <canvas id="chartCidades"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Seção de Resultados -->
-    <div class="results-section" id="resultsSection" style="display: none;">
-        <div class="results-header">
-            <div class="results-title">📊 Resultados da Consulta</div>
-            <div class="results-stats">
-                <span id="totalRegistros">0 registros</span>
-            </div>
-        </div>
-
-        <!-- Estado Vazio -->
-        <div class="empty-state" id="emptyState">
-            <div class="empty-state-icon">📊</div>
-            <div class="empty-state-text">Selecione os filtros e clique em Atualizar</div>
-            <p>Configure os filtros acima para visualizar os dados de vendas por produto</p>
-        </div>
-
-        <!-- Tabela de Resultados -->
-        <div class="table-container" id="tableContainer" style="display: none;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Cliente</th>
-                        <th>Razão Social</th>
-                        <th>Cidade</th>
-                        <th class="text-right">Qtde</th>
-                        <th class="text-right">Valor (R$)</th>
-                        <th class="text-right">Peso (kg)</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Paginação -->
-        <div id="paginationContainer"></div>
-
-        <!-- Footer com Botão de Exportação -->
-        <div class="footer-actions" id="footerActions" style="display: none;">
-            <div style="color: #495057; font-weight: 500;">
-                <strong id="totalValor">Total: R$ 0,00</strong>
-            </div>
-            <button class="btn-export" id="btnExportar" onclick="exportarDados()">
-                📊 Exportar Excel
-            </button>
-        </div>
+    <!-- Estado vazio inicial -->
+    <div class="empty-state" id="emptyState">
+        <div class="empty-state-icon">📊</div>
+        <div style="font-size: 1.1em; margin-bottom: 8px; color: #495057;">Selecione os filtros e clique em Atualizar</div>
+        <p>Configure os filtros acima para visualizar os dados de vendas por produto</p>
     </div>
 
     <script type="module">
         import { db } from './js/db.js';
         import { config } from './js/config.js';
-        import { cache, CACHE_TTL } from './js/cache.js';
-        import { Pagination, injectPaginationStyles } from './js/pagination.js';
-        import { FilterSearch, injectFilterSearchStyles } from './js/filter-search.js';
-        import { KPICards, injectKPIStyles } from './js/kpi-cards.js';
+        import { CacheManager, CACHE_TTL } from './js/cache.js';
+        import { Pagination } from './js/pagination.js';
+        import { FilterSearch } from './js/filter-search.js';
 
-        // Injeta estilos
-        injectPaginationStyles();
-        injectFilterSearchStyles();
-        injectKPIStyles();
+        // Chart.js
+        const chartScript = document.createElement('script');
+        chartScript.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0';
+        document.head.appendChild(chartScript);
 
         // Variáveis globais
         window.db = db;
@@ -558,18 +615,9 @@
         window.todasFamilias = [];
         window.todosProdutos = [];
         window.filterSearches = {};
-        window.kpiCards = new KPICards('#kpiContainer');
-        window.chartTopClientes = null;
-        window.chartCidades = null;
+        window.cache = new CacheManager();
 
-        // Paginação
-        window.pagination = new Pagination('#paginationContainer', {
-            pageSize: 50,
-            renderCallback: renderizarTabela,
-            onPageChange: (info) => {
-                console.log(`Página ${info.currentPage}/${info.totalPages}`);
-            }
-        });
+        let chart1, chart2;
 
         // Verifica configuração
         if (!config.authToken || config.authToken === 'SEU_TOKEN_AQUI') {
@@ -577,12 +625,20 @@
             document.getElementById('btnAtualizar').disabled = true;
         }
 
+        // Configurar paginação (25 registros)
+        window.pagination = new Pagination('#paginationContainer', {
+            pageSize: 25,
+            renderCallback: renderizarTabela
+        });
+
         // Carregar opções dos filtros
         async function carregarFiltros() {
             try {
+                if (!db.isConnected()) await db.connect();
+
                 // Tenta buscar do cache
                 const cacheKey = 'filtros_produtos';
-                const cached = cache.get(cacheKey);
+                const cached = window.cache.get(cacheKey);
 
                 let origens, familias, produtos;
 
@@ -593,15 +649,13 @@
                     produtos = cached.produtos;
                 } else {
                     console.log('🔄 Buscando filtros do banco...');
-                    if (!db.isConnected()) await db.connect();
 
-                    // Carregar do banco
                     origens = await db.execute('SELECT DISTINCT desc_origem FROM tab_produto WHERE desc_origem IS NOT NULL ORDER BY desc_origem');
                     familias = await db.execute('SELECT DISTINCT desc_familia, desc_origem FROM tab_produto WHERE desc_familia IS NOT NULL ORDER BY desc_familia');
                     produtos = await db.execute('SELECT produto, desc_produto, desc_familia, desc_origem FROM tab_produto WHERE desc_produto IS NOT NULL ORDER BY desc_produto');
 
                     // Salva no cache (1 hora)
-                    cache.set(cacheKey, { origens, familias, produtos }, CACHE_TTL.FILTERS);
+                    window.cache.set(cacheKey, { origens, familias, produtos }, CACHE_TTL.FILTERS);
                 }
 
                 window.todasOrigens = origens.rows;
@@ -637,12 +691,6 @@
                     option.textContent = opcao;
                     select.appendChild(option);
                 });
-            }
-
-            // Atualiza o FilterSearch se existir
-            const searchId = id.replace('filtro', '').toLowerCase();
-            if (window.filterSearches[searchId]) {
-                window.filterSearches[searchId].updateOptions(opcoes);
             }
         }
 
@@ -732,9 +780,6 @@
             document.getElementById('filtroFamilia').selectedIndex = -1;
             document.getElementById('filtroProduto').selectedIndex = -1;
 
-            // Limpa as buscas
-            Object.values(window.filterSearches).forEach(fs => fs.clear());
-
             // Recarrega todas as opções
             preencherSelect('filtroFamilia', []);
             preencherSelect('filtroProduto', []);
@@ -756,6 +801,7 @@
             try {
                 document.getElementById('loading').classList.add('active');
                 document.getElementById('btnAtualizar').disabled = true;
+                document.getElementById('emptyState').style.display = 'none';
 
                 if (!db.isConnected()) await db.connect();
 
@@ -793,7 +839,15 @@
                 const result = await db.execute(sql, params);
                 window.dadosCompletos = result.rows;
 
-                mostrarResultados(result.rows);
+                // Configurar paginação
+                window.pagination.setData(result.rows);
+
+                // Renderizar
+                renderizarTabela();
+                atualizarKPIs(result.rows);
+                atualizarGraficos(result.rows);
+
+                document.getElementById('mainContent').style.display = 'grid';
 
             } catch (error) {
                 console.error('Erro ao buscar dados:', error);
@@ -804,51 +858,15 @@
             }
         };
 
-        function mostrarResultados(dados) {
-            document.getElementById('resultsSection').style.display = 'block';
-
-            if (dados.length === 0) {
-                document.getElementById('emptyState').innerHTML = `
-                    <div class="empty-state-icon">🔍</div>
-                    <div class="empty-state-text">Nenhum resultado encontrado</div>
-                    <p>Tente ajustar os filtros de pesquisa</p>
-                `;
-                document.getElementById('emptyState').style.display = 'block';
-                document.getElementById('tableContainer').style.display = 'none';
-                document.getElementById('footerActions').style.display = 'none';
-                document.getElementById('chartsSection').style.display = 'none';
-                return;
-            }
-
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('tableContainer').style.display = 'block';
-            document.getElementById('footerActions').style.display = 'flex';
-            document.getElementById('chartsSection').style.display = 'grid';
-
-            // Atualiza KPIs
-            const kpis = KPICards.calculateFromData(dados, {
-                totalValue: 'valor',
-                totalQuantity: 'qtde',
-                totalWeight: 'peso',
-                count: true
-            });
-            window.kpiCards.setKPIs(kpis);
-
-            // Configura paginação
-            window.pagination.setData(dados);
-
-            // Renderiza gráficos
-            renderizarGraficos(dados);
-
-            // Atualiza total
-            const totalValor = dados.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
-            document.getElementById('totalValor').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            document.getElementById('totalRegistros').textContent = `${dados.length} registro(s)`;
-        }
-
-        function renderizarTabela(pageData) {
+        function renderizarTabela() {
+            const pageData = window.pagination.getCurrentPageData();
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
+
+            if (pageData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #6c757d;">Nenhum resultado encontrado</td></tr>';
+                return;
+            }
 
             pageData.forEach(row => {
                 const tr = document.createElement('tr');
@@ -864,21 +882,38 @@
                 `;
                 tbody.appendChild(tr);
             });
+
+            // Atualizar stats
+            const totalValor = window.dadosCompletos.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
+            document.getElementById('tableStats').textContent = `${window.dadosCompletos.length} registro(s)`;
+            document.getElementById('totalValue').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
         }
 
-        function renderizarGraficos(dados) {
-            // Top 10 Clientes
-            const top10 = dados.slice(0, 10);
-            const ctxClientes = document.getElementById('chartTopClientes');
+        function atualizarKPIs(dados) {
+            const totalValor = dados.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
+            const totalQtde = dados.reduce((sum, row) => sum + parseFloat(row.qtde || 0), 0);
+            const totalPeso = dados.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
 
-            if (window.chartTopClientes) {
-                window.chartTopClientes.destroy();
+            document.getElementById('kpiValor').textContent = 'R$ ' + totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            document.getElementById('kpiQtde').textContent = totalQtde.toLocaleString('pt-BR');
+            document.getElementById('kpiPeso').textContent = totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg';
+            document.getElementById('kpiRegistros').textContent = dados.length.toLocaleString('pt-BR');
+        }
+
+        function atualizarGraficos(dados) {
+            if (typeof Chart === 'undefined') {
+                setTimeout(() => atualizarGraficos(dados), 500);
+                return;
             }
 
-            window.chartTopClientes = new Chart(ctxClientes, {
+            // Gráfico 1: Top 10 Clientes
+            const top10 = dados.slice(0, 10);
+
+            if (chart1) chart1.destroy();
+            chart1 = new Chart(document.getElementById('chartTopClientes'), {
                 type: 'bar',
                 data: {
-                    labels: top10.map(d => (d.razao_social || d.cliente).substring(0, 20)),
+                    labels: top10.map(d => (d.razao_social || d.cliente).substring(0, 15)),
                     datasets: [{
                         label: 'Quantidade',
                         data: top10.map(d => parseFloat(d.qtde)),
@@ -889,7 +924,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false }
                     },
@@ -899,7 +934,7 @@
                 }
             });
 
-            // Vendas por Cidade (Top 5)
+            // Gráfico 2: Vendas por Cidade (Top 5)
             const cidadesMap = {};
             dados.forEach(d => {
                 if (d.cidade) {
@@ -911,13 +946,8 @@
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 5);
 
-            const ctxCidades = document.getElementById('chartCidades');
-
-            if (window.chartCidades) {
-                window.chartCidades.destroy();
-            }
-
-            window.chartCidades = new Chart(ctxCidades, {
+            if (chart2) chart2.destroy();
+            chart2 = new Chart(document.getElementById('chartCidades'), {
                 type: 'pie',
                 data: {
                     labels: cidadesArray.map(c => c[0]),
@@ -934,7 +964,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true
+                    maintainAspectRatio: false
                 }
             });
         }
@@ -977,9 +1007,7 @@
         // Inicializar
         window.addEventListener('load', () => {
             carregarFiltros();
-
-            // Mostra estatísticas do cache no console
-            console.log('📊 Cache Stats:', cache.getStats());
+            console.log('📊 Cache Stats:', window.cache.getStats());
         });
     </script>
 </body>

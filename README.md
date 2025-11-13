@@ -11,15 +11,74 @@ O **Ger_Comercial** é um sistema de gerenciamento comercial desenvolvido para f
 - ✅ 100% Frontend (JavaScript ES Modules)
 - ✅ Banco de dados na nuvem (Turso/LibSQL)
 - ✅ Dashboard gerencial com múltiplos relatórios
+- ✅ **Layout 70/30** - Tabela principal (70%) + Dashboard lateral (30%) 🆕
+- ✅ **25 linhas visíveis** com scroll e paginação 🆕
 - ✅ Filtros avançados com seleção múltipla e busca
 - ✅ Sistema de cache inteligente (LocalStorage)
-- ✅ Paginação avançada de dados
-- ✅ Cards de KPIs em tempo real
+- ✅ Paginação de 25 registros por página 🆕
+- ✅ Cards de KPIs em grid 2x2 🆕
 - ✅ Gráficos interativos com Chart.js
 - ✅ Exportação para Excel e PDF
 - ✅ Deploy via GitHub Pages
-- ✅ Interface moderna e responsiva
+- ✅ Interface moderna desktop-focused 🆕
 - ✅ Sem necessidade de terminal ou backend
+
+---
+
+## 📐 Layout 70/30 (NOVO! 🆕)
+
+Todos os dashboards agora seguem um layout otimizado para análise de dados:
+
+### 📊 Estrutura do Layout:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        FILTROS                               │
+├───────────────────────────────┬─────────────────────────────┤
+│        TABELA (70%)            │    DASHBOARD (30%)          │
+│                                │                             │
+│  ┌─ Header Amarelo ─────────┐ │  ┌─ KPI 1 ─┐ ┌─ KPI 2 ─┐  │
+│  │ 📊 Resultados │ X registros│ │  │ 💰      │ │ 📦      │  │
+│  └────────────────────────────┘ │  │ Valor   │ │ Qtde    │  │
+│  ┌────────────────────────────┐ │  └─────────┘ └─────────┘  │
+│  │ Cliente │ Razão │ Valor... │ │  ┌─ KPI 3 ─┐ ┌─ KPI 4 ─┐  │
+│  │ ─────────────────────────  │ │  │ ⚖️      │ │ 📊      │  │
+│  │ Linha 1                    │ │  │ Peso    │ │ Total   │  │
+│  │ Linha 2                    │ │  └─────────┘ └─────────┘  │
+│  │ ...                        │ │                             │
+│  │ Linha 25 (scroll)          │ │  ┌──────────────────────┐  │
+│  └────────────────────────────┘ │  │  Gráfico 1           │  │
+│  ┌─ Paginação ────────────────┐ │  │  📊 Top 10           │  │
+│  │ ◀ 1 2 3 4 5 ▶              │ │  └──────────────────────┘  │
+│  └────────────────────────────┘ │  ┌──────────────────────┐  │
+│  ┌─ Footer ───────────────────┐ │  │  Gráfico 2           │  │
+│  │ Total: R$ | 📊 Excel 📄 PDF│ │  │  🗺️ Distribuição    │  │
+│  └────────────────────────────┘ │  └──────────────────────┘  │
+└───────────────────────────────┴─────────────────────────────┘
+```
+
+### ✨ Características do Layout:
+
+**Seção Tabela (70% - Esquerda):**
+- 📋 **Header Amarelo**: Título e contador de registros
+- 📊 **25 linhas visíveis**: Viewport fixo com scroll suave
+- 📄 **Paginação**: 25 registros por página
+- 💾 **Footer**: Total de valores + botões de exportação (Excel/PDF)
+
+**Seção Dashboard (30% - Direita):**
+- 📊 **4 KPIs em Grid 2x2**: Valor Total, Quantidade, Peso, Total Registros
+- 📈 **2 Gráficos Empilhados**: Chart.js interativos
+  - Gráfico 1: Top 10 (barras)
+  - Gráfico 2: Distribuição (scatter/pie)
+- 🎨 **Visual Compacto**: Informações-chave sempre visíveis
+
+### 🎯 Vantagens:
+
+- ✅ **Foco nos Dados**: Tabela como elemento principal
+- ✅ **Métricas à Vista**: KPIs sempre visíveis no sidebar
+- ✅ **Performance**: Renderiza apenas 25 linhas por vez
+- ✅ **Navegação Rápida**: Paginação eficiente
+- ✅ **Desktop Optimized**: Layout pensado para telas grandes
 
 ---
 
@@ -106,9 +165,15 @@ Página inicial com cards de acesso aos relatórios:
 ### 📍 Vendas por Região
 **Arquivo:** `dashboard-vendas-regiao.html`
 
-Dashboard completo com filtros avançados e exportação de dados.
+Dashboard completo com **layout 70/30**, filtros avançados em cascata e visualização otimizada.
 
-#### 🔍 Filtros Disponíveis:
+#### 🎨 Layout:
+- **70% Tabela**: 25 linhas visíveis, paginação de 25 registros
+- **30% Dashboard**: 4 KPIs + 2 gráficos (Top 10 Produtos, Distribuição Qtde x Valor)
+- **Header Amarelo**: Destaque visual para resultados
+- **Cache**: Filtros salvos por 1 hora no LocalStorage
+
+#### 🔍 Filtros Disponíveis (com busca em tempo real):
 
 | Filtro | Descrição | Tipo |
 |--------|-----------|------|
@@ -129,6 +194,16 @@ Dashboard completo com filtros avançados e exportação de dados.
 
 **Ordenação:** Do maior para o menor por quantidade
 
+#### 📊 KPIs em Tempo Real (Grid 2x2):
+- 💰 **Valor Total**: Soma de todas as vendas filtradas
+- 📦 **Quantidade Total**: Total de unidades vendidas
+- ⚖️ **Peso Total**: Peso total em kg
+- 📊 **Total de Registros**: Número de produtos
+
+#### 📈 Gráficos (Chart.js):
+1. **Top 10 Produtos por Valor**: Gráfico de barras horizontais
+2. **Distribuição Quantidade vs Valor**: Scatter plot com top 30
+
 #### 📤 Exportações:
 
 - **Excel (.xlsx)** - Planilha formatada pronta para análise
@@ -143,12 +218,68 @@ O sistema faz consultas em múltiplas tabelas:
 
 ---
 
+### 👥 Vendas por Equipe Comercial
+**Arquivo:** `dashboard-vendas-equipe.html`
+
+Dashboard com **layout 70/30** focado em análise de desempenho por equipe comercial.
+
+#### 🎨 Layout:
+- **70% Tabela**: 25 linhas visíveis, paginação de 25 registros
+- **30% Dashboard**: 4 KPIs + 2 gráficos (Top 10 Produtos, Distribuição)
+- **Filtros em Cascata**: Supervisor → Representante → Cidade
+- **Cache**: Performance otimizada com LocalStorage
+
+#### 🔍 Filtros Disponíveis (com busca em tempo real):
+
+| Filtro | Descrição | Cascata |
+|--------|-----------|---------|
+| **Período** | Data inicial e final | - |
+| **Supervisor** | Supervisores comerciais | Nível 1 |
+| **Representante** | Representantes por supervisor | Nível 2 |
+| **Cidade** | Cidades por representante | Nível 3 |
+
+#### 📊 Dados Exibidos:
+- **Código:** Código do produto
+- **Descrição:** Descrição completa
+- **Quantidade:** Soma de unidades vendidas
+- **Valor:** Soma do valor líquido (R$)
+- **Peso:** Soma do peso líquido (kg)
+
+**Ordenação:** Do maior para o menor por quantidade
+
+#### 📊 KPIs em Tempo Real (Grid 2x2):
+- 💰 **Valor Total**: Soma de todas as vendas da equipe
+- 📦 **Quantidade Total**: Total de unidades vendidas
+- ⚖️ **Peso Total**: Peso total em kg
+- 📊 **Total de Registros**: Número de produtos
+
+#### 📈 Gráficos (Chart.js):
+1. **Top 10 Produtos por Valor**: Gráfico de barras
+2. **Distribuição Quantidade vs Valor**: Scatter plot
+
+#### 📤 Exportações:
+- **Excel (.xlsx)** - Dados completos da equipe
+- **PDF** - Relatório formatado
+
+#### 🔗 Tabelas Relacionadas:
+- `vendas` - Dados das vendas
+- `tab_representante` - Informações de representantes e supervisores
+
+---
+
 ### 📦 Análise de Produtos (NOVO! 🆕)
 **Arquivo:** `dashboard-analise-produtos.html`
 
-Dashboard completo de análise de produtos com recursos avançados de performance e visualização.
+Dashboard completo com **layout 70/30** e recursos avançados de análise de produtos por origem/família.
 
-#### 🔍 Filtros Disponíveis:
+#### 🎨 Layout:
+- **70% Tabela**: 25 linhas visíveis, paginação de 25 registros
+- **30% Dashboard**: 4 KPIs + 2 gráficos (Top 10 Clientes, Vendas por Cidade)
+- **Filtros em Cascata**: Origem → Família → Produto
+- **Botões de Data Rápida**: Mês, Trimestre, Ano
+- **Botão Limpar Filtros**: Reset completo com um clique
+
+#### 🔍 Filtros Disponíveis (com busca em tempo real):
 
 | Filtro | Descrição | Recurso |
 |--------|-----------|---------|
@@ -189,8 +320,9 @@ Cards no topo do dashboard com indicadores-chave:
 #### ⚡ Performance:
 
 - **Cache Inteligente:** Filtros salvos no LocalStorage (1 hora)
-- **Paginação:** 50/100/500/1000 registros por página
+- **Paginação:** 25 registros por página (otimizado para visualização)
 - **Carregamento Rápido:** Reutiliza dados em cache
+- **25 Linhas Visíveis:** Viewport fixo para melhor UX
 
 #### 📤 Exportações:
 
@@ -293,19 +425,20 @@ cache.clear();
 Sistema completo de paginação para grandes volumes de dados.
 
 #### Recursos:
-- 📄 **Múltiplos Tamanhos:** 50, 100, 500, 1000 registros/página
+- 📄 **Padrão 25 Registros:** Otimizado para visualização de 25 linhas
 - 🔢 **Navegação Inteligente:** Primeira, Anterior, Próxima, Última
 - 📊 **Estatísticas:** Exibe "X-Y de Z registros"
 - ⚡ **Performance:** Renderiza apenas página atual
+- 🎯 **Configurável:** Tamanhos personalizáveis (25, 50, 100, etc.)
 
 #### Exemplo de Uso:
 
 ```javascript
 import { Pagination } from './js/pagination.js';
 
-// Criar paginação
+// Criar paginação com 25 registros (padrão do layout 70/30)
 const pagination = new Pagination('#paginationContainer', {
-    pageSize: 50,
+    pageSize: 25,
     renderCallback: (pageData) => {
         // Função que renderiza os dados da página atual
         renderTable(pageData);
@@ -319,7 +452,7 @@ pagination.setData(arrayDeDados);
 pagination.nextPage();
 pagination.previousPage();
 pagination.goToPage(5);
-pagination.changePageSize(100);
+pagination.changePageSize(50); // Opcional: alterar tamanho
 ```
 
 ---
@@ -408,15 +541,17 @@ O sistema utiliza um esquema de cores moderno e vibrante:
 
 - **Vermelho Principal:** `#FC0303` (cor primária - botões, headers) 🆕
 - **Vermelho Contraste:** `#B50909` (hover, gradientes) 🆕
-- **Verde Seleção:** `#03FF1C` (itens selecionados) 🆕
+- **Verde Seleção:** `#03FF1C` (itens selecionados em filtros) 🆕
+- **Amarelo Header:** `#FFD700` (header das tabelas) 🆕
 - **Fundo:** Branco `#FFFFFF` e cinza claro `#F8F9FA`
 
 ### Características Visuais:
-- Gradientes suaves
-- Sombras elegantes
-- Animações de hover
-- Cards com efeito de elevação
-- Layout responsivo (desktop, tablet, mobile)
+- **Gradientes suaves**: Headers com degradê vermelho
+- **Sombras elegantes**: Cards com elevação sutil
+- **Animações de hover**: Feedback visual em botões e KPIs
+- **Layout 70/30**: Grid otimizado para análise de dados
+- **Desktop-focused**: Interface otimizada para telas grandes
+- **25 linhas visíveis**: Viewport fixo para melhor UX
 
 ---
 
@@ -656,16 +791,19 @@ Este projeto é de código aberto e está disponível sob a licença MIT.
 
 ### ✅ Implementado:
 - ✅ Dashboard principal
+- ✅ **Layout 70/30 em todos os dashboards (NOVO! 🆕)**
+- ✅ **25 linhas visíveis + paginação (NOVO! 🆕)**
 - ✅ Vendas por Região
 - ✅ Vendas por Equipe Comercial
 - ✅ **Análise de Produtos (NOVO! 🆕)**
-- ✅ Filtros múltiplos com busca
-- ✅ **Sistema de Cache (NOVO! 🆕)**
-- ✅ **Paginação Avançada (NOVO! 🆕)**
-- ✅ **KPIs em Tempo Real (NOVO! 🆕)**
+- ✅ Filtros múltiplos com busca em tempo real
+- ✅ **Sistema de Cache LocalStorage (NOVO! 🆕)**
+- ✅ **Paginação de 25 registros (NOVO! 🆕)**
+- ✅ **KPIs em Grid 2x2 (NOVO! 🆕)**
 - ✅ **Gráficos Interativos Chart.js (NOVO! 🆕)**
 - ✅ Exportação Excel/PDF
 - ✅ GitHub Pages
+- ✅ **Interface desktop-focused (NOVO! 🆕)**
 
 ### 🚧 Em Desenvolvimento:
 - Performance de Clientes
