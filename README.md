@@ -11,7 +11,11 @@ O **Ger_Comercial** é um sistema de gerenciamento comercial desenvolvido para f
 - ✅ 100% Frontend (JavaScript ES Modules)
 - ✅ Banco de dados na nuvem (Turso/LibSQL)
 - ✅ Dashboard gerencial com múltiplos relatórios
-- ✅ Filtros avançados com seleção múltipla
+- ✅ Filtros avançados com seleção múltipla e busca
+- ✅ Sistema de cache inteligente (LocalStorage)
+- ✅ Paginação avançada de dados
+- ✅ Cards de KPIs em tempo real
+- ✅ Gráficos interativos com Chart.js
 - ✅ Exportação para Excel e PDF
 - ✅ Deploy via GitHub Pages
 - ✅ Interface moderna e responsiva
@@ -61,19 +65,25 @@ Abra no navegador: https://angeloxiru.github.io/Ger_Comercial/
 ```
 Ger_Comercial/
 │
-├── index.html                    # Dashboard principal
-├── dashboard-vendas-regiao.html  # Relatório de vendas por região
-├── teste-conexao.html            # Teste de conexão (utilitário)
-├── exemplo.html                  # Exemplo de CRUD
+├── index.html                      # Dashboard principal
+├── dashboard-vendas-regiao.html    # Relatório de vendas por região
+├── dashboard-vendas-equipe.html    # Relatório de vendas por equipe
+├── dashboard-analise-produtos.html # Análise de produtos (NOVO! 🆕)
+├── teste-conexao.html              # Teste de conexão (utilitário)
+├── exemplo.html                    # Exemplo de CRUD
 │
 ├── js/
-│   ├── config.js                 # Configurações do banco (TOKEN AQUI!)
-│   ├── config.example.js         # Exemplo de configuração
-│   ├── db.js                     # Módulo de conexão e operações
-│   └── test.js                   # Scripts auxiliares
+│   ├── config.js                   # Configurações do banco (TOKEN AQUI!)
+│   ├── config.example.js           # Exemplo de configuração
+│   ├── db.js                       # Módulo de conexão e operações
+│   ├── cache.js                    # Sistema de cache (NOVO! 🆕)
+│   ├── pagination.js               # Paginação de tabelas (NOVO! 🆕)
+│   ├── filter-search.js            # Busca em filtros (NOVO! 🆕)
+│   ├── kpi-cards.js                # Cards de KPIs (NOVO! 🆕)
+│   └── test.js                     # Scripts auxiliares
 │
-├── .gitignore                    # Arquivos ignorados pelo Git
-└── README.md                     # Este arquivo
+├── .gitignore                      # Arquivos ignorados pelo Git
+└── README.md                       # Este arquivo
 ```
 
 ---
@@ -85,11 +95,11 @@ Ger_Comercial/
 
 Página inicial com cards de acesso aos relatórios:
 - ✅ **Vendas por Região** - Disponível
-- 📈 Análise de Produtos - Em breve
+- ✅ **Vendas por Equipe Comercial** - Disponível
+- ✅ **Análise de Produtos** - Disponível (NOVO! 🆕)
 - 👥 Performance de Clientes - Em breve
 - 💰 Análise Financeira - Em breve
 - 📦 Gestão de Estoque - Em breve
-- 🎯 Metas e KPIs - Em breve
 
 ---
 
@@ -133,6 +143,66 @@ O sistema faz consultas em múltiplas tabelas:
 
 ---
 
+### 📦 Análise de Produtos (NOVO! 🆕)
+**Arquivo:** `dashboard-analise-produtos.html`
+
+Dashboard completo de análise de produtos com recursos avançados de performance e visualização.
+
+#### 🔍 Filtros Disponíveis:
+
+| Filtro | Descrição | Recurso |
+|--------|-----------|---------|
+| **Período** | Data inicial e final | Datas rápidas (Mês, Trimestre, Ano) |
+| **Origem** | Origem dos produtos | Busca em tempo real ✨ |
+| **Família** | Família de produtos | Busca em tempo real ✨ |
+| **Produto** | Produtos específicos | Busca em tempo real ✨ |
+
+**🆕 Novidades:**
+- ✨ **Busca em tempo real**: Digite parte do nome para filtrar opções
+- 🧹 **Botão "Limpar Filtros"**: Reseta todos os filtros com um clique
+- ⚡ **Datas rápidas**: Botões para Mês Atual, Trimestre e Ano
+
+#### 📊 Dados Exibidos:
+
+- **Cliente:** Código do cliente
+- **Razão Social:** Nome completo
+- **Cidade:** Localização
+- **Quantidade:** Soma de unidades vendidas
+- **Valor:** Soma do valor líquido (R$)
+- **Peso:** Soma do peso líquido (kg)
+
+**Ordenação:** Do maior para o menor por quantidade
+
+#### 📈 KPIs em Tempo Real:
+
+Cards no topo do dashboard com indicadores-chave:
+- 💰 **Valor Total:** Soma de todas as vendas filtradas
+- 📦 **Quantidade Total:** Total de unidades vendidas
+- ⚖️ **Peso Total:** Peso total em kg
+- 📊 **Total de Registros:** Número de clientes/registros
+
+#### 📊 Gráficos Interativos (Chart.js):
+
+1. **Top 10 Clientes** - Gráfico de barras com maiores compradores
+2. **Vendas por Cidade** - Gráfico de pizza com top 5 cidades
+
+#### ⚡ Performance:
+
+- **Cache Inteligente:** Filtros salvos no LocalStorage (1 hora)
+- **Paginação:** 50/100/500/1000 registros por página
+- **Carregamento Rápido:** Reutiliza dados em cache
+
+#### 📤 Exportações:
+
+- **Excel (.xlsx)** - Nome automático com período (ex: `analise_produtos_2025-01-01_2025-01-31.xlsx`)
+
+#### 🔗 Tabelas Relacionadas:
+
+- `vendas` - Dados das vendas
+- `tab_produto` - Informações de produtos (origem, família, descrição)
+
+---
+
 ## 🔧 Módulos JavaScript
 
 ### 📦 `db.js` - Gerenciador de Banco de Dados
@@ -171,15 +241,175 @@ const structure = await db.getTableStructure('vendas');
 
 ---
 
+### 💾 `cache.js` - Sistema de Cache (NOVO! 🆕)
+
+Gerencia cache de dados no LocalStorage para melhorar performance.
+
+#### Características:
+- ⏰ **TTL Configurável:** Define tempo de expiração por tipo de dado
+- 🧹 **Limpeza Automática:** Remove caches expirados
+- 📊 **Estatísticas:** Monitora uso de espaço
+- 🔄 **getOrFetch:** Busca do cache ou executa função automaticamente
+
+#### Exemplo de Uso:
+
+```javascript
+import { cache, CACHE_TTL } from './js/cache.js';
+
+// Salvar no cache (1 hora)
+cache.set('filtros_produtos', dados, CACHE_TTL.FILTERS);
+
+// Buscar do cache
+const cached = cache.get('filtros_produtos');
+
+// Buscar com fallback automático
+const dados = await cache.getOrFetch(
+    'chave',
+    async () => await db.execute('SELECT * FROM vendas'),
+    CACHE_TTL.DASHBOARDS
+);
+
+// Ver estatísticas
+console.log(cache.getStats()); // { count, size, usage }
+
+// Limpar cache expirado
+cache.cleanup();
+
+// Limpar tudo
+cache.clear();
+```
+
+#### TTL Padrões:
+- `FILTERS`: 1 hora - Filtros mudam pouco
+- `DASHBOARDS`: 5 minutos - Dados de vendas
+- `KPIS`: 10 minutos - Indicadores
+- `CHARTS`: 15 minutos - Gráficos
+- `REPORTS`: 30 minutos - Relatórios
+
+---
+
+### 📄 `pagination.js` - Paginação de Tabelas (NOVO! 🆕)
+
+Sistema completo de paginação para grandes volumes de dados.
+
+#### Recursos:
+- 📄 **Múltiplos Tamanhos:** 50, 100, 500, 1000 registros/página
+- 🔢 **Navegação Inteligente:** Primeira, Anterior, Próxima, Última
+- 📊 **Estatísticas:** Exibe "X-Y de Z registros"
+- ⚡ **Performance:** Renderiza apenas página atual
+
+#### Exemplo de Uso:
+
+```javascript
+import { Pagination } from './js/pagination.js';
+
+// Criar paginação
+const pagination = new Pagination('#paginationContainer', {
+    pageSize: 50,
+    renderCallback: (pageData) => {
+        // Função que renderiza os dados da página atual
+        renderTable(pageData);
+    }
+});
+
+// Definir dados
+pagination.setData(arrayDeDados);
+
+// Navegação
+pagination.nextPage();
+pagination.previousPage();
+pagination.goToPage(5);
+pagination.changePageSize(100);
+```
+
+---
+
+### 🔍 `filter-search.js` - Busca em Filtros (NOVO! 🆕)
+
+Adiciona busca em tempo real nos elementos select múltiplos.
+
+#### Recursos:
+- ⚡ **Busca Instantânea:** Filtra enquanto digita
+- 🎯 **Case Insensitive:** Busca sem distinção de maiúsculas
+- ✕ **Botão Limpar:** Remove busca rapidamente
+- ⌨️ **Atalho ESC:** Limpa a busca
+
+#### Exemplo de Uso:
+
+```javascript
+import { FilterSearch } from './js/filter-search.js';
+
+// Adicionar busca em um select
+const search = new FilterSearch('meuSelect', {
+    placeholder: 'Digite para buscar...'
+});
+
+// Atualizar opções
+search.updateOptions(['Opção 1', 'Opção 2', 'Opção 3']);
+
+// Limpar busca
+search.clear();
+```
+
+---
+
+### 📊 `kpi-cards.js` - Cards de KPIs (NOVO! 🆕)
+
+Sistema de exibição de indicadores-chave de performance.
+
+#### Recursos:
+- 💳 **Cards Visuais:** Interface moderna e responsiva
+- 📈 **Tendências:** Indicadores de alta/baixa
+- 🎨 **Personalização:** Ícones, cores e formatos
+- 🔢 **Cálculos Automáticos:** A partir dos dados
+
+#### Exemplo de Uso:
+
+```javascript
+import { KPICards } from './js/kpi-cards.js';
+
+// Criar KPIs
+const kpiCards = new KPICards('#kpiContainer');
+
+// Calcular KPIs automaticamente
+const kpis = KPICards.calculateFromData(dados, {
+    totalValue: 'valor',      // Campo de valor
+    totalQuantity: 'qtde',    // Campo de quantidade
+    totalWeight: 'peso',      // Campo de peso
+    count: true              // Conta registros
+});
+
+// Exibir KPIs
+kpiCards.setKPIs(kpis);
+
+// Ou criar manualmente
+kpiCards.setKPIs([
+    {
+        icon: '💰',
+        label: 'Valor Total',
+        value: 125450.50,
+        format: 'currency',
+        trend: { direction: 'up', value: '+12%' }
+    },
+    {
+        icon: '📦',
+        label: 'Produtos Vendidos',
+        value: 12500,
+        format: 'number'
+    }
+]);
+```
+
+---
+
 ## 🎨 Design e Cores
 
-O sistema utiliza um esquema de cores moderno e profissional:
+O sistema utiliza um esquema de cores moderno e vibrante:
 
-- **Vermelho Vivo:** `#DC143C` (cor principal)
-- **Vermelho Escuro:** `#8B0000` (secundária)
-- **Dourado:** `#FFD700` (destaques)
-- **Dourado Escuro:** `#FFA500` (acentos)
-- **Fundo:** Branco `#FFFFFF`
+- **Vermelho Principal:** `#FC0303` (cor primária - botões, headers) 🆕
+- **Vermelho Contraste:** `#B50909` (hover, gradientes) 🆕
+- **Verde Seleção:** `#03FF1C` (itens selecionados) 🆕
+- **Fundo:** Branco `#FFFFFF` e cinza claro `#F8F9FA`
 
 ### Características Visuais:
 - Gradientes suaves
@@ -425,27 +655,34 @@ Este projeto é de código aberto e está disponível sob a licença MIT.
 ## 🎉 Roadmap
 
 ### ✅ Implementado:
-- Dashboard principal
-- Vendas por Região
-- Filtros múltiplos
-- Exportação Excel/PDF
-- GitHub Pages
+- ✅ Dashboard principal
+- ✅ Vendas por Região
+- ✅ Vendas por Equipe Comercial
+- ✅ **Análise de Produtos (NOVO! 🆕)**
+- ✅ Filtros múltiplos com busca
+- ✅ **Sistema de Cache (NOVO! 🆕)**
+- ✅ **Paginação Avançada (NOVO! 🆕)**
+- ✅ **KPIs em Tempo Real (NOVO! 🆕)**
+- ✅ **Gráficos Interativos Chart.js (NOVO! 🆕)**
+- ✅ Exportação Excel/PDF
+- ✅ GitHub Pages
 
 ### 🚧 Em Desenvolvimento:
-- Análise de Produtos
 - Performance de Clientes
 - Análise Financeira
 - Gestão de Estoque
-- Metas e KPIs
 
 ### 💡 Futuras Melhorias:
-- Gráficos interativos (Chart.js)
+- Sistema de Login e Permissões
+- Dashboard Executivo com IA
 - Comparativo de períodos
 - Drill-down detalhado
-- Filtros salvos
+- Filtros salvos e favoritos
+- Análise Preditiva
 - Dashboard personalizável
 - Modo escuro
 - Relatórios agendados
+- Detecção de clientes inativos
 
 ---
 
