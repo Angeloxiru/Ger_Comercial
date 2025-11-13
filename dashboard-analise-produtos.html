@@ -427,12 +427,6 @@
             margin-bottom: 16px;
             opacity: 0.5;
         }
-
-        /* Paginação */
-        #paginationContainer {
-            padding: 12px 20px;
-            border-top: 1px solid #dee2e6;
-        }
     </style>
 </head>
 <body>
@@ -693,29 +687,31 @@
             }
         }
 
-        // CASCATA: Origem → Família → Produto
+        // CASCATA FLEXÍVEL: Origem → Família → Produto (permite pular níveis)
         document.getElementById('filtroOrigem').addEventListener('change', function() {
             const origensSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
 
-            document.getElementById('filtroFamilia').selectedIndex = -1;
-            document.getElementById('filtroProduto').selectedIndex = -1;
+            // NÃO limpa seleções anteriores automaticamente
+            // document.getElementById('filtroFamilia').selectedIndex = -1;
+            // document.getElementById('filtroProduto').selectedIndex = -1;
 
             if (origensSelecionadas.length === 0) {
-                preencherSelect('filtroFamilia', []);
-                preencherSelect('filtroProduto', []);
+                // Se nenhuma origem: mostra todas
+                preencherSelect('filtroFamilia', window.todasFamilias.map(f => f.desc_familia).filter((v, i, s) => s.indexOf(v) === i));
+                preencherSelect('filtroProduto', window.todosProdutos.map(p => p.desc_produto).filter((v, i, s) => s.indexOf(v) === i));
             } else {
+                // Filtra famílias E produtos pela origem
                 const familiasFiltradas = window.todasFamilias
                     .filter(f => origensSelecionadas.includes(f.desc_origem))
                     .map(f => f.desc_familia)
                     .filter((value, index, self) => self.indexOf(value) === index);
-
-                preencherSelect('filtroFamilia', familiasFiltradas);
 
                 const produtosFiltrados = window.todosProdutos
                     .filter(p => origensSelecionadas.includes(p.desc_origem))
                     .map(p => p.desc_produto)
                     .filter((value, index, self) => self.indexOf(value) === index);
 
+                preencherSelect('filtroFamilia', familiasFiltradas);
                 preencherSelect('filtroProduto', produtosFiltrados);
             }
         });
@@ -724,9 +720,11 @@
             const familiasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
             const origensSelecionadas = Array.from(document.getElementById('filtroOrigem').selectedOptions).map(o => o.value);
 
-            document.getElementById('filtroProduto').selectedIndex = -1;
+            // NÃO limpa produtos automaticamente
+            // document.getElementById('filtroProduto').selectedIndex = -1;
 
             if (familiasSelecionadas.length === 0) {
+                // Se nenhuma família selecionada: filtra apenas por origem (se houver)
                 if (origensSelecionadas.length > 0) {
                     const produtosFiltrados = window.todosProdutos
                         .filter(p => origensSelecionadas.includes(p.desc_origem))
@@ -734,9 +732,19 @@
                         .filter((value, index, self) => self.indexOf(value) === index);
 
                     preencherSelect('filtroProduto', produtosFiltrados);
+                } else {
+                    // Se nem origem nem família: mostra todos
+                    preencherSelect('filtroProduto', window.todosProdutos.map(p => p.desc_produto).filter((v, i, s) => s.indexOf(v) === i));
                 }
             } else {
-                const produtosFiltrados = window.todosProdutos
+                // Filtra produtos pela combinação: origem (se houver) E família
+                let produtosFiltrados = window.todosProdutos;
+
+                if (origensSelecionadas.length > 0) {
+                    produtosFiltrados = produtosFiltrados.filter(p => origensSelecionadas.includes(p.desc_origem));
+                }
+
+                produtosFiltrados = produtosFiltrados
                     .filter(p => familiasSelecionadas.includes(p.desc_familia))
                     .map(p => p.desc_produto)
                     .filter((value, index, self) => self.indexOf(value) === index);

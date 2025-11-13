@@ -653,29 +653,29 @@
             }
         }
 
-        // CASCATA: Supervisor → Representante → Cidade
+        // CASCATA FLEXÍVEL: Supervisor → Representante → Cidade (permite pular níveis)
         document.getElementById('filtroSupervisor').addEventListener('change', function() {
             const supervisoresSelecionados = Array.from(this.selectedOptions).map(o => o.value);
 
-            document.getElementById('filtroRepresentante').selectedIndex = -1;
-            document.getElementById('filtroCidade').selectedIndex = -1;
+            // NÃO limpa seleções anteriores automaticamente
 
             if (supervisoresSelecionados.length === 0) {
-                preencherSelect('filtroRepresentante', []);
-                preencherSelect('filtroCidade', []);
+                // Se nenhum supervisor: mostra todos
+                preencherSelect('filtroRepresentante', window.todosRepresentantes.map(r => r.desc_representante).filter((v, i, s) => s.indexOf(v) === i));
+                preencherSelect('filtroCidade', window.todasCidades.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i));
             } else {
+                // Filtra representantes E cidades pelo supervisor
                 const representantesFiltrados = window.todosRepresentantes
                     .filter(r => supervisoresSelecionados.includes(r.rep_supervisor))
                     .map(r => r.desc_representante)
                     .filter((value, index, self) => self.indexOf(value) === index);
-
-                preencherSelect('filtroRepresentante', representantesFiltrados);
 
                 const cidadesFiltradas = window.todasCidades
                     .filter(c => supervisoresSelecionados.includes(c.rep_supervisor))
                     .map(c => c.cidade)
                     .filter((value, index, self) => self.indexOf(value) === index);
 
+                preencherSelect('filtroRepresentante', representantesFiltrados);
                 preencherSelect('filtroCidade', cidadesFiltradas);
             }
         });
@@ -684,9 +684,10 @@
             const representantesSelecionados = Array.from(this.selectedOptions).map(o => o.value);
             const supervisoresSelecionados = Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value);
 
-            document.getElementById('filtroCidade').selectedIndex = -1;
+            // NÃO limpa cidades automaticamente
 
             if (representantesSelecionados.length === 0) {
+                // Se nenhum representante: filtra apenas por supervisor (se houver)
                 if (supervisoresSelecionados.length > 0) {
                     const cidadesFiltradas = window.todasCidades
                         .filter(c => supervisoresSelecionados.includes(c.rep_supervisor))
@@ -694,14 +695,24 @@
                         .filter((value, index, self) => self.indexOf(value) === index);
 
                     preencherSelect('filtroCidade', cidadesFiltradas);
+                } else {
+                    // Se nem supervisor nem representante: mostra todas
+                    preencherSelect('filtroCidade', window.todasCidades.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i));
                 }
             } else {
+                // Filtra cidades pela combinação: supervisor (se houver) E representante
                 const codigosRepresentantes = window.todosRepresentantes
                     .filter(r => representantesSelecionados.includes(r.desc_representante))
                     .map(r => r.representante);
 
-                const cidadesFiltradas = window.todasCidades
-                    .filter(c => codigosRepresentantes.includes(c.representante))
+                let cidadesFiltradas = window.todasCidades
+                    .filter(c => codigosRepresentantes.includes(c.representante));
+
+                if (supervisoresSelecionados.length > 0) {
+                    cidadesFiltradas = cidadesFiltradas.filter(c => supervisoresSelecionados.includes(c.rep_supervisor));
+                }
+
+                cidadesFiltradas = cidadesFiltradas
                     .map(c => c.cidade)
                     .filter((value, index, self) => self.indexOf(value) === index);
 
