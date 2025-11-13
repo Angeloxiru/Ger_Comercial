@@ -47,6 +47,14 @@ export class FilterSearch {
      * Cria campo de busca acima do select
      */
     createSearchInput() {
+        // Verifica se já existe um input de busca (evita duplicação)
+        const existingWrapper = this.select.parentNode.querySelector('.filter-search-wrapper');
+        if (existingWrapper) {
+            this.searchInput = existingWrapper.querySelector('.filter-search-input');
+            this.clearBtn = existingWrapper.querySelector('.filter-search-clear');
+            return;
+        }
+
         const wrapper = document.createElement('div');
         wrapper.className = 'filter-search-wrapper';
         wrapper.style.cssText = 'position: relative; margin-bottom: 6px;';
@@ -96,6 +104,12 @@ export class FilterSearch {
      * Adiciona eventos ao input de busca
      */
     attachEvents() {
+        // Verifica se os eventos já foram anexados (evita duplicação)
+        if (this.searchInput.dataset.eventsAttached === 'true') {
+            return;
+        }
+        this.searchInput.dataset.eventsAttached = 'true';
+
         // Evento de digitação
         this.searchInput.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase().trim();
