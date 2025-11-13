@@ -114,7 +114,7 @@
 
         .date-range {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 8px;
         }
 
@@ -660,9 +660,11 @@
                 preencherSelect('filtroSupervisor', supervisores.rows.map(s => s.rep_supervisor));
 
                 // Adicionar FilterSearch aos selects
-                new FilterSearch('filtroSupervisor', { placeholder: 'Digite para buscar supervisor...' });
-                new FilterSearch('filtroRepresentante', { placeholder: 'Digite para buscar representante...' });
-                new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' });
+                window.filterSearches = {
+                    supervisor: new FilterSearch('filtroSupervisor', { placeholder: 'Digite para buscar supervisor...' }),
+                    representante: new FilterSearch('filtroRepresentante', { placeholder: 'Digite para buscar representante...' }),
+                    cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
+                };
 
             } catch (error) {
                 console.error('Erro ao carregar filtros:', error);
@@ -684,6 +686,12 @@
                     option.textContent = opcao;
                     select.appendChild(option);
                 });
+            }
+
+            // Atualiza FilterSearch se existir
+            const searchId = id.replace('filtro', '').toLowerCase();
+            if (window.filterSearches && window.filterSearches[searchId]) {
+                window.filterSearches[searchId].updateOptions(opcoes);
             }
         }
 
@@ -1056,8 +1064,9 @@
             }
         };
 
-        // Inicializar
+        // Inicializar - carrega filtros na primeira vez E ao voltar (pageshow para bfcache)
         window.addEventListener('load', carregarFiltros);
+        window.addEventListener('pageshow', carregarFiltros);
     </script>
 </body>
 </html>

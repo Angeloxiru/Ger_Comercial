@@ -130,7 +130,7 @@
 
         .date-range {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 8px;
         }
 
@@ -1009,11 +1009,13 @@
             }
         };
 
-        // Inicializar
-        window.addEventListener('load', () => {
+        // Inicializar - carrega filtros na primeira vez E ao voltar (pageshow para bfcache)
+        const initFiltros = () => {
             carregarFiltros();
             console.log('📊 Cache Stats:', cache.getStats());
-        });
+        };
+        window.addEventListener('load', initFiltros);
+        window.addEventListener('pageshow', initFiltros);
     </script>
 </body>
 </html>
