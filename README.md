@@ -497,6 +497,31 @@ git filter-branch --force --index-filter \
 - ✅ Exportação Excel/PDF
 - ✅ Logo Germani Alimentos em todos os dashboards
 
+____________
+att: 
+📊 Atualizações - Dashboard de Cobrança Semanal
+Novo Módulo: Performance vs Potencial
+Adicionado controle semanal de performance da equipe comercial com métricas de penetração de mercado e eficiência por rota.
+🆕 Tabelas do Banco
+potencial_cidade: Potencial por cidade (população, coordenadas, rota)
+potencial_representante: Metas semanais (peso, clientes, SKUs)
+representante_cidades: Relacionamento representante ↔ cidades atendidas
+📈 O que Faz
+Compara vendas reais da semana vs. meta estabelecida
+Calcula % de penetração de clientes (ativos / potencial da cidade)
+Identifica representantes abaixo da meta para ação imediata
+Ranking automático por faturamento, peso e quantidade de clientes
+🚀 Como Usar
+Segunda-feira: Atualize os dados de vendas no Turso
+Acesse cobranca-semanal.html via GitPages
+Selecione a semana desejada no dropdown
+Representantes em vermelho requerem ação imediata (< 70% da meta)
+⚙️ Próximos Passos
+Análise de produtos "parados" (revenda semanal)
+Dashboard de margem e descontos
+Mapa de calor de performance geográfica
+
+
 ### 🚧 Em Desenvolvimento
 - Análise Financeira
 - Gestão de Estoque
