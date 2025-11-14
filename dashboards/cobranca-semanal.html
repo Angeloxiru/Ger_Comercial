@@ -1,303 +1,896 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-  <title>Cobrança Semanal | Ger.Comercial</title>
-  <script src="https://cdn.jsdelivr.net/npm/@libsql/client@0.5.6/lib-cdn.min.js"></script>
-  <style>
-    body { font-family: 'Segoe UI', Arial; margin: 20px; background: #f5f5f5; }
-    .filtros-container {
-      background: #e3f2fd;
-      padding: 20px;
-      border-radius: 4px;
-      margin: 10px 0;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      align-items: end;
-    }
-    .filtro-grupo {
-      display: flex;
-      flex-direction: column;
-    }
-    .filtro-grupo label {
-      font-weight: bold;
-      margin-bottom: 5px;
-      font-size: 14px;
-    }
-    select {
-      padding: 10px;
-      font-size: 16px;
-      width: 100%;
-      border: 1px solid #bbb;
-      border-radius: 4px;
-    }
-    .btn-atualizar {
-      padding: 10px 20px;
-      background: #1976d2;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: bold;
-      align-self: end;
-    }
-    .btn-atualizar:hover {
-      background: #1565c0;
-    }
-    .card { background: white; border-left: 5px solid #333; padding: 15px; margin: 10px 0; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .critico { border-left-color: #d32f2f; background: #ffebee; }
-    .atencao { border-left-color: #f57c00; background: #fff3e0; }
-    .excelente { border-left-color: #388e3c; background: #e8f5e8; }
-    .metrica { display: inline-block; width: 220px; margin: 5px; vertical-align: top; }
-    .barra { height: 20px; background: #ddd; border-radius: 10px; overflow: hidden; }
-    .barra-preenchida { height: 100%; background: #4caf50; transition: width 0.3s; }
-    .valor { font-size: 24px; font-weight: bold; color: #333; }
-    .label { font-size: 12px; color: #666; }
-    .header { background: #1976d2; color: white; padding: 10px; border-radius: 4px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Semanal - Ger Comercial</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #fc0303;
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-logo img {
+            height: 60px;
+            width: auto;
+        }
+
+        .header h1 {
+            font-size: 1.6em;
+            font-weight: 600;
+        }
+
+        .btn-voltar {
+            background: white;
+            color: #fc0303;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-voltar:hover {
+            background: #f8f9fa;
+        }
+
+        .filters-section {
+            background: white;
+            padding: 24px;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .filters-title {
+            color: #212529;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group label {
+            color: #495057;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 0.9em;
+            display: block;
+        }
+
+        .filter-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.95em;
+            transition: all 0.2s;
+            background: white;
+            cursor: pointer;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #fc0303;
+            box-shadow: 0 0 0 3px rgba(252, 3, 3, 0.1);
+        }
+
+        .filter-group select option:checked {
+            background: #03ff1c;
+            color: #000;
+            font-weight: 600;
+        }
+
+        .btn-atualizar {
+            background: #fc0303;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .btn-atualizar:hover {
+            background: #b50909;
+        }
+
+        .btn-atualizar:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* LAYOUT: 70% Tabela / 30% Dashboard */
+        .main-content {
+            display: grid;
+            grid-template-columns: 70% 30%;
+            gap: 20px;
+            margin: 20px;
+            min-height: calc(100vh - 400px);
+        }
+
+        .table-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .table-header {
+            background: #FFD700;
+            color: #212529;
+            padding: 16px 20px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-wrapper {
+            overflow-y: auto;
+            max-height: 650px;
+            flex: 1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+
+        th {
+            background: #f8f9fa;
+            color: #495057;
+            font-weight: 600;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 0.9em;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f3f5;
+            font-size: 0.9em;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-align: center;
+            display: inline-block;
+            min-width: 70px;
+        }
+
+        .status-acima {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-abaixo {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-medio {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .dashboard-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #fc0303;
+        }
+
+        .kpi-icon {
+            font-size: 1.8em;
+            margin-bottom: 8px;
+        }
+
+        .kpi-label {
+            color: #6c757d;
+            font-size: 0.75em;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .kpi-value {
+            color: #212529;
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            height: 300px;
+        }
+
+        .chart-title {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 12px;
+        }
+
+        .table-footer {
+            background: #f8f9fa;
+            padding: 12px 20px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+        }
+
+        .footer-total {
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .btn-export {
+            background: white;
+            color: #fc0303;
+            border: 1px solid #fc0303;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            margin-left: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-export:hover {
+            background: #fc0303;
+            color: white;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 20px;
+            font-size: 0.9em;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        #paginationContainer {
+            padding: 12px 20px;
+            border-top: 1px solid #dee2e6;
+        }
+    </style>
 </head>
 <body>
-  <h1>🎯 Dashboard de Cobrança Semanal</h1>
-
-  <div class="filtros-container">
-    <div class="filtro-grupo">
-      <label for="semanaSelect">📅 Semana:</label>
-      <select id="semanaSelect">
-        <option value="">Carregando...</option>
-      </select>
-    </div>
-
-    <div class="filtro-grupo">
-      <label for="supervisorSelect">👔 Supervisor:</label>
-      <select id="supervisorSelect" onchange="filtrarRepresentantes()">
-        <option value="">Todos</option>
-      </select>
-    </div>
-
-    <div class="filtro-grupo">
-      <label for="representanteSelect">👤 Representante:</label>
-      <select id="representanteSelect">
-        <option value="">Todos</option>
-      </select>
-    </div>
-
-    <button class="btn-atualizar" onclick="carregar()">🔁 Atualizar Dados</button>
-  </div>
-
-  <div id="dash"></div>
-
-<script>
-const client = libsql.createClient({
-  url: "libsql://comercial-angeloxiru.aws-us-east-1.turso.io",
-  authToken: "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NjI4ODQ2ODMsImlkIjoiMmI3NTFkOTQtNGI1ZS00ZjZhLWExMDktNTY0OTg3MzgyOGZhIiwicmlkIjoiOGZiZGQ3ZmMtOThmOC00MmMxLWExNzYtZmJiOTZhYmEwN2I0In0.ZjNIt9GEI01v_Ot9GnzsbS_FJIHjTVjCL9X8TdUJmi0LUfoMXX6xMJlRqNCRZiS6U3iNwkP709K_H8ybU9e3DQ"
-});
-
-let todosRepresentantes = [];
-
-// Inicializa os filtros
-async function inicializarFiltros() {
-  try {
-    // Carrega semanas
-    await carregarSemanas();
-
-    // Carrega supervisores e representantes
-    await carregarSupervisoresERepresentantes();
-
-  } catch (error) {
-    console.error('Erro ao inicializar filtros:', error);
-    alert('Erro ao carregar filtros: ' + error.message);
-  }
-}
-
-// Preenche o seletor de semanas
-async function carregarSemanas() {
-  try {
-    // Tenta buscar com ano_semana primeiro
-    let result = await client.execute('SELECT DISTINCT ano_semana FROM potencial_representante ORDER BY ano_semana DESC');
-
-    const select = document.getElementById('semanaSelect');
-    select.innerHTML = '';
-
-    if (result.rows.length === 0) {
-      select.innerHTML = '<option value="">Nenhuma semana disponível</option>';
-      return;
-    }
-
-    result.rows.forEach(row => {
-      const option = document.createElement('option');
-      option.value = row.ano_semana;
-      option.textContent = `Semana ${row.ano_semana}`;
-      select.appendChild(option);
-    });
-  } catch (error) {
-    console.error('Erro ao carregar semanas:', error);
-    document.getElementById('semanaSelect').innerHTML = '<option value="">Erro ao carregar</option>';
-  }
-}
-
-// Carrega supervisores e representantes
-async function carregarSupervisoresERepresentantes() {
-  try {
-    // Busca dados da view
-    const result = await client.execute('SELECT DISTINCT supervisor, representante FROM vw_performance_cobranca ORDER BY supervisor, representante');
-
-    todosRepresentantes = result.rows;
-
-    // Preenche supervisores
-    const supervisores = [...new Set(result.rows.map(r => r.supervisor))].filter(s => s);
-    const selectSupervisor = document.getElementById('supervisorSelect');
-    selectSupervisor.innerHTML = '<option value="">Todos</option>';
-
-    supervisores.forEach(sup => {
-      const option = document.createElement('option');
-      option.value = sup;
-      option.textContent = sup;
-      selectSupervisor.appendChild(option);
-    });
-
-    // Preenche todos representantes inicialmente
-    preencherRepresentantes();
-
-  } catch (error) {
-    console.error('Erro ao carregar supervisores:', error);
-  }
-}
-
-// Preenche select de representantes (filtrado por supervisor)
-function preencherRepresentantes(supervisorFiltro = null) {
-  const selectRep = document.getElementById('representanteSelect');
-  selectRep.innerHTML = '<option value="">Todos</option>';
-
-  let representantesFiltrados = todosRepresentantes;
-
-  if (supervisorFiltro) {
-    representantesFiltrados = todosRepresentantes.filter(r => r.supervisor === supervisorFiltro);
-  }
-
-  const representantesUnicos = [...new Set(representantesFiltrados.map(r => r.representante))].filter(r => r);
-
-  representantesUnicos.forEach(rep => {
-    const option = document.createElement('option');
-    option.value = rep;
-    option.textContent = rep;
-    selectRep.appendChild(option);
-  });
-}
-
-// Cascata: quando mudar supervisor, filtrar representantes
-function filtrarRepresentantes() {
-  const supervisorSelecionado = document.getElementById('supervisorSelect').value;
-  preencherRepresentantes(supervisorSelecionado || null);
-}
-
-async function carregar() {
-  const semanaSelecionada = document.getElementById('semanaSelect').value;
-  const supervisorSelecionado = document.getElementById('supervisorSelect').value;
-  const representanteSelecionado = document.getElementById('representanteSelect').value;
-
-  if (!semanaSelecionada) {
-    document.getElementById('dash').innerHTML = '<p style="color: red; text-align: center;">Selecione uma semana!</p>';
-    return;
-  }
-
-  try {
-    // Monta a query com filtros
-    let sql = `SELECT * FROM vw_performance_cobranca WHERE ano_semana = ?`;
-    const params = [semanaSelecionada];
-
-    if (supervisorSelecionado) {
-      sql += ' AND supervisor = ?';
-      params.push(supervisorSelecionado);
-    }
-
-    if (representanteSelecionado) {
-      sql += ' AND representante = ?';
-      params.push(representanteSelecionado);
-    }
-
-    sql += ' ORDER BY perc_peso ASC';
-
-    const result = await client.execute({
-      sql: sql,
-      args: params
-    });
-
-    const dash = document.getElementById('dash');
-
-    if (result.rows.length === 0) {
-      dash.innerHTML = `<p style="text-align: center; padding: 20px; color: #666;">
-        <strong>Nenhum dado encontrado para os filtros selecionados.</strong><br>
-        Verifique se:<br>
-        • As metas estão cadastradas na tabela potencial_representante<br>
-        • Existem vendas para essa semana<br>
-        • O relacionamento representante-cidade está correto<br>
-        • Os filtros estão corretos
-      </p>`;
-      return;
-    }
-
-    dash.innerHTML = '';
-
-    result.rows.forEach(row => {
-      let status = 'excelente';
-      let prioridade = '🟢';
-      if (row.perc_peso < 70 || row.perc_clientes < 70) {
-        status = 'critico';
-        prioridade = '🔴';
-      } else if (row.perc_peso < 85 || row.perc_clientes < 85) {
-        status = 'atencao';
-        prioridade = '🟡';
-      }
-
-      const html = `
-        <div class="card ${status}">
-          <div class="header">
-            <h3>${row.representante} - ${row.cidade} ${prioridade}</h3>
-            <p>Supervisor: ${row.supervisor} | População: ${parseInt(row.populacao || 0).toLocaleString('pt-BR')} hab.</p>
-          </div>
-
-          <div class="metrica">
-            <div class="valor">${parseFloat(row.perc_peso || 0).toFixed(1)}%</div>
-            <div class="label">Peso: ${parseFloat(row.peso_vendido || 0).toLocaleString('pt-BR')}kg / ${parseFloat(row.meta_peso || 0).toLocaleString('pt-BR')}kg</div>
-            <div class="barra"><div class="barra-preenchida" style="width: ${Math.min(row.perc_peso || 0, 100)}%"></div></div>
-          </div>
-
-          <div class="metrica">
-            <div class="valor">${parseFloat(row.perc_clientes || 0).toFixed(1)}%</div>
-            <div class="label">Clientes: ${row.clientes_positivados || 0}/${row.meta_clientes || 0}</div>
-            <div class="barra"><div class="barra-preenchida" style="width: ${Math.min(row.perc_clientes || 0, 100)}%"></div></div>
-          </div>
-
-          <div class="metrica">
-            <div class="valor">R$ ${parseFloat(row.faturamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-            <div class="label">Faturamento Semanal</div>
-          </div>
-
-          <div class="metrica">
-            <div class="valor">${parseFloat(row.penetracao_clientes_pct || 0).toFixed(1)}%</div>
-            <div class="label">Penetração (Potencial: ${Math.floor((row.populacao || 0)/1000)} clientes)</div>
-          </div>
-
-          <div class="metrica">
-            <div class="valor">${parseFloat(row.perc_desconto_medio || 0).toFixed(1)}%</div>
-            <div class="label">Desconto Médio</div>
-          </div>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="header-logo">
+                <img src="https://static.wixstatic.com/media/ce3165_c01db19c0ef64e2abb8c894c7ecc6f95~mv2.png/v1/fill/w_161,h_69,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/logomarca-Germani-2023-Branca-borda-dour.png" alt="Logo Germani Alimentos">
+            </div>
+            <h1>🎯 Performance Semanal</h1>
         </div>
-      `;
-      dash.innerHTML += html;
-    });
-  } catch (error) {
-    console.error('Erro ao carregar dados:', error);
-    document.getElementById('dash').innerHTML = `<p style="color: red; text-align: center;">
-      <strong>Erro ao carregar dados:</strong><br>
-      ${error.message}
-    </p>`;
-  }
-}
+        <a href="../index.html" class="btn-voltar">← Voltar</a>
+    </div>
 
-// Inicializa a página
-inicializarFiltros();
-</script>
+    <!-- Alerta de Configuração -->
+    <div id="configAlert" class="alert alert-warning" style="display: none;">
+        <strong>⚠️ Configuração Necessária!</strong><br>
+        Configure suas credenciais do Turso no arquivo <code>js/config.js</code>
+    </div>
+
+    <!-- Seção de Filtros -->
+    <div class="filters-section">
+        <div class="filters-title">
+            🔍 Filtros de Pesquisa
+        </div>
+
+        <div class="filters-grid">
+            <!-- Semana -->
+            <div class="filter-group">
+                <label>📅 Semana</label>
+                <select id="filtroSemana">
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+
+            <!-- Supervisor -->
+            <div class="filter-group">
+                <label>👔 Supervisor</label>
+                <select id="filtroSupervisor" multiple size="3">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+
+            <!-- Representante -->
+            <div class="filter-group">
+                <label>👤 Representante</label>
+                <select id="filtroRepresentante" multiple size="3">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">
+            🔄 Atualizar Dados
+        </button>
+    </div>
+
+    <!-- Conteúdo Principal: 70/30 -->
+    <div class="main-content">
+        <!-- Seção Tabela (70%) -->
+        <div class="table-section">
+            <div class="table-header">
+                <span>📊 Resultados da Performance</span>
+                <span id="totalRegistros">0 registros</span>
+            </div>
+
+            <div class="table-wrapper">
+                <table id="tabelaDados">
+                    <thead>
+                        <tr>
+                            <th>Supervisor</th>
+                            <th>Representante</th>
+                            <th>Cidade</th>
+                            <th>% Peso</th>
+                            <th>% Clientes</th>
+                            <th>Faturamento</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody">
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <div class="empty-state-icon">🎯</div>
+                                <div>Selecione os filtros e clique em "Atualizar Dados"</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="paginationContainer"></div>
+
+            <div class="table-footer">
+                <div class="footer-total" id="footerTotal">
+                    Total: 0 registros
+                </div>
+                <div>
+                    <button class="btn-export" onclick="exportarExcel()">📊 Excel</button>
+                    <button class="btn-export" onclick="exportarPDF()">📄 PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção Dashboard (30%) -->
+        <div class="dashboard-section">
+            <!-- KPIs em Grid 2x2 -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon">⚖️</div>
+                    <div class="kpi-label">MÉDIA % PESO</div>
+                    <div class="kpi-value" id="kpiPeso">0%</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">👥</div>
+                    <div class="kpi-label">MÉDIA % CLIENTES</div>
+                    <div class="kpi-value" id="kpiClientes">0%</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">💰</div>
+                    <div class="kpi-label">FATURAMENTO TOTAL</div>
+                    <div class="kpi-value" id="kpiFaturamento">R$ 0</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">📊</div>
+                    <div class="kpi-label">TOTAL REGISTROS</div>
+                    <div class="kpi-value" id="kpiTotal">0</div>
+                </div>
+            </div>
+
+            <!-- Gráfico 1: Top 10 Representantes -->
+            <div class="chart-container">
+                <div class="chart-title">🏆 Top 10 Representantes (% Peso)</div>
+                <canvas id="chart1"></canvas>
+            </div>
+
+            <!-- Gráfico 2: Distribuição de Status -->
+            <div class="chart-container">
+                <div class="chart-title">📊 Status de Cumprimento de Meta</div>
+                <canvas id="chart2"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from '../js/db.js';
+        import { config } from '../js/config.js';
+        import { cache, CACHE_TTL } from '../js/cache.js';
+        import { Pagination } from '../js/pagination.js';
+        import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
+
+        // Inicializa isolamento do dashboard
+        initDashboard('Performance Semanal');
+        registerCleanup();
+        preventStaleCache();
+
+        window.db = db;
+        window.dadosCompletos = [];
+        window.todosSupervisores = [];
+        window.todosRepresentantes = [];
+        let chart1, chart2;
+
+        // Verifica configuração
+        if (!config.authToken || config.authToken === 'SEU_TOKEN_AQUI') {
+            document.getElementById('configAlert').style.display = 'block';
+            document.getElementById('btnAtualizar').disabled = true;
+        }
+
+        // Configurar paginação (25 registros)
+        window.pagination = new Pagination('#paginationContainer', {
+            pageSize: 25,
+            renderCallback: renderizarTabela
+        });
+
+        // Carregar filtros
+        async function carregarFiltros() {
+            try {
+                if (!db.isConnected()) await db.connect();
+
+                // Buscar semanas disponíveis
+                const semanas = await db.execute(`
+                    SELECT DISTINCT ano_semana
+                    FROM vw_performance_cobranca
+                    ORDER BY ano_semana DESC
+                `);
+
+                const selectSemana = document.getElementById('filtroSemana');
+                selectSemana.innerHTML = '';
+
+                if (semanas.rows.length > 0) {
+                    semanas.rows.forEach(s => {
+                        const option = document.createElement('option');
+                        option.value = s.ano_semana;
+                        option.textContent = `Semana ${s.ano_semana}`;
+                        selectSemana.appendChild(option);
+                    });
+                    selectSemana.value = semanas.rows[0].ano_semana;
+                } else {
+                    selectSemana.innerHTML = '<option value="">Nenhuma semana disponível</option>';
+                }
+
+                // Buscar supervisores e representantes
+                const dados = await db.execute(`
+                    SELECT DISTINCT rep_supervisor, desc_representante
+                    FROM vw_performance_cobranca
+                    ORDER BY rep_supervisor, desc_representante
+                `);
+
+                window.todosSupervisores = [...new Set(dados.rows.map(r => r.rep_supervisor))].filter(s => s);
+                window.todosRepresentantes = dados.rows;
+
+                // Preencher supervisores
+                const selectSupervisor = document.getElementById('filtroSupervisor');
+                selectSupervisor.innerHTML = '<option value="">Todos</option>';
+                window.todosSupervisores.forEach(sup => {
+                    const option = document.createElement('option');
+                    option.value = sup;
+                    option.textContent = sup;
+                    selectSupervisor.appendChild(option);
+                });
+
+                // Preencher representantes (todos inicialmente)
+                preencherRepresentantes();
+
+            } catch (error) {
+                console.error('Erro ao carregar filtros:', error);
+                alert('Erro ao carregar filtros: ' + error.message);
+            }
+        }
+
+        // Preencher select de representantes (com filtro de supervisor)
+        function preencherRepresentantes() {
+            const supervisoresSelecionados = Array.from(
+                document.getElementById('filtroSupervisor').selectedOptions
+            ).map(o => o.value).filter(v => v !== '');
+
+            const selectRep = document.getElementById('filtroRepresentante');
+            selectRep.innerHTML = '<option value="">Todos</option>';
+
+            let representantesFiltrados = window.todosRepresentantes;
+
+            if (supervisoresSelecionados.length > 0) {
+                representantesFiltrados = window.todosRepresentantes.filter(r =>
+                    supervisoresSelecionados.includes(r.rep_supervisor)
+                );
+            }
+
+            const representantesUnicos = [...new Set(representantesFiltrados.map(r => r.desc_representante))];
+            representantesUnicos.forEach(rep => {
+                const option = document.createElement('option');
+                option.value = rep;
+                option.textContent = rep;
+                selectRep.appendChild(option);
+            });
+        }
+
+        // Cascata: quando mudar supervisor, filtrar representantes
+        document.getElementById('filtroSupervisor').addEventListener('change', preencherRepresentantes);
+
+        // Atualizar dados
+        window.atualizarDados = async function() {
+            try {
+                if (!db.isConnected()) await db.connect();
+
+                const semana = document.getElementById('filtroSemana').value;
+                const supervisoresSelecionados = Array.from(
+                    document.getElementById('filtroSupervisor').selectedOptions
+                ).map(o => o.value).filter(v => v !== '');
+                const representantesSelecionados = Array.from(
+                    document.getElementById('filtroRepresentante').selectedOptions
+                ).map(o => o.value).filter(v => v !== '');
+
+                if (!semana) {
+                    alert('Selecione uma semana');
+                    return;
+                }
+
+                let sql = `
+                    SELECT *
+                    FROM vw_performance_cobranca
+                    WHERE ano_semana = ?
+                `;
+                const params = [semana];
+
+                if (supervisoresSelecionados.length > 0) {
+                    sql += ` AND rep_supervisor IN (${supervisoresSelecionados.map(() => '?').join(',')})`;
+                    params.push(...supervisoresSelecionados);
+                }
+
+                if (representantesSelecionados.length > 0) {
+                    sql += ` AND desc_representante IN (${representantesSelecionados.map(() => '?').join(',')})`;
+                    params.push(...representantesSelecionados);
+                }
+
+                sql += ' ORDER BY perc_peso DESC';
+
+                const result = await db.execute({ sql, args: params });
+                window.dadosCompletos = result.rows;
+
+                // Atualizar paginação
+                window.pagination.setData(window.dadosCompletos);
+
+                // Atualizar KPIs
+                atualizarKPIs();
+
+                // Atualizar gráficos
+                atualizarGraficos();
+
+                // Atualizar contador
+                document.getElementById('totalRegistros').textContent = `${result.rows.length} registros`;
+                document.getElementById('footerTotal').textContent = `Total: ${result.rows.length} registros`;
+
+            } catch (error) {
+                console.error('Erro ao atualizar dados:', error);
+                alert('Erro ao atualizar dados: ' + error.message);
+            }
+        };
+
+        function renderizarTabela(dados) {
+            const tbody = document.getElementById('tbody');
+
+            if (dados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div>Nenhum registro encontrado</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = dados.map(row => {
+                const percPeso = parseFloat(row.perc_peso || 0);
+                const percClientes = parseFloat(row.perc_clientes || 0);
+
+                // Define status baseado na média dos 2 indicadores
+                const media = (percPeso + percClientes) / 2;
+                let statusClass, statusText;
+                if (media >= 100) {
+                    statusClass = 'status-acima';
+                    statusText = '✅ Acima';
+                } else if (media >= 80) {
+                    statusClass = 'status-medio';
+                    statusText = '⚠️ Médio';
+                } else {
+                    statusClass = 'status-abaixo';
+                    statusText = '❌ Abaixo';
+                }
+
+                return `
+                    <tr>
+                        <td>${row.rep_supervisor || '-'}</td>
+                        <td>${row.desc_representante || '-'}</td>
+                        <td>${row.cidade || '-'}</td>
+                        <td>${percPeso.toFixed(1)}%</td>
+                        <td>${percClientes.toFixed(1)}%</td>
+                        <td>R$ ${parseFloat(row.faturamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function atualizarKPIs() {
+            const dados = window.dadosCompletos;
+
+            if (dados.length === 0) {
+                document.getElementById('kpiPeso').textContent = '0%';
+                document.getElementById('kpiClientes').textContent = '0%';
+                document.getElementById('kpiFaturamento').textContent = 'R$ 0';
+                document.getElementById('kpiTotal').textContent = '0';
+                return;
+            }
+
+            const mediaPeso = dados.reduce((sum, r) => sum + parseFloat(r.perc_peso || 0), 0) / dados.length;
+            const mediaClientes = dados.reduce((sum, r) => sum + parseFloat(r.perc_clientes || 0), 0) / dados.length;
+            const totalFaturamento = dados.reduce((sum, r) => sum + parseFloat(r.faturamento || 0), 0);
+
+            document.getElementById('kpiPeso').textContent = mediaPeso.toFixed(1) + '%';
+            document.getElementById('kpiClientes').textContent = mediaClientes.toFixed(1) + '%';
+            document.getElementById('kpiFaturamento').textContent = 'R$ ' + totalFaturamento.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            document.getElementById('kpiTotal').textContent = dados.length.toLocaleString('pt-BR');
+        }
+
+        function atualizarGraficos() {
+            const dados = window.dadosCompletos;
+
+            // Gráfico 1: Top 10 Representantes por % Peso
+            const top10 = [...dados]
+                .sort((a, b) => parseFloat(b.perc_peso || 0) - parseFloat(a.perc_peso || 0))
+                .slice(0, 10);
+
+            if (chart1) chart1.destroy();
+            const ctx1 = document.getElementById('chart1').getContext('2d');
+            chart1 = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: top10.map(r => r.desc_representante),
+                    datasets: [{
+                        label: '% Peso',
+                        data: top10.map(r => parseFloat(r.perc_peso || 0)),
+                        backgroundColor: '#fc0303',
+                        borderColor: '#b50909',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Gráfico 2: Distribuição de Status
+            const acima = dados.filter(r => {
+                const media = (parseFloat(r.perc_peso || 0) + parseFloat(r.perc_clientes || 0)) / 2;
+                return media >= 100;
+            }).length;
+
+            const medio = dados.filter(r => {
+                const media = (parseFloat(r.perc_peso || 0) + parseFloat(r.perc_clientes || 0)) / 2;
+                return media >= 80 && media < 100;
+            }).length;
+
+            const abaixo = dados.length - acima - medio;
+
+            if (chart2) chart2.destroy();
+            const ctx2 = document.getElementById('chart2').getContext('2d');
+            chart2 = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Acima da Meta', 'Médio', 'Abaixo da Meta'],
+                    datasets: [{
+                        data: [acima, medio, abaixo],
+                        backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Exportar Excel
+        window.exportarExcel = async function() {
+            try {
+                const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
+
+                const dadosExport = window.dadosCompletos.map(row => ({
+                    'Supervisor': row.rep_supervisor,
+                    'Representante': row.desc_representante,
+                    'Cidade': row.cidade,
+                    '% Peso': parseFloat(row.perc_peso || 0).toFixed(1) + '%',
+                    '% Clientes': parseFloat(row.perc_clientes || 0).toFixed(1) + '%',
+                    'Faturamento': 'R$ ' + parseFloat(row.faturamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})
+                }));
+
+                const ws = XLSX.utils.json_to_sheet(dadosExport);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Performance');
+
+                const semana = document.getElementById('filtroSemana').value;
+                XLSX.writeFile(wb, `performance_semanal_${semana}.xlsx`);
+
+            } catch (error) {
+                console.error('Erro ao exportar Excel:', error);
+                alert('Erro ao exportar Excel: ' + error.message);
+            }
+        };
+
+        // Exportar PDF
+        window.exportarPDF = async function() {
+            try {
+                const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+
+                const doc = new jsPDF();
+
+                doc.setFontSize(18);
+                doc.setTextColor(252, 3, 3);
+                doc.text('Performance Semanal', 14, 20);
+
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+
+                const tableData = window.dadosCompletos.map(row => [
+                    row.rep_supervisor || '-',
+                    row.desc_representante || '-',
+                    row.cidade || '-',
+                    parseFloat(row.perc_peso || 0).toFixed(1) + '%',
+                    parseFloat(row.perc_clientes || 0).toFixed(1) + '%',
+                    'R$ ' + parseFloat(row.faturamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})
+                ]);
+
+                doc.autoTable({
+                    head: [['Supervisor', 'Representante', 'Cidade', '% Peso', '% Clientes', 'Faturamento']],
+                    body: tableData,
+                    startY: 35,
+                    theme: 'striped',
+                    headStyles: {
+                        fillColor: [252, 3, 3],
+                        textColor: [255, 255, 255],
+                        fontStyle: 'bold'
+                    },
+                    alternateRowStyles: {
+                        fillColor: [248, 249, 250]
+                    }
+                });
+
+                const semana = document.getElementById('filtroSemana').value;
+                doc.save(`performance_semanal_${semana}.pdf`);
+
+            } catch (error) {
+                console.error('Erro ao exportar PDF:', error);
+                alert('Erro ao exportar PDF: ' + error.message);
+            }
+        };
+
+        // Inicializar
+        window.addEventListener('load', carregarFiltros);
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted || performance.getEntriesByType("navigation")[0].type === 'back_forward') {
+                carregarFiltros();
+            }
+        });
+    </script>
 </body>
 </html>
