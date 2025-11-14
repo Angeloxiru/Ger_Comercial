@@ -1,116 +1,137 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>DEBUG - Cobrança Semanal</title>
+  <title>Cobrança Semanal | Ger.Comercial</title>
   <script src="https://cdn.jsdelivr.net/npm/@libsql/client@0.5.6/lib-cdn.min.js"></script>
   <style>
-    body { font-family: Arial; margin: 20px; }
-    #debug { background: #ffebee; border: 2px solid #d32f2f; padding: 15px; margin: 10px 0; border-radius: 4px; }
-    #debug h3 { color: #d32f2f; }
-    .success { background: #e8f5e8; border-color: #388e3c; }
-    .success h3 { color: #388e3c; }
+    body { font-family: 'Segoe UI', Arial; margin: 20px; background: #f5f5f5; }
+    .card { background: white; border-left: 5px solid #333; padding: 15px; margin: 10px 0; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .critico { border-left-color: #d32f2f; background: #ffebee; }
+    .atencao { border-left-color: #f57c00; background: #fff3e0; }
+    .excelente { border-left-color: #388e3c; background: #e8f5e8; }
+    .metrica { display: inline-block; width: 220px; margin: 5px; vertical-align: top; }
+    .barra { height: 20px; background: #ddd; border-radius: 10px; overflow: hidden; }
+    .barra-preenchida { height: 100%; background: #4caf50; transition: width 0.3s; }
+    .valor { font-size: 24px; font-weight: bold; color: #333; }
+    .label { font-size: 12px; color: #666; }
+    .header { background: #1976d2; color: white; padding: 10px; border-radius: 4px; }
+    select { padding: 8px; font-size: 16px; margin: 10px 0; width: 200px; }
   </style>
 </head>
 <body>
-  <h1>🐛 DEBUG - Dashboard de Cobrança</h1>
+  <h1>🎯 Dashboard de Cobrança Semanal</h1>
   
-  <div id="debug"></div>
-  
-  <div id="conteudo" style="display: none;">
-    <p><strong>Semana Selecionada:</strong> <span id="semanaSelecionada"></span></p>
-    <button onclick="carregarDados()">Atualizar Dados</button>
-    <div id="dash"></div>
+  <div style="background: #e3f2fd; padding: 15px; border-radius: 4px; margin: 10px 0;">
+    <label for="semanaSelect"><strong>Selecione a Semana:</strong></label><br>
+    <select id="semanaSelect" onchange="carregar()">
+      <!-- Semanas serão carregadas automaticamente -->
+    </select>
+    <button onclick="carregar()" style="padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">🔁 Atualizar Dados</button>
   </div>
+  
+  <div id="dash"></div>
 
 <script>
-const CONFIG = {
+const client = libsql.createClient({
   url: "libsql://comercial-angeloxiru.aws-us-east-1.turso.io",
   authToken: "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NjI4ODQ2ODMsImlkIjoiMmI3NTFkOTQtNGI1ZS00ZjZhLWExMDktNTY0OTg3MzgyOGZhIiwicmlkIjoiOGZiZGQ3ZmMtOThmOC00MmMxLWExNzYtZmJiOTZhYmEwN2I0In0.ZjNIt9GEI01v_Ot9GnzsbS_FJIHjTVjCL9X8TdUJmi0LUfoMXX6xMJlRqNCRZiS6U3iNwkP709K_H8ybU9e3DQ"
-};
+});
 
-const debug = document.getElementById('debug');
-const conteudo = document.getElementById('conteudo');
-
-// Função para mostrar mensagens de debug
-function logDebug(mensagem, tipo = 'erro') {
-  const div = document.createElement('div');
-  div.innerHTML = `<h3>🔍 ${tipo.toUpperCase()}:</h3><pre>${mensagem}</pre>`;
-  div.className = tipo === 'sucesso' ? 'success' : '';
-  debug.appendChild(div);
+// Preenche o seletor de semanas
+async function carregarSemanas() {
+  const result = await client.execute('SELECT DISTINCT ano_semana FROM potencial_representante ORDER BY ano_semana DESC');
+  const select = document.getElementById('semanaSelect');
+  select.innerHTML = '';
+  
+  result.rows.forEach(row => {
+    const option = document.createElement('option');
+    option.value = row.ano_semana;
+    option.textContent = `Semana ${row.ano_semana}`;
+    select.appendChild(option);
+  });
 }
 
-// Passo 1: Testar conexão
-async function testarConexao() {
-  logDebug('Testando conexão com Turso...');
-  logDebug(`URL: ${CONFIG.url}`);
-  logDebug(`Token: ${CONFIG.authToken.substring(0, 10)}...`);
+async function carregar() {
+  const semanaSelecionada = document.getElementById('semanaSelect').value;
   
-  try {
-    const client = libsql.createClient(CONFIG);
-    const result = await client.execute('SELECT 1 as teste');
-    logDebug(`✅ Conexão OK: ${JSON.stringify(result.rows)}`, 'sucesso');
-    return true;
-  } catch (erro) {
-    logDebug(`❌ ERRO NA CONEXÃO: ${erro.message}`);
-    return false;
+  if (!semanaSelecionada) {
+    document.getElementById('dash').innerHTML = '<p style="color: red; text-align: center;">Selecione uma semana!</p>';
+    return;
   }
-}
-
-// Passo 2: Testar query de semanas
-async function testarQuerySemanas() {
-  logDebug('\n--- Testando query de semanas ---');
-  logDebug('SQL: SELECT DISTINCT ano_semana FROM potencial_representante ORDER BY ano_semana DESC');
   
-  try {
-    const client = libsql.createClient(CONFIG);
-    const result = await client.execute('SELECT DISTINCT ano_semana FROM potencial_representante ORDER BY ano_semana DESC');
-    logDebug(`✅ Query OK: ${result.rows.length} semanas encontradas`, 'sucesso');
-    logDebug(`Dados: ${JSON.stringify(result.rows)}`);
-    return result.rows;
-  } catch (erro) {
-    logDebug(`❌ ERRO NA QUERY: ${erro.message}`);
-    return null;
+  const result = await client.execute(`
+    SELECT * FROM vw_performance_cobranca 
+    WHERE ano_semana = '${semanaSelecionada}'
+    ORDER BY perc_peso ASC
+  `);
+  
+  const dash = document.getElementById('dash');
+  
+  if (result.rows.length === 0) {
+    dash.innerHTML = `<p style="text-align: center; padding: 20px; color: #666;">
+      <strong>Nenhum dado encontrado para a semana ${semanaSelecionada}.</strong><br>
+      Verifique se:<br>
+      • As metas estão cadastradas na tabela potencial_representante<br>
+      • Existem vendas para essa semana<br>
+      • O relacionamento representante-cidade está correto
+    </p>`;
+    return;
   }
+  
+  dash.innerHTML = '';
+  
+  result.rows.forEach(row => {
+    let status = 'excelente';
+    let prioridade = '🟢';
+    if (row.perc_peso < 70 || row.perc_clientes < 70) { 
+      status = 'critico'; 
+      prioridade = '🔴';
+    } else if (row.perc_peso < 85 || row.perc_clientes < 85) { 
+      status = 'atencao'; 
+      prioridade = '🟡';
+    }
+    
+    const html = `
+      <div class="card ${status}">
+        <div class="header">
+          <h3>${row.representante} - ${row.cidade} ${prioridade}</h3>
+          <p>Supervisor: ${row.supervisor} | População: ${parseInt(row.populacao).toLocaleString('pt-BR')} hab.</p>
+        </div>
+        
+        <div class="metrica">
+          <div class="valor">${row.perc_peso}%</div>
+          <div class="label">Peso: ${parseFloat(row.peso_vendido).toLocaleString('pt-BR')}kg / ${parseFloat(row.meta_peso).toLocaleString('pt-BR')}kg</div>
+          <div class="barra"><div class="barra-preenchida" style="width: ${row.perc_peso}%"></div></div>
+        </div>
+        
+        <div class="metrica">
+          <div class="valor">${row.perc_clientes}%</div>
+          <div class="label">Clientes: ${row.clientes_positivados}/${row.meta_clientes}</div>
+          <div class="barra"><div class="barra-preenchida" style="width: ${row.perc_clientes}%"></div></div>
+        </div>
+        
+        <div class="metrica">
+          <div class="valor">R$ ${parseFloat(row.faturamento).toLocaleString('pt-BR')}</div>
+          <div class="label">Faturamento Semanal</div>
+        </div>
+        
+        <div class="metrica">
+          <div class="valor">${row.penetracao_clientes_pct}%</div>
+          <div class="label">Penetração (Potencial: ${Math.floor(row.populacao/1000)} clientes)</div>
+        </div>
+        
+        <div class="metrica">
+          <div class="valor">${row.perc_desconto_medio}%</div>
+          <div class="label">Desconto Médio</div>
+        </div>
+      </div>
+    `;
+    dash.innerHTML += html;
+  });
 }
 
-// Passo 3: Testar view completa
-async function testarViewCompleta() {
-  logDebug('\n--- Testando view completa ---');
-  logDebug('SQL: SELECT * FROM vw_performance_cobranca WHERE ano_semana = \'2025-40\' LIMIT 5');
-  
-  try {
-    const client = libsql.createClient(CONFIG);
-    const result = await client.execute("SELECT * FROM vw_performance_cobranca WHERE ano_semana = '2025-40' LIMIT 5");
-    logDebug(`✅ View OK: ${result.rows.length} registros`, 'sucesso');
-    logDebug(`Dados: ${JSON.stringify(result.rows)}`);
-    return result.rows;
-  } catch (erro) {
-    logDebug(`❌ ERRO NA VIEW: ${erro.message}`);
-    return null;
-  }
-}
-
-// Inicialização completa
-async function inicializar() {
-  debug.innerHTML = '<h2>🔍 Iniciando Debug...</h2>';
-  
-  const conexaoOK = await testarConexao();
-  if (!conexaoOK) return;
-  
-  const semanas = await testarQuerySemanas();
-  if (!semanas) return;
-  
-  const dados = await testarViewCompleta();
-  
-  if (semanas && dados) {
-    logDebug('\n🎉 TODOS OS TESTES PASSARAM!', 'sucesso');
-    logDebug('O problema está no código original. Use a próxima versão.', 'sucesso');
-    // Aqui você pode chamar o código real
-  }
-}
-
-// Execute ao carregar a página
-inicializar();
+// Inicializa a página
+carregarSemanas();
 </script>
 </body>
 </html>
