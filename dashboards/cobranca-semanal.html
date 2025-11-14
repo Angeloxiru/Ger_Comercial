@@ -639,7 +639,7 @@
 
                 sql += ' ORDER BY perc_peso DESC';
 
-                const result = await db.execute({ sql, args: params });
+                const result = await db.execute(sql, params);
                 window.dadosCompletos = result.rows;
 
                 // Atualizar paginação
