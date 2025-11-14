@@ -5,6 +5,46 @@
   <script src="https://cdn.jsdelivr.net/npm/@libsql/client@0.5.6/lib-cdn.min.js"></script>
   <style>
     body { font-family: 'Segoe UI', Arial; margin: 20px; background: #f5f5f5; }
+    .filtros-container {
+      background: #e3f2fd;
+      padding: 20px;
+      border-radius: 4px;
+      margin: 10px 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      align-items: end;
+    }
+    .filtro-grupo {
+      display: flex;
+      flex-direction: column;
+    }
+    .filtro-grupo label {
+      font-weight: bold;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    select {
+      padding: 10px;
+      font-size: 16px;
+      width: 100%;
+      border: 1px solid #bbb;
+      border-radius: 4px;
+    }
+    .btn-atualizar {
+      padding: 10px 20px;
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      align-self: end;
+    }
+    .btn-atualizar:hover {
+      background: #1565c0;
+    }
     .card { background: white; border-left: 5px solid #333; padding: 15px; margin: 10px 0; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .critico { border-left-color: #d32f2f; background: #ffebee; }
     .atencao { border-left-color: #f57c00; background: #fff3e0; }
@@ -15,20 +55,36 @@
     .valor { font-size: 24px; font-weight: bold; color: #333; }
     .label { font-size: 12px; color: #666; }
     .header { background: #1976d2; color: white; padding: 10px; border-radius: 4px; }
-    select { padding: 8px; font-size: 16px; margin: 10px 0; width: 200px; }
   </style>
 </head>
 <body>
   <h1>🎯 Dashboard de Cobrança Semanal</h1>
-  
-  <div style="background: #e3f2fd; padding: 15px; border-radius: 4px; margin: 10px 0;">
-    <label for="semanaSelect"><strong>Selecione a Semana:</strong></label><br>
-    <select id="semanaSelect" onchange="carregar()">
-      <!-- Semanas serão carregadas automaticamente -->
-    </select>
-    <button onclick="carregar()" style="padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">🔁 Atualizar Dados</button>
+
+  <div class="filtros-container">
+    <div class="filtro-grupo">
+      <label for="semanaSelect">📅 Semana:</label>
+      <select id="semanaSelect">
+        <option value="">Carregando...</option>
+      </select>
+    </div>
+
+    <div class="filtro-grupo">
+      <label for="supervisorSelect">👔 Supervisor:</label>
+      <select id="supervisorSelect" onchange="filtrarRepresentantes()">
+        <option value="">Todos</option>
+      </select>
+    </div>
+
+    <div class="filtro-grupo">
+      <label for="representanteSelect">👤 Representante:</label>
+      <select id="representanteSelect">
+        <option value="">Todos</option>
+      </select>
+    </div>
+
+    <button class="btn-atualizar" onclick="carregar()">🔁 Atualizar Dados</button>
   </div>
-  
+
   <div id="dash"></div>
 
 <script>
@@ -37,101 +93,211 @@ const client = libsql.createClient({
   authToken: "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NjI4ODQ2ODMsImlkIjoiMmI3NTFkOTQtNGI1ZS00ZjZhLWExMDktNTY0OTg3MzgyOGZhIiwicmlkIjoiOGZiZGQ3ZmMtOThmOC00MmMxLWExNzYtZmJiOTZhYmEwN2I0In0.ZjNIt9GEI01v_Ot9GnzsbS_FJIHjTVjCL9X8TdUJmi0LUfoMXX6xMJlRqNCRZiS6U3iNwkP709K_H8ybU9e3DQ"
 });
 
+let todosRepresentantes = [];
+
+// Inicializa os filtros
+async function inicializarFiltros() {
+  try {
+    // Carrega semanas
+    await carregarSemanas();
+
+    // Carrega supervisores e representantes
+    await carregarSupervisoresERepresentantes();
+
+  } catch (error) {
+    console.error('Erro ao inicializar filtros:', error);
+    alert('Erro ao carregar filtros: ' + error.message);
+  }
+}
+
 // Preenche o seletor de semanas
 async function carregarSemanas() {
-  const result = await client.execute('SELECT DISTINCT ano_semana FROM potencial_representante ORDER BY ano_semana DESC');
-  const select = document.getElementById('semanaSelect');
-  select.innerHTML = '';
-  
-  result.rows.forEach(row => {
+  try {
+    // Tenta buscar com ano_semana primeiro
+    let result = await client.execute('SELECT DISTINCT ano_semana FROM potencial_representante ORDER BY ano_semana DESC');
+
+    const select = document.getElementById('semanaSelect');
+    select.innerHTML = '';
+
+    if (result.rows.length === 0) {
+      select.innerHTML = '<option value="">Nenhuma semana disponível</option>';
+      return;
+    }
+
+    result.rows.forEach(row => {
+      const option = document.createElement('option');
+      option.value = row.ano_semana;
+      option.textContent = `Semana ${row.ano_semana}`;
+      select.appendChild(option);
+    });
+  } catch (error) {
+    console.error('Erro ao carregar semanas:', error);
+    document.getElementById('semanaSelect').innerHTML = '<option value="">Erro ao carregar</option>';
+  }
+}
+
+// Carrega supervisores e representantes
+async function carregarSupervisoresERepresentantes() {
+  try {
+    // Busca dados da view
+    const result = await client.execute('SELECT DISTINCT supervisor, representante FROM vw_performance_cobranca ORDER BY supervisor, representante');
+
+    todosRepresentantes = result.rows;
+
+    // Preenche supervisores
+    const supervisores = [...new Set(result.rows.map(r => r.supervisor))].filter(s => s);
+    const selectSupervisor = document.getElementById('supervisorSelect');
+    selectSupervisor.innerHTML = '<option value="">Todos</option>';
+
+    supervisores.forEach(sup => {
+      const option = document.createElement('option');
+      option.value = sup;
+      option.textContent = sup;
+      selectSupervisor.appendChild(option);
+    });
+
+    // Preenche todos representantes inicialmente
+    preencherRepresentantes();
+
+  } catch (error) {
+    console.error('Erro ao carregar supervisores:', error);
+  }
+}
+
+// Preenche select de representantes (filtrado por supervisor)
+function preencherRepresentantes(supervisorFiltro = null) {
+  const selectRep = document.getElementById('representanteSelect');
+  selectRep.innerHTML = '<option value="">Todos</option>';
+
+  let representantesFiltrados = todosRepresentantes;
+
+  if (supervisorFiltro) {
+    representantesFiltrados = todosRepresentantes.filter(r => r.supervisor === supervisorFiltro);
+  }
+
+  const representantesUnicos = [...new Set(representantesFiltrados.map(r => r.representante))].filter(r => r);
+
+  representantesUnicos.forEach(rep => {
     const option = document.createElement('option');
-    option.value = row.ano_semana;
-    option.textContent = `Semana ${row.ano_semana}`;
-    select.appendChild(option);
+    option.value = rep;
+    option.textContent = rep;
+    selectRep.appendChild(option);
   });
+}
+
+// Cascata: quando mudar supervisor, filtrar representantes
+function filtrarRepresentantes() {
+  const supervisorSelecionado = document.getElementById('supervisorSelect').value;
+  preencherRepresentantes(supervisorSelecionado || null);
 }
 
 async function carregar() {
   const semanaSelecionada = document.getElementById('semanaSelect').value;
-  
+  const supervisorSelecionado = document.getElementById('supervisorSelect').value;
+  const representanteSelecionado = document.getElementById('representanteSelect').value;
+
   if (!semanaSelecionada) {
     document.getElementById('dash').innerHTML = '<p style="color: red; text-align: center;">Selecione uma semana!</p>';
     return;
   }
-  
-  const result = await client.execute(`
-    SELECT * FROM vw_performance_cobranca 
-    WHERE ano_semana = '${semanaSelecionada}'
-    ORDER BY perc_peso ASC
-  `);
-  
-  const dash = document.getElementById('dash');
-  
-  if (result.rows.length === 0) {
-    dash.innerHTML = `<p style="text-align: center; padding: 20px; color: #666;">
-      <strong>Nenhum dado encontrado para a semana ${semanaSelecionada}.</strong><br>
-      Verifique se:<br>
-      • As metas estão cadastradas na tabela potencial_representante<br>
-      • Existem vendas para essa semana<br>
-      • O relacionamento representante-cidade está correto
-    </p>`;
-    return;
-  }
-  
-  dash.innerHTML = '';
-  
-  result.rows.forEach(row => {
-    let status = 'excelente';
-    let prioridade = '🟢';
-    if (row.perc_peso < 70 || row.perc_clientes < 70) { 
-      status = 'critico'; 
-      prioridade = '🔴';
-    } else if (row.perc_peso < 85 || row.perc_clientes < 85) { 
-      status = 'atencao'; 
-      prioridade = '🟡';
+
+  try {
+    // Monta a query com filtros
+    let sql = `SELECT * FROM vw_performance_cobranca WHERE ano_semana = ?`;
+    const params = [semanaSelecionada];
+
+    if (supervisorSelecionado) {
+      sql += ' AND supervisor = ?';
+      params.push(supervisorSelecionado);
     }
-    
-    const html = `
-      <div class="card ${status}">
-        <div class="header">
-          <h3>${row.representante} - ${row.cidade} ${prioridade}</h3>
-          <p>Supervisor: ${row.supervisor} | População: ${parseInt(row.populacao).toLocaleString('pt-BR')} hab.</p>
+
+    if (representanteSelecionado) {
+      sql += ' AND representante = ?';
+      params.push(representanteSelecionado);
+    }
+
+    sql += ' ORDER BY perc_peso ASC';
+
+    const result = await client.execute({
+      sql: sql,
+      args: params
+    });
+
+    const dash = document.getElementById('dash');
+
+    if (result.rows.length === 0) {
+      dash.innerHTML = `<p style="text-align: center; padding: 20px; color: #666;">
+        <strong>Nenhum dado encontrado para os filtros selecionados.</strong><br>
+        Verifique se:<br>
+        • As metas estão cadastradas na tabela potencial_representante<br>
+        • Existem vendas para essa semana<br>
+        • O relacionamento representante-cidade está correto<br>
+        • Os filtros estão corretos
+      </p>`;
+      return;
+    }
+
+    dash.innerHTML = '';
+
+    result.rows.forEach(row => {
+      let status = 'excelente';
+      let prioridade = '🟢';
+      if (row.perc_peso < 70 || row.perc_clientes < 70) {
+        status = 'critico';
+        prioridade = '🔴';
+      } else if (row.perc_peso < 85 || row.perc_clientes < 85) {
+        status = 'atencao';
+        prioridade = '🟡';
+      }
+
+      const html = `
+        <div class="card ${status}">
+          <div class="header">
+            <h3>${row.representante} - ${row.cidade} ${prioridade}</h3>
+            <p>Supervisor: ${row.supervisor} | População: ${parseInt(row.populacao || 0).toLocaleString('pt-BR')} hab.</p>
+          </div>
+
+          <div class="metrica">
+            <div class="valor">${parseFloat(row.perc_peso || 0).toFixed(1)}%</div>
+            <div class="label">Peso: ${parseFloat(row.peso_vendido || 0).toLocaleString('pt-BR')}kg / ${parseFloat(row.meta_peso || 0).toLocaleString('pt-BR')}kg</div>
+            <div class="barra"><div class="barra-preenchida" style="width: ${Math.min(row.perc_peso || 0, 100)}%"></div></div>
+          </div>
+
+          <div class="metrica">
+            <div class="valor">${parseFloat(row.perc_clientes || 0).toFixed(1)}%</div>
+            <div class="label">Clientes: ${row.clientes_positivados || 0}/${row.meta_clientes || 0}</div>
+            <div class="barra"><div class="barra-preenchida" style="width: ${Math.min(row.perc_clientes || 0, 100)}%"></div></div>
+          </div>
+
+          <div class="metrica">
+            <div class="valor">R$ ${parseFloat(row.faturamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+            <div class="label">Faturamento Semanal</div>
+          </div>
+
+          <div class="metrica">
+            <div class="valor">${parseFloat(row.penetracao_clientes_pct || 0).toFixed(1)}%</div>
+            <div class="label">Penetração (Potencial: ${Math.floor((row.populacao || 0)/1000)} clientes)</div>
+          </div>
+
+          <div class="metrica">
+            <div class="valor">${parseFloat(row.perc_desconto_medio || 0).toFixed(1)}%</div>
+            <div class="label">Desconto Médio</div>
+          </div>
         </div>
-        
-        <div class="metrica">
-          <div class="valor">${row.perc_peso}%</div>
-          <div class="label">Peso: ${parseFloat(row.peso_vendido).toLocaleString('pt-BR')}kg / ${parseFloat(row.meta_peso).toLocaleString('pt-BR')}kg</div>
-          <div class="barra"><div class="barra-preenchida" style="width: ${row.perc_peso}%"></div></div>
-        </div>
-        
-        <div class="metrica">
-          <div class="valor">${row.perc_clientes}%</div>
-          <div class="label">Clientes: ${row.clientes_positivados}/${row.meta_clientes}</div>
-          <div class="barra"><div class="barra-preenchida" style="width: ${row.perc_clientes}%"></div></div>
-        </div>
-        
-        <div class="metrica">
-          <div class="valor">R$ ${parseFloat(row.faturamento).toLocaleString('pt-BR')}</div>
-          <div class="label">Faturamento Semanal</div>
-        </div>
-        
-        <div class="metrica">
-          <div class="valor">${row.penetracao_clientes_pct}%</div>
-          <div class="label">Penetração (Potencial: ${Math.floor(row.populacao/1000)} clientes)</div>
-        </div>
-        
-        <div class="metrica">
-          <div class="valor">${row.perc_desconto_medio}%</div>
-          <div class="label">Desconto Médio</div>
-        </div>
-      </div>
-    `;
-    dash.innerHTML += html;
-  });
+      `;
+      dash.innerHTML += html;
+    });
+  } catch (error) {
+    console.error('Erro ao carregar dados:', error);
+    document.getElementById('dash').innerHTML = `<p style="color: red; text-align: center;">
+      <strong>Erro ao carregar dados:</strong><br>
+      ${error.message}
+    </p>`;
+  }
 }
 
 // Inicializa a página
-carregarSemanas();
+inicializarFiltros();
 </script>
 </body>
 </html>
