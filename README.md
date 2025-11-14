@@ -1,21 +1,21 @@
-# 🗄️ Ger_Comercial
+# 📊 Ger Comercial - Sistema Integrado de Gerenciamento
 
-Sistema de Gerenciamento Comercial integrado com Turso Database (LibSQL)
+Sistema de Gerenciamento Comercial desenvolvido com Turso Database (LibSQL), otimizado para análise de vendas com dashboards interativos e filtros inteligentes.
 
-## 📋 Sobre o Projeto
+---
 
-O **Ger_Comercial** é um sistema de gerenciamento comercial desenvolvido para funcionar 100% no navegador (GitHub Pages), integrado com o banco de dados Turso (LibSQL/SQLite). Este projeto oferece dashboards visuais, relatórios detalhados e exportação de dados sem necessidade de servidor backend.
+## ✨ Destaques do Sistema
 
-### ✨ Características
-
-- ✅ 100% Frontend (JavaScript ES Modules)
-- ✅ Banco de dados na nuvem (Turso/LibSQL)
-- ✅ Dashboard gerencial com múltiplos relatórios
-- ✅ Filtros avançados com seleção múltipla
-- ✅ Exportação para Excel e PDF
-- ✅ Deploy via GitHub Pages
-- ✅ Interface moderna e responsiva
-- ✅ Sem necessidade de terminal ou backend
+- ✅ **100% Frontend** - JavaScript ES Modules, sem backend necessário
+- ✅ **Turso Database** - Cloud SQLite otimizado com 26 índices de performance
+- ✅ **Layout 70/30** - Tabela principal (70%) + Dashboard lateral (30%)
+- ✅ **4 Dashboards Completos** - Região, Equipe, Produtos, Clientes
+- ✅ **Filtros Inteligentes** - Busca em tempo real e cascata automática
+- ✅ **Cache Otimizado** - LocalStorage com TTL para performance máxima
+- ✅ **Paginação Eficiente** - 25 registros por página com navegação rápida
+- ✅ **Gráficos Interativos** - Chart.js com visualizações dinâmicas
+- ✅ **Exportação de Dados** - Excel e PDF com um clique
+- ✅ **GitHub Pages Ready** - Deploy automático configurado
 
 ---
 
@@ -25,30 +25,102 @@ O **Ger_Comercial** é um sistema de gerenciamento comercial desenvolvido para f
 
 ---
 
-## ⚙️ Configuração
+## 📁 Estrutura do Projeto
 
-### 1️⃣ Obter Token do Turso
+```
+Ger_Comercial/
+│
+├── index.html                     # 🏠 Página inicial com menu de dashboards
+│
+├── dashboards/                    # 📊 Dashboards de análise
+│   ├── dashboard-vendas-regiao.html        # Vendas por região
+│   ├── dashboard-vendas-equipe.html        # Vendas por equipe comercial
+│   ├── dashboard-analise-produtos.html     # Análise de produtos
+│   └── dashboard-performance-clientes.html # Performance de clientes
+│
+├── tools/                         # 🔧 Ferramentas de diagnóstico
+│   ├── diagnostico.html           # Diagnóstico de conexão e dados
+│   └── limpar-cache.html          # Limpeza de cache do sistema
+│
+├── js/                            # 📦 Módulos JavaScript
+│   ├── config.js                  # ⚙️ Configurações do banco (TOKEN AQUI!)
+│   ├── config.example.js          # Exemplo de configuração
+│   ├── db.js                      # Gerenciador de conexão e queries
+│   ├── cache.js                   # Sistema de cache com TTL
+│   ├── pagination.js              # Paginação de tabelas
+│   ├── filter-search.js           # Busca em tempo real em filtros
+│   └── dashboard-isolation.js     # Isolamento de dashboards
+│
+├── scripts/                       # 🗄️ Scripts SQL
+│   ├── README.md                  # Documentação dos scripts
+│   ├── 01-create-indexes.sql      # Criação de índices (CLI)
+│   ├── 01-create-indexes-web.sql  # Criação de índices (Web Dashboard)
+│   ├── 02-maintenance.sql         # Manutenção mensal
+│   └── 03-test-performance.sql    # Testes de performance
+│
+└── docs/                          # 📚 Documentação
+    ├── INDICES-EXPLICACAO.md      # Explicação sobre índices
+    ├── GUIA_RAPIDO.md             # Guia rápido de uso
+    └── TROUBLESHOOTING.md         # Solução de problemas
+```
+
+---
+
+## ⚙️ Configuração Inicial
+
+### 1️⃣ Configurar Credenciais do Turso
 
 1. Acesse [Turso Dashboard](https://turso.tech/app)
 2. Faça login com sua conta GitHub
-3. Selecione seu database: **comercial**
-4. Clique em **"Generate Token"** ou **"Create Token"**
-5. Copie o token gerado
+3. Selecione seu banco de dados
+4. Clique em **"Generate Token"** e copie o token
 
-### 2️⃣ Configurar o Projeto
-
-1. Abra o arquivo `js/config.js`
-2. Substitua `'SEU_TOKEN_AQUI'` pelo token copiado:
+5. Edite o arquivo `js/config.js`:
 
 ```javascript
 export const config = {
     dbName: 'comercial',
-    url: 'libsql://comercial-angeloxiru.aws-us-east-1.turso.io',
+    url: 'libsql://seu-banco.turso.io',
     authToken: 'seu-token-aqui', // ← Cole seu token aqui
 };
 ```
 
-3. Salve o arquivo
+### 2️⃣ Criar Índices de Performance
+
+**IMPORTANTE:** Execute esta etapa para otimizar as queries em 50-90%!
+
+#### Opção A: Via Turso Web Dashboard (Recomendado)
+
+1. Acesse https://turso.tech/
+2. Selecione seu banco de dados
+3. Vá em "SQL Editor"
+4. Abra o arquivo `scripts/01-create-indexes-web.sql`
+5. Copie todo o conteúdo e cole no editor
+6. Clique em "Run"
+7. Aguarde ~2 minutos (para ~45k registros)
+
+#### Opção B: Via Turso CLI
+
+```bash
+# Instalar Turso CLI
+curl -sSfL https://get.tur.so/install.sh | bash
+
+# Login
+turso auth login
+
+# Conectar ao banco
+turso db shell seu-banco-aqui
+
+# Executar script
+.read scripts/01-create-indexes.sql
+```
+
+**Resultado esperado:**
+- ⚡ Queries 50-90% mais rápidas
+- 💰 Redução de 95-99% no consumo de reads do Turso
+- 🚀 Dashboards carregam instantaneamente
+
+Ver mais detalhes em: `scripts/README.md`
 
 ### 3️⃣ Acessar o Sistema
 
@@ -56,360 +128,403 @@ Abra no navegador: https://angeloxiru.github.io/Ger_Comercial/
 
 ---
 
-## 📁 Estrutura do Projeto
-
-```
-Ger_Comercial/
-│
-├── index.html                    # Dashboard principal
-├── dashboard-vendas-regiao.html  # Relatório de vendas por região
-├── teste-conexao.html            # Teste de conexão (utilitário)
-├── exemplo.html                  # Exemplo de CRUD
-│
-├── js/
-│   ├── config.js                 # Configurações do banco (TOKEN AQUI!)
-│   ├── config.example.js         # Exemplo de configuração
-│   ├── db.js                     # Módulo de conexão e operações
-│   └── test.js                   # Scripts auxiliares
-│
-├── .gitignore                    # Arquivos ignorados pelo Git
-└── README.md                     # Este arquivo
-```
-
----
-
 ## 📊 Dashboards Disponíveis
 
-### 🎯 Dashboard Principal
-**Arquivo:** `index.html`
+### 1. 📍 Vendas por Região
 
-Página inicial com cards de acesso aos relatórios:
-- ✅ **Vendas por Região** - Disponível
-- 📈 Análise de Produtos - Em breve
-- 👥 Performance de Clientes - Em breve
-- 💰 Análise Financeira - Em breve
-- 📦 Gestão de Estoque - Em breve
-- 🎯 Metas e KPIs - Em breve
+**Arquivo:** `dashboards/dashboard-vendas-regiao.html`
 
----
+Análise completa de vendas por localização geográfica.
 
-### 📍 Vendas por Região
-**Arquivo:** `dashboard-vendas-regiao.html`
+**Filtros:**
+- Período (data inicial/final)
+- Rota (múltipla seleção)
+- Sub-Rota (cascata automática)
+- Cidade (busca em tempo real)
+- Supervisor
+- Representante
 
-Dashboard completo com filtros avançados e exportação de dados.
-
-#### 🔍 Filtros Disponíveis:
-
-| Filtro | Descrição | Tipo |
-|--------|-----------|------|
-| **Período** | Data inicial e final | Seleção de datas |
-| **Rota** | Rotas comerciais | Múltipla seleção |
-| **SubRota** | Sub-rotas | Múltipla seleção |
-| **Cidade** | Cidades | Múltipla seleção |
-| **Supervisor** | Supervisores | Múltipla seleção |
-| **Representante** | Representantes | Múltipla seleção |
-
-#### 📊 Dados Exibidos:
-
-- **Código:** Código do produto
-- **Descrição:** Descrição completa do produto
-- **Quantidade:** Soma total de unidades vendidas
-- **Valor:** Soma total do valor líquido (R$)
-- **Peso:** Soma total do peso líquido (kg)
-
-**Ordenação:** Do maior para o menor por quantidade
-
-#### 📤 Exportações:
-
-- **Excel (.xlsx)** - Planilha formatada pronta para análise
-- **PDF** - Relatório visual com tabela formatada
-
-#### 🔗 Tabelas Relacionadas:
-
-O sistema faz consultas em múltiplas tabelas:
-- `vendas` - Dados das vendas
-- `tab_cliente` - Informações de clientes (rotas)
-- `tab_representante` - Informações de representantes e supervisores
+**Visualizações:**
+- 4 KPIs: Valor Total, Quantidade, Peso, Total de Registros
+- Gráfico Top 10 Produtos por Valor
+- Gráfico Distribuição Quantidade vs Valor
+- Tabela paginada (25 registros/página)
 
 ---
 
-## 🔧 Módulos JavaScript
+### 2. 👥 Vendas por Equipe Comercial
 
-### 📦 `db.js` - Gerenciador de Banco de Dados
+**Arquivo:** `dashboards/dashboard-vendas-equipe.html`
 
-Módulo principal para operações com o banco de dados.
+Desempenho individual e por equipe comercial.
 
-#### Métodos Principais:
+**Filtros:**
+- Período
+- Supervisor (cascata nível 1)
+- Representante (cascata nível 2)
+- Cidade (cascata nível 3)
+
+**Visualizações:**
+- 4 KPIs em grid 2x2
+- Top 10 Produtos
+- Distribuição de vendas
+- Exportação para Excel/PDF
+
+---
+
+### 3. 📈 Análise de Produtos
+
+**Arquivo:** `dashboards/dashboard-analise-produtos.html`
+
+Análise detalhada por origem, família e produto.
+
+**Filtros:**
+- Período com atalhos (Mês, Trimestre, Ano)
+- Origem (busca em tempo real)
+- Família (cascata)
+- Produto (busca avançada)
+
+**Recursos especiais:**
+- Botão "Limpar Filtros"
+- Busca em tempo real em todos os selects
+- Exportação com nome automático por período
+
+---
+
+### 4. 💰 Performance de Clientes
+
+**Arquivo:** `dashboards/dashboard-performance-clientes.html`
+
+Análise de performance por grupo e cliente individual.
+
+**Filtros:**
+- Período
+- Grupo de Clientes
+- Cliente (com busca)
+- Cidade
+
+**Visualizações:**
+- Top 10 Clientes por valor
+- Gráfico de vendas por cidade
+- Tabela de performance detalhada
+
+---
+
+## 🔧 Ferramentas de Diagnóstico
+
+### Diagnóstico de Sistema
+
+**Arquivo:** `tools/diagnostico.html`
+
+Ferramenta completa para verificar:
+- ✅ Conexão com Turso
+- ✅ Estrutura do banco de dados
+- ✅ Quantidade de registros
+- ✅ Integridade dos dados
+- ✅ Performance das queries
+
+### Limpeza de Cache
+
+**Arquivo:** `tools/limpar-cache.html`
+
+Remove cache do LocalStorage para forçar atualização de dados.
+
+---
+
+## 📦 Módulos JavaScript
+
+### `db.js` - Gerenciador de Banco
 
 ```javascript
 import { db } from './js/db.js';
 
-// Conectar ao banco
+// Conectar
 await db.connect();
 
-// Executar query SQL personalizada
-const result = await db.execute('SELECT * FROM vendas');
+// Executar query
+const result = await db.execute('SELECT * FROM vendas LIMIT 10');
 
-// Executar query com parâmetros
+// Query com parâmetros
 const result = await db.execute({
     sql: 'SELECT * FROM vendas WHERE emissao >= ? AND emissao <= ?',
     args: ['2025-01-01', '2025-01-31']
 });
 
-// Executar múltiplas queries (batch)
+// Batch queries
 const results = await db.batch([
     { sql: 'SELECT COUNT(*) FROM vendas' },
     { sql: 'SELECT SUM(valor_liquido) FROM vendas' }
 ]);
-
-// Listar tabelas
-const tables = await db.listTables();
-
-// Ver estrutura de uma tabela
-const structure = await db.getTableStructure('vendas');
 ```
 
 ---
 
-## 🎨 Design e Cores
+### `cache.js` - Sistema de Cache
 
-O sistema utiliza um esquema de cores moderno e profissional:
+```javascript
+import { cache, CACHE_TTL } from './js/cache.js';
 
-- **Vermelho Vivo:** `#DC143C` (cor principal)
-- **Vermelho Escuro:** `#8B0000` (secundária)
-- **Dourado:** `#FFD700` (destaques)
-- **Dourado Escuro:** `#FFA500` (acentos)
-- **Fundo:** Branco `#FFFFFF`
+// Salvar no cache
+cache.set('chave', dados, CACHE_TTL.FILTERS); // 1 hora
 
-### Características Visuais:
-- Gradientes suaves
-- Sombras elegantes
-- Animações de hover
-- Cards com efeito de elevação
-- Layout responsivo (desktop, tablet, mobile)
+// Buscar do cache
+const cached = cache.get('chave');
 
----
-
-## 📐 Estrutura do Banco de Dados
-
-### Tabela: `vendas`
-
-Tabela principal com dados de vendas:
-
-```sql
-CREATE TABLE vendas (
-  chave_primaria INTEGER PRIMARY KEY AUTOINCREMENT,
-  serie TEXT,
-  nota_fiscal TEXT,
-  emissao TEXT,
-  produto TEXT,
-  qtde_faturada NUMERIC,
-  nat_oper TEXT,
-  familia TEXT,
-  complemento TEXT,
-  cliente TEXT,                  -- FK para tab_cliente
-  nome TEXT,
-  fantasia TEXT,
-  representante TEXT,            -- FK para tab_representante
-  uf TEXT,
-  cidade TEXT,
-  peso_liq NUMERIC,
-  preco_unitario NUMERIC,
-  perc_desc NUMERIC,
-  valor_bruto NUMERIC,
-  valor_desconto NUMERIC,
-  valor_liquido NUMERIC,
-  valor_financeiro NUMERIC,
-  grupo_empresa TEXT,
-  preco_unit_liq NUMERIC
+// Buscar com fallback automático
+const dados = await cache.getOrFetch(
+    'chave',
+    async () => await fetchData(),
+    CACHE_TTL.DASHBOARDS // 5 minutos
 );
+
+// Limpar cache expirado
+cache.cleanup();
 ```
 
-### Tabela: `tab_cliente`
+**TTL Padrões:**
+- FILTERS: 1 hora
+- DASHBOARDS: 5 minutos
+- KPIS: 10 minutos
+- CHARTS: 15 minutos
+- REPORTS: 30 minutos
 
-Informações dos clientes e rotas:
+---
 
-```sql
--- Estrutura básica
--- Chave primária: cliente
--- Contém: rota, sub_rota, endereço, etc.
-```
+### `pagination.js` - Paginação
 
-### Tabela: `tab_representante`
+```javascript
+import { Pagination } from './js/pagination.js';
 
-Informações dos representantes:
+// Criar paginação
+const pagination = new Pagination('#paginationContainer', {
+    pageSize: 25,
+    renderCallback: (pageData) => {
+        renderTable(pageData);
+    }
+});
 
-```sql
--- Estrutura básica
--- Chave primária: representante
--- Contém: desc_representante, rep_supervisor, etc.
-```
+// Definir dados
+pagination.setData(arrayDeDados);
 
-### Relacionamentos:
-
-```
-vendas.cliente → tab_cliente.cliente
-vendas.representante → tab_representante.representante
+// Navegação
+pagination.nextPage();
+pagination.previousPage();
+pagination.goToPage(5);
 ```
 
 ---
 
-## 🌐 Deploy no GitHub Pages
+### `filter-search.js` - Busca em Filtros
 
-O sistema já está configurado para GitHub Pages!
+```javascript
+import { FilterSearch } from './js/filter-search.js';
 
-### Como Atualizar:
+// Adicionar busca em select
+const search = new FilterSearch('meuSelect', {
+    placeholder: 'Digite para buscar...'
+});
+
+// Atualizar opções
+search.updateOptions(['Opção 1', 'Opção 2', 'Opção 3']);
+
+// Limpar
+search.clear();
+```
+
+---
+
+## 🗄️ Banco de Dados
+
+### Tabelas Principais
+
+**`vendas`** - Dados de vendas (45.453 registros)
+- Campos: serie, nota_fiscal, emissao, produto, qtde_faturada, valor_liquido, etc.
+
+**`tab_cliente`** - Informações de clientes
+- Campos: cliente, rota, sub_rota, cidade, etc.
+
+**`tab_representante`** - Representantes e supervisores
+- Campos: representante, desc_representante, rep_supervisor, etc.
+
+**`tab_produto`** - Produtos e famílias
+- Campos: produto, complemento, origem, familia, etc.
+
+### Índices Criados (26 total)
+
+Ver detalhes completos em: `docs/INDICES-EXPLICACAO.md`
+
+**Principais índices:**
+- `idx_vendas_emissao` - Filtros por data
+- `idx_vendas_cliente` - Consultas por cliente
+- `idx_vendas_produto` - Análise de produtos
+- `idx_vendas_representante` - Performance de equipe
+- `idx_vendas_composite_*` - Queries compostas otimizadas
+
+---
+
+## 🎨 Layout 70/30
+
+Todos os dashboards seguem o padrão otimizado:
+
+```
+┌─────────────────────────────────────────────────┐
+│                   FILTROS                        │
+├─────────────────────────┬───────────────────────┤
+│   TABELA (70%)          │  DASHBOARD (30%)      │
+│                         │                       │
+│ 📊 25 linhas visíveis   │  📊 4 KPIs (2x2)     │
+│ ⬆️⬇️ Scroll suave        │  📈 Gráfico 1        │
+│ ◀️ 1 2 3 4 5 ▶️ Paginação│  📊 Gráfico 2        │
+│ 💾 Exportar Excel/PDF   │                       │
+└─────────────────────────┴───────────────────────┘
+```
+
+**Características:**
+- 📋 25 linhas sempre visíveis
+- 📊 4 KPIs em grid 2x2
+- 📈 2 gráficos Chart.js
+- 📄 Paginação de 25 registros
+- 💾 Exportação integrada
+
+---
+
+## 🚀 Deploy e Desenvolvimento
+
+### Deploy no GitHub Pages
+
+O sistema está configurado para deploy automático:
 
 1. Faça suas alterações localmente
-2. Edite `js/config.js` com seu token
-3. Teste localmente
-4. Faça commit e push
-5. GitHub Pages atualiza automaticamente
+2. Configure `js/config.js` com seu token
+3. Commit e push para o repositório
+4. GitHub Pages atualiza automaticamente em ~1 minuto
 
-### URL do Sistema:
-```
-https://angeloxiru.github.io/Ger_Comercial/
+**URL:** https://angeloxiru.github.io/Ger_Comercial/
+
+### Desenvolvimento Local
+
+```bash
+# Clonar repositório
+git clone https://github.com/Angeloxiru/Ger_Comercial.git
+cd Ger_Comercial
+
+# Configurar credenciais
+cp js/config.example.js js/config.js
+# Edite js/config.js com seu token
+
+# Iniciar servidor local (necessário para ES modules)
+python -m http.server 8000
+# ou
+npx serve
+
+# Acessar
+http://localhost:8000
 ```
 
 ---
 
 ## 🔒 Segurança
 
-### ⚠️ Avisos Importantes:
+### ⚠️ Proteção do Token
 
-1. **Nunca** compartilhe seu token de autenticação
-2. **Não** faça commit do `config.js` com token preenchido
-3. O token tem acesso total ao seu banco de dados
-4. Para produção, considere usar um backend proxy
+**NUNCA** faça commit do seu token!
 
-### Protegendo o Token:
+O arquivo `js/config.js` está no `.gitignore` para proteção.
 
-O arquivo `.gitignore` está configurado para proteger suas credenciais. Se você já fez commit do token por engano:
-
-1. **Regenere o token** no Turso Dashboard
-2. Remova o arquivo do histórico do Git
-3. Confirme que `js/config.js` está no `.gitignore`
-
----
-
-## 📚 Exemplos de Uso
-
-### Exemplo 1: Consultar Vendas por Período
-
-```javascript
-import { db } from './js/db.js';
-
-await db.connect();
-
-const vendas = await db.execute({
-    sql: `
-        SELECT produto, complemento,
-               SUM(qtde_faturada) as qtde_total,
-               SUM(valor_liquido) as valor_total
-        FROM vendas
-        WHERE emissao >= ? AND emissao <= ?
-        GROUP BY produto, complemento
-        ORDER BY qtde_total DESC
-    `,
-    args: ['2025-01-01', '2025-01-31']
-});
-
-console.table(vendas.rows);
-```
-
-### Exemplo 2: Consultar com JOINs
-
-```javascript
-const resultado = await db.execute(`
-    SELECT
-        v.produto,
-        v.valor_liquido,
-        c.rota,
-        c.sub_rota,
-        r.desc_representante,
-        r.rep_supervisor
-    FROM vendas v
-    LEFT JOIN tab_cliente c ON v.cliente = c.cliente
-    LEFT JOIN tab_representante r ON v.representante = r.representante
-    WHERE v.emissao >= '2025-01-01'
-    ORDER BY v.valor_liquido DESC
-    LIMIT 100
-`);
-
-console.table(resultado.rows);
+**Se você commitou o token por acidente:**
+1. Regenere o token no Turso Dashboard
+2. Atualize `js/config.js`
+3. Remova o arquivo do histórico do Git:
+```bash
+git filter-branch --force --index-filter \
+  "git rm --cached --ignore-unmatch js/config.js" \
+  --prune-empty --tag-name-filter cat -- --all
 ```
 
 ---
 
-## 🐛 Solução de Problemas
+## 📚 Documentação Completa
 
-### Erro: "Token de autenticação não configurado"
+- **`docs/GUIA_RAPIDO.md`** - Guia rápido de uso do sistema
+- **`docs/TROUBLESHOOTING.md`** - Solução de problemas comuns
+- **`docs/INDICES-EXPLICACAO.md`** - Como funcionam os índices
+- **`scripts/README.md`** - Documentação dos scripts SQL
 
+---
+
+## 🐛 Solução de Problemas Comuns
+
+### ❌ "Token de autenticação não configurado"
 **Solução:** Edite `js/config.js` e adicione seu token do Turso.
 
----
-
-### Erro: "Failed to fetch"
-
-**Possíveis causas:**
-1. Sem conexão com internet
-2. Token inválido ou expirado
-3. Database não existe no Turso
+### ❌ "Failed to fetch"
+**Causas possíveis:**
+- Sem conexão com internet
+- Token inválido ou expirado
+- Database não existe
 
 **Solução:**
-- Verifique sua conexão
-- Gere um novo token no Turso
-- Confirme que o database "comercial" existe
+1. Verifique sua conexão
+2. Regenere o token no Turso
+3. Confirme que o database existe
 
----
-
-### Filtros não carregam dados
-
+### ❌ Dashboards lentos
 **Solução:**
-- Verifique se as tabelas `tab_cliente` e `tab_representante` têm dados
-- Confirme os relacionamentos entre as tabelas
+1. Execute os scripts de criação de índices em `scripts/`
+2. Execute `scripts/02-maintenance.sql` mensalmente
+3. Limpe o cache usando `tools/limpar-cache.html`
 
----
-
-### Exportação não funciona
-
+### ❌ Filtros não carregam
 **Solução:**
-- Certifique-se de que está acessando via HTTPS ou localhost
-- Não use protocolo `file://`
-- Verifique se há dados para exportar
+1. Execute `tools/diagnostico.html` para verificar dados
+2. Limpe o cache do navegador
+3. Verifique se as tabelas auxiliares têm dados
+
+**Mais problemas?** Consulte `docs/TROUBLESHOOTING.md`
 
 ---
 
-## 📖 Recursos Adicionais
+## 🎯 Roadmap
 
-### Documentação Turso:
-- [Turso Docs](https://docs.turso.tech/)
-- [LibSQL Client](https://github.com/libsql/libsql-client-ts)
+### ✅ Implementado
+- ✅ 4 Dashboards completos (Região, Equipe, Produtos, Clientes)
+- ✅ Layout 70/30 otimizado
+- ✅ 26 índices de performance
+- ✅ Sistema de cache inteligente
+- ✅ Filtros com busca em tempo real
+- ✅ Paginação de 25 registros
+- ✅ Gráficos interativos Chart.js
+- ✅ Exportação Excel/PDF
+- ✅ Logo Germani Alimentos em todos os dashboards
 
-### Bibliotecas Utilizadas:
-- [SheetJS (XLSX)](https://sheetjs.com/) - Exportação Excel
-- [jsPDF](https://github.com/parallax/jsPDF) - Exportação PDF
-- [jsPDF-AutoTable](https://github.com/simonbengtsson/jsPDF-AutoTable) - Tabelas em PDF
+### 🚧 Em Desenvolvimento
+- Análise Financeira
+- Gestão de Estoque
+- Comparativo de períodos
 
-### Tutoriais:
-- [Como usar Turso](https://turso.tech/tutorials)
-- [SQLite Tutorial](https://www.sqlitetutorial.net/)
+### 💡 Futuras Melhorias
+- Sistema de Login e Permissões
+- Dashboard Executivo com IA
+- Drill-down detalhado
+- Filtros salvos e favoritos
+- Análise Preditiva
+- Modo escuro
+- Relatórios agendados
 
 ---
 
 ## 🤝 Contribuindo
 
-Contribuições são bem-vindas! Sinta-se à vontade para:
+Contribuições são bem-vindas!
 
-- Reportar bugs
+- Reportar bugs via GitHub Issues
 - Sugerir melhorias
 - Enviar pull requests
-- Melhorar a documentação
-- Criar novos dashboards
+- Melhorar documentação
 
 ---
 
-## 📝 Licença
+## 📄 Licença
 
 Este projeto é de código aberto e está disponível sob a licença MIT.
 
@@ -419,40 +534,24 @@ Este projeto é de código aberto e está disponível sob a licença MIT.
 
 **Angeloxiru**
 - GitHub: [@Angeloxiru](https://github.com/Angeloxiru)
+- Projeto: [Ger_Comercial](https://github.com/Angeloxiru/Ger_Comercial)
 
 ---
 
-## 🎉 Roadmap
+## 📞 Recursos e Links
 
-### ✅ Implementado:
-- Dashboard principal
-- Vendas por Região
-- Filtros múltiplos
-- Exportação Excel/PDF
-- GitHub Pages
-
-### 🚧 Em Desenvolvimento:
-- Análise de Produtos
-- Performance de Clientes
-- Análise Financeira
-- Gestão de Estoque
-- Metas e KPIs
-
-### 💡 Futuras Melhorias:
-- Gráficos interativos (Chart.js)
-- Comparativo de períodos
-- Drill-down detalhado
-- Filtros salvos
-- Dashboard personalizável
-- Modo escuro
-- Relatórios agendados
+- **Sistema:** https://angeloxiru.github.io/Ger_Comercial/
+- **Turso Docs:** https://docs.turso.tech/
+- **LibSQL Client:** https://github.com/libsql/libsql-client-ts
+- **Chart.js:** https://www.chartjs.org/
+- **SheetJS (XLSX):** https://sheetjs.com/
 
 ---
 
 <p align="center">
-  <strong>🚀 Sistema 100% Web | 📊 Dashboards Inteligentes | 🔒 Seguro e Rápido</strong>
+  <strong>🚀 100% Web | 📊 Dashboards Inteligentes | 🔒 Seguro e Rápido</strong>
 </p>
 
 <p align="center">
-  Feito com ❤️ e ☕
+  Feito com ❤️ por Germani Alimentos
 </p>

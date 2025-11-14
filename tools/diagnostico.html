@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico - Ger Comercial</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #fc0303;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        h2 {
+            color: #03ff1c;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 5px;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .status.success {
+            background: #1e4620;
+            color: #03ff1c;
+        }
+
+        .status.error {
+            background: #4a1e1e;
+            color: #fc0303;
+        }
+
+        .status.warning {
+            background: #4a3e1e;
+            color: #ffd700;
+        }
+
+        pre {
+            background: #252526;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 10px 0;
+            border-left: 3px solid #fc0303;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: #252526;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        th {
+            background: #2d2d30;
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .btn {
+            background: #fc0303;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+
+        .btn:hover {
+            background: #b50909;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .test-result {
+            margin: 20px 0;
+            padding: 15px;
+            background: #252526;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Diagnóstico do Sistema</h1>
+
+        <div class="status" id="connectionStatus">
+            Conectando ao banco...
+        </div>
+
+        <button class="btn" onclick="runAllTests()">🚀 Executar Todos os Testes</button>
+        <button class="btn btn-secondary" onclick="location.reload()">🔄 Recarregar</button>
+
+        <h2>📊 1. Verificação de Tabelas</h2>
+        <div id="tables"></div>
+
+        <h2>🔢 2. Contagem de Registros</h2>
+        <div id="counts"></div>
+
+        <h2>📍 3. Teste: Vendas por Região</h2>
+        <div id="testeRegiao"></div>
+
+        <h2>👥 4. Teste: Vendas por Equipe</h2>
+        <div id="testeEquipe"></div>
+
+        <h2>📦 5. Teste: Análise de Produtos</h2>
+        <div id="testeProdutos"></div>
+
+        <h2>🔗 6. Verificação de JOINs</h2>
+        <div id="testeJoins"></div>
+
+        <h2>📅 7. Datas Disponíveis</h2>
+        <div id="testeDatas"></div>
+
+        <h2>🔍 8. DEBUG: Filtros (IMPORTANTE!)</h2>
+        <div id="testeFiltros"></div>
+    </div>
+
+    <script type="module">
+        import { db } from '../js/db.js';
+        import { config } from '../js/config.js';
+
+        window.db = db;
+
+        function showStatus(message, type = 'success') {
+            const status = document.getElementById('connectionStatus');
+            status.className = `status ${type}`;
+            status.textContent = message;
+        }
+
+        function showResult(elementId, content) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = content;
+        }
+
+        async function testConnection() {
+            try {
+                if (!db.isConnected()) {
+                    await db.connect();
+                }
+                showStatus('✅ Conectado ao banco com sucesso!', 'success');
+                return true;
+            } catch (error) {
+                showStatus(`❌ Erro de conexão: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function listTables() {
+            try {
+                const tables = await db.listTables();
+                let html = '<table><tr><th>#</th><th>Tabela</th></tr>';
+                tables.forEach((tableName, i) => {
+                    html += `<tr><td>${i+1}</td><td>${tableName}</td></tr>`;
+                });
+                html += '</table>';
+                showResult('tables', html);
+            } catch (error) {
+                showResult('tables', `<div class="status error">❌ Erro: ${error.message}</div>`);
+            }
+        }
+
+        async function countRecords() {
+            try {
+                const queries = [
+                    { name: 'vendas', sql: 'SELECT COUNT(*) as count FROM vendas' },
+                    { name: 'tab_cliente', sql: 'SELECT COUNT(*) as count FROM tab_cliente' },
+                    { name: 'tab_representante', sql: 'SELECT COUNT(*) as count FROM tab_representante' },
+                    { name: 'tab_produto', sql: 'SELECT COUNT(*) as count FROM tab_produto' }
+                ];
+
+                let html = '<table><tr><th>Tabela</th><th>Total de Registros</th></tr>';
+
+                for (const query of queries) {
+                    try {
+                        const result = await db.execute(query.sql);
+                        const count = result.rows[0].count;
+                        html += `<tr><td>${query.name}</td><td>${count.toLocaleString('pt-BR')}</td></tr>`;
+                    } catch (error) {
+                        html += `<tr><td>${query.name}</td><td style="color: #fc0303;">❌ ${error.message}</td></tr>`;
+                    }
+                }
+
+                html += '</table>';
+                showResult('counts', html);
+            } catch (error) {
+                showResult('counts', `<div class="status error">❌ Erro: ${error.message}</div>`);
+            }
+        }
+
+        async function testVendasRegiao() {
+            try {
+                let html = '<div class="test-result">';
+
+                // Teste 1: Verificar se existem rotas
+                const rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL LIMIT 10');
+                html += `<h3>Rotas Disponíveis (primeiras 10):</h3>`;
+                html += `<pre>${JSON.stringify(rotas.rows, null, 2)}</pre>`;
+
+                // Teste 2: Verificar vendas com JOIN
+                const vendasComJoin = await db.execute(`
+                    SELECT COUNT(*) as total
+                    FROM vendas v
+                    LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+                    WHERE c.rota IS NOT NULL
+                `);
+                html += `<h3>Vendas com Rota (JOIN):</h3>`;
+                html += `<pre>${vendasComJoin.rows[0].total.toLocaleString('pt-BR')} registros</pre>`;
+
+                // Teste 3: Query completa com filtro de exemplo
+                const queryTeste = await db.execute(`
+                    SELECT
+                        v.produto as cod,
+                        v.complemento as descricao,
+                        SUM(v.qtde_faturada) as qtde,
+                        SUM(v.valor_liquido) as valor,
+                        SUM(v.peso_liq) as peso
+                    FROM vendas v
+                    LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+                    LEFT JOIN tab_representante r ON v.representante = r.representante
+                    WHERE v.emissao >= '2024-01-01'
+                    GROUP BY v.produto, v.complemento
+                    ORDER BY qtde DESC
+                    LIMIT 5
+                `);
+                html += `<h3>Top 5 Produtos (2024 em diante):</h3>`;
+                html += `<pre>${JSON.stringify(queryTeste.rows, null, 2)}</pre>`;
+
+                html += '</div>';
+                showResult('testeRegiao', html);
+            } catch (error) {
+                showResult('testeRegiao', `<div class="status error">❌ Erro: ${error.message}</div>`);
+            }
+        }
+
+        async function testVendasEquipe() {
+            try {
+                let html = '<div class="test-result">';
+
+                // Teste 1: Verificar supervisores
+                const supervisores = await db.execute('SELECT DISTINCT rep_supervisor FROM tab_representante WHERE rep_supervisor IS NOT NULL LIMIT 10');
+                html += `<h3>Supervisores Disponíveis (primeiros 10):</h3>`;
+                html += `<pre>${JSON.stringify(supervisores.rows, null, 2)}</pre>`;
+
+                // Teste 2: Verificar representantes
+                const representantes = await db.execute('SELECT DISTINCT representante, desc_representante, rep_supervisor FROM tab_representante WHERE desc_representante IS NOT NULL LIMIT 10');
+                html += `<h3>Representantes Disponíveis (primeiros 10):</h3>`;
+                html += `<pre>${JSON.stringify(representantes.rows, null, 2)}</pre>`;
+
+                // Teste 3: Query completa
+                const queryTeste = await db.execute(`
+                    SELECT
+                        v.produto as cod,
+                        v.complemento as descricao,
+                        SUM(v.qtde_faturada) as qtde,
+                        SUM(v.valor_liquido) as valor
+                    FROM vendas v
+                    LEFT JOIN tab_representante r ON v.representante = r.representante
+                    WHERE v.emissao >= '2024-01-01'
+                    GROUP BY v.produto, v.complemento
+                    ORDER BY qtde DESC
+                    LIMIT 5
+                `);
+                html += `<h3>Top 5 Produtos (2024 em diante):</h3>`;
+                html += `<pre>${JSON.stringify(queryTeste.rows, null, 2)}</pre>`;
+
+                html += '</div>';
+                showResult('testeEquipe', html);
+            } catch (error) {
+                showResult('testeEquipe', `<div class="status error">❌ Erro: ${error.message}</div>`);
+            }
+        }
+
+        async function testAnaliseProdutos() {
+            try {
+                let html = '<div class="test-result">';
+
+                // Teste 1: Verificar origens
+                const origens = await db.execute('SELECT DISTINCT desc_origem FROM tab_produto WHERE desc_origem IS NOT NULL LIMIT 10');
+                html += `<h3>Origens Disponíveis (primeiras 10):</h3>`;
+                html += `<pre>${JSON.stringify(origens.rows, null, 2)}</pre>`;
+
+                // Teste 2: Verificar famílias
+                const familias = await db.execute('SELECT DISTINCT desc_familia FROM tab_produto WHERE desc_familia IS NOT NULL LIMIT 10');
+                html += `<h3>Famílias Disponíveis (primeiras 10):</h3>`;
+                html += `<pre>${JSON.stringify(familias.rows, null, 2)}</pre>`;
+
+                // Teste 3: Query completa
+                const queryTeste = await db.execute(`
+                    SELECT
+                        v.cliente,
+                        v.nome as razao_social,
+                        v.cidade,
+                        SUM(v.qtde_faturada) as qtde,
+                        SUM(v.valor_liquido) as valor
+                    FROM vendas v
+                    INNER JOIN tab_produto p ON v.produto = p.produto
+                    WHERE v.emissao >= '2024-01-01'
+                    GROUP BY v.cliente, v.nome, v.cidade
+                    ORDER BY qtde DESC
+                    LIMIT 5
+                `);
+                html += `<h3>Top 5 Clientes (2024 em diante):</h3>`;
+                html += `<pre>${JSON.stringify(queryTeste.rows, null, 2)}</pre>`;
+
+                html += '</div>';
+                showResult('testeProdutos', html);
+            } catch (error) {
+                showResult('testeProdutos', `<div class="status error">❌ Erro: ${error.message}</div>`);
+            }
+        }
+
+        async function testJoins() {
+            try {
+                let html = '<div class="test-result">';
+
+                // Teste de JOINs
+                const tests = [
+                    {
+                        name: 'vendas ↔ tab_cliente',
+                        sql: `SELECT COUNT(*) as total, COUNT(c.cliente) as com_join
+                              FROM vendas v
+                              LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+                              LIMIT 1`
+                    },
+                    {
+                        name: 'vendas ↔ tab_representante',
+                        sql: `SELECT COUNT(*) as total, COUNT(r.representante) as com_join
+                              FROM vendas v
+                              LEFT JOIN tab_representante r ON v.representante = r.representante
+                              LIMIT 1`
+                    },
+                    {
+                        name: 'vendas ↔ tab_produto',
+                        sql: `SELECT COUNT(*) as total, COUNT(p.produto) as com_join
+                              FROM vendas v
+                              INNER JOIN tab_produto p ON v.produto = p.produto
+                              LIMIT 1`
+                    }
+                ];
+
+                html += '<table><tr><th>JOIN</th><th>Resultado</th></tr>';
+                for (const test of tests) {
+                    try {
+                        const result = await db.execute(test.sql);
+                        html += `<tr><td>${test.name}</td><td>✅ Funcionando</td></tr>`;
+                    } catch (error) {
+                        html += `<tr><td>${test.name}</td><td style="color: #fc0303;">❌ ${error.message}</td></tr>`;
+                    }
+                }
+                html += '</table>';
+
+                html += '</div>';
+                showResult('testeJoins', html);
+            } catch (error) {
+                showResult('testeJoins', `<div class="status error">❌ Erro: ${error.message}</div>`);
+            }
+        }
+
+        async function testDatas() {
+            try {
+                let html = '<div class="test-result">';
+
+                // Teste de datas
+                const datas = await db.execute(`
+                    SELECT
+                        MIN(emissao) as primeira_venda,
+                        MAX(emissao) as ultima_venda,
+                        COUNT(*) as total_vendas
+                    FROM vendas
+                `);
+
+                html += `<h3>Período de Vendas:</h3>`;
+                html += `<pre>${JSON.stringify(datas.rows[0], null, 2)}</pre>`;
+
+                // Vendas por ano
+                const porAno = await db.execute(`
+                    SELECT
+                        substr(emissao, 1, 4) as ano,
+                        COUNT(*) as total
+                    FROM vendas
+                    GROUP BY substr(emissao, 1, 4)
+                    ORDER BY ano DESC
+                `);
+
+                html += `<h3>Vendas por Ano:</h3>`;
+                html += '<table><tr><th>Ano</th><th>Total de Vendas</th></tr>';
+                porAno.rows.forEach(row => {
+                    html += `<tr><td>${row.ano}</td><td>${row.total.toLocaleString('pt-BR')}</td></tr>`;
+                });
+                html += '</table>';
+
+                html += '</div>';
+                showResult('testeDatas', html);
+            } catch (error) {
+                showResult('testeDatas', `<div class="status error">❌ Erro: ${error.message}</div>`);
+            }
+        }
+
+        async function testFiltros() {
+            try {
+                let html = '<div class="test-result">';
+
+                html += '<h3>🔍 DEBUG: Por que os filtros não aparecem?</h3>';
+
+                // Teste 1: Rotas (Vendas por Região)
+                html += '<h4 style="color: #ffd700;">1. Teste: Rotas (Dashboard Vendas por Região)</h4>';
+                try {
+                    const rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL ORDER BY rota');
+                    html += `<strong>✅ Query executada com sucesso!</strong><br>`;
+                    html += `<strong>Total de rotas encontradas:</strong> ${rotas.rows.length}<br>`;
+                    html += `<strong>Primeiras 10 rotas:</strong><br>`;
+                    html += `<pre>${JSON.stringify(rotas.rows.slice(0, 10), null, 2)}</pre>`;
+
+                    if (rotas.rows.length === 0) {
+                        html += '<div style="background: #4a1e1e; padding: 10px; border-radius: 5px; color: #fc0303; margin: 10px 0;"><strong>⚠️ PROBLEMA:</strong> Nenhuma rota encontrada! A coluna "rota" está vazia ou NULL.</div>';
+                    }
+                } catch (error) {
+                    html += `<div style="background: #4a1e1e; padding: 10px; border-radius: 5px; color: #fc0303;"><strong>❌ ERRO:</strong> ${error.message}</div>`;
+                }
+
+                // Teste 2: Supervisores (Vendas por Equipe)
+                html += '<h4 style="color: #ffd700;">2. Teste: Supervisores (Dashboard Vendas por Equipe)</h4>';
+                try {
+                    const supervisores = await db.execute('SELECT DISTINCT rep_supervisor FROM tab_representante WHERE rep_supervisor IS NOT NULL ORDER BY rep_supervisor');
+                    html += `<strong>✅ Query executada com sucesso!</strong><br>`;
+                    html += `<strong>Total de supervisores encontrados:</strong> ${supervisores.rows.length}<br>`;
+                    html += `<strong>Primeiros 10 supervisores:</strong><br>`;
+                    html += `<pre>${JSON.stringify(supervisores.rows.slice(0, 10), null, 2)}</pre>`;
+
+                    if (supervisores.rows.length === 0) {
+                        html += '<div style="background: #4a1e1e; padding: 10px; border-radius: 5px; color: #fc0303; margin: 10px 0;"><strong>⚠️ PROBLEMA:</strong> Nenhum supervisor encontrado! A coluna "rep_supervisor" está vazia ou NULL.</div>';
+                    }
+                } catch (error) {
+                    html += `<div style="background: #4a1e1e; padding: 10px; border-radius: 5px; color: #fc0303;"><strong>❌ ERRO:</strong> ${error.message}</div>`;
+                }
+
+                // Teste 3: Origens (Análise de Produtos)
+                html += '<h4 style="color: #ffd700;">3. Teste: Origens (Dashboard Análise de Produtos)</h4>';
+                try {
+                    const origens = await db.execute('SELECT DISTINCT desc_origem FROM tab_produto WHERE desc_origem IS NOT NULL ORDER BY desc_origem');
+                    html += `<strong>✅ Query executada com sucesso!</strong><br>`;
+                    html += `<strong>Total de origens encontradas:</strong> ${origens.rows.length}<br>`;
+                    html += `<strong>Primeiras 10 origens:</strong><br>`;
+                    html += `<pre>${JSON.stringify(origens.rows.slice(0, 10), null, 2)}</pre>`;
+
+                    if (origens.rows.length === 0) {
+                        html += '<div style="background: #4a1e1e; padding: 10px; border-radius: 5px; color: #fc0303; margin: 10px 0;"><strong>⚠️ PROBLEMA:</strong> Nenhuma origem encontrada! A coluna "desc_origem" está vazia ou NULL.</div>';
+                    }
+                } catch (error) {
+                    html += `<div style="background: #4a1e1e; padding: 10px; border-radius: 5px; color: #fc0303;"><strong>❌ ERRO:</strong> ${error.message}</div>`;
+                }
+
+                // Resumo
+                html += '<h4 style="color: #03ff1c; margin-top: 30px;">📋 Resumo e Próximos Passos:</h4>';
+                html += '<div style="background: #1e4620; padding: 15px; border-radius: 5px; color: #03ff1c;">';
+                html += '<strong>Se todas as queries acima retornaram dados (> 0):</strong><br>';
+                html += '✅ O banco está OK!<br>';
+                html += '✅ O problema está no JavaScript dos dashboards<br>';
+                html += '✅ Abra o Console do navegador (F12) e procure por erros<br>';
+                html += '<br><strong>Se alguma query retornou 0 resultados:</strong><br>';
+                html += '❌ Os campos estão vazios ou NULL no banco<br>';
+                html += '❌ Você precisa popular esses campos primeiro<br>';
+                html += '❌ Ou ajustar os filtros para usar outros campos disponíveis<br>';
+                html += '</div>';
+
+                html += '</div>';
+                showResult('testeFiltros', html);
+            } catch (error) {
+                showResult('testeFiltros', `<div class="status error">❌ Erro: ${error.message}</div>`);
+            }
+        }
+
+        window.runAllTests = async function() {
+            showStatus('🔄 Executando testes...', 'warning');
+
+            const connected = await testConnection();
+            if (!connected) return;
+
+            await listTables();
+            await countRecords();
+            await testVendasRegiao();
+            await testVendasEquipe();
+            await testAnaliseProdutos();
+            await testJoins();
+            await testDatas();
+            await testFiltros(); // NOVO TESTE CRÍTICO!
+
+            showStatus('✅ Todos os testes concluídos!', 'success');
+        };
+
+        // Executar automaticamente ao carregar
+        window.addEventListener('load', runAllTests);
+    </script>
+</body>
+</html>

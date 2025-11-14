@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendas por Região - Ger Comercial</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #fc0303;
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-logo img {
+            height: 60px;
+            width: auto;
+        }
+
+        .header h1 {
+            font-size: 1.6em;
+            font-weight: 600;
+        }
+
+        .btn-voltar {
+            background: white;
+            color: #fc0303;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-voltar:hover {
+            background: #f8f9fa;
+        }
+
+        .filters-section {
+            background: white;
+            padding: 24px;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .filters-title {
+            color: #212529;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-limpar {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-limpar:hover {
+            background: #5a6268;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group label {
+            color: #495057;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 0.9em;
+            display: block;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.95em;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #fc0303;
+            box-shadow: 0 0 0 3px rgba(252, 3, 3, 0.1);
+        }
+
+        .filter-group select {
+            cursor: pointer;
+        }
+
+        .filter-group select option:checked {
+            background: #03ff1c;
+            color: #000;
+            font-weight: 600;
+        }
+
+        .date-range {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .quick-dates {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quick-date-btn {
+            background: #e9ecef;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-date-btn:hover {
+            background: #fc0303;
+            color: white;
+        }
+
+        .btn-atualizar {
+            background: #fc0303;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .btn-atualizar:hover {
+            background: #b50909;
+        }
+
+        .btn-atualizar:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* NOVO LAYOUT: 70% Tabela / 30% Dashboard */
+        .main-content {
+            display: grid;
+            grid-template-columns: 70% 30%;
+            gap: 20px;
+            margin: 20px;
+            min-height: calc(100vh - 400px);
+        }
+
+        .table-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
+            padding: 16px 20px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .table-stats {
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .table-container {
+            flex: 1;
+            overflow-y: auto;
+            max-height: calc(25 * 44px + 50px); /* 25 linhas + header */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9em;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        th.text-right,
+        td.text-right {
+            text-align: right;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f1f3f5;
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        td {
+            padding: 12px 16px;
+            color: #212529;
+            font-size: 0.9em;
+        }
+
+        .table-footer {
+            padding: 16px 20px;
+            background: #f8f9fa;
+            border-top: 2px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-value {
+            color: #495057;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-export {
+            background: #fc0303;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9em;
+        }
+
+        .btn-export:hover {
+            background: #b50909;
+        }
+
+        .dashboard-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 10px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .kpi-card:hover {
+            border-color: #fc0303;
+            transform: translateY(-2px);
+        }
+
+        .kpi-icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .kpi-label {
+            color: #6c757d;
+            font-size: 0.75em;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .kpi-value {
+            color: #212529;
+            font-size: 1.4em;
+            font-weight: 700;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 1em;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px;
+            background: white;
+            margin: 20px;
+            border-radius: 12px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #fc0303;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            padding: 60px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 20px;
+            font-size: 0.9em;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="header-logo">
+                <img src="https://static.wixstatic.com/media/ce3165_c01db19c0ef64e2abb8c894c7ecc6f95~mv2.png/v1/fill/w_161,h_69,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/logomarca-Germani-2023-Branca-borda-dour.png" alt="Logo Germani Alimentos">
+            </div>
+            <h1>📍 Vendas por Região</h1>
+        </div>
+        <a href="../index.html" class="btn-voltar">← Voltar</a>
+    </div>
+
+    <!-- Alerta -->
+    <div id="configAlert" class="alert alert-warning" style="display: none;">
+        <strong>⚠️ Configuração Necessária!</strong><br>
+        Configure suas credenciais do Turso no arquivo <code>js/config.js</code>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-section">
+        <div class="filters-title">
+            <span>🔍 Filtros de Pesquisa</span>
+            <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar Filtros</button>
+        </div>
+
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label>📅 Período</label>
+                <div class="date-range">
+                    <input type="date" id="dataInicio">
+                    <input type="date" id="dataFim">
+                </div>
+                <div class="quick-dates">
+                    <button class="quick-date-btn" onclick="setQuickDate('31dias')">Últimos 31 Dias</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('mes')">Mês Atual</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('trimestre')">Trimestre</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('ano')">Ano Atual</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>🛣️ Rota</label>
+                <select id="filtroRota" multiple size="3">
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>🗺️ SubRota</label>
+                <select id="filtroSubRota" multiple size="3">
+                    <option value="">Selecione uma Rota primeiro</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>🏙️ Cidade</label>
+                <select id="filtroCidade" multiple size="3">
+                    <option value="">Selecione Rota ou SubRota</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">
+            🔄 Atualizar Dados
+        </button>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Carregando dados do banco...</div>
+    </div>
+
+    <!-- NOVO LAYOUT: 70% Tabela / 30% Dashboard -->
+    <div class="main-content" id="mainContent" style="display: none;">
+        <!-- TABELA (70%) -->
+        <div class="table-section">
+            <div class="table-header">
+                <div class="table-title">📊 Resultados da Consulta</div>
+                <div class="table-stats" id="tableStats">0 registros</div>
+            </div>
+
+            <div id="emptyState" class="empty-state">
+                <div class="empty-state-icon">📊</div>
+                <div>Selecione os filtros e clique em Atualizar</div>
+            </div>
+
+            <div class="table-container" id="tableContainer" style="display: none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cód</th>
+                            <th>Descrição</th>
+                            <th class="text-right">Qtde</th>
+                            <th class="text-right">Valor (R$)</th>
+                            <th class="text-right">Peso (kg)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+
+            <div id="paginationContainer"></div>
+
+            <div class="table-footer" id="tableFooter" style="display: none;">
+                <div class="total-value" id="totalValue">Total: R$ 0,00</div>
+                <div class="export-buttons">
+                    <button class="btn-export" onclick="exportarExcel()">📊 Excel</button>
+                    <button class="btn-export" onclick="exportarPDF()">📄 PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD (30%) -->
+        <div class="dashboard-section">
+            <!-- KPIs em Grid 2x2 -->
+            <div class="kpi-grid" id="kpiGrid"></div>
+
+            <!-- Gráfico 1 -->
+            <div class="chart-card">
+                <div class="chart-title">📊 Top 10 Produtos</div>
+                <canvas id="chartTopProdutos"></canvas>
+            </div>
+
+            <!-- Gráfico 2 -->
+            <div class="chart-card">
+                <div class="chart-title">🗺️ Vendas por Cidade</div>
+                <canvas id="chartCidades"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from '../js/db.js';
+        import { config } from '../js/config.js';
+        import { cache, CACHE_TTL } from '../js/cache.js';
+        import { Pagination, injectPaginationStyles } from '../js/pagination.js';
+        import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
+        import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
+
+        // Inicializa isolamento do dashboard
+        initDashboard('Vendas por Região');
+        registerCleanup();
+        preventStaleCache();
+
+        injectPaginationStyles();
+        injectFilterSearchStyles();
+
+        window.db = db;
+        window.dadosCompletos = [];
+        window.todasRotas = [];
+        window.todasSubRotas = [];
+        window.todasCidades = [];
+        window.filterSearches = {};
+        window.chartTopProdutos = null;
+        window.chartCidades = null;
+
+        window.pagination = new Pagination('#paginationContainer', {
+            pageSize: 25,
+            renderCallback: renderizarTabela
+        });
+
+        if (!config.authToken || config.authToken === 'SEU_TOKEN_AQUI') {
+            document.getElementById('configAlert').style.display = 'block';
+            document.getElementById('btnAtualizar').disabled = true;
+        }
+
+        async function carregarFiltros() {
+            try {
+                const cacheKey = 'filtros_regiao';
+                const cached = cache.get(cacheKey);
+                let rotas, subRotas, cidades;
+
+                if (cached) {
+                    rotas = cached.rotas;
+                    subRotas = cached.subRotas;
+                    cidades = cached.cidades;
+                } else {
+                    if (!db.isConnected()) await db.connect();
+                    rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL ORDER BY rota');
+                    subRotas = await db.execute('SELECT DISTINCT sub_rota, rota FROM tab_cliente WHERE sub_rota IS NOT NULL ORDER BY sub_rota');
+                    cidades = await db.execute('SELECT DISTINCT v.cidade, c.rota, c.sub_rota FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.cidade IS NOT NULL ORDER BY v.cidade');
+                    cache.set(cacheKey, { rotas, subRotas, cidades }, CACHE_TTL.FILTERS);
+                }
+
+                window.todasRotas = rotas.rows;
+                window.todasSubRotas = subRotas.rows;
+                window.todasCidades = cidades.rows;
+
+                preencherSelect('filtroRota', rotas.rows.map(r => r.rota));
+
+                // Adicionar FilterSearch aos selects (apenas se ainda não existir)
+                if (!window.filterSearches) {
+                    window.filterSearches = {
+                        rota: new FilterSearch('filtroRota', { placeholder: 'Digite para buscar rota...' }),
+                        subrota: new FilterSearch('filtroSubRota', { placeholder: 'Digite para buscar subrota...' }),
+                        cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
+                    };
+                }
+            } catch (error) {
+                console.error('Erro ao carregar filtros:', error);
+                alert('Erro ao carregar filtros: ' + error.message);
+            }
+        }
+
+        function preencherSelect(id, opcoes) {
+            const select = document.getElementById(id);
+            select.innerHTML = '';
+            if (opcoes.length === 0) {
+                select.innerHTML = '<option value="">Nenhuma opção disponível</option>';
+                select.disabled = true;
+            } else {
+                select.disabled = false;
+                opcoes.forEach(opcao => {
+                    const option = document.createElement('option');
+                    option.value = opcao;
+                    option.textContent = opcao;
+                    select.appendChild(option);
+                });
+            }
+            const searchId = id.replace('filtro', '').toLowerCase();
+            if (window.filterSearches[searchId]) {
+                window.filterSearches[searchId].updateOptions(opcoes);
+            }
+        }
+
+        // CASCATA FLEXÍVEL: Rota → SubRota → Cidade (permite pular níveis)
+        document.getElementById('filtroRota').addEventListener('change', function() {
+            const rotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
+
+            // NÃO limpa seleções anteriores automaticamente
+
+            if (rotasSelecionadas.length === 0) {
+                // Se nenhuma rota: mostra todas
+                preencherSelect('filtroSubRota', window.todasSubRotas.map(s => s.sub_rota).filter((v, i, s) => s.indexOf(v) === i));
+                preencherSelect('filtroCidade', window.todasCidades.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i));
+            } else {
+                // Filtra sub-rotas E cidades pela rota
+                const subRotasFiltradas = window.todasSubRotas.filter(s => rotasSelecionadas.includes(s.rota)).map(s => s.sub_rota).filter((v, i, s) => s.indexOf(v) === i);
+                preencherSelect('filtroSubRota', subRotasFiltradas);
+
+                const cidadesFiltradas = window.todasCidades.filter(c => rotasSelecionadas.includes(c.rota)).map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i);
+                preencherSelect('filtroCidade', cidadesFiltradas);
+            }
+        });
+
+        document.getElementById('filtroSubRota').addEventListener('change', function() {
+            const subRotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
+            const rotasSelecionadas = Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value);
+
+            // NÃO limpa cidades automaticamente
+
+            if (subRotasSelecionadas.length === 0) {
+                // Se nenhuma sub-rota: filtra apenas por rota (se houver)
+                if (rotasSelecionadas.length > 0) {
+                    const cidadesFiltradas = window.todasCidades.filter(c => rotasSelecionadas.includes(c.rota)).map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i);
+                    preencherSelect('filtroCidade', cidadesFiltradas);
+                } else {
+                    // Se nem rota nem sub-rota: mostra todas
+                    preencherSelect('filtroCidade', window.todasCidades.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i));
+                }
+            } else {
+                // Filtra cidades pela combinação: rota (se houver) E sub-rota
+                let cidadesFiltradas = window.todasCidades.filter(c => subRotasSelecionadas.includes(c.sub_rota));
+
+                if (rotasSelecionadas.length > 0) {
+                    cidadesFiltradas = cidadesFiltradas.filter(c => rotasSelecionadas.includes(c.rota));
+                }
+
+                cidadesFiltradas = cidadesFiltradas.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i);
+                preencherSelect('filtroCidade', cidadesFiltradas);
+            }
+        });
+
+        window.setQuickDate = function(period) {
+            const hoje = new Date();
+            let inicio, fim;
+            switch (period) {
+                case '31dias':
+                    inicio = new Date(hoje);
+                    inicio.setDate(hoje.getDate() - 31);
+                    fim = hoje;
+                    break;
+                case 'mes':
+                    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+                    fim = hoje;
+                    break;
+                case 'trimestre':
+                    const mesAtual = hoje.getMonth();
+                    const inicioTrimestre = Math.floor(mesAtual / 3) * 3;
+                    inicio = new Date(hoje.getFullYear(), inicioTrimestre, 1);
+                    fim = hoje;
+                    break;
+                case 'ano':
+                    inicio = new Date(hoje.getFullYear(), 0, 1);
+                    fim = hoje;
+                    break;
+            }
+            document.getElementById('dataInicio').value = inicio.toISOString().split('T')[0];
+            document.getElementById('dataFim').value = fim.toISOString().split('T')[0];
+        };
+
+        window.limparFiltros = function() {
+            document.getElementById('dataInicio').value = '';
+            document.getElementById('dataFim').value = '';
+            document.getElementById('filtroRota').selectedIndex = -1;
+            document.getElementById('filtroSubRota').selectedIndex = -1;
+            document.getElementById('filtroCidade').selectedIndex = -1;
+            Object.values(window.filterSearches).forEach(fs => fs.clear());
+            preencherSelect('filtroSubRota', []);
+            preencherSelect('filtroCidade', []);
+        };
+
+        window.atualizarDados = async function() {
+            const dataInicio = document.getElementById('dataInicio').value;
+            const dataFim = document.getElementById('dataFim').value;
+            const rotas = Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value);
+            const subRotas = Array.from(document.getElementById('filtroSubRota').selectedOptions).map(o => o.value);
+            const cidades = Array.from(document.getElementById('filtroCidade').selectedOptions).map(o => o.value);
+
+            if (!dataInicio || !dataFim) {
+                alert('Por favor, selecione o período (data início e fim)');
+                return;
+            }
+
+            try {
+                document.getElementById('loading').classList.add('active');
+                document.getElementById('btnAtualizar').disabled = true;
+                if (!db.isConnected()) await db.connect();
+
+                let sql = `SELECT v.produto as cod, v.complemento as descricao, SUM(v.qtde_faturada) as qtde, SUM(v.valor_liquido) as valor, SUM(v.peso_liq) as peso FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.emissao >= ? AND v.emissao <= ?`;
+                const params = [dataInicio, dataFim];
+
+                if (rotas.length > 0) {
+                    sql += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
+                    params.push(...rotas);
+                }
+                if (subRotas.length > 0) {
+                    sql += ` AND c.sub_rota IN (${subRotas.map(() => '?').join(',')})`;
+                    params.push(...subRotas);
+                }
+                if (cidades.length > 0) {
+                    sql += ` AND v.cidade IN (${cidades.map(() => '?').join(',')})`;
+                    params.push(...cidades);
+                }
+
+                sql += ' GROUP BY v.produto, v.complemento ORDER BY qtde DESC';
+
+                const result = await db.execute(sql, params);
+                window.dadosCompletos = result.rows;
+                mostrarResultados(result.rows);
+
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao buscar dados: ' + error.message);
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('btnAtualizar').disabled = false;
+            }
+        };
+
+        function mostrarResultados(dados) {
+            document.getElementById('mainContent').style.display = dados.length > 0 ? 'grid' : 'none';
+
+            if (dados.length === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('tableContainer').style.display = 'none';
+                document.getElementById('tableFooter').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('tableContainer').style.display = 'block';
+            document.getElementById('tableFooter').style.display = 'flex';
+
+            // KPIs
+            const totalValor = dados.reduce((sum, r) => sum + parseFloat(r.valor || 0), 0);
+            const totalQtde = dados.reduce((sum, r) => sum + parseFloat(r.qtde || 0), 0);
+            const totalPeso = dados.reduce((sum, r) => sum + parseFloat(r.peso || 0), 0);
+
+            document.getElementById('kpiGrid').innerHTML = `
+                <div class="kpi-card">
+                    <div class="kpi-icon">💰</div>
+                    <div class="kpi-label">Valor Total</div>
+                    <div class="kpi-value">R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">📦</div>
+                    <div class="kpi-label">Quantidade</div>
+                    <div class="kpi-value">${totalQtde.toLocaleString('pt-BR')}</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">⚖️</div>
+                    <div class="kpi-label">Peso Total</div>
+                    <div class="kpi-value">${totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2})} kg</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">📊</div>
+                    <div class="kpi-label">Registros</div>
+                    <div class="kpi-value">${dados.length}</div>
+                </div>
+            `;
+
+            window.pagination.setData(dados);
+            renderizarGraficos(dados);
+
+            document.getElementById('tableStats').textContent = `${dados.length} registro(s)`;
+            document.getElementById('totalValue').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        }
+
+        function renderizarTabela(pageData) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            pageData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.cod || '-'}</td>
+                    <td>${row.descricao || '-'}</td>
+                    <td class="text-right">${parseFloat(row.qtde || 0).toLocaleString('pt-BR')}</td>
+                    <td class="text-right">R$ ${parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    <td class="text-right">${parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function renderizarGraficos(dados) {
+            const top10 = dados.slice(0, 10);
+            const ctx1 = document.getElementById('chartTopProdutos');
+
+            if (window.chartTopProdutos) window.chartTopProdutos.destroy();
+
+            window.chartTopProdutos = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: top10.map(d => (d.descricao || d.cod).substring(0, 15)),
+                    datasets: [{
+                        label: 'Quantidade',
+                        data: top10.map(d => parseFloat(d.qtde)),
+                        backgroundColor: 'rgba(252, 3, 3, 0.7)',
+                        borderColor: '#fc0303',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // Gráfico de Cidades - buscar dados reais com os mesmos filtros
+            try {
+                const dataInicio = document.getElementById('dataInicio').value;
+                const dataFim = document.getElementById('dataFim').value;
+                const rotas = Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value);
+                const subRotas = Array.from(document.getElementById('filtroSubRota').selectedOptions).map(o => o.value);
+                const cidades = Array.from(document.getElementById('filtroCidade').selectedOptions).map(o => o.value);
+
+                let sqlCidades = `
+                    SELECT v.cidade, SUM(v.valor_liquido) as valor_total
+                    FROM vendas v
+                    LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+                    WHERE v.emissao >= ? AND v.emissao <= ?
+                    AND v.cidade IS NOT NULL
+                `;
+                const paramsCidades = [dataInicio, dataFim];
+
+                if (rotas.length > 0) {
+                    sqlCidades += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
+                    paramsCidades.push(...rotas);
+                }
+                if (subRotas.length > 0) {
+                    sqlCidades += ` AND c.sub_rota IN (${subRotas.map(() => '?').join(',')})`;
+                    paramsCidades.push(...subRotas);
+                }
+                if (cidades.length > 0) {
+                    sqlCidades += ` AND v.cidade IN (${cidades.map(() => '?').join(',')})`;
+                    paramsCidades.push(...cidades);
+                }
+
+                sqlCidades += ' GROUP BY v.cidade ORDER BY valor_total DESC LIMIT 5';
+
+                const resultCidades = await db.execute(sqlCidades, paramsCidades);
+                const cidadesData = resultCidades.rows;
+
+                const ctx2 = document.getElementById('chartCidades');
+                if (window.chartCidades) window.chartCidades.destroy();
+
+                window.chartCidades = new Chart(ctx2, {
+                    type: 'pie',
+                    data: {
+                        labels: cidadesData.map(c => c.cidade),
+                        datasets: [{
+                            data: cidadesData.map(c => parseFloat(c.valor_total)),
+                            backgroundColor: ['rgba(252, 3, 3, 0.8)', 'rgba(181, 9, 9, 0.8)', 'rgba(3, 255, 28, 0.8)', 'rgba(255, 193, 7, 0.8)', 'rgba(13, 110, 253, 0.8)']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true
+                    }
+                });
+            } catch (error) {
+                console.error('Erro ao carregar gráfico de cidades:', error);
+            }
+        }
+
+        window.exportarExcel = async function() {
+            if (window.dadosCompletos.length === 0) {
+                alert('Não há dados para exportar');
+                return;
+            }
+            try {
+                const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
+                const dados = window.dadosCompletos.map(row => ({
+                    'Código': row.cod,
+                    'Descrição': row.descricao,
+                    'Quantidade': parseFloat(row.qtde || 0),
+                    'Valor': parseFloat(row.valor || 0),
+                    'Peso': parseFloat(row.peso || 0)
+                }));
+                const ws = XLSX.utils.json_to_sheet(dados);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Vendas por Região');
+                const dataInicio = document.getElementById('dataInicio').value;
+                const dataFim = document.getElementById('dataFim').value;
+                XLSX.writeFile(wb, `vendas_regiao_${dataInicio}_${dataFim}.xlsx`);
+            } catch (error) {
+                console.error('Erro ao exportar:', error);
+                alert('Erro ao exportar: ' + error.message);
+            }
+        };
+
+        window.exportarPDF = async function() {
+            if (window.dadosCompletos.length === 0) {
+                alert('Não há dados para exportar');
+                return;
+            }
+            try {
+                const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                const doc = new jsPDF();
+                doc.setFontSize(18);
+                doc.setTextColor(252, 3, 3);
+                doc.text('Vendas por Região', 14, 20);
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+                const tableData = window.dadosCompletos.map(row => [
+                    row.cod,
+                    row.descricao,
+                    parseFloat(row.qtde || 0).toLocaleString('pt-BR'),
+                    'R$ ' + parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                    parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg'
+                ]);
+                doc.autoTable({
+                    head: [['Código', 'Descrição', 'Qtde', 'Valor', 'Peso']],
+                    body: tableData,
+                    startY: 35,
+                    theme: 'striped',
+                    headStyles: { fillColor: [252, 3, 3], textColor: [255, 255, 255], fontStyle: 'bold' },
+                    alternateRowStyles: { fillColor: [248, 249, 250] }
+                });
+                const dataInicio = document.getElementById('dataInicio').value;
+                const dataFim = document.getElementById('dataFim').value;
+                doc.save(`vendas_regiao_${dataInicio}_${dataFim}.pdf`);
+            } catch (error) {
+                console.error('Erro ao exportar:', error);
+                alert('Erro ao exportar: ' + error.message);
+            }
+        };
+
+        // Carrega filtros na primeira vez E ao voltar (pageshow para bfcache)
+        window.addEventListener('load', carregarFiltros);
+        window.addEventListener('pageshow', carregarFiltros);
+    </script>
+</body>
+</html>
