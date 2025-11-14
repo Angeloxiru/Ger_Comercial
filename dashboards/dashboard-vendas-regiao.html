@@ -433,7 +433,7 @@
             </div>
             <h1>📍 Vendas por Região</h1>
         </div>
-        <a href="index.html" class="btn-voltar">← Voltar</a>
+        <a href="../index.html" class="btn-voltar">← Voltar</a>
     </div>
 
     <!-- Alerta -->
@@ -615,11 +615,14 @@
 
                 preencherSelect('filtroRota', rotas.rows.map(r => r.rota));
 
-                window.filterSearches = {
-                    rota: new FilterSearch('filtroRota', { placeholder: 'Digite para buscar rota...' }),
-                    subrota: new FilterSearch('filtroSubRota', { placeholder: 'Digite para buscar subrota...' }),
-                    cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
-                };
+                // Adicionar FilterSearch aos selects (apenas se ainda não existir)
+                if (!window.filterSearches) {
+                    window.filterSearches = {
+                        rota: new FilterSearch('filtroRota', { placeholder: 'Digite para buscar rota...' }),
+                        subrota: new FilterSearch('filtroSubRota', { placeholder: 'Digite para buscar subrota...' }),
+                        cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
+                    };
+                }
             } catch (error) {
                 console.error('Erro ao carregar filtros:', error);
                 alert('Erro ao carregar filtros: ' + error.message);

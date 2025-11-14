@@ -450,7 +450,7 @@
             </div>
             <h1>📦 Análise de Produtos</h1>
         </div>
-        <a href="index.html" class="btn-voltar">← Voltar</a>
+        <a href="../index.html" class="btn-voltar">← Voltar</a>
     </div>
 
     <!-- Alerta de Configuração -->
@@ -681,12 +681,14 @@
 
                 preencherSelect('filtroOrigem', origens.rows.map(o => o.desc_origem));
 
-                // Inicializa busca nos filtros
-                window.filterSearches = {
-                    origem: new FilterSearch('filtroOrigem', { placeholder: 'Digite para buscar origem...' }),
-                    familia: new FilterSearch('filtroFamilia', { placeholder: 'Digite para buscar família...' }),
-                    produto: new FilterSearch('filtroProduto', { placeholder: 'Digite para buscar produto...' })
-                };
+                // Inicializa busca nos filtros (apenas se ainda não existir)
+                if (!window.filterSearches) {
+                    window.filterSearches = {
+                        origem: new FilterSearch('filtroOrigem', { placeholder: 'Digite para buscar origem...' }),
+                        familia: new FilterSearch('filtroFamilia', { placeholder: 'Digite para buscar família...' }),
+                        produto: new FilterSearch('filtroProduto', { placeholder: 'Digite para buscar produto...' })
+                    };
+                }
 
             } catch (error) {
                 console.error('Erro ao carregar filtros:', error);

@@ -448,7 +448,7 @@
             </div>
             <h1>📊 Performance de Clientes</h1>
         </div>
-        <a href="index.html" class="btn-voltar">← Voltar</a>
+        <a href="../index.html" class="btn-voltar">← Voltar</a>
     </div>
 
     <!-- Alerta de Configuração -->
@@ -628,7 +628,6 @@
         window.todosGrupos = [];
         window.todosClientes = [];
         window.todasCidades = [];
-        window.filterSearches = {};
 
         let chart1, chart2;
 
@@ -675,12 +674,14 @@
 
                 preencherSelect('filtroGrupo', grupos.rows.map(g => g.grupo_desc));
 
-                // Inicializa busca nos filtros
-                window.filterSearches = {
-                    grupo: new FilterSearch('filtroGrupo', { placeholder: 'Digite para buscar grupo...' }),
-                    cliente: new FilterSearch('filtroCliente', { placeholder: 'Digite para buscar cliente...' }),
-                    cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
-                };
+                // Inicializa busca nos filtros (apenas se ainda não existir)
+                if (!window.filterSearches) {
+                    window.filterSearches = {
+                        grupo: new FilterSearch('filtroGrupo', { placeholder: 'Digite para buscar grupo...' }),
+                        cliente: new FilterSearch('filtroCliente', { placeholder: 'Digite para buscar cliente...' }),
+                        cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
+                    };
+                }
 
             } catch (error) {
                 console.error('Erro ao carregar filtros:', error);
