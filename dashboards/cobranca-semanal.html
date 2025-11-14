@@ -15,49 +15,83 @@
     .valor { font-size: 24px; font-weight: bold; color: #333; }
     .label { font-size: 12px; color: #666; }
     .header { background: #1976d2; color: white; padding: 10px; border-radius: 4px; }
+    select { padding: 8px; font-size: 16px; margin: 10px 0; }
   </style>
 </head>
 <body>
   <h1>🎯 Dashboard de Cobrança Semanal</h1>
-  <p>Período: <strong id="periodo"></strong> | 
-     Semana: <strong id="semanaAtual"></strong> | 
-     <button onclick="carregar()" style="padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer;">🔁 Atualizar Dados</button>
-  </p>
+  
+  <!-- SELETOR DE SEMANA -->
+  <div style="background: #e3f2fd; padding: 15px; border-radius: 4px; margin: 10px 0;">
+    <label for="semanaSelect"><strong>Selecione a Semana:</strong></label>
+    <select id="semanaSelect" onchange="carregar()">
+      <option value="">-- Carregando semanas disponíveis --</option>
+    </select>
+    <button onclick="carregar()" style="padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">🔁 Atualizar</button>
+  </div>
   
   <div id="dash"></div>
 
 <script>
 const client = libsql.createClient({
-  url: "libsql://comercial-angeloxiru.aws-us-east-1.turso.io",
-  authToken: "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NjI4ODQ2ODMsImlkIjoiMmI3NTFkOTQtNGI1ZS00ZjZhLWExMDktNTY0OTg3MzgyOGZhIiwicmlkIjoiOGZiZGQ3ZmMtOThmOC00MmMxLWExNzYtZmJiOTZhYmEwN2I0In0.ZjNIt9GEI01v_Ot9GnzsbS_FJIHjTVjCL9X8TdUJmi0LUfoMXX6xMJlRqNCRZiS6U3iNwkP709K_H8ybU9e3DQi"
+  url: "libsql://seu-banco.turso.io",
+  authToken: "seu-token-aqui"
 });
 
-async function carregar() {
-  // Define período (últimos 7 dias)
+// Preenche o seletor de semanas ao carregar a página
+async function carregarSemanas() {
+  const result = await client.execute('SELECT DISTINCT ano_semana FROM potencial_representante ORDER BY ano_semana DESC');
+  const select = document.getElementById('semanaSelect');
+  select.innerHTML = '';
+  
+  result.rows.forEach(row => {
+    const option = document.createElement('option');
+    option.value = row.ano_semana;
+    option.textContent = `Semana ${row.ano_semana}`;
+    select.appendChild(option);
+  });
+  
+  // Seleciona a semana atual por padrão
   const hoje = new Date();
-  const seteDiasAtras = new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000);
-  document.getElementById('periodo').textContent = 
-    seteDiasAtras.toLocaleDateString('pt-BR') + ' a ' + hoje.toLocaleDateString('pt-BR');
+  const semanaAtual = `${hoje.getFullYear()}-${String(Math.ceil((hoje - new Date(hoje.getFullYear(),0,1)) / 604800000)).padStart(2,'0')}`;
+  select.value = semanaAtual;
+}
+
+async function carregar() {
+  const semanaSelecionada = document.getElementById('semanaSelect').value;
   
-  // Calcula semana atual
-  const inicioAno = new Date(hoje.getFullYear(), 0, 1);
-  const semana = Math.ceil((Math.floor((hoje - inicioAno) / 86400000) + inicioAno.getDay() + 1) / 7);
-  document.getElementById('semanaAtual').textContent = `${hoje.getFullYear()}-${semana.toString().padStart(2, '0')}`;
+  if (!semanaSelecionada) {
+    document.getElementById('dash').innerHTML = '<p style="color: red;">Selecione uma semana!</p>';
+    return;
+  }
   
-  const result = await client.execute('SELECT * FROM vw_performance_cobranca ORDER BY perc_peso ASC');
+  const result = await client.execute(`
+    SELECT * FROM vw_performance_cobranca 
+    WHERE ano_semana = '${semanaSelecionada}'
+    ORDER BY perc_peso ASC
+  `);
+  
   const dash = document.getElementById('dash');
+  
+  if (result.rows.length === 0) {
+    dash.innerHTML = `<p style="text-align: center; padding: 20px; color: #666;">
+      Nenhum dado encontrado para a semana ${semanaSelecionada}. 
+      Verifique se as metas e vendas estão cadastradas.
+    </p>`;
+    return;
+  }
+  
   dash.innerHTML = '';
   
   result.rows.forEach(row => {
-    // Define status pela pior métrica
     let status = 'excelente';
     let prioridade = '🟢';
     if (row.perc_peso < 70 || row.perc_clientes < 70) { 
       status = 'critico'; 
-      prioridade = '🔴 URGENTE';
+      prioridade = '🔴';
     } else if (row.perc_peso < 85 || row.perc_clientes < 85) { 
       status = 'atencao'; 
-      prioridade = '🟡 Ação';
+      prioridade = '🟡';
     }
     
     const html = `
@@ -81,17 +115,12 @@ async function carregar() {
         
         <div class="metrica">
           <div class="valor">R$ ${parseFloat(row.faturamento).toLocaleString('pt-BR')}</div>
-          <div class="label">Faturamento Semanal</div>
+          <div class="label">Faturamento</div>
         </div>
         
         <div class="metrica">
           <div class="valor">${row.penetracao_clientes_pct}%</div>
           <div class="label">Penetração (Potencial: ${Math.floor(row.populacao/1000)} clientes)</div>
-        </div>
-        
-        <div class="metrica">
-          <div class="valor">${row.clientes_novos}</div>
-          <div class="label">Clientes Novos</div>
         </div>
         
         <div class="metrica">
@@ -104,7 +133,8 @@ async function carregar() {
   });
 }
 
-carregar();
+// Carrega as semanas disponíveis ao abrir a página
+carregarSemanas().then(() => carregar());
 </script>
 </body>
 </html>
