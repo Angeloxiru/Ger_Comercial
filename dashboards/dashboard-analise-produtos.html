@@ -723,7 +723,7 @@
                 });
             }
 
-            // Atualiza FilterSearch se existir
+            // Verifica se window.filterSearches existe e não é null antes de acessar
             const searchId = id.replace('filtro', '').toLowerCase();
             if (window.filterSearches && window.filterSearches[searchId]) {
                 window.filterSearches[searchId].updateOptions(opcoes);
