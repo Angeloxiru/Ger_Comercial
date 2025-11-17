@@ -148,6 +148,46 @@
             color: #6c757d;
         }
 
+        /* Estilos para cards desabilitados por permissão */
+        .card-disabled {
+            position: relative;
+        }
+
+        .card-disabled:hover {
+            transform: none !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+            border-color: transparent !important;
+        }
+
+        /* User info e logout */
+        .header-user {
+            justify-self: end;
+            text-align: right;
+        }
+
+        .user-info {
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            opacity: 0.95;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -178,6 +218,10 @@
             <div class="header-content">
                 <h1>📊 Dashboard Germani Alimentos</h1>
                 <p>Sistema Integrado de Gerenciamento</p>
+            </div>
+            <div class="header-user">
+                <div class="user-info" id="userInfo">👤 Usuário</div>
+                <button class="btn-logout" onclick="handleLogout()">🚪 Sair</button>
             </div>
         </div>
 
@@ -253,6 +297,48 @@
             </div>
         </div>
     </div>
+
+    <!-- Scripts de Autenticação -->
+    <script src="https://cdn.jsdelivr.net/npm/@libsql/client@0.4.0/dist/index.umd.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+
+    <!-- Script de Controle de Acesso -->
+    <script>
+        // Verificar autenticação ao carregar a página
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verificar se está autenticado (redireciona para login se não estiver)
+            if (!authManager.requireAuth()) {
+                return; // Será redirecionado para login
+            }
+
+            // Obter dados do usuário
+            const user = authManager.getCurrentUser();
+            if (user) {
+                // Mostrar nome do usuário no header
+                const userInfoEl = document.getElementById('userInfo');
+                if (userInfoEl) {
+                    userInfoEl.textContent = `👤 ${user.fullName || user.username}`;
+                }
+
+                console.log('✅ Usuário autenticado:', user.username);
+                console.log('📋 Permissões:', user.permissions);
+            }
+
+            // Aplicar controle de acesso aos cards
+            authManager.applyAccessControl();
+
+            console.log('🔐 Controle de acesso aplicado com sucesso');
+        });
+
+        // Função de logout
+        function handleLogout() {
+            if (confirm('Deseja realmente sair do sistema?')) {
+                authManager.logout();
+            }
+        }
+    </script>
 
     <!-- PWA Service Worker Registration -->
     <script>
