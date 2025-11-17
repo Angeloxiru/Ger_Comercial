@@ -319,9 +319,9 @@
                     // Sucesso
                     showAlert('Login realizado com sucesso! Redirecionando...', 'success');
 
-                    // Redirecionar após 1 segundo
+                    // Redirecionar após 1 segundo usando replace() para substituir no histórico
                     setTimeout(() => {
-                        window.location.href = '/Ger_Comercial/index.html';
+                        window.location.replace('/Ger_Comercial/index.html');
                     }, 1000);
                 } else {
                     // Erro de autenticação
