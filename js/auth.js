@@ -27,9 +27,12 @@ class AuthManager {
                 };
             }
 
+            console.log('🔐 Tentando login:', username);
+
             // Conectar ao banco
             const db = new DatabaseManager();
             await db.connect();
+            console.log('✅ Conectado ao banco');
 
             // Consultar usuário no banco
             const sql = `
@@ -38,10 +41,13 @@ class AuthManager {
                 WHERE username = ? AND password = ? AND active = 1
             `;
 
+            console.log('🔍 Executando query com parâmetros:', [username.trim(), password]);
             const result = await db.execute(sql, [username.trim(), password]);
+            console.log('📊 Resultado da query:', result);
 
             // Verificar se encontrou o usuário
             if (!result.rows || result.rows.length === 0) {
+                console.log('❌ Nenhum usuário encontrado');
                 return {
                     success: false,
                     message: 'Usuário ou senha inválidos'
@@ -49,6 +55,7 @@ class AuthManager {
             }
 
             const user = result.rows[0];
+            console.log('👤 Usuário encontrado:', user);
 
             // Parsear permissões (JSON)
             let permissions = [];
