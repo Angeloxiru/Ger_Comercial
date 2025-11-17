@@ -624,7 +624,7 @@
                 preencherSelect('filtroRota', rotas.rows.map(r => r.rota));
 
                 // Adicionar FilterSearch aos selects (apenas se ainda não existir)
-                if (!window.filterSearches || Object.keys(window.filterSearches).length === 0) {
+                if (!window.filterSearches) {
                     window.filterSearches = {
                         rota: new FilterSearch('filtroRota', { placeholder: 'Digite para buscar rota...' }),
                         subrota: new FilterSearch('filtroSubRota', { placeholder: 'Digite para buscar subrota...' }),

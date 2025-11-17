@@ -689,7 +689,7 @@
                 preencherSelect('filtroOrigem', origens.rows.map(o => o.desc_origem));
 
                 // Inicializa busca nos filtros (apenas se ainda não existir)
-                if (!window.filterSearches || Object.keys(window.filterSearches).length === 0) {
+                if (!window.filterSearches) {
                     window.filterSearches = {
                         origem: new FilterSearch('filtroOrigem', { placeholder: 'Digite para buscar origem...' }),
                         familia: new FilterSearch('filtroFamilia', { placeholder: 'Digite para buscar família...' }),
