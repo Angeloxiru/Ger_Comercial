@@ -653,7 +653,8 @@
                 });
             }
             const searchId = id.replace('filtro', '').toLowerCase();
-            if (window.filterSearches[searchId]) {
+            // Verifica se window.filterSearches existe e não é null antes de acessar
+            if (window.filterSearches && window.filterSearches[searchId]) {
                 window.filterSearches[searchId].updateOptions(opcoes);
             }
         }
