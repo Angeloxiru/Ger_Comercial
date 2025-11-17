@@ -3,7 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema Integrado de Gerenciamento Comercial - Germani Alimentos">
+    <meta name="theme-color" content="#fc0303">
     <title>Dashboard - Ger Comercial</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="/icon-192.png">
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
     <style>
         * {
             margin: 0;
@@ -241,5 +253,31 @@
             </div>
         </div>
     </div>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('✅ Service Worker registrado com sucesso:', registration.scope);
+
+                        // Limpa cache periodicamente
+                        setInterval(() => {
+                            registration.active?.postMessage({ action: 'cleanCache' });
+                        }, 3600000); // A cada 1 hora
+                    })
+                    .catch((error) => {
+                        console.error('❌ Erro ao registrar Service Worker:', error);
+                    });
+            });
+
+            // Detecta quando um novo service worker está aguardando
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                console.log('🔄 Novo Service Worker ativado - recarregando página');
+                window.location.reload();
+            });
+        }
+    </script>
 </body>
 </html>

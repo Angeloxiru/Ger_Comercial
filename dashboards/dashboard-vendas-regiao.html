@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dashboard de Vendas por Região - Ger Comercial">
+    <meta name="theme-color" content="#fc0303">
     <title>Vendas por Região - Ger Comercial</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
@@ -616,7 +624,7 @@
                 preencherSelect('filtroRota', rotas.rows.map(r => r.rota));
 
                 // Adicionar FilterSearch aos selects (apenas se ainda não existir)
-                if (!window.filterSearches) {
+                if (!window.filterSearches || Object.keys(window.filterSearches).length === 0) {
                     window.filterSearches = {
                         rota: new FilterSearch('filtroRota', { placeholder: 'Digite para buscar rota...' }),
                         subrota: new FilterSearch('filtroSubRota', { placeholder: 'Digite para buscar subrota...' }),
@@ -1001,6 +1009,19 @@
         // Carrega filtros na primeira vez E ao voltar (pageshow para bfcache)
         window.addEventListener('load', carregarFiltros);
         window.addEventListener('pageshow', carregarFiltros);
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('✅ Service Worker registrado');
+                    })
+                    .catch((error) => {
+                        console.error('❌ Erro ao registrar Service Worker:', error);
+                    });
+            });
+        }
     </script>
 </body>
 </html>

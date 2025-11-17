@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dashboard de Análise de Produtos - Ger Comercial">
+    <meta name="theme-color" content="#fc0303">
     <title>Análise de Produtos - Ger Comercial</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
     <style>
         * {
             margin: 0;
@@ -682,7 +689,7 @@
                 preencherSelect('filtroOrigem', origens.rows.map(o => o.desc_origem));
 
                 // Inicializa busca nos filtros (apenas se ainda não existir)
-                if (!window.filterSearches) {
+                if (!window.filterSearches || Object.keys(window.filterSearches).length === 0) {
                     window.filterSearches = {
                         origem: new FilterSearch('filtroOrigem', { placeholder: 'Digite para buscar origem...' }),
                         familia: new FilterSearch('filtroFamilia', { placeholder: 'Digite para buscar família...' }),
@@ -1055,6 +1062,19 @@
         };
         window.addEventListener('load', initFiltros);
         window.addEventListener('pageshow', initFiltros);
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('✅ Service Worker registrado');
+                    })
+                    .catch((error) => {
+                        console.error('❌ Erro ao registrar Service Worker:', error);
+                    });
+            });
+        }
     </script>
 </body>
 </html>

@@ -8,10 +8,11 @@ Sistema de Gerenciamento Comercial desenvolvido com Turso Database (LibSQL), oti
 
 - ✅ **100% Frontend** - JavaScript ES Modules, sem backend necessário
 - ✅ **Turso Database** - Cloud SQLite otimizado com 26 índices de performance
+- ✅ **PWA (Progressive Web App)** - Funciona offline e pode ser instalado no dispositivo
 - ✅ **Layout 70/30** - Tabela principal (70%) + Dashboard lateral (30%)
 - ✅ **4 Dashboards Completos** - Região, Equipe, Produtos, Clientes
-- ✅ **Filtros Inteligentes** - Busca em tempo real e cascata automática
-- ✅ **Cache Otimizado** - LocalStorage com TTL para performance máxima
+- ✅ **Filtros Inteligentes** - Busca digitável em tempo real e cascata automática
+- ✅ **Cache Otimizado** - LocalStorage com TTL + Service Worker para performance máxima
 - ✅ **Paginação Eficiente** - 25 registros por página com navegação rápida
 - ✅ **Gráficos Interativos** - Chart.js com visualizações dinâmicas
 - ✅ **Exportação de Dados** - Excel e PDF com um clique
@@ -31,6 +32,10 @@ Sistema de Gerenciamento Comercial desenvolvido com Turso Database (LibSQL), oti
 Ger_Comercial/
 │
 ├── index.html                     # 🏠 Página inicial com menu de dashboards
+├── manifest.json                  # 📱 Manifest PWA (metadados da aplicação)
+├── sw.js                          # 🔄 Service Worker (cache e modo offline)
+├── icon-192.png                   # 📱 Ícone PWA 192x192
+├── icon-512.png                   # 📱 Ícone PWA 512x512
 │
 ├── dashboards/                    # 📊 Dashboards de análise
 │   ├── dashboard-vendas-regiao.html        # Vendas por região
@@ -125,6 +130,29 @@ Ver mais detalhes em: `scripts/README.md`
 ### 3️⃣ Acessar o Sistema
 
 Abra no navegador: https://angeloxiru.github.io/Ger_Comercial/
+
+### 4️⃣ Instalar como PWA (Opcional)
+
+O sistema agora funciona como PWA (Progressive Web App) e pode ser instalado em qualquer dispositivo!
+
+**No Desktop (Chrome/Edge):**
+1. Acesse o sistema no navegador
+2. Clique no ícone de instalação (➕) na barra de endereço
+3. Clique em "Instalar"
+4. O app abrirá em janela própria
+
+**No Mobile (Android/iOS):**
+1. Acesse o sistema no navegador
+2. Toque no menu (⋮) ou compartilhar (📤)
+3. Selecione "Adicionar à tela inicial"
+4. O ícone aparecerá na sua tela inicial
+
+**Benefícios do PWA:**
+- 🚀 Acesso mais rápido (ícone na tela inicial)
+- 📱 Funciona offline após primeira visita
+- 💾 Cache inteligente de recursos
+- 🔔 Visual de aplicativo nativo
+- 🌐 Sincroniza automaticamente quando online
 
 ---
 
@@ -331,6 +359,57 @@ search.updateOptions(['Opção 1', 'Opção 2', 'Opção 3']);
 search.clear();
 ```
 
+**Funcionalidade de busca digitável:**
+- ✅ Todos os filtros com múltipla seleção possuem busca em tempo real
+- ✅ Digite para filtrar as opções instantaneamente
+- ✅ Suporta acentos e busca parcial
+- ✅ Interface intuitiva com campo de busca acima do select
+
+---
+
+## 📱 PWA - Progressive Web App
+
+O sistema foi convertido em PWA, oferecendo experiência de aplicativo nativo.
+
+### Arquivos PWA
+
+**`manifest.json`** - Metadados da aplicação:
+- Nome, ícones, cores do tema
+- Modo standalone (sem barra do navegador)
+- Atalhos para dashboards principais
+- Suporte a múltiplas orientações
+
+**`sw.js`** - Service Worker:
+- Cache de arquivos essenciais na instalação
+- Estratégia Network First para dados atualizados
+- Fallback para cache quando offline
+- Cache automático de CDNs (Chart.js, XLSX, etc.)
+- Limpeza automática de cache antigo
+
+**Ícones:**
+- `icon-192.png` - Ícone 192x192 (tela inicial mobile)
+- `icon-512.png` - Ícone 512x512 (splash screen)
+
+### Como funciona
+
+1. **Primeira visita:** Service Worker registrado e arquivos cacheados
+2. **Visitas seguintes:** Carrega do cache + atualiza em background
+3. **Offline:** Serve conteúdo do cache automaticamente
+4. **Online:** Sincroniza e atualiza cache com novos dados
+
+### Recursos offline
+
+**Funcionam offline após primeira visita:**
+- Interface completa de todos os dashboards
+- Módulos JavaScript (db.js, cache.js, etc.)
+- Bibliotecas (Chart.js, XLSX)
+- Ícones e assets estáticos
+
+**Requerem conexão:**
+- Consultas ao banco Turso
+- Exportação de dados
+- Atualização de filtros
+
 ---
 
 ## 🗄️ Banco de Dados
@@ -488,10 +567,12 @@ git filter-branch --force --index-filter \
 
 ### ✅ Implementado
 - ✅ 4 Dashboards completos (Região, Equipe, Produtos, Clientes)
+- ✅ PWA completo (funciona offline e pode ser instalado)
+- ✅ Busca digitável em todos os filtros
 - ✅ Layout 70/30 otimizado
 - ✅ 26 índices de performance
-- ✅ Sistema de cache inteligente
-- ✅ Filtros com busca em tempo real
+- ✅ Sistema de cache inteligente (LocalStorage + Service Worker)
+- ✅ Filtros com busca em tempo real e cascata automática
 - ✅ Paginação de 25 registros
 - ✅ Gráficos interativos Chart.js
 - ✅ Exportação Excel/PDF
