@@ -1056,10 +1056,24 @@
         };
 
         // Inicializar - carrega filtros na primeira vez E ao voltar (pageshow para bfcache)
-        const initFiltros = () => {
+        const initFiltros = (event) => {
+            // Se for evento pageshow e a página veio do cache (persisted)
+            if (event && event.type === 'pageshow' && event.persisted) {
+                console.log('📄 Página restaurada do cache - limpando estado dos filtros...');
+
+                // Destrói FilterSearch existentes para evitar estado obsoleto
+                if (window.filterSearches) {
+                    Object.values(window.filterSearches).forEach(fs => {
+                        if (fs && fs.destroy) fs.destroy();
+                    });
+                    window.filterSearches = null;
+                }
+            }
+
             carregarFiltros();
             console.log('📊 Cache Stats:', cache.getStats());
         };
+
         window.addEventListener('load', initFiltros);
         window.addEventListener('pageshow', initFiltros);
 
