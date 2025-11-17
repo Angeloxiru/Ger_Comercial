@@ -2,20 +2,20 @@
   "name": "Ger Comercial - Germani Alimentos",
   "short_name": "Ger Comercial",
   "description": "Sistema Integrado de Gerenciamento Comercial - Germani Alimentos",
-  "start_url": "/",
+  "start_url": "/Ger_Comercial/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#fc0303",
   "orientation": "any",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/Ger_Comercial/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/Ger_Comercial/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -30,22 +30,22 @@
       "name": "Vendas por Região",
       "short_name": "Região",
       "description": "Acessar dashboard de vendas por região",
-      "url": "/dashboards/dashboard-vendas-regiao.html",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "url": "/Ger_Comercial/dashboards/dashboard-vendas-regiao.html",
+      "icons": [{ "src": "/Ger_Comercial/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Vendas por Equipe",
       "short_name": "Equipe",
       "description": "Acessar dashboard de vendas por equipe",
-      "url": "/dashboards/dashboard-vendas-equipe.html",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "url": "/Ger_Comercial/dashboards/dashboard-vendas-equipe.html",
+      "icons": [{ "src": "/Ger_Comercial/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Análise de Produtos",
       "short_name": "Produtos",
       "description": "Acessar análise de produtos",
-      "url": "/dashboards/dashboard-analise-produtos.html",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "url": "/Ger_Comercial/dashboards/dashboard-analise-produtos.html",
+      "icons": [{ "src": "/Ger_Comercial/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
