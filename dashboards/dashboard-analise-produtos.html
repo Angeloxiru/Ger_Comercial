@@ -618,14 +618,18 @@
         import { db } from '../js/db.js';
         import { config } from '../js/config.js';
         import { cache, CACHE_TTL } from '../js/cache.js';
-        import { Pagination } from '../js/pagination.js';
-        import { FilterSearch } from '../js/filter-search.js';
+        import { Pagination, injectPaginationStyles } from '../js/pagination.js';
+        import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Análise de Produtos');
         registerCleanup();
         preventStaleCache();
+
+        // Injeta estilos necessários
+        injectPaginationStyles();
+        injectFilterSearchStyles();
 
         // Chart.js
         const chartScript = document.createElement('script');
