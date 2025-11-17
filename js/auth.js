@@ -146,7 +146,7 @@ class AuthManager {
         console.log('✅ Logout realizado');
 
         // Redirecionar para login
-        window.location.href = '/login.html';
+        window.location.href = '/Ger_Comercial/login.html';
     }
 
     /**
@@ -155,7 +155,7 @@ class AuthManager {
     requireAuth() {
         if (!this.isAuthenticated()) {
             console.log('⚠️ Acesso negado. Redirecionando para login...');
-            window.location.href = '/login.html';
+            window.location.href = '/Ger_Comercial/login.html';
             return false;
         }
         return true;
@@ -168,7 +168,7 @@ class AuthManager {
     redirectIfAuthenticated() {
         if (this.isAuthenticated()) {
             console.log('ℹ️ Usuário já autenticado. Redirecionando para home...');
-            window.location.href = '/index.html';
+            window.location.href = '/Ger_Comercial/index.html';
             return true;
         }
         return false;
