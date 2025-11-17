@@ -135,6 +135,7 @@ git push origin claude/add-auth-permissions-01XMwwDF2QRr3fNrcCNuvs6R
 - `analise-produtos` → Análise de Produtos 📈
 - `performance-clientes` → Performance de Clientes 💰
 - `cobranca-semanal` → Performance Semanal (Cobrança) 🎯
+- `produtos-parados` → Produtos Parados 🛑 **[NOVO]**
 
 ---
 
@@ -232,6 +233,109 @@ SELECT id, username, full_name, permissions, active, created_at
 FROM users
 ORDER BY id;
 ```
+
+---
+
+## 🛑 Dashboard de Produtos Parados - Como Liberar Acesso
+
+### O que é o Dashboard de Produtos Parados?
+
+Dashboard que identifica produtos que os representantes vendiam regularmente há 4+ semanas, mas pararam de vender recentemente. Útil para:
+- Detectar perda de clientes
+- Identificar produtos descontinuados
+- Alertar supervisores sobre produtos em risco
+- Analisar o valor potencial perdido
+
+### Como Liberar Acesso para um Usuário
+
+**1. Adicionar permissão para um usuário específico:**
+
+```sql
+-- Exemplo: Liberar acesso para o gerente
+UPDATE users
+SET permissions = '["vendas-regiao","vendas-equipe","analise-produtos","performance-clientes","produtos-parados"]',
+    updated_at = datetime('now')
+WHERE username = 'gerente';
+```
+
+**2. Liberar para TODOS os usuários:**
+
+```sql
+-- Admin (já tem todos)
+UPDATE users
+SET permissions = '["vendas-regiao","vendas-equipe","analise-produtos","performance-clientes","cobranca-semanal","produtos-parados"]'
+WHERE username = 'admin';
+
+-- Gerentes
+UPDATE users
+SET permissions = '["vendas-regiao","vendas-equipe","analise-produtos","performance-clientes","produtos-parados"]'
+WHERE username = 'gerente';
+
+-- Vendedores (se desejar)
+UPDATE users
+SET permissions = '["vendas-regiao","performance-clientes","produtos-parados"]'
+WHERE username = 'vendedor';
+```
+
+**3. Criar novo usuário com acesso ao dashboard:**
+
+```sql
+INSERT INTO users (username, password, full_name, permissions, active)
+VALUES (
+    'supervisor',
+    'supervisor123',
+    'Supervisor de Vendas',
+    '["vendas-regiao","vendas-equipe","produtos-parados"]',
+    1
+);
+```
+
+### Pré-requisitos no Banco de Dados
+
+Antes de usar o dashboard, você precisa criar a VIEW no Turso:
+
+```bash
+# 1. Conectar ao Turso
+turso db shell comercial
+
+# 2. Executar o script SQL
+# Copie e cole o conteúdo de: sql/create_view_produtos_parados.sql
+```
+
+**OU** execute diretamente:
+
+```sql
+-- Ver arquivo completo em: sql/create_view_produtos_parados.sql
+-- O arquivo contém a view vw_produtos_parados que analisa:
+-- - Produtos vendidos há 4-6 semanas
+-- - Produtos NÃO vendidos nas últimas 4 semanas
+-- - Cálculo de risco e valor perdido
+```
+
+### Verificar se está funcionando
+
+```sql
+-- Ver alguns produtos parados
+SELECT * FROM vw_produtos_parados LIMIT 10;
+
+-- Ver totais por supervisor
+SELECT
+    rep_supervisor,
+    COUNT(*) as total_produtos_parados,
+    SUM(valor_medio_perdido) as valor_total_risco
+FROM vw_produtos_parados
+GROUP BY rep_supervisor;
+```
+
+### Permissões Recomendadas por Perfil
+
+| Perfil | Deve ter acesso? | Justificativa |
+|--------|------------------|---------------|
+| **Admin** | ✅ Sim | Visão completa de todos os dashboards |
+| **Gerente Comercial** | ✅ Sim | Precisa identificar produtos parados para agir |
+| **Supervisor** | ✅ Sim | Monitorar equipe e produtos em risco |
+| **Vendedor** | ⚠️ Depende | Pode ser útil para auto-gestão |
+| **Financeiro** | ❌ Não | Foco em cobrança, não em produtos |
 
 ---
 

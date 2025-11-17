@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dashboard de Produtos Parados - Ger Comercial">
+    <meta name="theme-color" content="#fc0303">
+    <title>Produtos Parados - Ger Comercial</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/Ger_Comercial/manifest.json">
+    <link rel="apple-touch-icon" href="/Ger_Comercial/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/Ger_Comercial/icon-192.png">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #fc0303;
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-logo img {
+            height: 60px;
+            width: auto;
+        }
+
+        .header h1 {
+            font-size: 1.6em;
+            font-weight: 600;
+        }
+
+        .btn-voltar {
+            background: white;
+            color: #fc0303;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-voltar:hover {
+            background: #f8f9fa;
+        }
+
+        .filters-section {
+            background: white;
+            padding: 24px;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .filters-title {
+            color: #212529;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-limpar {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-limpar:hover {
+            background: #5a6268;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group label {
+            color: #495057;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 0.9em;
+            display: block;
+        }
+
+        .filter-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.95em;
+            transition: all 0.2s;
+            background: white;
+            cursor: pointer;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #fc0303;
+            box-shadow: 0 0 0 3px rgba(252, 3, 3, 0.1);
+        }
+
+        .btn-atualizar {
+            background: #fc0303;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .btn-atualizar:hover {
+            background: #b50909;
+        }
+
+        .btn-atualizar:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 70% 30%;
+            gap: 20px;
+            margin: 0 20px 20px 20px;
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            color: #212529;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .kpis-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #fc0303;
+        }
+
+        .kpi-label {
+            color: #6c757d;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .kpi-value {
+            color: #212529;
+            font-size: 2em;
+            font-weight: 700;
+        }
+
+        .kpi-change {
+            font-size: 0.85em;
+            margin-top: 8px;
+        }
+
+        .kpi-change.positive {
+            color: #28a745;
+        }
+
+        .kpi-change.negative {
+            color: #dc3545;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 600px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            background: #f8f9fa;
+            z-index: 10;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .badge-critico {
+            background: #dc3545;
+            color: white;
+        }
+
+        .badge-alto {
+            background: #fd7e14;
+            color: white;
+        }
+
+        .badge-medio {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .badge-baixo {
+            background: #28a745;
+            color: white;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .empty-state {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state.show {
+            display: block;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .kpis-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .kpis-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #17a2b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div class="header-logo">
+                <img src="https://static.wixstatic.com/media/ce3165_c01db19c0ef64e2abb8c894c7ecc6f95~mv2.png/v1/fill/w_161,h_69,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/logomarca-Germani-2023-Branca-borda-dour.png" alt="Logo Germani Alimentos">
+            </div>
+            <h1>🛑 Produtos Parados</h1>
+        </div>
+        <button class="btn-voltar" onclick="window.history.back()">← Voltar</button>
+    </div>
+
+    <div class="alert-info" style="margin: 20px;">
+        <strong>ℹ️ Sobre este Dashboard:</strong> Identifica produtos que os representantes vendiam regularmente há 4+ semanas, mas pararam de vender. Útil para detectar perda de clientes ou produtos descontinuados.
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-section">
+        <div class="filters-title">
+            <span>🔍 Filtros</span>
+            <button class="btn-limpar" onclick="limparFiltros()">Limpar Filtros</button>
+        </div>
+
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label for="filterSupervisor">Supervisor</label>
+                <select id="filterSupervisor" onchange="aplicarFiltros()">
+                    <option value="">Todos os Supervisores</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filterRepresentante">Representante</label>
+                <select id="filterRepresentante" onchange="aplicarFiltros()">
+                    <option value="">Todos os Representantes</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filterCategoria">Categoria de Produto</label>
+                <select id="filterCategoria" onchange="aplicarFiltros()">
+                    <option value="">Todas as Categorias</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filterRisco">Nível de Risco</label>
+                <select id="filterRisco" onchange="aplicarFiltros()">
+                    <option value="">Todos os Níveis</option>
+                    <option value="CRÍTICO">🔴 Crítico</option>
+                    <option value="ALTO">🟠 Alto</option>
+                    <option value="MÉDIO">🟡 Médio</option>
+                    <option value="BAIXO">🟢 Baixo</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn-atualizar" onclick="carregarDados()" id="btnAtualizar">
+            🔄 Atualizar Dados
+        </button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpis-grid" style="margin: 0 20px;">
+        <div class="kpi-card">
+            <div class="kpi-label">Total de Produtos Parados</div>
+            <div class="kpi-value" id="kpiTotalProdutos">-</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-label">Valor Total em Risco</div>
+            <div class="kpi-value" id="kpiValorRisco">-</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-label">Representantes Afetados</div>
+            <div class="kpi-value" id="kpiRepresentantes">-</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-label">Média de Semanas Parado</div>
+            <div class="kpi-value" id="kpiMediaSemanas">-</div>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+        <!-- Painel Esquerdo: Tabela -->
+        <div class="left-panel">
+            <div class="card">
+                <div class="card-title">📋 Lista de Produtos Parados</div>
+
+                <div class="loading" id="loadingTable">
+                    ⏳ Carregando dados...
+                </div>
+
+                <div class="empty-state" id="emptyTable">
+                    <div class="empty-state-icon">✅</div>
+                    <h3>Nenhum produto parado encontrado</h3>
+                    <p>Ótima notícia! Não há produtos que pararam de ser vendidos no período analisado.</p>
+                </div>
+
+                <div class="table-container" id="tableContainer" style="display: none;">
+                    <table id="tableData">
+                        <thead>
+                            <tr>
+                                <th>Risco</th>
+                                <th>Supervisor</th>
+                                <th>Representante</th>
+                                <th>Produto</th>
+                                <th>Categoria</th>
+                                <th>Última Venda</th>
+                                <th>Semanas Parado</th>
+                                <th>Valor Médio</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Painel Direito: Gráficos e Resumo -->
+        <div class="right-panel">
+            <div class="card">
+                <div class="card-title">🔥 Top 10 Produtos Mais Paralisados</div>
+                <div class="chart-container">
+                    <canvas id="chartTopProdutos"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📊 Distribuição por Risco</div>
+                <div class="chart-container">
+                    <canvas id="chartRisco"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from '../js/db.js';
+        import { cache, CACHE_TTL } from '../js/cache.js';
+
+        // Estado global
+        let dadosCompletos = [];
+        let dadosFiltrados = [];
+        let chartTopProdutos = null;
+        let chartRisco = null;
+
+        // Carregar dados
+        async function carregarDados() {
+            try {
+                mostrarLoading(true);
+
+                // Conectar ao banco
+                await db.connect();
+
+                // Buscar dados da view
+                const result = await db.execute(`
+                    SELECT * FROM vw_produtos_parados
+                    ORDER BY qtd_semanas_parado DESC, valor_medio_perdido DESC
+                `);
+
+                dadosCompletos = result.rows || [];
+                dadosFiltrados = [...dadosCompletos];
+
+                console.log('✅ Dados carregados:', dadosCompletos.length, 'produtos parados');
+
+                // Atualizar interface
+                popularFiltros();
+                aplicarFiltros();
+                mostrarLoading(false);
+
+            } catch (error) {
+                console.error('❌ Erro ao carregar dados:', error);
+                alert('Erro ao carregar dados. Verifique o console para mais detalhes.');
+                mostrarLoading(false);
+            }
+        }
+
+        // Popular filtros
+        function popularFiltros() {
+            // Supervisores únicos
+            const supervisores = [...new Set(dadosCompletos.map(d => d.rep_supervisor))].sort();
+            const selectSupervisor = document.getElementById('filterSupervisor');
+            selectSupervisor.innerHTML = '<option value="">Todos os Supervisores</option>' +
+                supervisores.map(s => `<option value="${s}">${s}</option>`).join('');
+
+            // Representantes únicos
+            const representantes = [...new Set(dadosCompletos.map(d => d.desc_representante))].sort();
+            const selectRepresentante = document.getElementById('filterRepresentante');
+            selectRepresentante.innerHTML = '<option value="">Todos os Representantes</option>' +
+                representantes.map(r => `<option value="${r}">${r}</option>`).join('');
+
+            // Categorias únicas
+            const categorias = [...new Set(dadosCompletos.map(d => d.categoria_produto))].sort();
+            const selectCategoria = document.getElementById('filterCategoria');
+            selectCategoria.innerHTML = '<option value="">Todas as Categorias</option>' +
+                categorias.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        // Aplicar filtros
+        function aplicarFiltros() {
+            const supervisor = document.getElementById('filterSupervisor').value;
+            const representante = document.getElementById('filterRepresentante').value;
+            const categoria = document.getElementById('filterCategoria').value;
+            const risco = document.getElementById('filterRisco').value;
+
+            dadosFiltrados = dadosCompletos.filter(item => {
+                if (supervisor && item.rep_supervisor !== supervisor) return false;
+                if (representante && item.desc_representante !== representante) return false;
+                if (categoria && item.categoria_produto !== categoria) return false;
+                if (risco && item.nivel_risco !== risco) return false;
+                return true;
+            });
+
+            atualizarInterface();
+        }
+
+        // Atualizar interface
+        function atualizarInterface() {
+            atualizarKPIs();
+            atualizarTabela();
+            atualizarGraficos();
+
+            // Mostrar/ocultar empty state
+            if (dadosFiltrados.length === 0) {
+                document.getElementById('emptyTable').classList.add('show');
+                document.getElementById('tableContainer').style.display = 'none';
+            } else {
+                document.getElementById('emptyTable').classList.remove('show');
+                document.getElementById('tableContainer').style.display = 'block';
+            }
+        }
+
+        // Atualizar KPIs
+        function atualizarKPIs() {
+            const totalProdutos = dadosFiltrados.length;
+            const valorTotal = dadosFiltrados.reduce((sum, item) => sum + (item.valor_medio_perdido || 0), 0);
+            const representantesUnicos = new Set(dadosFiltrados.map(d => d.desc_representante)).size;
+            const mediaSemanas = dadosFiltrados.length > 0
+                ? (dadosFiltrados.reduce((sum, item) => sum + (item.qtd_semanas_parado || 0), 0) / dadosFiltrados.length).toFixed(1)
+                : 0;
+
+            document.getElementById('kpiTotalProdutos').textContent = totalProdutos.toLocaleString('pt-BR');
+            document.getElementById('kpiValorRisco').textContent = 'R$ ' + valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            document.getElementById('kpiRepresentantes').textContent = representantesUnicos;
+            document.getElementById('kpiMediaSemanas').textContent = mediaSemanas + ' sem';
+        }
+
+        // Atualizar tabela
+        function atualizarTabela() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            dadosFiltrados.forEach(item => {
+                const tr = document.createElement('tr');
+
+                const badgeClass = {
+                    'CRÍTICO': 'badge-critico',
+                    'ALTO': 'badge-alto',
+                    'MÉDIO': 'badge-medio',
+                    'BAIXO': 'badge-baixo'
+                }[item.nivel_risco] || 'badge-baixo';
+
+                tr.innerHTML = `
+                    <td><span class="badge ${badgeClass}">${item.nivel_risco}</span></td>
+                    <td>${item.rep_supervisor || '-'}</td>
+                    <td>${item.desc_representante || '-'}</td>
+                    <td>${item.desc_produto || '-'}</td>
+                    <td>${item.categoria_produto || '-'}</td>
+                    <td>${formatarData(item.ultima_venda)}</td>
+                    <td>${item.qtd_semanas_parado} semanas</td>
+                    <td>R$ ${(item.valor_medio_perdido || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Atualizar gráficos
+        function atualizarGraficos() {
+            atualizarGraficoTopProdutos();
+            atualizarGraficoRisco();
+        }
+
+        // Gráfico Top 10 Produtos
+        function atualizarGraficoTopProdutos() {
+            // Agrupar por produto
+            const produtosAgrupados = {};
+            dadosFiltrados.forEach(item => {
+                if (!produtosAgrupados[item.desc_produto]) {
+                    produtosAgrupados[item.desc_produto] = {
+                        produto: item.desc_produto,
+                        qtdReps: 0,
+                        valorTotal: 0
+                    };
+                }
+                produtosAgrupados[item.desc_produto].qtdReps++;
+                produtosAgrupados[item.desc_produto].valorTotal += (item.valor_medio_perdido || 0);
+            });
+
+            // Ordenar e pegar top 10
+            const top10 = Object.values(produtosAgrupados)
+                .sort((a, b) => b.qtdReps - a.qtdReps)
+                .slice(0, 10);
+
+            const ctx = document.getElementById('chartTopProdutos');
+            if (chartTopProdutos) {
+                chartTopProdutos.destroy();
+            }
+
+            chartTopProdutos = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: top10.map(p => p.produto.length > 30 ? p.produto.substring(0, 30) + '...' : p.produto),
+                    datasets: [{
+                        label: 'Representantes Afetados',
+                        data: top10.map(p => p.qtdReps),
+                        backgroundColor: '#fc0303',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico de Risco
+        function atualizarGraficoRisco() {
+            const riscos = {
+                'CRÍTICO': 0,
+                'ALTO': 0,
+                'MÉDIO': 0,
+                'BAIXO': 0
+            };
+
+            dadosFiltrados.forEach(item => {
+                if (riscos.hasOwnProperty(item.nivel_risco)) {
+                    riscos[item.nivel_risco]++;
+                }
+            });
+
+            const ctx = document.getElementById('chartRisco');
+            if (chartRisco) {
+                chartRisco.destroy();
+            }
+
+            chartRisco = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Crítico', 'Alto', 'Médio', 'Baixo'],
+                    datasets: [{
+                        data: [riscos.CRÍTICO, riscos.ALTO, riscos.MÉDIO, riscos.BAIXO],
+                        backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#28a745']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Limpar filtros
+        function limparFiltros() {
+            document.getElementById('filterSupervisor').value = '';
+            document.getElementById('filterRepresentante').value = '';
+            document.getElementById('filterCategoria').value = '';
+            document.getElementById('filterRisco').value = '';
+            aplicarFiltros();
+        }
+
+        // Mostrar/ocultar loading
+        function mostrarLoading(show) {
+            document.getElementById('loadingTable').classList.toggle('show', show);
+            document.getElementById('btnAtualizar').disabled = show;
+        }
+
+        // Formatar data
+        function formatarData(data) {
+            if (!data) return '-';
+            try {
+                return new Date(data).toLocaleDateString('pt-BR');
+            } catch {
+                return data;
+            }
+        }
+
+        // Tornar funções globais
+        window.carregarDados = carregarDados;
+        window.aplicarFiltros = aplicarFiltros;
+        window.limparFiltros = limparFiltros;
+
+        // Carregar dados ao iniciar
+        carregarDados();
+    </script>
+</body>
+</html>

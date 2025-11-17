@@ -230,6 +230,12 @@ class AuthManager {
                 name: 'Performance Semanal',
                 icon: '🎯',
                 url: 'dashboards/cobranca-semanal.html'
+            },
+            {
+                id: 'produtos-parados',
+                name: 'Produtos Parados',
+                icon: '🛑',
+                url: 'dashboards/dashboard-produtos-parados.html'
             }
         ];
     }
@@ -308,7 +314,8 @@ class AuthManager {
             'vendas-equipe': 'dashboard-vendas-equipe.html',
             'analise-produtos': 'dashboard-analise-produtos.html',
             'performance-clientes': 'dashboard-performance-clientes.html',
-            'cobranca-semanal': 'cobranca-semanal.html'
+            'cobranca-semanal': 'cobranca-semanal.html',
+            'produtos-parados': 'dashboard-produtos-parados.html'
         };
 
         const fileName = dashboardFiles[dashboardId];
