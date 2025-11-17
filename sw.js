@@ -1,0 +1,168 @@
+// Service Worker para Ger Comercial - Germani Alimentos
+// Versão: 1.0.0
+
+const CACHE_NAME = 'ger-comercial-v1';
+const RUNTIME_CACHE = 'ger-comercial-runtime-v1';
+
+// Arquivos essenciais para funcionar offline
+const ESSENTIAL_FILES = [
+  '/',
+  '/index.html',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/manifest.json',
+  '/dashboards/dashboard-vendas-regiao.html',
+  '/dashboards/dashboard-vendas-equipe.html',
+  '/dashboards/dashboard-analise-produtos.html',
+  '/dashboards/dashboard-performance-clientes.html',
+  '/dashboards/cobranca-semanal.html',
+  '/js/db.js',
+  '/js/config.js',
+  '/js/cache.js',
+  '/js/pagination.js',
+  '/js/filter-search.js',
+  '/js/dashboard-isolation.js'
+];
+
+// Instala o Service Worker e cacheia arquivos essenciais
+self.addEventListener('install', (event) => {
+  console.log('🔧 Service Worker: Instalando...');
+
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        console.log('📦 Service Worker: Cacheando arquivos essenciais');
+        // Tenta cachear todos os arquivos, mas não falha se algum não existir
+        return Promise.allSettled(
+          ESSENTIAL_FILES.map(url =>
+            cache.add(url).catch(err => {
+              console.warn(`⚠️ Não foi possível cachear ${url}:`, err);
+              return null;
+            })
+          )
+        );
+      })
+      .then(() => {
+        console.log('✅ Service Worker: Instalação concluída');
+        return self.skipWaiting();
+      })
+  );
+});
+
+// Ativa o Service Worker e limpa caches antigos
+self.addEventListener('activate', (event) => {
+  console.log('🚀 Service Worker: Ativando...');
+
+  event.waitUntil(
+    caches.keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames
+            .filter((name) => name !== CACHE_NAME && name !== RUNTIME_CACHE)
+            .map((name) => {
+              console.log(`🗑️ Service Worker: Removendo cache antigo: ${name}`);
+              return caches.delete(name);
+            })
+        );
+      })
+      .then(() => {
+        console.log('✅ Service Worker: Ativação concluída');
+        return self.clients.claim();
+      })
+  );
+});
+
+// Estratégia de cache: Network First com fallback para Cache
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Ignora requisições não-HTTP
+  if (!url.protocol.startsWith('http')) {
+    return;
+  }
+
+  // Ignora requisições para APIs externas (CDN, analytics, etc)
+  const externalDomains = ['cdn.jsdelivr.net', 'cdnjs.cloudflare.com', 'unpkg.com'];
+  if (externalDomains.some(domain => url.hostname.includes(domain))) {
+    // Para CDNs, usa cache-first
+    event.respondWith(
+      caches.match(request)
+        .then(cached => cached || fetch(request)
+          .then(response => {
+            if (response && response.status === 200) {
+              const clone = response.clone();
+              caches.open(RUNTIME_CACHE)
+                .then(cache => cache.put(request, clone));
+            }
+            return response;
+          })
+        )
+    );
+    return;
+  }
+
+  // Para recursos do próprio app: Network First
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        // Se a resposta for válida, cacheia uma cópia
+        if (response && response.status === 200) {
+          const clone = response.clone();
+
+          caches.open(RUNTIME_CACHE)
+            .then((cache) => {
+              cache.put(request, clone);
+            });
+        }
+
+        return response;
+      })
+      .catch(() => {
+        // Se a rede falhar, tenta buscar do cache
+        return caches.match(request)
+          .then((cached) => {
+            if (cached) {
+              console.log('📦 Service Worker: Servindo do cache:', request.url);
+              return cached;
+            }
+
+            // Se for uma navegação e não estiver em cache, retorna a página principal
+            if (request.mode === 'navigate') {
+              return caches.match('/index.html');
+            }
+
+            // Para outros recursos, retorna erro
+            return new Response('Offline - Recurso não disponível', {
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: new Headers({
+                'Content-Type': 'text/plain'
+              })
+            });
+          });
+      })
+  );
+});
+
+// Limpa cache de runtime periodicamente (mantém apenas últimos 50 itens)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.action === 'cleanCache') {
+    event.waitUntil(
+      caches.open(RUNTIME_CACHE)
+        .then((cache) => {
+          return cache.keys()
+            .then((keys) => {
+              if (keys.length > 50) {
+                const toDelete = keys.slice(0, keys.length - 50);
+                return Promise.all(
+                  toDelete.map(key => cache.delete(key))
+                );
+              }
+            });
+        })
+    );
+  }
+});
+
+console.log('🎉 Service Worker carregado com sucesso!');
