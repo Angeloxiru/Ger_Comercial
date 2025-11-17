@@ -257,13 +257,10 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/@libsql/client@0.4.0/dist/index.umd.js"></script>
-    <script src="js/config.js"></script>
-    <script src="js/db.js"></script>
-    <script src="js/auth.js"></script>
+    <!-- Script principal -->
+    <script type="module">
+        import { authManager } from './js/auth.js';
 
-    <script>
         // Verificar se já está autenticado
         if (authManager.redirectIfAuthenticated()) {
             // Já está logado, redirecionará automaticamente
