@@ -6,22 +6,22 @@ const RUNTIME_CACHE = 'ger-comercial-runtime-v1';
 
 // Arquivos essenciais para funcionar offline
 const ESSENTIAL_FILES = [
-  '/',
-  '/index.html',
-  '/icon-192.png',
-  '/icon-512.png',
-  '/manifest.json',
-  '/dashboards/dashboard-vendas-regiao.html',
-  '/dashboards/dashboard-vendas-equipe.html',
-  '/dashboards/dashboard-analise-produtos.html',
-  '/dashboards/dashboard-performance-clientes.html',
-  '/dashboards/cobranca-semanal.html',
-  '/js/db.js',
-  '/js/config.js',
-  '/js/cache.js',
-  '/js/pagination.js',
-  '/js/filter-search.js',
-  '/js/dashboard-isolation.js'
+  '/Ger_Comercial/',
+  '/Ger_Comercial/index.html',
+  '/Ger_Comercial/icon-192.png',
+  '/Ger_Comercial/icon-512.png',
+  '/Ger_Comercial/manifest.json',
+  '/Ger_Comercial/dashboards/dashboard-vendas-regiao.html',
+  '/Ger_Comercial/dashboards/dashboard-vendas-equipe.html',
+  '/Ger_Comercial/dashboards/dashboard-analise-produtos.html',
+  '/Ger_Comercial/dashboards/dashboard-performance-clientes.html',
+  '/Ger_Comercial/dashboards/cobranca-semanal.html',
+  '/Ger_Comercial/js/db.js',
+  '/Ger_Comercial/js/config.js',
+  '/Ger_Comercial/js/cache.js',
+  '/Ger_Comercial/js/pagination.js',
+  '/Ger_Comercial/js/filter-search.js',
+  '/Ger_Comercial/js/dashboard-isolation.js'
 ];
 
 // Instala o Service Worker e cacheia arquivos essenciais
@@ -129,7 +129,7 @@ self.addEventListener('fetch', (event) => {
 
             // Se for uma navegação e não estiver em cache, retorna a página principal
             if (request.mode === 'navigate') {
-              return caches.match('/index.html');
+              return caches.match('/Ger_Comercial/index.html');
             }
 
             // Para outros recursos, retorna erro
