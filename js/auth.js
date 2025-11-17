@@ -5,6 +5,8 @@
  * Gerencia autenticação de usuários e controle de permissões
  */
 
+import { DatabaseManager } from './db.js';
+
 class AuthManager {
     constructor() {
         this.storageKey = 'ger_comercial_auth';
@@ -323,5 +325,8 @@ class AuthManager {
     }
 }
 
-// Exportar instância global
-const authManager = new AuthManager();
+// Exportar instância global (Singleton)
+export const authManager = new AuthManager();
+
+// Exportar a classe para casos especiais
+export { AuthManager };
