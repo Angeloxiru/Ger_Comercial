@@ -179,7 +179,7 @@ class AuthManager {
         if (this.isAuthenticated()) {
             console.log('ℹ️ Usuário já autenticado. Redirecionando para home...');
             // Usa replace() para substituir a página de login no histórico
-            window.location.replace('/Ger_Comercial/index.html');
+            window.location.replace('/Ger_Comercial/');
             return true;
         }
         return false;
