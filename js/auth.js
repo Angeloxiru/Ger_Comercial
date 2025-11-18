@@ -11,6 +11,137 @@ class AuthManager {
     constructor() {
         this.storageKey = 'ger_comercial_auth';
         this.sessionKey = 'ger_comercial_session';
+        this.cookieName = 'ger_session';
+    }
+
+    /**
+     * Helper: Define cookie
+     * @param {string} name - Nome do cookie
+     * @param {string} value - Valor do cookie
+     * @param {number} days - Dias até expiração
+     */
+    setCookie(name, value, days = 7) {
+        const expires = new Date();
+        expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+        document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=Strict`;
+    }
+
+    /**
+     * Helper: Obter cookie
+     * @param {string} name - Nome do cookie
+     * @returns {string|null}
+     */
+    getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) {
+                return decodeURIComponent(c.substring(nameEQ.length, c.length));
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Helper: Deletar cookie
+     * @param {string} name - Nome do cookie
+     */
+    deleteCookie(name) {
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+    }
+
+    /**
+     * Salva sessão em múltiplas fontes (localStorage, sessionStorage, cookie)
+     * @param {Object} sessionData - Dados da sessão
+     */
+    saveSession(sessionData) {
+        const sessionJSON = JSON.stringify(sessionData);
+
+        // 1. localStorage (compatibilidade com código existente)
+        localStorage.setItem(this.storageKey, sessionJSON);
+        localStorage.setItem(this.sessionKey, 'active');
+
+        // 2. sessionStorage (mais confiável entre páginas da mesma aba)
+        sessionStorage.setItem(this.storageKey, sessionJSON);
+        sessionStorage.setItem(this.sessionKey, 'active');
+
+        // 3. Cookie (funciona em todos os paths do domínio)
+        this.setCookie(this.cookieName, sessionJSON, 7);
+
+        console.log('💾 Sessão salva em localStorage, sessionStorage e cookie');
+    }
+
+    /**
+     * Lê sessão de múltiplas fontes (prioridade: sessionStorage > localStorage > cookie)
+     * @returns {Object|null}
+     */
+    readSession() {
+        let sessionJSON = null;
+        let source = null;
+
+        // 1º: Tentar sessionStorage (mais confiável)
+        sessionJSON = sessionStorage.getItem(this.storageKey);
+        if (sessionJSON) {
+            source = 'sessionStorage';
+        }
+
+        // 2º: Tentar localStorage
+        if (!sessionJSON) {
+            sessionJSON = localStorage.getItem(this.storageKey);
+            if (sessionJSON) {
+                source = 'localStorage';
+                // Restaurar para sessionStorage
+                sessionStorage.setItem(this.storageKey, sessionJSON);
+                sessionStorage.setItem(this.sessionKey, 'active');
+            }
+        }
+
+        // 3º: Tentar cookie (fallback)
+        if (!sessionJSON) {
+            sessionJSON = this.getCookie(this.cookieName);
+            if (sessionJSON) {
+                source = 'cookie';
+                // Restaurar para sessionStorage e localStorage
+                sessionStorage.setItem(this.storageKey, sessionJSON);
+                sessionStorage.setItem(this.sessionKey, 'active');
+                localStorage.setItem(this.storageKey, sessionJSON);
+                localStorage.setItem(this.sessionKey, 'active');
+            }
+        }
+
+        if (sessionJSON) {
+            try {
+                const session = JSON.parse(sessionJSON);
+                console.log(`✅ Sessão recuperada de: ${source}`);
+                return session;
+            } catch (e) {
+                console.error('Erro ao parsear sessão:', e);
+                return null;
+            }
+        }
+
+        console.log('❌ Nenhuma sessão encontrada');
+        return null;
+    }
+
+    /**
+     * Limpa sessão de todas as fontes
+     */
+    clearSession() {
+        // Limpar localStorage
+        localStorage.removeItem(this.storageKey);
+        localStorage.removeItem(this.sessionKey);
+
+        // Limpar sessionStorage
+        sessionStorage.removeItem(this.storageKey);
+        sessionStorage.removeItem(this.sessionKey);
+
+        // Limpar cookie
+        this.deleteCookie(this.cookieName);
+
+        console.log('🗑️ Sessão limpa de todas as fontes');
     }
 
     /**
@@ -77,9 +208,8 @@ class AuthManager {
                 loginTime: new Date().toISOString()
             };
 
-            // Salvar sessão no localStorage
-            localStorage.setItem(this.storageKey, JSON.stringify(session));
-            localStorage.setItem(this.sessionKey, 'active');
+            // Salvar sessão em todas as fontes (localStorage, sessionStorage, cookie)
+            this.saveSession(session);
 
             // Log de sucesso
             console.log('✅ Login realizado com sucesso:', user.username);
@@ -104,9 +234,8 @@ class AuthManager {
      * @returns {boolean}
      */
     isAuthenticated() {
-        const session = localStorage.getItem(this.sessionKey);
-        const userData = localStorage.getItem(this.storageKey);
-        return session === 'active' && userData !== null;
+        const session = this.readSession();
+        return session !== null;
     }
 
     /**
@@ -114,17 +243,7 @@ class AuthManager {
      * @returns {Object|null}
      */
     getCurrentUser() {
-        if (!this.isAuthenticated()) {
-            return null;
-        }
-
-        try {
-            const userData = localStorage.getItem(this.storageKey);
-            return JSON.parse(userData);
-        } catch (e) {
-            console.error('Erro ao obter dados do usuário:', e);
-            return null;
-        }
+        return this.readSession();
     }
 
     /**
@@ -150,8 +269,7 @@ class AuthManager {
      * Realiza o logout do usuário
      */
     logout() {
-        localStorage.removeItem(this.storageKey);
-        localStorage.removeItem(this.sessionKey);
+        this.clearSession();
         console.log('✅ Logout realizado');
 
         // Redirecionar para login (replace para não adicionar ao histórico)

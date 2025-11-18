@@ -322,37 +322,10 @@
     <script type="module">
         import { authManager } from './js/auth.js';
 
-        // INTERCEPTOR: Detectar quem limpa o localStorage
-        const originalRemoveItem = localStorage.removeItem.bind(localStorage);
-        const originalClear = localStorage.clear.bind(localStorage);
-
-        localStorage.removeItem = function(key) {
-            console.error('🚨 ALGUÉM ESTÁ REMOVENDO:', key);
-            console.trace('Stack trace:');
-            alert('🚨 localStorage.removeItem(' + key + ') foi chamado!\nVeja o console para stack trace.');
-            return originalRemoveItem(key);
-        };
-
-        localStorage.clear = function() {
-            console.error('🚨 ALGUÉM ESTÁ LIMPANDO TODO O localStorage!');
-            console.trace('Stack trace:');
-            alert('🚨 localStorage.clear() foi chamado!\nVeja o console para stack trace.');
-            return originalClear();
-        };
-
-        // DEBUG: Verificar localStorage ANTES de tudo
-        const debugSession = localStorage.getItem('ger_comercial_session');
-        const debugAuth = localStorage.getItem('ger_comercial_auth');
-        console.log('🔍 DEBUG - Session:', debugSession);
-        console.log('🔍 DEBUG - Auth:', debugAuth);
-
-        // Se não tem sessão, mostrar alert antes de redirecionar
-        if (!debugSession || debugSession !== 'active') {
-            alert('⚠️ DEBUG: Sessão não encontrada ou inativa!\nSession: ' + debugSession);
-        }
-
         // Verificar autenticação ao carregar a página
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('🔍 Verificando autenticação...');
+
             // Verificar se está autenticado (redireciona para login se não estiver)
             if (!authManager.requireAuth()) {
                 return; // Será redirecionado para login
