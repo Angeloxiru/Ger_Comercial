@@ -8,9 +8,11 @@ Sistema de Gerenciamento Comercial desenvolvido com Turso Database (LibSQL), oti
 
 - ✅ **100% Frontend** - JavaScript ES Modules, sem backend necessário
 - ✅ **Turso Database** - Cloud SQLite otimizado com 26 índices de performance
+- ✅ **Sistema de Autenticação** - Login seguro com controle de permissões por dashboard
+- ✅ **Gerenciamento de Usuários** - Interface administrativa para criar e gerenciar usuários
 - ✅ **PWA (Progressive Web App)** - Funciona offline e pode ser instalado no dispositivo
 - ✅ **Layout 70/30** - Tabela principal (70%) + Dashboard lateral (30%)
-- ✅ **4 Dashboards Completos** - Região, Equipe, Produtos, Clientes
+- ✅ **7 Dashboards Completos** - Região, Equipe, Produtos, Clientes, Performance Semanal, Produtos Parados, Gerenciar Usuários
 - ✅ **Filtros Inteligentes** - Busca digitável em tempo real e cascata automática
 - ✅ **Cache Otimizado** - LocalStorage com TTL + Service Worker para performance máxima
 - ✅ **Paginação Eficiente** - 25 registros por página com navegação rápida
@@ -41,7 +43,10 @@ Ger_Comercial/
 │   ├── dashboard-vendas-regiao.html        # Vendas por região
 │   ├── dashboard-vendas-equipe.html        # Vendas por equipe comercial
 │   ├── dashboard-analise-produtos.html     # Análise de produtos
-│   └── dashboard-performance-clientes.html # Performance de clientes
+│   ├── dashboard-performance-clientes.html # Performance de clientes
+│   ├── cobranca-semanal.html               # Performance semanal
+│   ├── dashboard-produtos-parados.html     # Produtos parados
+│   └── dashboard-gerenciar-usuarios.html   # Gerenciamento de usuários (Admin)
 │
 ├── tools/                         # 🔧 Ferramentas de diagnóstico
 │   ├── diagnostico.html           # Diagnóstico de conexão e dados
@@ -51,6 +56,7 @@ Ger_Comercial/
 │   ├── config.js                  # ⚙️ Configurações do banco (TOKEN AQUI!)
 │   ├── config.example.js          # Exemplo de configuração
 │   ├── db.js                      # Gerenciador de conexão e queries
+│   ├── auth.js                    # Sistema de autenticação e permissões
 │   ├── cache.js                   # Sistema de cache com TTL
 │   ├── pagination.js              # Paginação de tabelas
 │   ├── filter-search.js           # Busca em tempo real em filtros
@@ -127,11 +133,64 @@ turso db shell seu-banco-aqui
 
 Ver mais detalhes em: `scripts/README.md`
 
-### 3️⃣ Acessar o Sistema
+### 3️⃣ Configurar Sistema de Autenticação
 
-Abra no navegador: https://angeloxiru.github.io/Ger_Comercial/
+O sistema possui autenticação completa com controle de permissões por usuário.
 
-### 4️⃣ Instalar como PWA (Opcional)
+#### Criar tabela de usuários
+
+Execute o SQL abaixo no Turso Dashboard para criar a tabela de usuários:
+
+```sql
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    full_name TEXT,
+    permissions TEXT,  -- JSON array com IDs dos dashboards permitidos
+    active INTEGER DEFAULT 1,  -- 1=ativo, 0=inativo
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX idx_username ON users(username);
+CREATE INDEX idx_active ON users(active);
+```
+
+#### Criar usuário administrador inicial
+
+```sql
+INSERT INTO users (username, password, full_name, permissions, active)
+VALUES (
+    'admin',
+    'admin123',
+    'Administrador',
+    '["vendas-regiao","vendas-equipe","analise-produtos","performance-clientes","cobranca-semanal","produtos-parados","gerenciar-usuarios"]',
+    1
+);
+```
+
+**IMPORTANTE:** Altere a senha do admin após primeiro login!
+
+#### IDs dos Dashboards
+
+- `vendas-regiao` - Vendas por Região
+- `vendas-equipe` - Vendas por Equipe Comercial
+- `analise-produtos` - Análise de Produtos
+- `performance-clientes` - Performance de Clientes
+- `cobranca-semanal` - Performance Semanal
+- `produtos-parados` - Produtos Parados
+- `gerenciar-usuarios` - Gerenciar Usuários (somente admins)
+
+### 4️⃣ Acessar o Sistema
+
+**URL:** https://angeloxiru.github.io/Ger_Comercial/
+
+**Login padrão:**
+- Usuário: `admin`
+- Senha: `admin123`
+
+### 5️⃣ Instalar como PWA (Opcional)
 
 O sistema agora funciona como PWA (Progressive Web App) e pode ser instalado em qualquer dispositivo!
 
@@ -235,6 +294,125 @@ Análise de performance por grupo e cliente individual.
 - Top 10 Clientes por valor
 - Gráfico de vendas por cidade
 - Tabela de performance detalhada
+
+---
+
+### 5. 🎯 Performance Semanal
+
+**Arquivo:** `dashboards/cobranca-semanal.html`
+
+Controle semanal de performance da equipe comercial.
+
+**Filtros:**
+- Seleção de semana
+
+**Visualizações:**
+- Performance vs Meta semanal
+- Penetração de clientes por cidade
+- Ranking de representantes
+- Alertas para representantes abaixo da meta
+
+---
+
+### 6. 🛑 Produtos Parados
+
+**Arquivo:** `dashboards/dashboard-produtos-parados.html`
+
+Identifica produtos que pararam de ser vendidos.
+
+**Análise:**
+- Produtos vendidos há 4-6 semanas atrás
+- Produtos não vendidos nas últimas 4 semanas
+- Classificação de risco (CRÍTICO, ALTO, MÉDIO, BAIXO)
+- Alertas de perda de clientes
+
+---
+
+### 7. 👥 Gerenciar Usuários (Admin)
+
+**Arquivo:** `dashboards/dashboard-gerenciar-usuarios.html`
+
+**🔐 Acesso restrito a administradores**
+
+Interface completa de gerenciamento de usuários e permissões.
+
+**Funcionalidades:**
+- ➕ **Criar novos usuários** com validação de dados
+- ✏️ **Editar usuários** existentes (nome, senha, permissões)
+- 🔒 **Ativar/Desativar** usuários
+- 🎛️ **Gerenciar permissões** por dashboard (checkboxes)
+- 📊 **Visualizar status** e quantidade de permissões
+- 💾 **Salvar alterações** diretamente no banco Turso
+
+**Como usar:**
+1. Acesse com usuário que possui permissão `gerenciar-usuarios`
+2. Clique em "Adicionar Usuário" para criar novos usuários
+3. Use "Editar" para modificar permissões ou dados
+4. Use "Ativar/Desativar" para controlar acesso ao sistema
+
+**Estrutura de permissões:**
+- Cada usuário possui um array JSON de IDs de dashboards
+- Permissões aplicadas automaticamente no login
+- Cards sem permissão ficam bloqueados visualmente
+- Mudanças refletem no próximo login do usuário
+
+**Segurança:**
+- Username único (não pode ser alterado)
+- Validação de senha (mínimo 6 caracteres)
+- Confirmação antes de desativar usuários
+- Apenas usuários com permissão administrativa podem acessar
+
+---
+
+## 🔐 Sistema de Autenticação
+
+### Como funciona
+
+**1. Login (`login.html`):**
+- Usuário insere credenciais (username + password)
+- Sistema consulta tabela `users` no Turso
+- Valida senha e status ativo
+- Cria sessão no localStorage
+- Redireciona para página inicial
+
+**2. Controle de Acesso:**
+- Cada página verifica autenticação ao carregar
+- Sistema carrega permissões do usuário
+- Cards sem permissão ficam bloqueados visualmente
+- Ao clicar em card bloqueado, exibe mensagem de acesso negado
+
+**3. Sessão:**
+- Armazenada em localStorage (client-side)
+- Contém: id, username, fullName, permissions, loginTime
+- Botão de logout disponível em todas as páginas
+- Logout limpa sessão e redireciona para login
+
+**4. Permissões:**
+- Formato: array JSON de IDs de dashboards
+- Exemplo: `["vendas-regiao", "vendas-equipe", "gerenciar-usuarios"]`
+- Gerenciadas via dashboard administrativo
+- Aplicadas em tempo real após novo login
+
+### Módulo de Autenticação (`js/auth.js`)
+
+```javascript
+import { authManager } from './js/auth.js';
+
+// Verificar se está autenticado
+const isAuth = authManager.isAuthenticated();
+
+// Obter usuário atual
+const user = authManager.getCurrentUser();
+
+// Verificar permissão específica
+const hasAccess = authManager.hasPermission('vendas-regiao');
+
+// Fazer logout
+authManager.logout();
+
+// Requerer autenticação (redireciona se não autenticado)
+authManager.requireAuth();
+```
 
 ---
 
@@ -416,6 +594,10 @@ O sistema foi convertido em PWA, oferecendo experiência de aplicativo nativo.
 
 ### Tabelas Principais
 
+**`users`** - Usuários e autenticação
+- Campos: id, username, password, full_name, permissions (JSON), active, created_at, updated_at
+- Controla autenticação e permissões de acesso aos dashboards
+
 **`vendas`** - Dados de vendas (45.453 registros)
 - Campos: serie, nota_fiscal, emissao, produto, qtde_faturada, valor_liquido, etc.
 
@@ -427,6 +609,16 @@ O sistema foi convertido em PWA, oferecendo experiência de aplicativo nativo.
 
 **`tab_produto`** - Produtos e famílias
 - Campos: produto, complemento, origem, familia, etc.
+
+**`potencial_cidade`** - Potencial por cidade
+- Campos: cidade, populacao, coordenadas, rota (para Performance Semanal)
+
+**`potencial_representante`** - Metas semanais
+- Campos: representante, semana, meta_peso, meta_clientes, meta_skus
+
+**`representante_cidades`** - Relacionamento representante ↔ cidades
+
+**`vw_produtos_parados`** - View de análise de produtos parados
 
 ### Índices Criados (26 total)
 
@@ -566,7 +758,10 @@ git filter-branch --force --index-filter \
 ## 🎯 Roadmap
 
 ### ✅ Implementado
-- ✅ 4 Dashboards completos (Região, Equipe, Produtos, Clientes)
+- ✅ 7 Dashboards completos (Região, Equipe, Produtos, Clientes, Performance Semanal, Produtos Parados, Gerenciar Usuários)
+- ✅ Sistema de Login e Autenticação completo
+- ✅ Gerenciamento de Usuários com controle de permissões
+- ✅ Controle de acesso por dashboard (permissões granulares)
 - ✅ PWA completo (funciona offline e pode ser instalado)
 - ✅ Busca digitável em todos os filtros
 - ✅ Layout 70/30 otimizado
@@ -577,6 +772,8 @@ git filter-branch --force --index-filter \
 - ✅ Gráficos interativos Chart.js
 - ✅ Exportação Excel/PDF
 - ✅ Logo Germani Alimentos em todos os dashboards
+- ✅ Dashboard de Performance Semanal com metas
+- ✅ Dashboard de Produtos Parados com análise de risco
 
 ____________
 att: 
@@ -609,13 +806,16 @@ Mapa de calor de performance geográfica
 - Comparativo de períodos
 
 ### 💡 Futuras Melhorias
-- Sistema de Login e Permissões
+- Criptografia de senhas (bcrypt/hash)
+- Sessão com expiração automática
+- Log de atividades dos usuários
 - Dashboard Executivo com IA
 - Drill-down detalhado
 - Filtros salvos e favoritos
 - Análise Preditiva
 - Modo escuro
 - Relatórios agendados
+- Autenticação Two-Factor (2FA)
 
 ---
 
