@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Debug de Sessão</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #00ff00;
+        }
+        .info {
+            background: #2d2d2d;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #00ff00;
+        }
+        .error {
+            border-left-color: #ff0000;
+            color: #ff6b6b;
+        }
+        .success {
+            border-left-color: #00ff00;
+        }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #00cc00;
+        }
+        pre {
+            background: #000;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug de Sessão - Ger Comercial</h1>
+
+    <div class="info">
+        <h2>Status Atual do localStorage:</h2>
+        <pre id="currentStatus"></pre>
+    </div>
+
+    <div class="info">
+        <h2>Ações de Teste:</h2>
+        <button onclick="checkSession()">🔍 Verificar Sessão</button>
+        <button onclick="createSession()">✅ Criar Sessão de Teste</button>
+        <button onclick="goToHome()">🏠 Ir para Home</button>
+        <button onclick="goToDashboard()">📊 Ir para Dashboard</button>
+        <button onclick="clearAll()">🗑️ Limpar Tudo</button>
+    </div>
+
+    <div id="logs"></div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = `info ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> - ${message}`;
+            logs.insertBefore(div, logs.firstChild);
+        }
+
+        function checkSession() {
+            const session = localStorage.getItem('ger_comercial_session');
+            const auth = localStorage.getItem('ger_comercial_auth');
+
+            document.getElementById('currentStatus').textContent =
+                `Session: ${session}\n\nAuth: ${auth ? JSON.stringify(JSON.parse(auth), null, 2) : 'null'}`;
+
+            if (session === 'active' && auth) {
+                log('✅ Sessão ATIVA e válida', 'success');
+            } else {
+                log('❌ Sessão INATIVA ou inválida', 'error');
+            }
+        }
+
+        function createSession() {
+            const testSession = {
+                id: 1,
+                username: 'admin',
+                fullName: 'Administrador',
+                permissions: ['vendas-regiao', 'vendas-equipe', 'analise-produtos'],
+                loginTime: new Date().toISOString()
+            };
+
+            localStorage.setItem('ger_comercial_session', 'active');
+            localStorage.setItem('ger_comercial_auth', JSON.stringify(testSession));
+
+            log('✅ Sessão de teste criada com sucesso!', 'success');
+            checkSession();
+        }
+
+        function goToHome() {
+            log('🏠 Redirecionando para Home...', 'info');
+            setTimeout(() => {
+                window.location.href = '/Ger_Comercial/index.html';
+            }, 500);
+        }
+
+        function goToDashboard() {
+            log('📊 Redirecionando para Dashboard...', 'info');
+            setTimeout(() => {
+                window.location.href = '/Ger_Comercial/dashboards/dashboard-vendas-regiao.html';
+            }, 500);
+        }
+
+        function clearAll() {
+            localStorage.clear();
+            log('🗑️ localStorage limpo', 'error');
+            checkSession();
+        }
+
+        // Verificar automaticamente ao carregar
+        window.addEventListener('load', () => {
+            log('🔄 Página de debug carregada', 'info');
+            checkSession();
+        });
+
+        // Monitorar mudanças no localStorage
+        window.addEventListener('storage', (e) => {
+            log(`🔔 localStorage alterado: ${e.key} = ${e.newValue}`, 'info');
+            checkSession();
+        });
+    </script>
+</body>
+</html>
