@@ -312,6 +312,24 @@
     <script type="module">
         import { authManager } from './js/auth.js';
 
+        // INTERCEPTOR: Detectar quem limpa o localStorage
+        const originalRemoveItem = localStorage.removeItem.bind(localStorage);
+        const originalClear = localStorage.clear.bind(localStorage);
+
+        localStorage.removeItem = function(key) {
+            console.error('🚨 ALGUÉM ESTÁ REMOVENDO:', key);
+            console.trace('Stack trace:');
+            alert('🚨 localStorage.removeItem(' + key + ') foi chamado!\nVeja o console para stack trace.');
+            return originalRemoveItem(key);
+        };
+
+        localStorage.clear = function() {
+            console.error('🚨 ALGUÉM ESTÁ LIMPANDO TODO O localStorage!');
+            console.trace('Stack trace:');
+            alert('🚨 localStorage.clear() foi chamado!\nVeja o console para stack trace.');
+            return originalClear();
+        };
+
         // DEBUG: Verificar localStorage ANTES de tudo
         const debugSession = localStorage.getItem('ger_comercial_session');
         const debugAuth = localStorage.getItem('ger_comercial_auth');
