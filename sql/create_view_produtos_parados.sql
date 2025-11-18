@@ -1,13 +1,8 @@
 -- =====================================================
--- VIEW: PRODUTOS PARADOS - Ger Comercial
+-- VIEW: PRODUTOS PARADOS - Ger Comercial (VERSÃO CORRIGIDA)
 -- =====================================================
 -- Identifica produtos que os representantes vendiam há 4 semanas
 -- mas pararam de vender nas últimas semanas
-
--- Descrição:
--- Esta view analisa o histórico de vendas e identifica SKUs que
--- apresentavam vendas regulares mas foram descontinuados recentemente
--- pelos representantes.
 
 -- =====================================================
 -- CRIAR VIEW
@@ -17,36 +12,44 @@ CREATE VIEW IF NOT EXISTS vw_produtos_parados AS
 WITH vendas_4_semanas_atras AS (
     -- Produtos vendidos entre 4-6 semanas atrás
     SELECT DISTINCT
-        rep_supervisor,
-        desc_representante,
-        cod_representante,
-        sku_produto,
-        desc_produto,
-        categoria_produto,
-        AVG(valor_total) as valor_medio_venda,
+        tr.rep_supervisor,
+        tr.desc_representante,
+        v.representante,
+        v.produto,
+        tp.desc_produto,
+        v.familia,
+        tp.desc_familia,
+        AVG(v.valor_bruto) as valor_medio_venda,
         COUNT(*) as qtd_vendas_anteriores,
-        MAX(data_venda) as ultima_venda_periodo_anterior
-    FROM vendas
-    WHERE data_venda BETWEEN date('now', '-6 weeks') AND date('now', '-4 weeks')
-    GROUP BY rep_supervisor, desc_representante, cod_representante,
-             sku_produto, desc_produto, categoria_produto
+        MAX(v.emissao) as ultima_venda_periodo_anterior
+    FROM vendas v
+    INNER JOIN tab_representante tr ON v.representante = tr.representante
+    LEFT JOIN tab_produto tp ON v.produto = tp.produto
+    WHERE v.emissao BETWEEN date('now', '-6 weeks') AND date('now', '-4 weeks')
+        AND v.emissao != ''  -- Filtrar registros sem data
+        AND v.representante != ''  -- Filtrar registros sem representante
+        AND v.nat_oper LIKE '5%' OR v.nat_oper LIKE '6%'  -- Apenas vendas (não devoluções)
+    GROUP BY tr.rep_supervisor, tr.desc_representante, v.representante,
+             v.produto, tp.desc_produto, v.familia, tp.desc_familia
     HAVING COUNT(*) >= 2  -- Pelo menos 2 vendas no período
 ),
 vendas_recentes AS (
     -- Produtos vendidos nas últimas 4 semanas
     SELECT DISTINCT
-        cod_representante,
-        sku_produto
+        representante,
+        produto
     FROM vendas
-    WHERE data_venda >= date('now', '-4 weeks')
+    WHERE emissao >= date('now', '-4 weeks')
+        AND emissao != ''
+        AND representante != ''
 )
 SELECT
     v4.rep_supervisor,
     v4.desc_representante,
-    v4.cod_representante,
-    v4.sku_produto,
+    v4.representante as cod_representante,
+    v4.produto as sku_produto,
     v4.desc_produto,
-    v4.categoria_produto,
+    COALESCE(v4.desc_familia, v4.familia) as categoria_produto,
     v4.ultima_venda_periodo_anterior as ultima_venda,
     CAST((julianday('now') - julianday(v4.ultima_venda_periodo_anterior)) / 7 AS INTEGER) as qtd_semanas_parado,
     ROUND(v4.valor_medio_venda, 2) as valor_medio_perdido,
@@ -59,23 +62,24 @@ SELECT
     END as nivel_risco
 FROM vendas_4_semanas_atras v4
 LEFT JOIN vendas_recentes vr
-    ON v4.cod_representante = vr.cod_representante
-    AND v4.sku_produto = vr.sku_produto
-WHERE vr.sku_produto IS NULL  -- Produto NÃO foi vendido recentemente
+    ON v4.representante = vr.representante
+    AND v4.produto = vr.produto
+WHERE vr.produto IS NULL  -- Produto NÃO foi vendido recentemente
 ORDER BY qtd_semanas_parado DESC, valor_medio_perdido DESC;
 
 -- =====================================================
--- QUERIES DE EXEMPLO PARA TESTE
+-- QUERIES DE TESTE
 -- =====================================================
 
 -- 1. Ver todos os produtos parados
--- SELECT * FROM vw_produtos_parados;
+-- SELECT * FROM vw_produtos_parados LIMIT 20;
 
 -- 2. Produtos parados por supervisor
 -- SELECT
 --     rep_supervisor,
 --     COUNT(*) as total_produtos_parados,
---     SUM(valor_medio_perdido) as valor_total_risco
+--     SUM(valor_medio_perdido) as valor_total_risco,
+--     COUNT(DISTINCT desc_representante) as qtd_representantes
 -- FROM vw_produtos_parados
 -- GROUP BY rep_supervisor
 -- ORDER BY valor_total_risco DESC;
@@ -106,22 +110,34 @@ ORDER BY qtd_semanas_parado DESC, valor_medio_perdido DESC;
 --         ELSE 4
 --     END;
 
+-- 5. Produtos parados por representante específico
+-- SELECT * FROM vw_produtos_parados
+-- WHERE desc_representante = 'GERMANI ALIMENTOS LTDA'
+-- ORDER BY qtd_semanas_parado DESC;
+
 -- =====================================================
--- OBSERVAÇÕES IMPORTANTES
+-- ÍNDICES RECOMENDADOS PARA PERFORMANCE
 -- =====================================================
 
--- Esta view assume que sua tabela de vendas tem os seguintes campos:
--- - rep_supervisor (texto)
--- - desc_representante (texto)
--- - cod_representante (texto/número)
--- - sku_produto (texto/número)
--- - desc_produto (texto)
--- - categoria_produto (texto)
--- - valor_total (número)
--- - data_venda (data)
+-- CREATE INDEX IF NOT EXISTS idx_vendas_emissao ON vendas(emissao);
+-- CREATE INDEX IF NOT EXISTS idx_vendas_rep_produto ON vendas(representante, produto);
+-- CREATE INDEX IF NOT EXISTS idx_vendas_familia ON vendas(familia);
+-- CREATE INDEX IF NOT EXISTS idx_vendas_nat_oper ON vendas(nat_oper);
 
--- Se os nomes dos campos forem diferentes, ajuste a query conforme necessário.
+-- =====================================================
+-- OBSERVAÇÕES
+-- =====================================================
 
--- Para melhor performance, considere criar índices:
--- CREATE INDEX idx_vendas_data ON vendas(data_venda);
--- CREATE INDEX idx_vendas_rep_produto ON vendas(cod_representante, sku_produto);
+-- 1. Filtros aplicados:
+--    - emissao != '' (ignora registros sem data)
+--    - representante != '' (ignora registros sem representante)
+--    - nat_oper LIKE '5%' OR '6%' (apenas vendas, não devoluções)
+
+-- 2. O campo 'familia' vem direto da tabela vendas (mais eficiente)
+--    Se preferir usar desc_familia da tab_produto, já está no JOIN
+
+-- 3. Caso queira filtrar apenas tipos específicos de operação:
+--    Ajuste a linha: AND v.nat_oper IN ('5101', '6101', ...)
+
+-- 4. Se quiser ajustar o período de análise (atualmente 4 semanas):
+--    Modifique: date('now', '-4 weeks') e date('now', '-6 weeks')
