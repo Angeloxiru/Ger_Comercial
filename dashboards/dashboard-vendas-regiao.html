@@ -601,6 +601,17 @@
 
         async function carregarFiltros() {
             try {
+                // Inicializa busca nos filtros PRIMEIRO (antes de preencher)
+                if (!window.filterSearches || Object.keys(window.filterSearches).length === 0) {
+                    console.log('📝 Inicializando FilterSearch...');
+                    window.filterSearches = {
+                        rota: new FilterSearch('filtroRota', { placeholder: 'Digite para buscar rota...' }),
+                        subrota: new FilterSearch('filtroSubRota', { placeholder: 'Digite para buscar subrota...' }),
+                        cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
+                    };
+                    console.log('✅ FilterSearch inicializado:', window.filterSearches);
+                }
+
                 const cacheKey = 'filtros_regiao';
                 const cached = cache.get(cacheKey);
                 let rotas, subRotas, cidades;
@@ -622,15 +633,6 @@
                 window.todasCidades = cidades.rows;
 
                 preencherSelect('filtroRota', rotas.rows.map(r => r.rota));
-
-                // Inicializa busca nos filtros (apenas se ainda não existir)
-                if (!window.filterSearches) {
-                    window.filterSearches = {
-                        rota: new FilterSearch('filtroRota', { placeholder: 'Digite para buscar rota...' }),
-                        subrota: new FilterSearch('filtroSubRota', { placeholder: 'Digite para buscar subrota...' }),
-                        cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
-                    };
-                }
             } catch (error) {
                 console.error('Erro ao carregar filtros:', error);
                 alert('Erro ao carregar filtros: ' + error.message);
@@ -639,6 +641,11 @@
 
         function preencherSelect(id, opcoes) {
             const select = document.getElementById(id);
+            if (!select) {
+                console.error('❌ Select não encontrado:', id);
+                return;
+            }
+
             select.innerHTML = '';
             if (opcoes.length === 0) {
                 select.innerHTML = '<option value="">Nenhuma opção disponível</option>';
@@ -652,10 +659,21 @@
                     select.appendChild(option);
                 });
             }
-            const searchId = id.replace('filtro', '').toLowerCase();
-            // Verifica se window.filterSearches existe e não é null antes de acessar
+
+            // Mapeia o ID do select para a chave do filterSearches
+            const searchIdMap = {
+                'filtroRota': 'rota',
+                'filtroSubRota': 'subrota',
+                'filtroCidade': 'cidade'
+            };
+            const searchId = searchIdMap[id];
+
+            // Atualiza o FilterSearch se existir
             if (window.filterSearches && window.filterSearches[searchId]) {
+                console.log(`🔄 Atualizando FilterSearch para ${id} (${opcoes.length} opções)`);
                 window.filterSearches[searchId].updateOptions(opcoes);
+            } else {
+                console.warn(`⚠️ FilterSearch não encontrado para ${id} (buscando por '${searchId}')`);
             }
         }
 
