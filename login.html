@@ -321,9 +321,9 @@
 
                     // Redirecionar após 1 segundo usando replace() para substituir no histórico
                     setTimeout(() => {
-                        window.location.replace('/Ger_Comercial/index.html');
+                        window.location.replace('/Ger_Comercial/');
                     }, 1000);
-                } else {
+                } else{
                     // Erro de autenticação
                     showAlert(result.message || 'Usuário ou senha inválidos', 'error');
                     setLoading(false);
