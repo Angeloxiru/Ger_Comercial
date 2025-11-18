@@ -312,6 +312,17 @@
     <script type="module">
         import { authManager } from './js/auth.js';
 
+        // DEBUG: Verificar localStorage ANTES de tudo
+        const debugSession = localStorage.getItem('ger_comercial_session');
+        const debugAuth = localStorage.getItem('ger_comercial_auth');
+        console.log('🔍 DEBUG - Session:', debugSession);
+        console.log('🔍 DEBUG - Auth:', debugAuth);
+
+        // Se não tem sessão, mostrar alert antes de redirecionar
+        if (!debugSession || debugSession !== 'active') {
+            alert('⚠️ DEBUG: Sessão não encontrada ou inativa!\nSession: ' + debugSession);
+        }
+
         // Verificar autenticação ao carregar a página
         document.addEventListener('DOMContentLoaded', () => {
             // Verificar se está autenticado (redireciona para login se não estiver)
