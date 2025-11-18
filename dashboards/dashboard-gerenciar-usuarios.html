@@ -457,6 +457,18 @@
             }
 
             async init() {
+                // Conectar ao banco antes de carregar usuários
+                if (!db.isConnected()) {
+                    try {
+                        await db.connect();
+                        console.log('✅ Banco de dados conectado');
+                    } catch (error) {
+                        console.error('❌ Erro ao conectar ao banco:', error);
+                        alert('Erro ao conectar ao banco de dados. Verifique a configuração.');
+                        return;
+                    }
+                }
+
                 await this.loadUsers();
                 this.renderPermissionsCheckboxes();
             }
