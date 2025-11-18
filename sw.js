@@ -1,8 +1,8 @@
 // Service Worker para Ger Comercial - Germani Alimentos
-// Versão: 1.1.0 - Adicionado sistema de autenticação
+// Versão: 1.2.0 - Adicionado dashboard de Produtos Parados
 
-const CACHE_NAME = 'ger-comercial-v2';
-const RUNTIME_CACHE = 'ger-comercial-runtime-v2';
+const CACHE_NAME = 'ger-comercial-v3';
+const RUNTIME_CACHE = 'ger-comercial-runtime-v3';
 
 // Arquivos essenciais para funcionar offline
 const ESSENTIAL_FILES = [
@@ -17,6 +17,7 @@ const ESSENTIAL_FILES = [
   '/Ger_Comercial/dashboards/dashboard-analise-produtos.html',
   '/Ger_Comercial/dashboards/dashboard-performance-clientes.html',
   '/Ger_Comercial/dashboards/cobranca-semanal.html',
+  '/Ger_Comercial/dashboards/dashboard-produtos-parados.html',
   '/Ger_Comercial/js/db.js',
   '/Ger_Comercial/js/config.js',
   '/Ger_Comercial/js/auth.js',
