@@ -1,19 +1,18 @@
 # 📊 Ger Comercial - Sistema Integrado de Gerenciamento
 
-Sistema de Gerenciamento Comercial desenvolvido com Turso Database (LibSQL), otimizado para análise de vendas com dashboards interativos e filtros inteligentes.
+Sistema de Gerenciamento Comercial desenvolvido com Turso Database (LibSQL), otimizado para análise de vendas com dashboards interativos, autenticação e filtros inteligentes.
 
 ---
 
 ## ✨ Destaques do Sistema
 
 - ✅ **100% Frontend** - JavaScript ES Modules, sem backend necessário
+- ✅ **Autenticação e Permissões** - Sistema completo de login e controle de acesso
 - ✅ **Turso Database** - Cloud SQLite otimizado com 26 índices de performance
 - ✅ **PWA (Progressive Web App)** - Funciona offline e pode ser instalado no dispositivo
-- ✅ **Layout 70/30** - Tabela principal (70%) + Dashboard lateral (30%)
-- ✅ **4 Dashboards Completos** - Região, Equipe, Produtos, Clientes
+- ✅ **6 Dashboards Completos** - Vendas, equipe, produtos, clientes, cobrança e produtos parados
 - ✅ **Filtros Inteligentes** - Busca digitável em tempo real e cascata automática
-- ✅ **Cache Otimizado** - LocalStorage com TTL + Service Worker para performance máxima
-- ✅ **Paginação Eficiente** - 25 registros por página com navegação rápida
+- ✅ **Cache Tri-fonte** - LocalStorage + SessionStorage + Cookies para máxima confiabilidade
 - ✅ **Gráficos Interativos** - Chart.js com visualizações dinâmicas
 - ✅ **Exportação de Dados** - Excel e PDF com um clique
 - ✅ **GitHub Pages Ready** - Deploy automático configurado
@@ -24,6 +23,12 @@ Sistema de Gerenciamento Comercial desenvolvido com Turso Database (LibSQL), oti
 
 **URL do Sistema:** https://angeloxiru.github.io/Ger_Comercial/
 
+**Usuários de Teste:**
+- Admin: `admin` / `admin123` (acesso completo)
+- Gerente: `gerente` / `gerente123` (4 dashboards)
+- Vendedor: `vendedor` / `vendedor123` (2 dashboards)
+- Financeiro: `financeiro` / `financeiro123` (2 dashboards)
+
 ---
 
 ## 📁 Estrutura do Projeto
@@ -31,42 +36,59 @@ Sistema de Gerenciamento Comercial desenvolvido com Turso Database (LibSQL), oti
 ```
 Ger_Comercial/
 │
-├── index.html                     # 🏠 Página inicial com menu de dashboards
-├── manifest.json                  # 📱 Manifest PWA (metadados da aplicação)
-├── sw.js                          # 🔄 Service Worker (cache e modo offline)
-├── icon-192.png                   # 📱 Ícone PWA 192x192
-├── icon-512.png                   # 📱 Ícone PWA 512x512
+├── index.html                     # 🏠 Home com menu de dashboards
+├── login.html                     # 🔐 Tela de login
+├── manifest.json                  # 📱 Manifest PWA
+├── sw.js                          # 🔄 Service Worker
+├── icon-192.png / icon-512.png    # 📱 Ícones PWA
 │
 ├── dashboards/                    # 📊 Dashboards de análise
-│   ├── dashboard-vendas-regiao.html        # Vendas por região
-│   ├── dashboard-vendas-equipe.html        # Vendas por equipe comercial
-│   ├── dashboard-analise-produtos.html     # Análise de produtos
-│   └── dashboard-performance-clientes.html # Performance de clientes
-│
-├── tools/                         # 🔧 Ferramentas de diagnóstico
-│   ├── diagnostico.html           # Diagnóstico de conexão e dados
-│   └── limpar-cache.html          # Limpeza de cache do sistema
+│   ├── dashboard-vendas-regiao.html
+│   ├── dashboard-vendas-equipe.html
+│   ├── dashboard-analise-produtos.html
+│   ├── dashboard-performance-clientes.html
+│   ├── cobranca-semanal.html
+│   └── dashboard-produtos-parados.html
 │
 ├── js/                            # 📦 Módulos JavaScript
-│   ├── config.js                  # ⚙️ Configurações do banco (TOKEN AQUI!)
+│   ├── config.js                  # ⚙️ Configurações (TOKEN AQUI!)
 │   ├── config.example.js          # Exemplo de configuração
-│   ├── db.js                      # Gerenciador de conexão e queries
-│   ├── cache.js                   # Sistema de cache com TTL
+│   ├── db.js                      # Gerenciador de conexão
+│   ├── auth.js                    # 🔐 Sistema de autenticação
+│   ├── cache.js                   # Sistema de cache
 │   ├── pagination.js              # Paginação de tabelas
-│   ├── filter-search.js           # Busca em tempo real em filtros
+│   ├── filter-search.js           # Busca em tempo real
 │   └── dashboard-isolation.js     # Isolamento de dashboards
 │
-├── scripts/                       # 🗄️ Scripts SQL
-│   ├── README.md                  # Documentação dos scripts
-│   ├── 01-create-indexes.sql      # Criação de índices (CLI)
-│   ├── 01-create-indexes-web.sql  # Criação de índices (Web Dashboard)
-│   ├── 02-maintenance.sql         # Manutenção mensal
-│   └── 03-test-performance.sql    # Testes de performance
+├── sql/                           # 🗄️ Scripts SQL organizados
+│   ├── README.md                  # Documentação SQL
+│   ├── auth/                      # Scripts de autenticação
+│   │   ├── 01_create_users_table.sql
+│   │   ├── 02_verificar_usuarios.sql
+│   │   └── 03_manage_users.sql
+│   ├── views/                     # Views SQL
+│   │   └── create_view_produtos_parados.sql
+│   └── maintenance/               # Scripts de manutenção
+│       ├── 01-create-indexes.sql
+│       ├── 01-create-indexes-web.sql
+│       ├── 02-maintenance.sql
+│       └── 03-test-performance.sql
 │
-└── docs/                          # 📚 Documentação
-    ├── INDICES-EXPLICACAO.md      # Explicação sobre índices
-    ├── GUIA_RAPIDO.md             # Guia rápido de uso
-    └── TROUBLESHOOTING.md         # Solução de problemas
+├── docs/                          # 📚 Documentação completa
+│   ├── README.md                  # Índice da documentação
+│   ├── GUIA_RAPIDO.md             # Guia rápido de uso
+│   ├── TROUBLESHOOTING.md         # Solução de problemas
+│   ├── INDICES-EXPLICACAO.md      # Explicação sobre índices
+│   ├── AUTENTICACAO.md            # Sistema de autenticação
+│   └── PRODUTOS_PARADOS.md        # Dashboard produtos parados
+│
+├── tools/                         # 🔧 Ferramentas de diagnóstico
+│   ├── diagnostico.html           # Diagnóstico de conexão
+│   ├── limpar-cache.html          # Limpeza de cache
+│   └── debug-session.html         # Debug de sessão
+│
+└── scripts/                       # 📜 Scripts auxiliares (legacy)
+    └── README.md
 ```
 
 ---
@@ -90,325 +112,178 @@ export const config = {
 };
 ```
 
-### 2️⃣ Criar Índices de Performance
+### 2️⃣ Criar Índices de Performance ⚡
 
 **IMPORTANTE:** Execute esta etapa para otimizar as queries em 50-90%!
 
-#### Opção A: Via Turso Web Dashboard (Recomendado)
+**Via Turso Web Dashboard (Recomendado):**
 
 1. Acesse https://turso.tech/
-2. Selecione seu banco de dados
-3. Vá em "SQL Editor"
-4. Abra o arquivo `scripts/01-create-indexes-web.sql`
-5. Copie todo o conteúdo e cole no editor
-6. Clique em "Run"
-7. Aguarde ~2 minutos (para ~45k registros)
-
-#### Opção B: Via Turso CLI
-
-```bash
-# Instalar Turso CLI
-curl -sSfL https://get.tur.so/install.sh | bash
-
-# Login
-turso auth login
-
-# Conectar ao banco
-turso db shell seu-banco-aqui
-
-# Executar script
-.read scripts/01-create-indexes.sql
-```
+2. Selecione seu banco → "SQL Editor"
+3. Abra o arquivo `sql/maintenance/01-create-indexes-web.sql`
+4. Copie todo o conteúdo e cole no editor
+5. Clique em "Run"
 
 **Resultado esperado:**
 - ⚡ Queries 50-90% mais rápidas
-- 💰 Redução de 95-99% no consumo de reads do Turso
-- 🚀 Dashboards carregam instantaneamente
+- 💰 Redução de 95-99% no consumo de reads
+- 🚀 Dashboards instantâneos
 
-Ver mais detalhes em: `scripts/README.md`
+### 3️⃣ Configurar Autenticação 🔐
 
-### 3️⃣ Acessar o Sistema
+**Criar tabela de usuários:**
+
+1. Abra `sql/auth/01_create_users_table.sql`
+2. Copie todo o conteúdo
+3. Cole no Turso SQL Editor
+4. Execute
+
+**Resultado:**
+- Tabela `users` criada
+- 4 usuários de exemplo inseridos
+- Índices de autenticação configurados
+
+**Gerenciar usuários:**
+- Ver exemplos em: `sql/auth/03_manage_users.sql`
+- Documentação completa: `docs/AUTENTICACAO.md`
+
+### 4️⃣ (Opcional) Criar View de Produtos Parados
+
+Se deseja usar o dashboard de produtos parados:
+
+1. Abra `sql/views/create_view_produtos_parados.sql`
+2. Execute no Turso SQL Editor
+3. Libere permissões para usuários (ver `docs/AUTENTICACAO.md`)
+
+### 5️⃣ Acessar o Sistema
 
 Abra no navegador: https://angeloxiru.github.io/Ger_Comercial/
-
-### 4️⃣ Instalar como PWA (Opcional)
-
-O sistema agora funciona como PWA (Progressive Web App) e pode ser instalado em qualquer dispositivo!
-
-**No Desktop (Chrome/Edge):**
-1. Acesse o sistema no navegador
-2. Clique no ícone de instalação (➕) na barra de endereço
-3. Clique em "Instalar"
-4. O app abrirá em janela própria
-
-**No Mobile (Android/iOS):**
-1. Acesse o sistema no navegador
-2. Toque no menu (⋮) ou compartilhar (📤)
-3. Selecione "Adicionar à tela inicial"
-4. O ícone aparecerá na sua tela inicial
-
-**Benefícios do PWA:**
-- 🚀 Acesso mais rápido (ícone na tela inicial)
-- 📱 Funciona offline após primeira visita
-- 💾 Cache inteligente de recursos
-- 🔔 Visual de aplicativo nativo
-- 🌐 Sincroniza automaticamente quando online
 
 ---
 
 ## 📊 Dashboards Disponíveis
 
-### 1. 📍 Vendas por Região
+### 1. 🔐 Login
+- Autenticação obrigatória
+- Validação contra banco Turso
+- Sessão persistente (localStorage + sessionStorage + cookies)
+- Redirecionamento automático
 
-**Arquivo:** `dashboards/dashboard-vendas-regiao.html`
+### 2. 🏠 Home (index.html)
+- Menu de dashboards com cards
+- Controle de acesso por permissões
+- Cards bloqueados ficam esmaecidos + ícone 🔒
+- Informações do usuário no header
+- Botão de logout
 
-Análise completa de vendas por localização geográfica.
+### 3. 📍 Vendas por Região
+**Filtros:** Período, Rota, Sub-Rota, Cidade, Supervisor, Representante
+**KPIs:** Valor Total, Quantidade, Peso, Registros
+**Gráficos:** Top 10 Produtos, Distribuição
 
-**Filtros:**
-- Período (data inicial/final)
-- Rota (múltipla seleção)
-- Sub-Rota (cascata automática)
-- Cidade (busca em tempo real)
-- Supervisor
-- Representante
+### 4. 👥 Vendas por Equipe
+**Filtros:** Período, Supervisor (cascata), Representante, Cidade
+**KPIs:** Performance individual e equipe
+**Recursos:** Exportação Excel/PDF
 
-**Visualizações:**
-- 4 KPIs: Valor Total, Quantidade, Peso, Total de Registros
-- Gráfico Top 10 Produtos por Valor
-- Gráfico Distribuição Quantidade vs Valor
-- Tabela paginada (25 registros/página)
+### 5. 📈 Análise de Produtos
+**Filtros:** Período (atalhos), Origem, Família, Produto
+**Recursos:** Busca em tempo real, Limpar filtros
+**Análise:** Por origem, família e SKU
 
----
+### 6. 💰 Performance de Clientes
+**Filtros:** Período, Grupo de Clientes, Cliente, Cidade
+**Visualizações:** Top 10 Clientes, Vendas por cidade
+**Análise:** Performance detalhada
 
-### 2. 👥 Vendas por Equipe Comercial
+### 7. 🎯 Cobrança Semanal
+**Filtros:** Semana
+**KPIs:** Performance vs Potencial
+**Análise:** Penetração de mercado, eficiência por rota
+**Ranking:** Por faturamento, peso, clientes
 
-**Arquivo:** `dashboards/dashboard-vendas-equipe.html`
-
-Desempenho individual e por equipe comercial.
-
-**Filtros:**
-- Período
-- Supervisor (cascata nível 1)
-- Representante (cascata nível 2)
-- Cidade (cascata nível 3)
-
-**Visualizações:**
-- 4 KPIs em grid 2x2
-- Top 10 Produtos
-- Distribuição de vendas
-- Exportação para Excel/PDF
-
----
-
-### 3. 📈 Análise de Produtos
-
-**Arquivo:** `dashboards/dashboard-analise-produtos.html`
-
-Análise detalhada por origem, família e produto.
-
-**Filtros:**
-- Período com atalhos (Mês, Trimestre, Ano)
-- Origem (busca em tempo real)
-- Família (cascata)
-- Produto (busca avançada)
-
-**Recursos especiais:**
-- Botão "Limpar Filtros"
-- Busca em tempo real em todos os selects
-- Exportação com nome automático por período
+### 8. 🛑 Produtos Parados
+**Filtros:** Supervisor, Representante, Categoria, Risco
+**KPIs:** Total de produtos parados, Valor em risco, Semanas paradas
+**Classificação:** Crítico (8+ sem), Alto (6-7), Médio (4-5), Baixo (4)
+**Documentação:** `docs/PRODUTOS_PARADOS.md`
 
 ---
 
-### 4. 💰 Performance de Clientes
+## 🔐 Sistema de Autenticação
 
-**Arquivo:** `dashboards/dashboard-performance-clientes.html`
+### Como Funciona
 
-Análise de performance por grupo e cliente individual.
+1. **Login obrigatório** antes de acessar qualquer dashboard
+2. **Validação** contra tabela `users` no Turso
+3. **Sessão** salva em 3 lugares simultaneamente:
+   - localStorage (compatibilidade)
+   - sessionStorage (mais confiável)
+   - Cookies (funciona em todos os paths)
+4. **Controle de acesso** por permissões em JSON
+5. **Cards bloqueados** ficam visíveis mas desabilitados
 
-**Filtros:**
-- Período
-- Grupo de Clientes
-- Cliente (com busca)
-- Cidade
+### Permissões Disponíveis
 
-**Visualizações:**
-- Top 10 Clientes por valor
-- Gráfico de vendas por cidade
-- Tabela de performance detalhada
-
----
-
-## 🔧 Ferramentas de Diagnóstico
-
-### Diagnóstico de Sistema
-
-**Arquivo:** `tools/diagnostico.html`
-
-Ferramenta completa para verificar:
-- ✅ Conexão com Turso
-- ✅ Estrutura do banco de dados
-- ✅ Quantidade de registros
-- ✅ Integridade dos dados
-- ✅ Performance das queries
-
-### Limpeza de Cache
-
-**Arquivo:** `tools/limpar-cache.html`
-
-Remove cache do LocalStorage para forçar atualização de dados.
-
----
-
-## 📦 Módulos JavaScript
-
-### `db.js` - Gerenciador de Banco
-
-```javascript
-import { db } from './js/db.js';
-
-// Conectar
-await db.connect();
-
-// Executar query
-const result = await db.execute('SELECT * FROM vendas LIMIT 10');
-
-// Query com parâmetros
-const result = await db.execute({
-    sql: 'SELECT * FROM vendas WHERE emissao >= ? AND emissao <= ?',
-    args: ['2025-01-01', '2025-01-31']
-});
-
-// Batch queries
-const results = await db.batch([
-    { sql: 'SELECT COUNT(*) FROM vendas' },
-    { sql: 'SELECT SUM(valor_liquido) FROM vendas' }
-]);
+```json
+[
+  "vendas-regiao",
+  "vendas-equipe",
+  "analise-produtos",
+  "performance-clientes",
+  "cobranca-semanal",
+  "produtos-parados"
+]
 ```
 
----
+### Gerenciar Usuários
 
-### `cache.js` - Sistema de Cache
-
-```javascript
-import { cache, CACHE_TTL } from './js/cache.js';
-
-// Salvar no cache
-cache.set('chave', dados, CACHE_TTL.FILTERS); // 1 hora
-
-// Buscar do cache
-const cached = cache.get('chave');
-
-// Buscar com fallback automático
-const dados = await cache.getOrFetch(
-    'chave',
-    async () => await fetchData(),
-    CACHE_TTL.DASHBOARDS // 5 minutos
-);
-
-// Limpar cache expirado
-cache.cleanup();
+**Adicionar usuário:**
+```sql
+INSERT INTO users (username, password, full_name, permissions, active)
+VALUES ('novo_user', 'senha123', 'Nome Completo',
+        '["vendas-regiao","analise-produtos"]', 1);
 ```
 
-**TTL Padrões:**
-- FILTERS: 1 hora
-- DASHBOARDS: 5 minutos
-- KPIS: 10 minutos
-- CHARTS: 15 minutos
-- REPORTS: 30 minutos
-
----
-
-### `pagination.js` - Paginação
-
-```javascript
-import { Pagination } from './js/pagination.js';
-
-// Criar paginação
-const pagination = new Pagination('#paginationContainer', {
-    pageSize: 25,
-    renderCallback: (pageData) => {
-        renderTable(pageData);
-    }
-});
-
-// Definir dados
-pagination.setData(arrayDeDados);
-
-// Navegação
-pagination.nextPage();
-pagination.previousPage();
-pagination.goToPage(5);
+**Alterar permissões:**
+```sql
+UPDATE users
+SET permissions = '["vendas-regiao","vendas-equipe","produtos-parados"]'
+WHERE username = 'vendedor';
 ```
 
----
-
-### `filter-search.js` - Busca em Filtros
-
-```javascript
-import { FilterSearch } from './js/filter-search.js';
-
-// Adicionar busca em select
-const search = new FilterSearch('meuSelect', {
-    placeholder: 'Digite para buscar...'
-});
-
-// Atualizar opções
-search.updateOptions(['Opção 1', 'Opção 2', 'Opção 3']);
-
-// Limpar
-search.clear();
-```
-
-**Funcionalidade de busca digitável:**
-- ✅ Todos os filtros com múltipla seleção possuem busca em tempo real
-- ✅ Digite para filtrar as opções instantaneamente
-- ✅ Suporta acentos e busca parcial
-- ✅ Interface intuitiva com campo de busca acima do select
+**Ver mais:** `sql/auth/03_manage_users.sql` e `docs/AUTENTICACAO.md`
 
 ---
 
 ## 📱 PWA - Progressive Web App
 
-O sistema foi convertido em PWA, oferecendo experiência de aplicativo nativo.
+### Instalação
+
+**Desktop (Chrome/Edge):**
+1. Acesse o sistema
+2. Clique no ícone ➕ na barra de endereço
+3. Clique em "Instalar"
+
+**Mobile (Android/iOS):**
+1. Acesse no navegador
+2. Menu ⋮ ou compartilhar 📤
+3. "Adicionar à tela inicial"
+
+### Benefícios
+
+- 🚀 Acesso mais rápido
+- 📱 Funciona offline (após primeira visita)
+- 💾 Cache inteligente de recursos
+- 🔔 Visual de aplicativo nativo
+- 🌐 Sincroniza quando online
 
 ### Arquivos PWA
 
-**`manifest.json`** - Metadados da aplicação:
-- Nome, ícones, cores do tema
-- Modo standalone (sem barra do navegador)
-- Atalhos para dashboards principais
-- Suporte a múltiplas orientações
-
-**`sw.js`** - Service Worker:
-- Cache de arquivos essenciais na instalação
-- Estratégia Network First para dados atualizados
-- Fallback para cache quando offline
-- Cache automático de CDNs (Chart.js, XLSX, etc.)
-- Limpeza automática de cache antigo
-
-**Ícones:**
-- `icon-192.png` - Ícone 192x192 (tela inicial mobile)
-- `icon-512.png` - Ícone 512x512 (splash screen)
-
-### Como funciona
-
-1. **Primeira visita:** Service Worker registrado e arquivos cacheados
-2. **Visitas seguintes:** Carrega do cache + atualiza em background
-3. **Offline:** Serve conteúdo do cache automaticamente
-4. **Online:** Sincroniza e atualiza cache com novos dados
-
-### Recursos offline
-
-**Funcionam offline após primeira visita:**
-- Interface completa de todos os dashboards
-- Módulos JavaScript (db.js, cache.js, etc.)
-- Bibliotecas (Chart.js, XLSX)
-- Ícones e assets estáticos
-
-**Requerem conexão:**
-- Consultas ao banco Turso
-- Exportação de dados
-- Atualização de filtros
+- `manifest.json` - Metadados da aplicação
+- `sw.js` - Service Worker (versão 1.3.0)
+- Estratégia: Network First com fallback para cache
+- Cache automático de CDNs
 
 ---
 
@@ -416,54 +291,42 @@ O sistema foi convertido em PWA, oferecendo experiência de aplicativo nativo.
 
 ### Tabelas Principais
 
-**`vendas`** - Dados de vendas (45.453 registros)
-- Campos: serie, nota_fiscal, emissao, produto, qtde_faturada, valor_liquido, etc.
+- **`vendas`** - Dados de vendas (~45k registros)
+- **`tab_cliente`** - Informações de clientes
+- **`tab_representante`** - Representantes e supervisores
+- **`tab_produto`** - Produtos e famílias
+- **`users`** - Usuários e permissões (autenticação)
 
-**`tab_cliente`** - Informações de clientes
-- Campos: cliente, rota, sub_rota, cidade, etc.
+### Views
 
-**`tab_representante`** - Representantes e supervisores
-- Campos: representante, desc_representante, rep_supervisor, etc.
+- **`vw_produtos_parados`** - Produtos que pararam de ser vendidos
 
-**`tab_produto`** - Produtos e famílias
-- Campos: produto, complemento, origem, familia, etc.
+### Índices
 
-### Índices Criados (26 total)
+26 índices otimizados para performance.
+Ver detalhes: `docs/INDICES-EXPLICACAO.md`
 
-Ver detalhes completos em: `docs/INDICES-EXPLICACAO.md`
+### Scripts SQL
 
-**Principais índices:**
-- `idx_vendas_emissao` - Filtros por data
-- `idx_vendas_cliente` - Consultas por cliente
-- `idx_vendas_produto` - Análise de produtos
-- `idx_vendas_representante` - Performance de equipe
-- `idx_vendas_composite_*` - Queries compostas otimizadas
+Todos organizados em `sql/`:
+- `auth/` - Autenticação e usuários
+- `views/` - Views SQL
+- `maintenance/` - Índices e manutenção
+
+Ver documentação: `sql/README.md`
 
 ---
 
-## 🎨 Layout 70/30
+## 🔧 Ferramentas de Diagnóstico
 
-Todos os dashboards seguem o padrão otimizado:
+### tools/diagnostico.html
+Verifica conexão, estrutura, dados e performance.
 
-```
-┌─────────────────────────────────────────────────┐
-│                   FILTROS                        │
-├─────────────────────────┬───────────────────────┤
-│   TABELA (70%)          │  DASHBOARD (30%)      │
-│                         │                       │
-│ 📊 25 linhas visíveis   │  📊 4 KPIs (2x2)     │
-│ ⬆️⬇️ Scroll suave        │  📈 Gráfico 1        │
-│ ◀️ 1 2 3 4 5 ▶️ Paginação│  📊 Gráfico 2        │
-│ 💾 Exportar Excel/PDF   │                       │
-└─────────────────────────┴───────────────────────┘
-```
+### tools/limpar-cache.html
+Remove cache do LocalStorage para forçar atualização.
 
-**Características:**
-- 📋 25 linhas sempre visíveis
-- 📊 4 KPIs em grid 2x2
-- 📈 2 gráficos Chart.js
-- 📄 Paginação de 25 registros
-- 💾 Exportação integrada
+### tools/debug-session.html
+Ferramenta interativa para debug de sessão/autenticação.
 
 ---
 
@@ -476,7 +339,7 @@ O sistema está configurado para deploy automático:
 1. Faça suas alterações localmente
 2. Configure `js/config.js` com seu token
 3. Commit e push para o repositório
-4. GitHub Pages atualiza automaticamente em ~1 minuto
+4. GitHub Pages atualiza em ~1 minuto
 
 **URL:** https://angeloxiru.github.io/Ger_Comercial/
 
@@ -493,8 +356,7 @@ cp js/config.example.js js/config.js
 
 # Iniciar servidor local (necessário para ES modules)
 python -m http.server 8000
-# ou
-npx serve
+# ou npx serve
 
 # Acessar
 http://localhost:8000
@@ -508,26 +370,34 @@ http://localhost:8000
 
 **NUNCA** faça commit do seu token!
 
-O arquivo `js/config.js` está no `.gitignore` para proteção.
+O arquivo `js/config.js` está no `.gitignore`.
 
 **Se você commitou o token por acidente:**
 1. Regenere o token no Turso Dashboard
 2. Atualize `js/config.js`
-3. Remova o arquivo do histórico do Git:
-```bash
-git filter-branch --force --index-filter \
-  "git rm --cached --ignore-unmatch js/config.js" \
-  --prune-empty --tag-name-filter cat -- --all
-```
+3. Remova do histórico do Git
+
+### ⚠️ Melhorias Recomendadas para Produção
+
+1. **Senhas criptografadas** - Usar bcrypt/argon2
+2. **Tokens JWT** - Ao invés de localStorage
+3. **HTTPS obrigatório**
+4. **Rate limiting** - Limitar tentativas de login
+5. **Expiração de sessão**
+
+Ver mais: `docs/AUTENTICACAO.md`
 
 ---
 
 ## 📚 Documentação Completa
 
-- **`docs/GUIA_RAPIDO.md`** - Guia rápido de uso do sistema
-- **`docs/TROUBLESHOOTING.md`** - Solução de problemas comuns
-- **`docs/INDICES-EXPLICACAO.md`** - Como funcionam os índices
-- **`scripts/README.md`** - Documentação dos scripts SQL
+- **[docs/README.md](docs/README.md)** - Índice da documentação
+- **[docs/GUIA_RAPIDO.md](docs/GUIA_RAPIDO.md)** - Guia rápido de uso
+- **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Solução de problemas
+- **[docs/AUTENTICACAO.md](docs/AUTENTICACAO.md)** - Sistema de autenticação
+- **[docs/PRODUTOS_PARADOS.md](docs/PRODUTOS_PARADOS.md)** - Dashboard produtos parados
+- **[docs/INDICES-EXPLICACAO.md](docs/INDICES-EXPLICACAO.md)** - Como funcionam os índices
+- **[sql/README.md](sql/README.md)** - Documentação dos scripts SQL
 
 ---
 
@@ -536,28 +406,19 @@ git filter-branch --force --index-filter \
 ### ❌ "Token de autenticação não configurado"
 **Solução:** Edite `js/config.js` e adicione seu token do Turso.
 
-### ❌ "Failed to fetch"
-**Causas possíveis:**
-- Sem conexão com internet
-- Token inválido ou expirado
-- Database não existe
-
+### ❌ "Usuário ou senha inválidos"
 **Solução:**
-1. Verifique sua conexão
-2. Regenere o token no Turso
-3. Confirme que o database existe
+1. Verifique se executou `sql/auth/01_create_users_table.sql`
+2. Use `sql/auth/02_verificar_usuarios.sql` para verificar
+
+### ❌ Logout ao clicar "Voltar"
+**Solução:** Problema resolvido! Sistema usa sessão tri-fonte (localStorage + sessionStorage + cookies)
 
 ### ❌ Dashboards lentos
 **Solução:**
-1. Execute os scripts de criação de índices em `scripts/`
-2. Execute `scripts/02-maintenance.sql` mensalmente
-3. Limpe o cache usando `tools/limpar-cache.html`
-
-### ❌ Filtros não carregam
-**Solução:**
-1. Execute `tools/diagnostico.html` para verificar dados
-2. Limpe o cache do navegador
-3. Verifique se as tabelas auxiliares têm dados
+1. Execute `sql/maintenance/01-create-indexes.sql`
+2. Execute `sql/maintenance/02-maintenance.sql` mensalmente
+3. Limpe cache usando `tools/limpar-cache.html`
 
 **Mais problemas?** Consulte `docs/TROUBLESHOOTING.md`
 
@@ -566,56 +427,46 @@ git filter-branch --force --index-filter \
 ## 🎯 Roadmap
 
 ### ✅ Implementado
-- ✅ 4 Dashboards completos (Região, Equipe, Produtos, Clientes)
-- ✅ PWA completo (funciona offline e pode ser instalado)
+
+- ✅ 6 Dashboards completos
+- ✅ Sistema de autenticação e permissões
+- ✅ PWA completo (offline + instalável)
+- ✅ Sessão multi-fonte (localStorage + sessionStorage + cookies)
 - ✅ Busca digitável em todos os filtros
-- ✅ Layout 70/30 otimizado
 - ✅ 26 índices de performance
-- ✅ Sistema de cache inteligente (LocalStorage + Service Worker)
-- ✅ Filtros com busca em tempo real e cascata automática
-- ✅ Paginação de 25 registros
-- ✅ Gráficos interativos Chart.js
 - ✅ Exportação Excel/PDF
-- ✅ Logo Germani Alimentos em todos os dashboards
+- ✅ Dashboard de Produtos Parados
+- ✅ Dashboard de Cobrança Semanal
 
-____________
-att: 
-📊 Atualizações - Dashboard de Cobrança Semanal
-Novo Módulo: Performance vs Potencial
-Adicionado controle semanal de performance da equipe comercial com métricas de penetração de mercado e eficiência por rota.
-🆕 Tabelas do Banco
-potencial_cidade: Potencial por cidade (população, coordenadas, rota)
-potencial_representante: Metas semanais (peso, clientes, SKUs)
-representante_cidades: Relacionamento representante ↔ cidades atendidas
-📈 O que Faz
-Compara vendas reais da semana vs. meta estabelecida
-Calcula % de penetração de clientes (ativos / potencial da cidade)
-Identifica representantes abaixo da meta para ação imediata
-Ranking automático por faturamento, peso e quantidade de clientes
-🚀 Como Usar
-Segunda-feira: Atualize os dados de vendas no Turso
-Acesse cobranca-semanal.html via GitPages
-Selecione a semana desejada no dropdown
-Representantes em vermelho requerem ação imediata (< 70% da meta)
-⚙️ Próximos Passos
-Análise de produtos "parados" (revenda semanal)
-Dashboard de margem e descontos
-Mapa de calor de performance geográfica
+### 🚧 Próximas Implementações
 
+1. **Dashboard de Margem e Rentabilidade**
+   - Análise de margem bruta/líquida por produto
+   - Rentabilidade por cliente/representante
+   - Identificação de produtos com baixa margem
+   - Sugestões de ajuste de preços
 
-### 🚧 Em Desenvolvimento
-- Análise Financeira
-- Gestão de Estoque
-- Comparativo de períodos
+2. **Sistema de Alertas e Notificações**
+   - Alertas de meta não atingida
+   - Notificações de produtos parados críticos
+   - Avisos de clientes inativos
+   - Email automático para supervisores
 
-### 💡 Futuras Melhorias
-- Sistema de Login e Permissões
-- Dashboard Executivo com IA
-- Drill-down detalhado
-- Filtros salvos e favoritos
-- Análise Preditiva
-- Modo escuro
-- Relatórios agendados
+3. **Dashboard Executivo com IA**
+   - Análise preditiva de vendas
+   - Sugestões automáticas de ação
+   - Insights baseados em ML
+   - Comparativo com períodos anteriores
+
+4. **Relatórios Agendados**
+   - Geração automática de relatórios
+   - Envio por email em horários programados
+   - Relatórios personalizados por usuário
+
+5. **Modo Escuro**
+   - Tema escuro para todo o sistema
+   - Alternância automática baseada em horário
+   - Configuração por usuário
 
 ---
 
@@ -655,7 +506,7 @@ Este projeto é de código aberto e está disponível sob a licença MIT.
 ---
 
 <p align="center">
-  <strong>🚀 100% Web | 📊 Dashboards Inteligentes | 🔒 Seguro e Rápido</strong>
+  <strong>🚀 100% Web | 🔐 Autenticação Segura | 📊 Dashboards Inteligentes</strong>
 </p>
 
 <p align="center">
