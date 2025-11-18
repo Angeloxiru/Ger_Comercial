@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Usuários - Ger Comercial</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <style>
+        .users-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .users-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .btn-add-user {
+            background: var(--primary-color, #2c5aa0);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .btn-add-user:hover {
+            background: #1e4178;
+        }
+
+        .users-table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .users-table thead {
+            background: #f5f5f5;
+        }
+
+        .users-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .users-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .users-table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .permissions-cell {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-edit {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .btn-edit:hover {
+            background: #ffb300;
+        }
+
+        .btn-toggle {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-toggle:hover {
+            background: #5a6268;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+        }
+
+        .close-modal {
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+        }
+
+        .close-modal:hover {
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color, #2c5aa0);
+            box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
+        }
+
+        .permissions-group {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 6px;
+        }
+
+        .permissions-group h3 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .permission-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+        }
+
+        .permission-item input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .permission-item label {
+            margin: 0;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .btn-primary {
+            flex: 1;
+            background: var(--primary-color, #2c5aa0);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .btn-primary:hover {
+            background: #1e4178;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .password-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <button onclick="window.location.href='../index.html'" class="btn-back">
+                    ← Voltar
+                </button>
+                <h1>👥 Gerenciar Usuários</h1>
+            </div>
+            <div class="header-right" id="userInfo"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="users-container">
+            <div class="users-header">
+                <div>
+                    <h2 style="margin: 0 0 5px 0;">Usuários do Sistema</h2>
+                    <p style="margin: 0; color: #666; font-size: 14px;">Gerencie os usuários e suas permissões de acesso</p>
+                </div>
+                <button class="btn-add-user" onclick="userManager.openAddModal()">
+                    ➕ Adicionar Usuário
+                </button>
+            </div>
+
+            <div class="users-table-container">
+                <div id="loadingState" class="loading">
+                    <p>Carregando usuários...</p>
+                </div>
+                <div id="tableContainer" style="display: none;">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>Usuário</th>
+                                <th>Nome Completo</th>
+                                <th>Status</th>
+                                <th>Permissões</th>
+                                <th>Criado em</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Users will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">👤</div>
+                    <p>Nenhum usuário encontrado</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Adicionar Usuário</h2>
+                <button class="close-modal" onclick="userManager.closeModal()">&times;</button>
+            </div>
+
+            <form id="userForm" onsubmit="userManager.handleSubmit(event)">
+                <input type="hidden" id="userId" value="">
+
+                <div class="form-group">
+                    <label for="username">Usuário (Login) *</label>
+                    <input type="text" id="username" required
+                           pattern="[a-zA-Z0-9_]{3,30}"
+                           title="Use apenas letras, números e underscore (3-30 caracteres)">
+                </div>
+
+                <div class="form-group">
+                    <label for="fullName">Nome Completo *</label>
+                    <input type="text" id="fullName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Senha *</label>
+                    <input type="password" id="password" required minlength="6">
+                    <div class="password-hint" id="passwordHint">Mínimo de 6 caracteres</div>
+                </div>
+
+                <div class="permissions-group">
+                    <h3>Permissões de Acesso</h3>
+                    <div id="permissionsContainer">
+                        <!-- Permissions checkboxes will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="userManager.closeModal()">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-primary" id="submitButton">
+                        Salvar Usuário
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Import necessary modules -->
+    <script type="module">
+        import { authManager } from '../js/auth.js';
+        import { db } from '../js/db.js';
+
+        // Check authentication
+        const currentUser = authManager.requireAuth();
+
+        // Check if user has permission to manage users
+        if (currentUser && !authManager.hasPermission('gerenciar-usuarios')) {
+            alert('⚠️ Acesso negado! Você não tem permissão para gerenciar usuários.');
+            window.location.href = '../index.html';
+        }
+
+        // Display user info in header
+        if (currentUser) {
+            document.getElementById('userInfo').innerHTML = `
+                <span style="margin-right: 15px;">👤 ${currentUser.fullName || currentUser.username}</span>
+                <button onclick="authManager.logout()" class="btn-logout">Sair</button>
+            `;
+        }
+
+        // User Manager Class
+        class UserManager {
+            constructor() {
+                this.users = [];
+                this.editingUserId = null;
+                this.availableDashboards = authManager.getAvailableDashboards();
+                this.init();
+            }
+
+            async init() {
+                await this.loadUsers();
+                this.renderPermissionsCheckboxes();
+            }
+
+            async loadUsers() {
+                try {
+                    const loadingState = document.getElementById('loadingState');
+                    const tableContainer = document.getElementById('tableContainer');
+                    const emptyState = document.getElementById('emptyState');
+
+                    loadingState.style.display = 'block';
+                    tableContainer.style.display = 'none';
+                    emptyState.style.display = 'none';
+
+                    const result = await db.execute(`
+                        SELECT id, username, full_name, permissions, active,
+                               created_at, updated_at
+                        FROM users
+                        ORDER BY username
+                    `);
+
+                    this.users = result.rows || [];
+
+                    loadingState.style.display = 'none';
+
+                    if (this.users.length === 0) {
+                        emptyState.style.display = 'block';
+                    } else {
+                        tableContainer.style.display = 'block';
+                        this.renderUsersTable();
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar usuários:', error);
+                    alert('Erro ao carregar usuários: ' + error.message);
+                    document.getElementById('loadingState').innerHTML =
+                        '<p style="color: red;">Erro ao carregar usuários. Tente novamente.</p>';
+                }
+            }
+
+            renderUsersTable() {
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = '';
+
+                this.users.forEach(user => {
+                    const permissions = this.parsePermissions(user.permissions);
+                    const permissionCount = permissions.length;
+                    const totalDashboards = this.availableDashboards.length;
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong>${this.escapeHtml(user.username)}</strong></td>
+                        <td>${this.escapeHtml(user.full_name || '')}</td>
+                        <td>
+                            <span class="badge ${user.active ? 'badge-active' : 'badge-inactive'}">
+                                ${user.active ? '✓ Ativo' : '✗ Inativo'}
+                            </span>
+                        </td>
+                        <td class="permissions-cell">
+                            ${permissionCount} de ${totalDashboards} dashboards
+                        </td>
+                        <td>${this.formatDate(user.created_at)}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-action btn-edit"
+                                        onclick="userManager.openEditModal(${user.id})"
+                                        title="Editar usuário">
+                                    ✏️ Editar
+                                </button>
+                                <button class="btn-action btn-toggle"
+                                        onclick="userManager.toggleUserStatus(${user.id}, ${user.active})"
+                                        title="${user.active ? 'Desativar' : 'Ativar'} usuário">
+                                    ${user.active ? '🔒 Desativar' : '🔓 Ativar'}
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            renderPermissionsCheckboxes() {
+                const container = document.getElementById('permissionsContainer');
+                container.innerHTML = '';
+
+                this.availableDashboards.forEach(dashboard => {
+                    const div = document.createElement('div');
+                    div.className = 'permission-item';
+                    div.innerHTML = `
+                        <input type="checkbox"
+                               id="perm_${dashboard.id}"
+                               name="permission"
+                               value="${dashboard.id}">
+                        <label for="perm_${dashboard.id}">${dashboard.name}</label>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+
+            openAddModal() {
+                this.editingUserId = null;
+                document.getElementById('modalTitle').textContent = 'Adicionar Usuário';
+                document.getElementById('userId').value = '';
+                document.getElementById('username').disabled = false;
+                document.getElementById('password').required = true;
+                document.getElementById('passwordHint').textContent = 'Mínimo de 6 caracteres';
+                document.getElementById('submitButton').textContent = 'Salvar Usuário';
+
+                // Reset form
+                document.getElementById('userForm').reset();
+
+                // Show modal
+                document.getElementById('userModal').style.display = 'block';
+            }
+
+            openEditModal(userId) {
+                const user = this.users.find(u => u.id === userId);
+                if (!user) return;
+
+                this.editingUserId = userId;
+                document.getElementById('modalTitle').textContent = 'Editar Usuário';
+                document.getElementById('userId').value = userId;
+                document.getElementById('username').value = user.username;
+                document.getElementById('username').disabled = true; // Cannot change username
+                document.getElementById('fullName').value = user.full_name || '';
+                document.getElementById('password').value = '';
+                document.getElementById('password').required = false;
+                document.getElementById('passwordHint').textContent = 'Deixe em branco para manter a senha atual';
+                document.getElementById('submitButton').textContent = 'Atualizar Usuário';
+
+                // Set permissions
+                const permissions = this.parsePermissions(user.permissions);
+                this.availableDashboards.forEach(dashboard => {
+                    const checkbox = document.getElementById(`perm_${dashboard.id}`);
+                    if (checkbox) {
+                        checkbox.checked = permissions.includes(dashboard.id);
+                    }
+                });
+
+                // Show modal
+                document.getElementById('userModal').style.display = 'block';
+            }
+
+            closeModal() {
+                document.getElementById('userModal').style.display = 'none';
+                document.getElementById('userForm').reset();
+                this.editingUserId = null;
+            }
+
+            async handleSubmit(event) {
+                event.preventDefault();
+
+                const userId = document.getElementById('userId').value;
+                const username = document.getElementById('username').value.trim();
+                const fullName = document.getElementById('fullName').value.trim();
+                const password = document.getElementById('password').value;
+
+                // Get selected permissions
+                const selectedPermissions = [];
+                document.querySelectorAll('input[name="permission"]:checked').forEach(checkbox => {
+                    selectedPermissions.push(checkbox.value);
+                });
+
+                const permissionsJson = JSON.stringify(selectedPermissions);
+
+                try {
+                    if (userId) {
+                        // Update existing user
+                        await this.updateUser(userId, fullName, password, permissionsJson);
+                    } else {
+                        // Create new user
+                        await this.createUser(username, fullName, password, permissionsJson);
+                    }
+
+                    this.closeModal();
+                    await this.loadUsers();
+                } catch (error) {
+                    console.error('Erro ao salvar usuário:', error);
+                    alert('Erro ao salvar usuário: ' + error.message);
+                }
+            }
+
+            async createUser(username, fullName, password, permissions) {
+                // Check if username already exists
+                const checkResult = await db.execute(
+                    'SELECT id FROM users WHERE username = ?',
+                    [username]
+                );
+
+                if (checkResult.rows && checkResult.rows.length > 0) {
+                    throw new Error('Nome de usuário já existe!');
+                }
+
+                // Insert new user
+                const now = new Date().toISOString();
+                await db.execute(`
+                    INSERT INTO users (username, password, full_name, permissions, active, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, 1, ?, ?)
+                `, [username, password, fullName, permissions, now, now]);
+
+                alert('Usuário criado com sucesso!');
+            }
+
+            async updateUser(userId, fullName, password, permissions) {
+                const now = new Date().toISOString();
+
+                if (password) {
+                    // Update with new password
+                    await db.execute(`
+                        UPDATE users
+                        SET full_name = ?, password = ?, permissions = ?, updated_at = ?
+                        WHERE id = ?
+                    `, [fullName, password, permissions, now, userId]);
+                } else {
+                    // Update without changing password
+                    await db.execute(`
+                        UPDATE users
+                        SET full_name = ?, permissions = ?, updated_at = ?
+                        WHERE id = ?
+                    `, [fullName, permissions, now, userId]);
+                }
+
+                alert('Usuário atualizado com sucesso!');
+            }
+
+            async toggleUserStatus(userId, currentStatus) {
+                const newStatus = currentStatus ? 0 : 1;
+                const action = newStatus ? 'ativar' : 'desativar';
+
+                if (!confirm(`Deseja realmente ${action} este usuário?`)) {
+                    return;
+                }
+
+                try {
+                    const now = new Date().toISOString();
+                    await db.execute(
+                        'UPDATE users SET active = ?, updated_at = ? WHERE id = ?',
+                        [newStatus, now, userId]
+                    );
+
+                    await this.loadUsers();
+                    alert(`Usuário ${newStatus ? 'ativado' : 'desativado'} com sucesso!`);
+                } catch (error) {
+                    console.error('Erro ao alterar status:', error);
+                    alert('Erro ao alterar status: ' + error.message);
+                }
+            }
+
+            parsePermissions(permissionsStr) {
+                try {
+                    if (!permissionsStr) return [];
+                    return JSON.parse(permissionsStr);
+                } catch (error) {
+                    console.error('Erro ao parsear permissões:', error);
+                    return [];
+                }
+            }
+
+            formatDate(dateStr) {
+                if (!dateStr) return '-';
+                try {
+                    const date = new Date(dateStr);
+                    return date.toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                } catch (error) {
+                    return dateStr;
+                }
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Initialize User Manager
+        window.userManager = new UserManager();
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('userModal');
+            if (event.target === modal) {
+                userManager.closeModal();
+            }
+        };
+
+        // Make authManager available globally for logout button
+        window.authManager = authManager;
+    </script>
+</body>
+</html>
