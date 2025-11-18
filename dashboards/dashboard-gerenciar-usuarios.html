@@ -3,15 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gerenciar Usuários - Ger Comercial">
+    <meta name="theme-color" content="#fc0303">
     <title>Gerenciar Usuários - Ger Comercial</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/dashboard.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #fc0303;
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.6em;
+            font-weight: 600;
+        }
+
+        .btn-back {
+            background: white;
+            color: #fc0303;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-back:hover {
+            background: #f8f9fa;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .container {
+            margin: 20px;
+        }
+
         .users-container {
             display: grid;
             grid-template-columns: 1fr;
             gap: 20px;
-            padding: 20px;
         }
 
         .users-header {
@@ -21,8 +90,19 @@
             margin-bottom: 20px;
         }
 
+        .users-header h2 {
+            color: #212529;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+
+        .users-header p {
+            color: #495057;
+            font-size: 0.9em;
+        }
+
         .btn-add-user {
-            background: var(--primary-color, #2c5aa0);
+            background: #fc0303;
             color: white;
             border: none;
             padding: 12px 24px;
@@ -30,11 +110,11 @@
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
-            transition: background 0.3s;
+            transition: all 0.3s;
         }
 
         .btn-add-user:hover {
-            background: #1e4178;
+            background: #b50909;
         }
 
         .users-table-container {
@@ -50,15 +130,18 @@
         }
 
         .users-table thead {
-            background: #f5f5f5;
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .users-table th {
             padding: 12px;
             text-align: left;
             font-weight: 600;
-            color: #333;
-            border-bottom: 2px solid #ddd;
+            color: #212529;
+            border-bottom: 2px solid #dee2e6;
         }
 
         .users-table td {
@@ -88,9 +171,15 @@
             color: #721c24;
         }
 
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
         .permissions-cell {
-            font-size: 12px;
-            color: #666;
+            font-size: 0.85em;
+            color: #6c757d;
         }
 
         .action-buttons {
@@ -113,7 +202,7 @@
         }
 
         .btn-edit:hover {
-            background: #ffb300;
+            background: #e0a800;
         }
 
         .btn-toggle {
@@ -176,7 +265,8 @@
 
         .modal-header h2 {
             margin: 0;
-            color: #333;
+            color: #212529;
+            font-size: 1.3em;
         }
 
         .close-modal {
@@ -205,23 +295,26 @@
             display: block;
             margin-bottom: 6px;
             font-weight: 500;
-            color: #333;
+            color: #495057;
+            font-size: 0.9em;
         }
 
         .form-group input[type="text"],
         .form-group input[type="password"] {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.95em;
             box-sizing: border-box;
+            transition: all 0.2s;
+            background: white;
         }
 
         .form-group input:focus {
             outline: none;
-            border-color: var(--primary-color, #2c5aa0);
-            box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
+            border-color: #fc0303;
+            box-shadow: 0 0 0 3px rgba(252, 3, 3, 0.1);
         }
 
         .permissions-group {
@@ -233,8 +326,9 @@
 
         .permissions-group h3 {
             margin: 0 0 15px 0;
-            font-size: 16px;
-            color: #333;
+            font-size: 1em;
+            color: #212529;
+            font-weight: 600;
         }
 
         .permission-item {
@@ -269,7 +363,7 @@
 
         .btn-primary {
             flex: 1;
-            background: var(--primary-color, #2c5aa0);
+            background: #fc0303;
             color: white;
             border: none;
             padding: 12px 24px;
@@ -277,10 +371,11 @@
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
+            transition: all 0.3s;
         }
 
         .btn-primary:hover {
-            background: #1e4178;
+            background: #b50909;
         }
 
         .btn-secondary {
@@ -302,13 +397,13 @@
         .loading {
             text-align: center;
             padding: 40px;
-            color: #666;
+            color: #495057;
         }
 
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: #999;
+            color: #6c757d;
         }
 
         .empty-state-icon {
@@ -317,22 +412,22 @@
         }
 
         .password-hint {
-            font-size: 12px;
-            color: #666;
+            font-size: 0.85em;
+            color: #6c757d;
             margin-top: 4px;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="header-content">
-            <div class="header-left">
-                <button onclick="window.location.href='../index.html'" class="btn-back">
-                    ← Voltar
-                </button>
-                <h1>👥 Gerenciar Usuários</h1>
-            </div>
-            <div class="header-right" id="userInfo"></div>
+        <div class="header-left">
+            <button onclick="window.location.href='../index.html'" class="btn-back">
+                ← Voltar
+            </button>
+            <h1>👥 Gerenciar Usuários</h1>
+        </div>
+        <div class="header-right">
+            <span id="userInfo" style="font-size: 0.9em;"></span>
         </div>
     </div>
 
@@ -441,7 +536,8 @@
 
         // Display user info in header
         if (currentUser) {
-            document.getElementById('userInfo').innerHTML = `
+            const headerRight = document.querySelector('.header-right');
+            headerRight.innerHTML = `
                 <span style="margin-right: 15px;">👤 ${currentUser.fullName || currentUser.username}</span>
                 <button onclick="authManager.logout()" class="btn-logout">Sair</button>
             `;
