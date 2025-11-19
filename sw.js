@@ -1,8 +1,8 @@
 // Service Worker para Ger Comercial - Germani Alimentos
-// Versão: 1.2.0 - Adicionado dashboard de Produtos Parados
+// Versão: 1.4.0 - Reorganização de arquivos e estrutura
 
-const CACHE_NAME = 'ger-comercial-v3';
-const RUNTIME_CACHE = 'ger-comercial-runtime-v3';
+const CACHE_NAME = 'ger-comercial-v4';
+const RUNTIME_CACHE = 'ger-comercial-runtime-v4';
 
 // Arquivos essenciais para funcionar offline
 const ESSENTIAL_FILES = [
