@@ -662,6 +662,17 @@
         // Carregar opções dos filtros
         async function carregarFiltros() {
             try {
+                // Inicializa busca nos filtros PRIMEIRO (antes de preencher)
+                if (!window.filterSearches || Object.keys(window.filterSearches).length === 0) {
+                    console.log('📝 Inicializando FilterSearch...');
+                    window.filterSearches = {
+                        origem: new FilterSearch('filtroOrigem', { placeholder: 'Digite para buscar origem...' }),
+                        familia: new FilterSearch('filtroFamilia', { placeholder: 'Digite para buscar família...' }),
+                        produto: new FilterSearch('filtroProduto', { placeholder: 'Digite para buscar produto...' })
+                    };
+                    console.log('✅ FilterSearch inicializado:', window.filterSearches);
+                }
+
                 if (!db.isConnected()) await db.connect();
 
                 // Tenta buscar do cache
@@ -692,15 +703,6 @@
 
                 preencherSelect('filtroOrigem', origens.rows.map(o => o.desc_origem));
 
-                // Inicializa busca nos filtros (apenas se ainda não existir)
-                if (!window.filterSearches) {
-                    window.filterSearches = {
-                        origem: new FilterSearch('filtroOrigem', { placeholder: 'Digite para buscar origem...' }),
-                        familia: new FilterSearch('filtroFamilia', { placeholder: 'Digite para buscar família...' }),
-                        produto: new FilterSearch('filtroProduto', { placeholder: 'Digite para buscar produto...' })
-                    };
-                }
-
             } catch (error) {
                 console.error('Erro ao carregar filtros:', error);
                 alert('Erro ao carregar filtros: ' + error.message);
@@ -709,6 +711,11 @@
 
         function preencherSelect(id, opcoes) {
             const select = document.getElementById(id);
+            if (!select) {
+                console.error('❌ Select não encontrado:', id);
+                return;
+            }
+
             select.innerHTML = '';
             if (opcoes.length === 0) {
                 select.innerHTML = '<option value="">Nenhuma opção disponível</option>';
@@ -723,10 +730,20 @@
                 });
             }
 
-            // Atualiza FilterSearch se existir
-            const searchId = id.replace('filtro', '').toLowerCase();
+            // Mapeia o ID do select para a chave do filterSearches
+            const searchIdMap = {
+                'filtroOrigem': 'origem',
+                'filtroFamilia': 'familia',
+                'filtroProduto': 'produto'
+            };
+            const searchId = searchIdMap[id];
+
+            // Atualiza o FilterSearch se existir
             if (window.filterSearches && window.filterSearches[searchId]) {
+                console.log(`🔄 Atualizando FilterSearch para ${id} (${opcoes.length} opções)`);
                 window.filterSearches[searchId].updateOptions(opcoes);
+            } else {
+                console.warn(`⚠️ FilterSearch não encontrado para ${id} (buscando por '${searchId}')`);
             }
         }
 

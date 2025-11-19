@@ -354,6 +354,12 @@ class AuthManager {
                 name: 'Produtos Parados',
                 icon: '🛑',
                 url: 'dashboards/dashboard-produtos-parados.html'
+            },
+            {
+                id: 'gerenciar-usuarios',
+                name: 'Gerenciar Usuários',
+                icon: '👥',
+                url: 'dashboards/dashboard-gerenciar-usuarios.html'
             }
         ];
     }
@@ -433,7 +439,8 @@ class AuthManager {
             'analise-produtos': 'dashboard-analise-produtos.html',
             'performance-clientes': 'dashboard-performance-clientes.html',
             'cobranca-semanal': 'cobranca-semanal.html',
-            'produtos-parados': 'dashboard-produtos-parados.html'
+            'produtos-parados': 'dashboard-produtos-parados.html',
+            'gerenciar-usuarios': 'dashboard-gerenciar-usuarios.html'
         };
 
         const fileName = dashboardFiles[dashboardId];

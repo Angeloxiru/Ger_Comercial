@@ -9,6 +9,8 @@ Sistema de Gerenciamento Comercial desenvolvido com Turso Database (LibSQL), oti
 - ✅ **100% Frontend** - JavaScript ES Modules, sem backend necessário
 - ✅ **Autenticação e Permissões** - Sistema completo de login e controle de acesso
 - ✅ **Turso Database** - Cloud SQLite otimizado com 26 índices de performance
+- ✅ **Sistema de Autenticação** - Login seguro com controle de permissões por dashboard
+- ✅ **Gerenciamento de Usuários** - Interface administrativa para criar e gerenciar usuários
 - ✅ **PWA (Progressive Web App)** - Funciona offline e pode ser instalado no dispositivo
 - ✅ **6 Dashboards Completos** - Vendas, equipe, produtos, clientes, cobrança e produtos parados
 - ✅ **Filtros Inteligentes** - Busca digitável em tempo real e cascata automática
@@ -427,46 +429,59 @@ Ver mais: `docs/AUTENTICACAO.md`
 ## 🎯 Roadmap
 
 ### ✅ Implementado
-
-- ✅ 6 Dashboards completos
-- ✅ Sistema de autenticação e permissões
-- ✅ PWA completo (offline + instalável)
-- ✅ Sessão multi-fonte (localStorage + sessionStorage + cookies)
+- ✅ 7 Dashboards completos (Região, Equipe, Produtos, Clientes, Performance Semanal, Produtos Parados, Gerenciar Usuários)
+- ✅ Sistema de Login e Autenticação completo
+- ✅ Gerenciamento de Usuários com controle de permissões
+- ✅ Controle de acesso por dashboard (permissões granulares)
+- ✅ PWA completo (funciona offline e pode ser instalado)
 - ✅ Busca digitável em todos os filtros
 - ✅ 26 índices de performance
 - ✅ Exportação Excel/PDF
-- ✅ Dashboard de Produtos Parados
-- ✅ Dashboard de Cobrança Semanal
+- ✅ Logo Germani Alimentos em todos os dashboards
+- ✅ Dashboard de Performance Semanal com metas
+- ✅ Dashboard de Produtos Parados com análise de risco
 
-### 🚧 Próximas Implementações
+____________
+att: 
+📊 Atualizações - Dashboard de Cobrança Semanal
+Novo Módulo: Performance vs Potencial
+Adicionado controle semanal de performance da equipe comercial com métricas de penetração de mercado e eficiência por rota.
+🆕 Tabelas do Banco
+potencial_cidade: Potencial por cidade (população, coordenadas, rota)
+potencial_representante: Metas semanais (peso, clientes, SKUs)
+representante_cidades: Relacionamento representante ↔ cidades atendidas
+📈 O que Faz
+Compara vendas reais da semana vs. meta estabelecida
+Calcula % de penetração de clientes (ativos / potencial da cidade)
+Identifica representantes abaixo da meta para ação imediata
+Ranking automático por faturamento, peso e quantidade de clientes
+🚀 Como Usar
+Segunda-feira: Atualize os dados de vendas no Turso
+Acesse cobranca-semanal.html via GitPages
+Selecione a semana desejada no dropdown
+Representantes em vermelho requerem ação imediata (< 70% da meta)
+⚙️ Próximos Passos
+Análise de produtos "parados" (revenda semanal)
+Dashboard de margem e descontos
+Mapa de calor de performance geográfica
 
-1. **Dashboard de Margem e Rentabilidade**
-   - Análise de margem bruta/líquida por produto
-   - Rentabilidade por cliente/representante
-   - Identificação de produtos com baixa margem
-   - Sugestões de ajuste de preços
 
-2. **Sistema de Alertas e Notificações**
-   - Alertas de meta não atingida
-   - Notificações de produtos parados críticos
-   - Avisos de clientes inativos
-   - Email automático para supervisores
+### 🚧 Em Desenvolvimento
+- Análise Financeira
+- Gestão de Estoque
+- Comparativo de períodos
 
-3. **Dashboard Executivo com IA**
-   - Análise preditiva de vendas
-   - Sugestões automáticas de ação
-   - Insights baseados em ML
-   - Comparativo com períodos anteriores
-
-4. **Relatórios Agendados**
-   - Geração automática de relatórios
-   - Envio por email em horários programados
-   - Relatórios personalizados por usuário
-
-5. **Modo Escuro**
-   - Tema escuro para todo o sistema
-   - Alternância automática baseada em horário
-   - Configuração por usuário
+### 💡 Futuras Melhorias
+- Criptografia de senhas (bcrypt/hash)
+- Sessão com expiração automática
+- Log de atividades dos usuários
+- Dashboard Executivo com IA
+- Drill-down detalhado
+- Filtros salvos e favoritos
+- Análise Preditiva
+- Modo escuro
+- Relatórios agendados
+- Autenticação Two-Factor (2FA)
 
 ---
 

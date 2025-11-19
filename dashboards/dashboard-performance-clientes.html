@@ -657,6 +657,17 @@
         // Carregar filtros
         async function carregarFiltros() {
             try {
+                // Inicializa busca nos filtros PRIMEIRO (antes de preencher)
+                if (!window.filterSearches || Object.keys(window.filterSearches).length === 0) {
+                    console.log('📝 Inicializando FilterSearch...');
+                    window.filterSearches = {
+                        grupo: new FilterSearch('filtroGrupo', { placeholder: 'Digite para buscar grupo...' }),
+                        cliente: new FilterSearch('filtroCliente', { placeholder: 'Digite para buscar cliente...' }),
+                        cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
+                    };
+                    console.log('✅ FilterSearch inicializado:', window.filterSearches);
+                }
+
                 if (!db.isConnected()) await db.connect();
 
                 const cacheKey = 'filtros_clientes';
@@ -685,15 +696,6 @@
 
                 preencherSelect('filtroGrupo', grupos.rows.map(g => g.grupo_desc));
 
-                // Inicializa busca nos filtros (apenas se ainda não existir)
-                if (!window.filterSearches) {
-                    window.filterSearches = {
-                        grupo: new FilterSearch('filtroGrupo', { placeholder: 'Digite para buscar grupo...' }),
-                        cliente: new FilterSearch('filtroCliente', { placeholder: 'Digite para buscar cliente...' }),
-                        cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
-                    };
-                }
-
             } catch (error) {
                 console.error('Erro ao carregar filtros:', error);
                 alert('Erro ao carregar filtros: ' + error.message);
@@ -702,6 +704,11 @@
 
         function preencherSelect(id, opcoes) {
             const select = document.getElementById(id);
+            if (!select) {
+                console.error('❌ Select não encontrado:', id);
+                return;
+            }
+
             select.innerHTML = '';
             if (opcoes.length === 0) {
                 select.innerHTML = '<option value="">Nenhuma opção disponível</option>';
@@ -716,10 +723,20 @@
                 });
             }
 
-            // Atualiza FilterSearch se existir
-            const searchId = id.replace('filtro', '').toLowerCase();
+            // Mapeia o ID do select para a chave do filterSearches
+            const searchIdMap = {
+                'filtroGrupo': 'grupo',
+                'filtroCliente': 'cliente',
+                'filtroCidade': 'cidade'
+            };
+            const searchId = searchIdMap[id];
+
+            // Atualiza o FilterSearch se existir
             if (window.filterSearches && window.filterSearches[searchId]) {
+                console.log(`🔄 Atualizando FilterSearch para ${id} (${opcoes.length} opções)`);
                 window.filterSearches[searchId].updateOptions(opcoes);
+            } else {
+                console.warn(`⚠️ FilterSearch não encontrado para ${id} (buscando por '${searchId}')`);
             }
         }
 
