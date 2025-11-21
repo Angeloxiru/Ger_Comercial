@@ -624,6 +624,11 @@
         chartScript.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0';
         document.head.appendChild(chartScript);
 
+        // DataLabels Plugin
+        const dataLabelsScript = document.createElement('script');
+        dataLabelsScript.src = 'https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js';
+        document.head.appendChild(dataLabelsScript);
+
         window.db = db;
         window.dadosAtuais = [];
         window.todosSupervisores = [];
