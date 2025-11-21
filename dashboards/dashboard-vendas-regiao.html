@@ -1131,7 +1131,7 @@
             console.log('📊 Cache Stats:', cache.getStats());
         };
 
-        window.addEventListener('load', initFiltros);
+        // Usa apenas pageshow para evitar dupla inicialização (load + pageshow disparam juntos)
         window.addEventListener('pageshow', initFiltros);
 
         // PWA Service Worker Registration
