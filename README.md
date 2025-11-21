@@ -393,12 +393,22 @@ Ver mais: `docs/AUTENTICACAO.md`
 
 ## 📚 Documentação Completa
 
+### Guias e Tutoriais
 - **[docs/README.md](docs/README.md)** - Índice da documentação
 - **[docs/GUIA_RAPIDO.md](docs/GUIA_RAPIDO.md)** - Guia rápido de uso
 - **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Solução de problemas
+
+### Funcionalidades
 - **[docs/AUTENTICACAO.md](docs/AUTENTICACAO.md)** - Sistema de autenticação
 - **[docs/PRODUTOS_PARADOS.md](docs/PRODUTOS_PARADOS.md)** - Dashboard produtos parados
 - **[docs/INDICES-EXPLICACAO.md](docs/INDICES-EXPLICACAO.md)** - Como funcionam os índices
+
+### Análises e Planejamento
+- **[docs/ANALISE_GRAFICOS.md](docs/ANALISE_GRAFICOS.md)** - Análise de gráficos e melhorias ⭐ NOVO
+- **[docs/ANALISES_CRUZADAS.md](docs/ANALISES_CRUZADAS.md)** - Oportunidades de análise cruzada ⭐ NOVO
+- **[docs/PROXIMOS_PASSOS.md](docs/PROXIMOS_PASSOS.md)** - Roadmap detalhado ⭐ NOVO
+
+### Técnica
 - **[sql/README.md](sql/README.md)** - Documentação dos scripts SQL
 
 ---

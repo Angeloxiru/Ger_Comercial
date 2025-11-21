@@ -13,6 +13,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/Ger_Comercial/icon-192.png">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -682,7 +683,7 @@
             chartTopProdutos = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: top10.map(p => p.produto.length > 30 ? p.produto.substring(0, 30) + '...' : p.produto),
+                    labels: top10.map(p => p.produto.length > 50 ? p.produto.substring(0, 50) + '...' : p.produto),
                     datasets: [{
                         label: 'Representantes Afetados',
                         data: top10.map(p => p.qtdReps),
@@ -691,6 +692,7 @@
                     }]
                 },
                 options: {
+                    indexAxis: 'y', // Barras horizontais
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
@@ -699,7 +701,7 @@
                         }
                     },
                     scales: {
-                        y: {
+                        x: {
                             beginAtZero: true,
                             ticks: {
                                 stepSize: 1
