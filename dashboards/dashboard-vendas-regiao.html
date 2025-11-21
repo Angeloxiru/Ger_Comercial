@@ -685,53 +685,64 @@
             }
         }
 
-        // CASCATA FLEXÍVEL: Rota → SubRota → Cidade (permite pular níveis)
-        document.getElementById('filtroRota').addEventListener('change', function() {
-            const rotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
+        // Flag para evitar registrar event listeners múltiplas vezes
+        if (!window._eventListenersRegistrados) {
+            window._eventListenersRegistrados = true;
 
-            // NÃO limpa seleções anteriores automaticamente
+            // CASCATA FLEXÍVEL: Rota → SubRota → Cidade (permite pular níveis)
+            const filtroRota = document.getElementById('filtroRota');
+            if (filtroRota) {
+                filtroRota.addEventListener('change', function() {
+                    if (!window.todasSubRotas || !window.todasCidades) return;
+                    const rotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
 
-            if (rotasSelecionadas.length === 0) {
-                // Se nenhuma rota: mostra todas
-                preencherSelect('filtroSubRota', window.todasSubRotas.map(s => s.sub_rota).filter((v, i, s) => s.indexOf(v) === i));
-                preencherSelect('filtroCidade', window.todasCidades.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i));
-            } else {
-                // Filtra sub-rotas E cidades pela rota
-                const subRotasFiltradas = window.todasSubRotas.filter(s => rotasSelecionadas.includes(s.rota)).map(s => s.sub_rota).filter((v, i, s) => s.indexOf(v) === i);
-                preencherSelect('filtroSubRota', subRotasFiltradas);
+                    if (rotasSelecionadas.length === 0) {
+                        // Se nenhuma rota: mostra todas
+                        preencherSelect('filtroSubRota', window.todasSubRotas.map(s => s.sub_rota).filter((v, i, s) => s.indexOf(v) === i));
+                        preencherSelect('filtroCidade', window.todasCidades.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i));
+                    } else {
+                        // Filtra sub-rotas E cidades pela rota
+                        const subRotasFiltradas = window.todasSubRotas.filter(s => rotasSelecionadas.includes(s.rota)).map(s => s.sub_rota).filter((v, i, s) => s.indexOf(v) === i);
+                        preencherSelect('filtroSubRota', subRotasFiltradas);
 
-                const cidadesFiltradas = window.todasCidades.filter(c => rotasSelecionadas.includes(c.rota)).map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i);
-                preencherSelect('filtroCidade', cidadesFiltradas);
+                        const cidadesFiltradas = window.todasCidades.filter(c => rotasSelecionadas.includes(c.rota)).map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i);
+                        preencherSelect('filtroCidade', cidadesFiltradas);
+                    }
+                });
             }
-        });
 
-        document.getElementById('filtroSubRota').addEventListener('change', function() {
-            const subRotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
-            const rotasSelecionadas = Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value);
+            const filtroSubRota = document.getElementById('filtroSubRota');
+            if (filtroSubRota) {
+                filtroSubRota.addEventListener('change', function() {
+                    if (!window.todasCidades || !window.todasSubRotas) return;
+                    const subRotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
+                    const filtroRotaEl = document.getElementById('filtroRota');
+                    if (!filtroRotaEl) return;
+                    const rotasSelecionadas = Array.from(filtroRotaEl.selectedOptions).map(o => o.value);
 
-            // NÃO limpa cidades automaticamente
+                    if (subRotasSelecionadas.length === 0) {
+                        // Se nenhuma sub-rota: filtra apenas por rota (se houver)
+                        if (rotasSelecionadas.length > 0) {
+                            const cidadesFiltradas = window.todasCidades.filter(c => rotasSelecionadas.includes(c.rota)).map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i);
+                            preencherSelect('filtroCidade', cidadesFiltradas);
+                        } else {
+                            // Se nem rota nem sub-rota: mostra todas
+                            preencherSelect('filtroCidade', window.todasCidades.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i));
+                        }
+                    } else {
+                        // Filtra cidades pela combinação: rota (se houver) E sub-rota
+                        let cidadesFiltradas = window.todasCidades.filter(c => subRotasSelecionadas.includes(c.sub_rota));
 
-            if (subRotasSelecionadas.length === 0) {
-                // Se nenhuma sub-rota: filtra apenas por rota (se houver)
-                if (rotasSelecionadas.length > 0) {
-                    const cidadesFiltradas = window.todasCidades.filter(c => rotasSelecionadas.includes(c.rota)).map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i);
-                    preencherSelect('filtroCidade', cidadesFiltradas);
-                } else {
-                    // Se nem rota nem sub-rota: mostra todas
-                    preencherSelect('filtroCidade', window.todasCidades.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i));
-                }
-            } else {
-                // Filtra cidades pela combinação: rota (se houver) E sub-rota
-                let cidadesFiltradas = window.todasCidades.filter(c => subRotasSelecionadas.includes(c.sub_rota));
+                        if (rotasSelecionadas.length > 0) {
+                            cidadesFiltradas = cidadesFiltradas.filter(c => rotasSelecionadas.includes(c.rota));
+                        }
 
-                if (rotasSelecionadas.length > 0) {
-                    cidadesFiltradas = cidadesFiltradas.filter(c => rotasSelecionadas.includes(c.rota));
-                }
-
-                cidadesFiltradas = cidadesFiltradas.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i);
-                preencherSelect('filtroCidade', cidadesFiltradas);
+                        cidadesFiltradas = cidadesFiltradas.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i);
+                        preencherSelect('filtroCidade', cidadesFiltradas);
+                    }
+                });
             }
-        });
+        }
 
         window.setQuickDate = function(period) {
             const hoje = new Date();
@@ -767,7 +778,9 @@
             document.getElementById('filtroRota').selectedIndex = -1;
             document.getElementById('filtroSubRota').selectedIndex = -1;
             document.getElementById('filtroCidade').selectedIndex = -1;
-            Object.values(window.filterSearches).forEach(fs => fs.clear());
+            if (window.filterSearches) {
+                Object.values(window.filterSearches).forEach(fs => fs && fs.clear && fs.clear());
+            }
             preencherSelect('filtroSubRota', []);
             preencherSelect('filtroCidade', []);
         };
