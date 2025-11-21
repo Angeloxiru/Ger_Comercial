@@ -1112,8 +1112,7 @@
             }
         };
 
-        // Inicializar - carrega filtros na primeira vez E ao voltar (pageshow para bfcache)
-        window.addEventListener('load', carregarFiltros);
+        // Usa apenas pageshow para evitar dupla inicialização (load + pageshow disparam juntos)
         window.addEventListener('pageshow', carregarFiltros);
 
         // PWA Service Worker Registration
