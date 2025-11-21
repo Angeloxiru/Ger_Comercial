@@ -192,8 +192,8 @@ export class FilterSearch {
             selected: false
         }));
 
-        // Reaplica o filtro atual
-        const currentSearch = this.searchInput.value.toLowerCase().trim();
+        // Reaplica o filtro atual (verifica se searchInput existe)
+        const currentSearch = this.searchInput?.value?.toLowerCase().trim() || '';
         this.filterOptions(currentSearch);
     }
 
@@ -201,9 +201,10 @@ export class FilterSearch {
      * Limpa a busca e restaura todas as opções
      */
     clear() {
+        if (!this.searchInput) return;
         this.searchInput.value = '';
         this.filterOptions('');
-        this.clearBtn.style.display = 'none';
+        if (this.clearBtn) this.clearBtn.style.display = 'none';
     }
 
     /**
@@ -236,6 +237,10 @@ export class FilterSearch {
         if (this.searchInput && this.searchInput.parentNode) {
             this.searchInput.parentNode.remove();
         }
+        // Limpa referências para evitar memory leaks
+        this.searchInput = null;
+        this.clearBtn = null;
+        this.select = null;
     }
 }
 
