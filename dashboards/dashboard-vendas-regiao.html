@@ -658,6 +658,9 @@
                 window.todasCidades = cidades.rows;
 
                 preencherSelect('filtroRota', rotas.rows.map(r => r.rota));
+
+                // Registra event listeners após DOM estar pronto
+                registrarEventListeners();
             } catch (error) {
                 console.error('Erro ao carregar filtros:', error);
                 alert('Erro ao carregar filtros: ' + error.message);
@@ -753,24 +756,25 @@
             }
         };
 
-        // Registra event listeners uma única vez
-        // IMPORTANTE: Não precisa de cleanup, listeners permanecem ativos durante navegação
-        if (!listenersRegistrados) {
-            listenersRegistrados = true;
+        // Função para registrar event listeners (só executa quando DOM estiver pronto)
+        function registrarEventListeners() {
+            if (!listenersRegistrados) {
+                listenersRegistrados = true;
 
-            const elemFiltroRota = getElemFiltroRota();
-            const elemFiltroSubRota = getElemFiltroSubRota();
+                const elemFiltroRota = getElemFiltroRota();
+                const elemFiltroSubRota = getElemFiltroSubRota();
 
-            if (elemFiltroRota) {
-                elemFiltroRota.addEventListener('change', handleFiltroRotaChange);
-                console.log('✅ Listener registrado: filtroRota');
+                if (elemFiltroRota) {
+                    elemFiltroRota.addEventListener('change', handleFiltroRotaChange);
+                    console.log('✅ Listener registrado: filtroRota');
+                }
+                if (elemFiltroSubRota) {
+                    elemFiltroSubRota.addEventListener('change', handleFiltroSubRotaChange);
+                    console.log('✅ Listener registrado: filtroSubRota');
+                }
+            } else {
+                console.log('♻️ Listeners já registrados, reutilizando');
             }
-            if (elemFiltroSubRota) {
-                elemFiltroSubRota.addEventListener('change', handleFiltroSubRotaChange);
-                console.log('✅ Listener registrado: filtroSubRota');
-            }
-        } else {
-            console.log('♻️ Listeners já registrados, reutilizando');
         }
 
         window.setQuickDate = function(period) {
