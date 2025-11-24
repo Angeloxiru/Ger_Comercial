@@ -186,11 +186,14 @@ export class FilterSearch {
      * @param {Array} newOptions - Array com {value, text}
      */
     updateOptions(newOptions) {
-        this.allOptions = newOptions.map(opt => ({
-            value: opt.value || opt,
-            text: opt.text || opt,
-            selected: false
-        }));
+        // Filtra valores undefined/null e mapeia para formato correto
+        this.allOptions = (newOptions || [])
+            .filter(opt => opt !== undefined && opt !== null && opt !== '')
+            .map(opt => ({
+                value: opt.value || opt,
+                text: opt.text || opt,
+                selected: false
+            }));
 
         // Reaplica o filtro atual (verifica se searchInput existe)
         const currentSearch = this.searchInput?.value?.toLowerCase().trim() || '';

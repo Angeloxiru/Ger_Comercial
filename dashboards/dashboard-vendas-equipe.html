@@ -697,7 +697,10 @@
                 window.todosRepresentantes = representantes.rows;
                 window.todasCidades = cidades.rows;
 
-                preencherSelect('filtroSupervisor', supervisores.rows.map(s => s.rep_supervisor));
+                // Filtra valores nulos/undefined antes de preencher
+                preencherSelect('filtroSupervisor', supervisores.rows
+                    .map(s => s.rep_supervisor)
+                    .filter(v => v !== null && v !== undefined && v !== ''));
 
             } catch (error) {
                 console.error('Erro ao carregar filtros:', error);
@@ -750,19 +753,27 @@
             // NÃO limpa seleções anteriores automaticamente
 
             if (supervisoresSelecionados.length === 0) {
-                // Se nenhum supervisor: mostra todos
-                preencherSelect('filtroRepresentante', window.todosRepresentantes.map(r => r.desc_representante).filter((v, i, s) => s.indexOf(v) === i));
-                preencherSelect('filtroCidade', window.todasCidades.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i));
+                // Se nenhum supervisor: mostra todos (remove null/undefined e duplicatas)
+                preencherSelect('filtroRepresentante', window.todosRepresentantes
+                    .map(r => r.desc_representante)
+                    .filter(v => v !== null && v !== undefined && v !== '')
+                    .filter((v, i, s) => s.indexOf(v) === i));
+                preencherSelect('filtroCidade', window.todasCidades
+                    .map(c => c.cidade)
+                    .filter(v => v !== null && v !== undefined && v !== '')
+                    .filter((v, i, s) => s.indexOf(v) === i));
             } else {
-                // Filtra representantes E cidades pelo supervisor
+                // Filtra representantes E cidades pelo supervisor (remove null/undefined e duplicatas)
                 const representantesFiltrados = window.todosRepresentantes
                     .filter(r => supervisoresSelecionados.includes(r.rep_supervisor))
                     .map(r => r.desc_representante)
+                    .filter(v => v !== null && v !== undefined && v !== '')
                     .filter((value, index, self) => self.indexOf(value) === index);
 
                 const cidadesFiltradas = window.todasCidades
                     .filter(c => supervisoresSelecionados.includes(c.rep_supervisor))
                     .map(c => c.cidade)
+                    .filter(v => v !== null && v !== undefined && v !== '')
                     .filter((value, index, self) => self.indexOf(value) === index);
 
                 preencherSelect('filtroRepresentante', representantesFiltrados);
@@ -782,12 +793,16 @@
                     const cidadesFiltradas = window.todasCidades
                         .filter(c => supervisoresSelecionados.includes(c.rep_supervisor))
                         .map(c => c.cidade)
+                        .filter(v => v !== null && v !== undefined && v !== '')
                         .filter((value, index, self) => self.indexOf(value) === index);
 
                     preencherSelect('filtroCidade', cidadesFiltradas);
                 } else {
-                    // Se nem supervisor nem representante: mostra todas
-                    preencherSelect('filtroCidade', window.todasCidades.map(c => c.cidade).filter((v, i, s) => s.indexOf(v) === i));
+                    // Se nem supervisor nem representante: mostra todas (remove null/undefined e duplicatas)
+                    preencherSelect('filtroCidade', window.todasCidades
+                        .map(c => c.cidade)
+                        .filter(v => v !== null && v !== undefined && v !== '')
+                        .filter((v, i, s) => s.indexOf(v) === i));
                 }
             } else {
                 // Filtra cidades pela combinação: supervisor (se houver) E representante
@@ -804,6 +819,7 @@
 
                 cidadesFiltradas = cidadesFiltradas
                     .map(c => c.cidade)
+                    .filter(v => v !== null && v !== undefined && v !== '')
                     .filter((value, index, self) => self.indexOf(value) === index);
 
                 preencherSelect('filtroCidade', cidadesFiltradas);
