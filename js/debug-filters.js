@@ -228,7 +228,7 @@ export class FilterDebugger {
      */
     interceptAddEventListener() {
         const originalAddEventListener = EventTarget.prototype.addEventListener;
-        const debugger = this;
+        const self = this;
 
         EventTarget.prototype.addEventListener = function(type, listener, options) {
             // Identifica o elemento
@@ -237,7 +237,7 @@ export class FilterDebugger {
             // Só monitora elementos de filtro
             if (elementId.includes('filtro') || elementId.includes('data')) {
                 const handlerName = listener.name || 'anonymous';
-                debugger.monitorListener(elementId, type, handlerName);
+                self.monitorListener(elementId, type, handlerName);
             }
 
             // Chama o original
@@ -251,11 +251,11 @@ export class FilterDebugger {
      * Wrapper para monitorar evento change
      */
     wrapChangeHandler(element, originalHandler, handlerName) {
-        const debugger = this;
+        const self = this;
 
         return function(event) {
             const selectedValues = Array.from(this.selectedOptions || []).map(o => o.value);
-            debugger.monitorEvent(this.id, 'change', selectedValues);
+            self.monitorEvent(this.id, 'change', selectedValues);
 
             // Chama handler original
             return originalHandler.call(this, event);
