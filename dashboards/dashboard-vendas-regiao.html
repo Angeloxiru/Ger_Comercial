@@ -659,7 +659,13 @@
                 const cached = cache.get(cacheKey);
                 let rotas, subRotas, cidades;
 
-                if (cached) {
+                // Valida se o cache existe E tem dados não vazios
+                const cacheValido = cached &&
+                    cached.rotas?.rows?.length > 0 &&
+                    cached.subRotas?.rows?.length > 0 &&
+                    cached.cidades?.rows?.length > 0;
+
+                if (cacheValido) {
                     window.filterDebugger.log('warn', '📦 Usando dados do CACHE', {
                         cached: cached,
                         rotasType: typeof cached.rotas,
@@ -680,6 +686,15 @@
                         cidadesRows: cidades?.rows?.length || 0
                     });
                 } else {
+                    if (cached) {
+                        window.filterDebugger.log('warn', '🗑️ Cache INVÁLIDO (vazio) - descartando e buscando do banco', {
+                            rotasRows: cached.rotas?.rows?.length || 0,
+                            subRotasRows: cached.subRotas?.rows?.length || 0,
+                            cidadesRows: cached.cidades?.rows?.length || 0
+                        });
+                        // Remove cache inválido
+                        cache.delete(cacheKey);
+                    }
                     window.filterDebugger.log('info', '🔄 Cache MISS - buscando do banco...');
                     if (!db.isConnected()) await db.connect();
                     rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL ORDER BY rota');
