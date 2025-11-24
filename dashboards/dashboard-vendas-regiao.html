@@ -659,13 +659,34 @@
                 const cached = cache.get(cacheKey);
                 let rotas, subRotas, cidades;
 
+                // LOG DETALHADO: Estado inicial do cache
+                console.log('🔍 [DEBUG] Estado do cache:', {
+                    cached: cached,
+                    isCachedNull: cached === null,
+                    isCachedUndefined: cached === undefined,
+                    cachedType: typeof cached,
+                    hasRotas: cached?.rotas !== undefined,
+                    hasRows: cached?.rotas?.rows !== undefined,
+                    rowsLength: cached?.rotas?.rows?.length,
+                    fullCache: JSON.stringify(cached, null, 2)
+                });
+
                 // Valida se o cache existe E tem dados não vazios
                 const cacheValido = cached &&
                     cached.rotas?.rows?.length > 0 &&
                     cached.subRotas?.rows?.length > 0 &&
                     cached.cidades?.rows?.length > 0;
 
+                console.log('🔍 [DEBUG] Validação do cache:', {
+                    cached: !!cached,
+                    rotasLength: cached?.rotas?.rows?.length || 0,
+                    subRotasLength: cached?.subRotas?.rows?.length || 0,
+                    cidadesLength: cached?.cidades?.rows?.length || 0,
+                    cacheValido: cacheValido
+                });
+
                 if (cacheValido) {
+                    console.log('📦 [CACHE HIT] Usando dados do CACHE');
                     window.filterDebugger.log('warn', '📦 Usando dados do CACHE', {
                         cached: cached,
                         rotasType: typeof cached.rotas,
@@ -679,6 +700,12 @@
                     subRotas = cached.subRotas;
                     cidades = cached.cidades;
 
+                    console.log('📊 Dados recuperados do cache:', {
+                        rotasRows: rotas?.rows?.length || 0,
+                        subRotasRows: subRotas?.rows?.length || 0,
+                        cidadesRows: cidades?.rows?.length || 0
+                    });
+
                     window.filterDebugger.log('info', '📊 Dados recuperados do cache', {
                         rotas: rotas,
                         rotasRows: rotas?.rows?.length || 0,
@@ -687,6 +714,11 @@
                     });
                 } else {
                     if (cached) {
+                        console.warn('🗑️ [CACHE INVÁLIDO] Cache existe mas está vazio - descartando', {
+                            rotasRows: cached.rotas?.rows?.length || 0,
+                            subRotasRows: cached.subRotas?.rows?.length || 0,
+                            cidadesRows: cached.cidades?.rows?.length || 0
+                        });
                         window.filterDebugger.log('warn', '🗑️ Cache INVÁLIDO (vazio) - descartando e buscando do banco', {
                             rotasRows: cached.rotas?.rows?.length || 0,
                             subRotasRows: cached.subRotas?.rows?.length || 0,
@@ -694,12 +726,24 @@
                         });
                         // Remove cache inválido
                         cache.delete(cacheKey);
+                    } else {
+                        console.log('🔄 [CACHE MISS] Nenhum cache encontrado - buscando do banco...');
                     }
+
                     window.filterDebugger.log('info', '🔄 Cache MISS - buscando do banco...');
+
+                    console.log('🔌 Conectando ao banco...');
                     if (!db.isConnected()) await db.connect();
+
+                    console.log('🔍 Executando queries...');
                     rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL ORDER BY rota');
+                    console.log('✅ Rotas buscadas:', rotas?.rows?.length || 0);
+
                     subRotas = await db.execute('SELECT DISTINCT sub_rota, rota FROM tab_cliente WHERE sub_rota IS NOT NULL ORDER BY sub_rota');
+                    console.log('✅ SubRotas buscadas:', subRotas?.rows?.length || 0);
+
                     cidades = await db.execute('SELECT DISTINCT v.cidade, c.rota, c.sub_rota FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.cidade IS NOT NULL ORDER BY v.cidade');
+                    console.log('✅ Cidades buscadas:', cidades?.rows?.length || 0);
 
                     window.filterDebugger.log('info', '✅ Dados buscados do banco', {
                         rotasRows: rotas?.rows?.length || 0,
@@ -707,7 +751,17 @@
                         cidadesRows: cidades?.rows?.length || 0
                     });
 
-                    cache.set(cacheKey, { rotas, subRotas, cidades }, CACHE_TTL.FILTERS);
+                    // VALIDAÇÃO EXTRA: Não salva cache se os dados estiverem vazios
+                    if (rotas?.rows?.length > 0 && subRotas?.rows?.length > 0 && cidades?.rows?.length > 0) {
+                        console.log('💾 Salvando dados no cache...');
+                        cache.set(cacheKey, { rotas, subRotas, cidades }, CACHE_TTL.FILTERS);
+                    } else {
+                        console.warn('⚠️ [AVISO] Dados do banco estão vazios - NÃO salvando no cache', {
+                            rotasRows: rotas?.rows?.length || 0,
+                            subRotasRows: subRotas?.rows?.length || 0,
+                            cidadesRows: cidades?.rows?.length || 0
+                        });
+                    }
                 }
 
                 window.todasRotas = rotas.rows;
