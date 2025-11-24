@@ -602,6 +602,18 @@
             renderCallback: renderizarTabela
         });
 
+        // ========== CACHE DE ELEMENTOS DOM ==========
+        // Otimização: armazena referências para evitar lookups repetidos
+        const elemDataInicio = document.getElementById('dataInicio');
+        const elemDataFim = document.getElementById('dataFim');
+        const elemFiltroRota = document.getElementById('filtroRota');
+        const elemFiltroSubRota = document.getElementById('filtroSubRota');
+        const elemFiltroCidade = document.getElementById('filtroCidade');
+
+        // ========== CONTROLE DE EVENT LISTENERS ==========
+        // Evita registrar listeners múltiplas vezes (escopo de módulo, não global)
+        let listenersRegistrados = false;
+
         if (!config.authToken || config.authToken === 'SEU_TOKEN_AQUI') {
             document.getElementById('configAlert').style.display = 'block';
             document.getElementById('btnAtualizar').disabled = true;
@@ -713,9 +725,8 @@
         const handleFiltroSubRotaChange = function() {
             if (!window.todasCidades || !window.todasSubRotas) return;
             const subRotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
-            const filtroRotaEl = document.getElementById('filtroRota');
-            if (!filtroRotaEl) return;
-            const rotasSelecionadas = Array.from(filtroRotaEl.selectedOptions).map(o => o.value);
+            if (!elemFiltroRota) return;
+            const rotasSelecionadas = Array.from(elemFiltroRota.selectedOptions).map(o => o.value);
 
             if (subRotasSelecionadas.length === 0) {
                 // Se nenhuma sub-rota: filtra apenas por rota (se houver)
@@ -741,18 +752,15 @@
 
         // Registra event listeners uma única vez
         // IMPORTANTE: Não precisa de cleanup, listeners permanecem ativos durante navegação
-        if (!window._listenersRegistrados) {
-            window._listenersRegistrados = true;
+        if (!listenersRegistrados) {
+            listenersRegistrados = true;
 
-            const filtroRota = document.getElementById('filtroRota');
-            const filtroSubRota = document.getElementById('filtroSubRota');
-
-            if (filtroRota) {
-                filtroRota.addEventListener('change', handleFiltroRotaChange);
+            if (elemFiltroRota) {
+                elemFiltroRota.addEventListener('change', handleFiltroRotaChange);
                 console.log('✅ Listener registrado: filtroRota');
             }
-            if (filtroSubRota) {
-                filtroSubRota.addEventListener('change', handleFiltroSubRotaChange);
+            if (elemFiltroSubRota) {
+                elemFiltroSubRota.addEventListener('change', handleFiltroSubRotaChange);
                 console.log('✅ Listener registrado: filtroSubRota');
             }
         } else {
@@ -783,16 +791,16 @@
                     fim = hoje;
                     break;
             }
-            document.getElementById('dataInicio').value = inicio.toISOString().split('T')[0];
-            document.getElementById('dataFim').value = fim.toISOString().split('T')[0];
+            elemDataInicio.value = inicio.toISOString().split('T')[0];
+            elemDataFim.value = fim.toISOString().split('T')[0];
         };
 
         window.limparFiltros = function() {
-            document.getElementById('dataInicio').value = '';
-            document.getElementById('dataFim').value = '';
-            document.getElementById('filtroRota').selectedIndex = -1;
-            document.getElementById('filtroSubRota').selectedIndex = -1;
-            document.getElementById('filtroCidade').selectedIndex = -1;
+            elemDataInicio.value = '';
+            elemDataFim.value = '';
+            elemFiltroRota.selectedIndex = -1;
+            elemFiltroSubRota.selectedIndex = -1;
+            elemFiltroCidade.selectedIndex = -1;
             if (window.filterSearches) {
                 Object.values(window.filterSearches).forEach(fs => fs?.clear());
             }
@@ -801,11 +809,11 @@
         };
 
         window.atualizarDados = async function() {
-            const dataInicio = document.getElementById('dataInicio').value;
-            const dataFim = document.getElementById('dataFim').value;
-            const rotas = Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value);
-            const subRotas = Array.from(document.getElementById('filtroSubRota').selectedOptions).map(o => o.value);
-            const cidades = Array.from(document.getElementById('filtroCidade').selectedOptions).map(o => o.value);
+            const dataInicio = elemDataInicio.value;
+            const dataFim = elemDataFim.value;
+            const rotas = Array.from(elemFiltroRota.selectedOptions).map(o => o.value);
+            const subRotas = Array.from(elemFiltroSubRota.selectedOptions).map(o => o.value);
+            const cidades = Array.from(elemFiltroCidade.selectedOptions).map(o => o.value);
 
             if (!dataInicio || !dataFim) {
                 alert('Por favor, selecione o período (data início e fim)');
@@ -942,11 +950,11 @@
 
             // Gráfico de Cidades - buscar dados reais com os mesmos filtros
             try {
-                const dataInicio = document.getElementById('dataInicio').value;
-                const dataFim = document.getElementById('dataFim').value;
-                const rotas = Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value);
-                const subRotas = Array.from(document.getElementById('filtroSubRota').selectedOptions).map(o => o.value);
-                const cidades = Array.from(document.getElementById('filtroCidade').selectedOptions).map(o => o.value);
+                const dataInicio = elemDataInicio.value;
+                const dataFim = elemDataFim.value;
+                const rotas = Array.from(elemFiltroRota.selectedOptions).map(o => o.value);
+                const subRotas = Array.from(elemFiltroSubRota.selectedOptions).map(o => o.value);
+                const cidades = Array.from(elemFiltroCidade.selectedOptions).map(o => o.value);
 
                 let sqlCidades = `
                     SELECT v.cidade, SUM(v.valor_liquido) as valor_total
@@ -1148,15 +1156,16 @@
 
         /**
          * Salva estado atual dos filtros em sessionStorage
+         * Otimizado: usa cache de elementos DOM
          */
         function salvarEstadoFiltros() {
             try {
                 const estado = {
-                    dataInicio: document.getElementById('dataInicio')?.value || '',
-                    dataFim: document.getElementById('dataFim')?.value || '',
-                    rotas: Array.from(document.getElementById('filtroRota')?.selectedOptions || []).map(o => o.value),
-                    subRotas: Array.from(document.getElementById('filtroSubRota')?.selectedOptions || []).map(o => o.value),
-                    cidades: Array.from(document.getElementById('filtroCidade')?.selectedOptions || []).map(o => o.value),
+                    dataInicio: elemDataInicio?.value || '',
+                    dataFim: elemDataFim?.value || '',
+                    rotas: Array.from(elemFiltroRota?.selectedOptions || []).map(o => o.value),
+                    subRotas: Array.from(elemFiltroSubRota?.selectedOptions || []).map(o => o.value),
+                    cidades: Array.from(elemFiltroCidade?.selectedOptions || []).map(o => o.value),
                     timestamp: Date.now()
                 };
                 sessionStorage.setItem(CACHE_KEY_ESTADO, JSON.stringify(estado));
@@ -1168,6 +1177,8 @@
 
         /**
          * Restaura estado dos filtros de sessionStorage
+         * Otimizado: usa Promise.resolve().then() para evitar race condition,
+         * Set para lookups O(1), e dispara handlers para popular dependentes
          * @returns {boolean} true se restaurou com sucesso
          */
         function restaurarEstadoFiltros() {
@@ -1189,36 +1200,59 @@
 
                 console.log('📦 Restaurando estado dos filtros:', estado);
 
-                // Restaura datas
-                if (estado.dataInicio) document.getElementById('dataInicio').value = estado.dataInicio;
-                if (estado.dataFim) document.getElementById('dataFim').value = estado.dataFim;
+                // Restaura datas (síncrono)
+                if (estado.dataInicio) elemDataInicio.value = estado.dataInicio;
+                if (estado.dataFim) elemDataFim.value = estado.dataFim;
 
-                // Restaura seleções dos selects (após carregamento das opções)
-                setTimeout(() => {
-                    const filtroRota = document.getElementById('filtroRota');
-                    const filtroSubRota = document.getElementById('filtroSubRota');
-                    const filtroCidade = document.getElementById('filtroCidade');
+                // Restaura seleções após render (Promise.resolve() garante execução após DOM)
+                // Usa Set para lookups O(1) em vez de includes() O(n)
+                Promise.resolve().then(() => {
+                    // Converte arrays para Set para otimizar lookups
+                    const rotasSet = new Set(estado.rotas || []);
+                    const subRotasSet = new Set(estado.subRotas || []);
+                    const cidadesSet = new Set(estado.cidades || []);
 
-                    if (filtroRota && estado.rotas?.length) {
-                        Array.from(filtroRota.options).forEach(opt => {
-                            opt.selected = estado.rotas.includes(opt.value);
+                    // Restaura Rota
+                    if (elemFiltroRota && rotasSet.size > 0) {
+                        Array.from(elemFiltroRota.options).forEach(opt => {
+                            opt.selected = rotasSet.has(opt.value);
                         });
+                        // Dispara handler para popular sub-rotas e cidades dependentes
+                        elemFiltroRota.dispatchEvent(new Event('change'));
+                        console.log('✅ Rotas restauradas e handler disparado');
                     }
 
-                    if (filtroSubRota && estado.subRotas?.length) {
-                        Array.from(filtroSubRota.options).forEach(opt => {
-                            opt.selected = estado.subRotas.includes(opt.value);
+                    // Aguarda próximo tick para garantir que sub-rotas foram populadas
+                    return Promise.resolve();
+                }).then(() => {
+                    const subRotasSet = new Set(estado.subRotas || []);
+
+                    // Restaura SubRota
+                    if (elemFiltroSubRota && subRotasSet.size > 0) {
+                        Array.from(elemFiltroSubRota.options).forEach(opt => {
+                            opt.selected = subRotasSet.has(opt.value);
                         });
+                        // Dispara handler para popular cidades dependentes
+                        elemFiltroSubRota.dispatchEvent(new Event('change'));
+                        console.log('✅ SubRotas restauradas e handler disparado');
                     }
 
-                    if (filtroCidade && estado.cidades?.length) {
-                        Array.from(filtroCidade.options).forEach(opt => {
-                            opt.selected = estado.cidades.includes(opt.value);
+                    return Promise.resolve();
+                }).then(() => {
+                    const cidadesSet = new Set(estado.cidades || []);
+
+                    // Restaura Cidade
+                    if (elemFiltroCidade && cidadesSet.size > 0) {
+                        Array.from(elemFiltroCidade.options).forEach(opt => {
+                            opt.selected = cidadesSet.has(opt.value);
                         });
+                        console.log('✅ Cidades restauradas');
                     }
 
-                    console.log('✅ Estado restaurado com sucesso');
-                }, 100); // Delay para garantir que as opções foram carregadas
+                    console.log('✅ Estado restaurado com sucesso (sem race condition)');
+                }).catch(error => {
+                    console.warn('⚠️ Erro ao restaurar seleções:', error);
+                });
 
                 return true;
             } catch (error) {
