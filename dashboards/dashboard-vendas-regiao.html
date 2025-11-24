@@ -602,13 +602,15 @@
             renderCallback: renderizarTabela
         });
 
-        // ========== CACHE DE ELEMENTOS DOM ==========
-        // Otimização: armazena referências para evitar lookups repetidos
-        const elemDataInicio = document.getElementById('dataInicio');
-        const elemDataFim = document.getElementById('dataFim');
-        const elemFiltroRota = document.getElementById('filtroRota');
-        const elemFiltroSubRota = document.getElementById('filtroSubRota');
-        const elemFiltroCidade = document.getElementById('filtroCidade');
+        // ========== CACHE DE ELEMENTOS DOM (LAZY LOADING) ==========
+        // Otimização: armazena referências apenas quando acessados (evita undefined)
+        let _elemDataInicio, _elemDataFim, _elemFiltroRota, _elemFiltroSubRota, _elemFiltroCidade;
+
+        const getElemDataInicio = () => _elemDataInicio || (_elemDataInicio = document.getElementById('dataInicio'));
+        const getElemDataFim = () => _elemDataFim || (_elemDataFim = document.getElementById('dataFim'));
+        const getElemFiltroRota = () => _elemFiltroRota || (_elemFiltroRota = document.getElementById('filtroRota'));
+        const getElemFiltroSubRota = () => _elemFiltroSubRota || (_elemFiltroSubRota = document.getElementById('filtroSubRota'));
+        const getElemFiltroCidade = () => _elemFiltroCidade || (_elemFiltroCidade = document.getElementById('filtroCidade'));
 
         // ========== CONTROLE DE EVENT LISTENERS ==========
         // Evita registrar listeners múltiplas vezes (escopo de módulo, não global)
@@ -725,6 +727,7 @@
         const handleFiltroSubRotaChange = function() {
             if (!window.todasCidades || !window.todasSubRotas) return;
             const subRotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
+            const elemFiltroRota = getElemFiltroRota();
             if (!elemFiltroRota) return;
             const rotasSelecionadas = Array.from(elemFiltroRota.selectedOptions).map(o => o.value);
 
@@ -754,6 +757,9 @@
         // IMPORTANTE: Não precisa de cleanup, listeners permanecem ativos durante navegação
         if (!listenersRegistrados) {
             listenersRegistrados = true;
+
+            const elemFiltroRota = getElemFiltroRota();
+            const elemFiltroSubRota = getElemFiltroSubRota();
 
             if (elemFiltroRota) {
                 elemFiltroRota.addEventListener('change', handleFiltroRotaChange);
@@ -791,16 +797,24 @@
                     fim = hoje;
                     break;
             }
-            elemDataInicio.value = inicio.toISOString().split('T')[0];
-            elemDataFim.value = fim.toISOString().split('T')[0];
+            const elemDataInicio = getElemDataInicio();
+            const elemDataFim = getElemDataFim();
+            if (elemDataInicio) elemDataInicio.value = inicio.toISOString().split('T')[0];
+            if (elemDataFim) elemDataFim.value = fim.toISOString().split('T')[0];
         };
 
         window.limparFiltros = function() {
-            elemDataInicio.value = '';
-            elemDataFim.value = '';
-            elemFiltroRota.selectedIndex = -1;
-            elemFiltroSubRota.selectedIndex = -1;
-            elemFiltroCidade.selectedIndex = -1;
+            const elemDataInicio = getElemDataInicio();
+            const elemDataFim = getElemDataFim();
+            const elemFiltroRota = getElemFiltroRota();
+            const elemFiltroSubRota = getElemFiltroSubRota();
+            const elemFiltroCidade = getElemFiltroCidade();
+
+            if (elemDataInicio) elemDataInicio.value = '';
+            if (elemDataFim) elemDataFim.value = '';
+            if (elemFiltroRota) elemFiltroRota.selectedIndex = -1;
+            if (elemFiltroSubRota) elemFiltroSubRota.selectedIndex = -1;
+            if (elemFiltroCidade) elemFiltroCidade.selectedIndex = -1;
             if (window.filterSearches) {
                 Object.values(window.filterSearches).forEach(fs => fs?.clear());
             }
@@ -809,6 +823,17 @@
         };
 
         window.atualizarDados = async function() {
+            const elemDataInicio = getElemDataInicio();
+            const elemDataFim = getElemDataFim();
+            const elemFiltroRota = getElemFiltroRota();
+            const elemFiltroSubRota = getElemFiltroSubRota();
+            const elemFiltroCidade = getElemFiltroCidade();
+
+            if (!elemDataInicio || !elemDataFim || !elemFiltroRota || !elemFiltroSubRota || !elemFiltroCidade) {
+                alert('Erro: Elementos do formulário não encontrados');
+                return;
+            }
+
             const dataInicio = elemDataInicio.value;
             const dataFim = elemDataFim.value;
             const rotas = Array.from(elemFiltroRota.selectedOptions).map(o => o.value);
@@ -950,6 +975,17 @@
 
             // Gráfico de Cidades - buscar dados reais com os mesmos filtros
             try {
+                const elemDataInicio = getElemDataInicio();
+                const elemDataFim = getElemDataFim();
+                const elemFiltroRota = getElemFiltroRota();
+                const elemFiltroSubRota = getElemFiltroSubRota();
+                const elemFiltroCidade = getElemFiltroCidade();
+
+                if (!elemDataInicio || !elemDataFim || !elemFiltroRota || !elemFiltroSubRota || !elemFiltroCidade) {
+                    console.warn('⚠️ Elementos não encontrados para gráfico de cidades');
+                    return;
+                }
+
                 const dataInicio = elemDataInicio.value;
                 const dataFim = elemDataFim.value;
                 const rotas = Array.from(elemFiltroRota.selectedOptions).map(o => o.value);
@@ -1156,10 +1192,16 @@
 
         /**
          * Salva estado atual dos filtros em sessionStorage
-         * Otimizado: usa cache de elementos DOM
+         * Otimizado: usa lazy loading de elementos DOM
          */
         function salvarEstadoFiltros() {
             try {
+                const elemDataInicio = getElemDataInicio();
+                const elemDataFim = getElemDataFim();
+                const elemFiltroRota = getElemFiltroRota();
+                const elemFiltroSubRota = getElemFiltroSubRota();
+                const elemFiltroCidade = getElemFiltroCidade();
+
                 const estado = {
                     dataInicio: elemDataInicio?.value || '',
                     dataFim: elemDataFim?.value || '',
@@ -1200,6 +1242,19 @@
 
                 console.log('📦 Restaurando estado dos filtros:', estado);
 
+                // Obtém elementos (lazy loading)
+                const elemDataInicio = getElemDataInicio();
+                const elemDataFim = getElemDataFim();
+                const elemFiltroRota = getElemFiltroRota();
+                const elemFiltroSubRota = getElemFiltroSubRota();
+                const elemFiltroCidade = getElemFiltroCidade();
+
+                // Verifica se elementos existem
+                if (!elemDataInicio || !elemDataFim || !elemFiltroRota || !elemFiltroSubRota || !elemFiltroCidade) {
+                    console.warn('⚠️ Elementos DOM não encontrados, aguardando próxima carga');
+                    return false;
+                }
+
                 // Restaura datas (síncrono)
                 if (estado.dataInicio) elemDataInicio.value = estado.dataInicio;
                 if (estado.dataFim) elemDataFim.value = estado.dataFim;
@@ -1209,8 +1264,6 @@
                 Promise.resolve().then(() => {
                     // Converte arrays para Set para otimizar lookups
                     const rotasSet = new Set(estado.rotas || []);
-                    const subRotasSet = new Set(estado.subRotas || []);
-                    const cidadesSet = new Set(estado.cidades || []);
 
                     // Restaura Rota
                     if (elemFiltroRota && rotasSet.size > 0) {
