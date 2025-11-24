@@ -610,14 +610,17 @@
         async function carregarFiltros() {
             try {
                 // Inicializa busca nos filtros PRIMEIRO (antes de preencher)
+                // IMPORTANTE: Não recria se já existir (mantém estado)
                 if (!window.filterSearches || Object.keys(window.filterSearches).length === 0) {
-                    console.log('📝 Inicializando FilterSearch...');
+                    console.log('📝 Inicializando FilterSearch pela primeira vez...');
                     window.filterSearches = {
                         rota: new FilterSearch('filtroRota', { placeholder: 'Digite para buscar rota...' }),
                         subrota: new FilterSearch('filtroSubRota', { placeholder: 'Digite para buscar subrota...' }),
                         cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
                     };
                     console.log('✅ FilterSearch inicializado:', window.filterSearches);
+                } else {
+                    console.log('♻️ Reutilizando FilterSearch existente');
                 }
 
                 const cacheKey = 'filtros_regiao';
@@ -685,8 +688,10 @@
             }
         }
 
-        // CASCATA FLEXÍVEL: Rota → SubRota → Cidade (permite pular níveis)
-        // Funções nomeadas para event listeners (permite cleanup adequado)
+        // ========== CASCATA FLEXÍVEL: Rota → SubRota → Cidade ==========
+        // Event listeners mantidos vivos durante navegação (sem destruição)
+
+        // Funções nomeadas para event listeners
         const handleFiltroRotaChange = function() {
             if (!window.todasSubRotas || !window.todasCidades) return;
             const rotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
@@ -734,36 +739,25 @@
             }
         };
 
-        // Função para limpar event listeners antigos
-        function limparEventListeners() {
-            const filtroRota = document.getElementById('filtroRota');
-            const filtroSubRota = document.getElementById('filtroSubRota');
-
-            if (filtroRota) {
-                filtroRota.removeEventListener('change', handleFiltroRotaChange);
-            }
-            if (filtroSubRota) {
-                filtroSubRota.removeEventListener('change', handleFiltroSubRotaChange);
-            }
-        }
-
-        // Função para registrar event listeners
-        function registrarEventListeners() {
-            limparEventListeners(); // Remove listeners antigos primeiro
+        // Registra event listeners uma única vez
+        // IMPORTANTE: Não precisa de cleanup, listeners permanecem ativos durante navegação
+        if (!window._listenersRegistrados) {
+            window._listenersRegistrados = true;
 
             const filtroRota = document.getElementById('filtroRota');
             const filtroSubRota = document.getElementById('filtroSubRota');
 
             if (filtroRota) {
                 filtroRota.addEventListener('change', handleFiltroRotaChange);
+                console.log('✅ Listener registrado: filtroRota');
             }
             if (filtroSubRota) {
                 filtroSubRota.addEventListener('change', handleFiltroSubRotaChange);
+                console.log('✅ Listener registrado: filtroSubRota');
             }
+        } else {
+            console.log('♻️ Listeners já registrados, reutilizando');
         }
-
-        // Registra listeners na inicialização
-        registrarEventListeners();
 
         window.setQuickDate = function(period) {
             const hoje = new Date();
@@ -1146,23 +1140,123 @@
             }
         };
 
-        // Inicializar - carrega filtros na primeira vez E ao voltar (pageshow para bfcache)
-        const initFiltros = (event) => {
-            // Se for evento pageshow e a página veio do cache (persisted)
-            if (event && event.type === 'pageshow' && event.persisted) {
-                console.log('📄 Página restaurada do cache - limpando estado dos filtros...');
+        // ========== SISTEMA DE CACHE DE ESTADO DOS FILTROS ==========
+        // Mantém seleções do usuário entre navegações (alinhado com cache de 6h)
 
-                // Destrói FilterSearch existentes para evitar estado obsoleto
-                if (window.filterSearches) {
-                    Object.values(window.filterSearches).forEach(fs => fs?.destroy());
-                    window.filterSearches = null;
+        const CACHE_KEY_ESTADO = 'estado_filtros_vendas_regiao';
+        const ESTADO_VALIDO_MS = 6 * 60 * 60 * 1000; // 6 horas (mesmo TTL dos filtros)
+
+        /**
+         * Salva estado atual dos filtros em sessionStorage
+         */
+        function salvarEstadoFiltros() {
+            try {
+                const estado = {
+                    dataInicio: document.getElementById('dataInicio')?.value || '',
+                    dataFim: document.getElementById('dataFim')?.value || '',
+                    rotas: Array.from(document.getElementById('filtroRota')?.selectedOptions || []).map(o => o.value),
+                    subRotas: Array.from(document.getElementById('filtroSubRota')?.selectedOptions || []).map(o => o.value),
+                    cidades: Array.from(document.getElementById('filtroCidade')?.selectedOptions || []).map(o => o.value),
+                    timestamp: Date.now()
+                };
+                sessionStorage.setItem(CACHE_KEY_ESTADO, JSON.stringify(estado));
+                console.log('💾 Estado dos filtros salvo:', estado);
+            } catch (error) {
+                console.warn('⚠️ Erro ao salvar estado dos filtros:', error);
+            }
+        }
+
+        /**
+         * Restaura estado dos filtros de sessionStorage
+         * @returns {boolean} true se restaurou com sucesso
+         */
+        function restaurarEstadoFiltros() {
+            try {
+                const estadoStr = sessionStorage.getItem(CACHE_KEY_ESTADO);
+                if (!estadoStr) {
+                    console.log('📭 Nenhum estado salvo encontrado');
+                    return false;
                 }
 
-                // Re-registra event listeners para garantir que estão vinculados aos elementos atuais
-                registrarEventListeners();
+                const estado = JSON.parse(estadoStr);
+
+                // Verifica se o estado ainda é válido (6 horas)
+                if (Date.now() - estado.timestamp > ESTADO_VALIDO_MS) {
+                    console.log('⏰ Estado expirado, removendo...');
+                    sessionStorage.removeItem(CACHE_KEY_ESTADO);
+                    return false;
+                }
+
+                console.log('📦 Restaurando estado dos filtros:', estado);
+
+                // Restaura datas
+                if (estado.dataInicio) document.getElementById('dataInicio').value = estado.dataInicio;
+                if (estado.dataFim) document.getElementById('dataFim').value = estado.dataFim;
+
+                // Restaura seleções dos selects (após carregamento das opções)
+                setTimeout(() => {
+                    const filtroRota = document.getElementById('filtroRota');
+                    const filtroSubRota = document.getElementById('filtroSubRota');
+                    const filtroCidade = document.getElementById('filtroCidade');
+
+                    if (filtroRota && estado.rotas?.length) {
+                        Array.from(filtroRota.options).forEach(opt => {
+                            opt.selected = estado.rotas.includes(opt.value);
+                        });
+                    }
+
+                    if (filtroSubRota && estado.subRotas?.length) {
+                        Array.from(filtroSubRota.options).forEach(opt => {
+                            opt.selected = estado.subRotas.includes(opt.value);
+                        });
+                    }
+
+                    if (filtroCidade && estado.cidades?.length) {
+                        Array.from(filtroCidade.options).forEach(opt => {
+                            opt.selected = estado.cidades.includes(opt.value);
+                        });
+                    }
+
+                    console.log('✅ Estado restaurado com sucesso');
+                }, 100); // Delay para garantir que as opções foram carregadas
+
+                return true;
+            } catch (error) {
+                console.warn('⚠️ Erro ao restaurar estado dos filtros:', error);
+                return false;
+            }
+        }
+
+        // Salva estado automaticamente ao sair da página
+        window.addEventListener('pagehide', salvarEstadoFiltros);
+        window.addEventListener('beforeunload', salvarEstadoFiltros);
+
+        // ========== INICIALIZAÇÃO DOS FILTROS ==========
+
+        const initFiltros = async (event) => {
+            // Se for evento pageshow e a página veio do cache (persisted)
+            if (event && event.type === 'pageshow' && event.persisted) {
+                console.log('📄 Página restaurada do bfcache');
+
+                // MANTÉM FilterSearch e listeners vivos (não destroi)
+                // Apenas restaura estado salvo
+                const restaurou = restaurarEstadoFiltros();
+
+                if (!restaurou) {
+                    // Se não tinha estado salvo, recarrega filtros
+                    await carregarFiltros();
+                }
+
+                console.log('📊 Cache Stats:', cache.getStats());
+                return;
             }
 
-            carregarFiltros();
+            // Primeira carga ou reload - carrega filtros
+            await carregarFiltros();
+
+            // Tenta restaurar estado após carregar
+            restaurarEstadoFiltros();
+
             console.log('📊 Cache Stats:', cache.getStats());
         };
 
