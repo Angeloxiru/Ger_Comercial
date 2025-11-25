@@ -618,6 +618,7 @@
         import { Pagination, injectPaginationStyles } from '../js/pagination.js';
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
+        import { serializeDbResult, validateCacheStructure } from '../js/db-utils.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Performance de Clientes');
@@ -678,22 +679,10 @@
 
                 let grupos, clientes, cidades;
 
-                // Valida se o cache existe E tem dados não vazios E estrutura correta
-                let cacheValido = cached &&
-                    cached.grupos?.rows?.length > 0 &&
-                    cached.clientes?.rows?.length > 0 &&
-                    cached.cidades?.rows?.length > 0;
-
-                // Valida se os dados têm a estrutura correta
-                if (cacheValido) {
-                    const primeiroGrupo = cached.grupos.rows[0];
-                    const hasProperty = primeiroGrupo && typeof primeiroGrupo === 'object' && 'grupo_desc' in primeiroGrupo;
-
-                    if (!hasProperty) {
-                        cache.delete(cacheKey);
-                        cacheValido = false;
-                    }
-                }
+                // Valida se o cache existe E tem dados não vazios E estrutura correta usando validateCacheStructure
+                const cacheValido = validateCacheStructure(cached?.grupos, 'grupo_desc') &&
+                    validateCacheStructure(cached?.clientes, 'cliente') &&
+                    validateCacheStructure(cached?.cidades, 'cidade');
 
                 if (cacheValido) {
                     grupos = cached.grupos;
@@ -711,13 +700,6 @@
 
                     // Valida antes de salvar no cache
                     if (grupos?.rows?.length > 0 && clientes?.rows?.length > 0 && cidades?.rows?.length > 0) {
-                        // Converte resultados do LibSQL para objetos simples antes de cachear
-                        const serializeDbResult = (result) => ({
-                            rows: result.rows.map(row => ({ ...row })),
-                            columns: result.columns,
-                            rowsAffected: result.rowsAffected
-                        });
-
                         cache.set(cacheKey, {
                             grupos: serializeDbResult(grupos),
                             clientes: serializeDbResult(clientes),

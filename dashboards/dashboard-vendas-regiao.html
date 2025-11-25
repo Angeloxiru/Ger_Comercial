@@ -578,14 +578,7 @@
         import { Pagination, injectPaginationStyles } from '../js/pagination.js';
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
-        import { FilterDebugger } from '../js/debug-filters.js';
-
-        // ========== SISTEMA DE DEBUG ==========
-        window.filterDebugger = new FilterDebugger('Vendas por Região');
-        window.filterDebugger.log('info', '🚀 Dashboard iniciando...');
-
-        // Intercepta addEventListener para monitoramento automático
-        window.filterDebugger.interceptAddEventListener();
+        import { serializeDbResult, validateCacheStructure } from '../js/db-utils.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Vendas por Região');
@@ -631,85 +624,34 @@
 
         async function carregarFiltros() {
             try {
-                window.filterDebugger.log('info', '📂 carregarFiltros() iniciado');
-
                 // Inicializa busca nos filtros PRIMEIRO (antes de preencher)
                 // IMPORTANTE: Não recria se já existir (mantém estado)
                 if (!window.filterSearches || Object.keys(window.filterSearches).length === 0) {
-                    window.filterDebugger.log('info', '📝 Inicializando FilterSearch pela primeira vez...');
                     window.filterSearches = {
                         rota: new FilterSearch('filtroRota', { placeholder: 'Digite para buscar rota...' }),
                         subrota: new FilterSearch('filtroSubRota', { placeholder: 'Digite para buscar subrota...' }),
                         cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
                     };
-                    window.filterDebugger.log('info', '✅ FilterSearch inicializado', {
-                        keys: Object.keys(window.filterSearches)
-                    });
-                } else {
-                    window.filterDebugger.log('warn', '♻️ Reutilizando FilterSearch existente (possível cache)', {
-                        keys: Object.keys(window.filterSearches),
-                        instances: window.filterSearches
-                    });
                 }
 
                 const cacheKey = 'filtros_regiao';
                 const cached = cache.get(cacheKey);
                 let rotas, subRotas, cidades;
 
-                // Valida se o cache existe E tem dados não vazios E estrutura correta
-                let cacheValido = cached &&
-                    cached.rotas?.rows?.length > 0 &&
-                    cached.subRotas?.rows?.length > 0 &&
-                    cached.cidades?.rows?.length > 0;
-
-                // Valida se os dados têm a estrutura correta (objetos serializáveis)
-                // LibSQL retorna objetos especiais que precisam ser convertidos
-                if (cacheValido) {
-                    const primeiraRota = cached.rotas.rows[0];
-                    const hasRotaProperty = primeiraRota && typeof primeiraRota === 'object' && 'rota' in primeiraRota;
-
-                    if (!hasRotaProperty) {
-                        window.filterDebugger.log('warn', '🗑️ Cache CORROMPIDO detectado - limpando', {
-                            primeiraRota: primeiraRota,
-                            hasRotaProperty: hasRotaProperty
-                        });
-                        cache.delete(cacheKey);
-                        cacheValido = false;
-                    }
-                }
+                // Valida se o cache existe E tem dados não vazios E estrutura correta usando validateCacheStructure
+                const cacheValido = validateCacheStructure(cached?.rotas, 'rota') &&
+                    validateCacheStructure(cached?.subRotas, 'sub_rota') &&
+                    validateCacheStructure(cached?.cidades, 'cidade');
 
                 if (cacheValido) {
-                    window.filterDebugger.log('warn', '📦 Usando dados do CACHE', {
-                        cached: cached,
-                        rotasType: typeof cached.rotas,
-                        rotasKeys: cached.rotas ? Object.keys(cached.rotas) : 'null',
-                        rotasRows: cached.rotas?.rows?.length || 0,
-                        subRotasRows: cached.subRotas?.rows?.length || 0,
-                        cidadesRows: cached.cidades?.rows?.length || 0
-                    });
-
                     rotas = cached.rotas;
                     subRotas = cached.subRotas;
                     cidades = cached.cidades;
-
-                    window.filterDebugger.log('info', '📊 Dados recuperados do cache', {
-                        rotas: rotas,
-                        rotasRows: rotas?.rows?.length || 0,
-                        subRotasRows: subRotas?.rows?.length || 0,
-                        cidadesRows: cidades?.rows?.length || 0
-                    });
                 } else {
                     if (cached) {
-                        window.filterDebugger.log('warn', '🗑️ Cache INVÁLIDO (vazio) - descartando e buscando do banco', {
-                            rotasRows: cached.rotas?.rows?.length || 0,
-                            subRotasRows: cached.subRotas?.rows?.length || 0,
-                            cidadesRows: cached.cidades?.rows?.length || 0
-                        });
                         // Remove cache inválido
                         cache.delete(cacheKey);
                     }
-
-                    window.filterDebugger.log('info', '🔄 Cache MISS - buscando do banco...');
 
                     if (!db.isConnected()) await db.connect();
 
@@ -719,22 +661,8 @@
 
                     cidades = await db.execute('SELECT DISTINCT v.cidade, c.rota, c.sub_rota FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.cidade IS NOT NULL ORDER BY v.cidade');
 
-                    window.filterDebugger.log('info', '✅ Dados buscados do banco', {
-                        rotasRows: rotas?.rows?.length || 0,
-                        subRotasRows: subRotas?.rows?.length || 0,
-                        cidadesRows: cidades?.rows?.length || 0
-                    });
-
                     // VALIDAÇÃO EXTRA: Não salva cache se os dados estiverem vazios
                     if (rotas?.rows?.length > 0 && subRotas?.rows?.length > 0 && cidades?.rows?.length > 0) {
-                        // Converte resultados do LibSQL para objetos simples antes de cachear
-                        // LibSQL retorna objetos especiais que não são serializáveis corretamente
-                        const serializeDbResult = (result) => ({
-                            rows: result.rows.map(row => ({ ...row })),
-                            columns: result.columns,
-                            rowsAffected: result.rowsAffected
-                        });
-
                         cache.set(cacheKey, {
                             rotas: serializeDbResult(rotas),
                             subRotas: serializeDbResult(subRotas),
@@ -747,33 +675,10 @@
                 window.todasSubRotas = subRotas.rows;
                 window.todasCidades = cidades.rows;
 
-                window.filterDebugger.log('info', '🗂️ Arrays globais definidos', {
-                    todasRotasLength: window.todasRotas?.length || 0,
-                    todasSubRotasLength: window.todasSubRotas?.length || 0,
-                    todasCidadesLength: window.todasCidades?.length || 0,
-                    todasRotasSample: window.todasRotas?.slice(0, 3) || []
-                });
-
-                // DEBUG: Inspecionar estrutura REAL dos dados
-                window.filterDebugger.log('info', '🔬 Estrutura dos dados (primeiras 3 rotas)', {
-                    primeiraRota: rotas.rows[0],
-                    segundaRota: rotas.rows[1],
-                    terceiraRota: rotas.rows[2],
-                    keysDoObjeto: rotas.rows[0] ? Object.keys(rotas.rows[0]) : [],
-                    valoresPrimeiraRota: rotas.rows[0] ? Object.values(rotas.rows[0]) : []
-                });
-
                 // Filtra valores nulos/undefined antes de preencher
                 const rotasFiltradas = rotas.rows
                     .map(r => r.rota)
                     .filter(v => v !== null && v !== undefined && v !== '');
-
-                window.filterDebugger.log('info', '🔍 Rotas após filtro', {
-                    rotasRowsOriginal: rotas.rows?.length || 0,
-                    rotasAposMapeamento: rotas.rows?.map(r => r.rota).length || 0,
-                    rotasAposFiltro: rotasFiltradas.length,
-                    amostra: rotasFiltradas.slice(0, 5)
-                });
 
                 preencherSelect('filtroRota', rotasFiltradas);
 
@@ -786,24 +691,16 @@
         }
 
         function preencherSelect(id, opcoes) {
-            window.filterDebugger.log('info', `🔄 preencherSelect(${id}) com ${opcoes.length} opções`);
-
             const select = document.getElementById(id);
             if (!select) {
-                window.filterDebugger.log('error', `❌ Select não encontrado: ${id}`);
                 console.error('❌ Select não encontrado:', id);
                 return;
             }
-
-            // Log do estado anterior
-            const oldOptionsCount = select.options.length;
-            window.filterDebugger.log('info', `Substituindo ${oldOptionsCount} opções antigas por ${opcoes.length} novas em ${id}`);
 
             select.innerHTML = '';
             if (opcoes.length === 0) {
                 select.innerHTML = '<option value="">Nenhuma opção disponível</option>';
                 select.disabled = true;
-                window.filterDebugger.log('warn', `⚠️ ${id} desabilitado (sem opções)`);
             } else {
                 select.disabled = false;
                 opcoes.forEach(opcao => {
@@ -824,10 +721,7 @@
 
             // Atualiza o FilterSearch se existir
             if (window.filterSearches && window.filterSearches[searchId]) {
-                window.filterDebugger.monitorFilterSearch(id, 'updateOptions', opcoes.length);
                 window.filterSearches[searchId].updateOptions(opcoes);
-            } else {
-                window.filterDebugger.log('error', `⚠️ FilterSearch não encontrado para ${id} (chave: '${searchId}')`);
             }
         }
 
@@ -837,13 +731,8 @@
         // Funções nomeadas para event listeners
         const handleFiltroRotaChange = function() {
             const rotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
-            window.filterDebugger.monitorEvent('filtroRota', 'change', rotasSelecionadas);
 
             if (!window.todasSubRotas || !window.todasCidades) {
-                window.filterDebugger.log('warn', '⚠️ handleFiltroRotaChange: Dados não carregados', {
-                    todasSubRotas: !!window.todasSubRotas,
-                    todasCidades: !!window.todasCidades
-                });
                 return;
             }
 
@@ -877,19 +766,13 @@
 
         const handleFiltroSubRotaChange = function() {
             const subRotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
-            window.filterDebugger.monitorEvent('filtroSubRota', 'change', subRotasSelecionadas);
 
             if (!window.todasCidades || !window.todasSubRotas) {
-                window.filterDebugger.log('warn', '⚠️ handleFiltroSubRotaChange: Dados não carregados', {
-                    todasCidades: !!window.todasCidades,
-                    todasSubRotas: !!window.todasSubRotas
-                });
                 return;
             }
 
             const elemFiltroRota = getElemFiltroRota();
             if (!elemFiltroRota) {
-                window.filterDebugger.log('error', '❌ handleFiltroSubRotaChange: elemFiltroRota não encontrado');
                 return;
             }
             const rotasSelecionadas = Array.from(elemFiltroRota.selectedOptions).map(o => o.value);
@@ -928,30 +811,18 @@
 
         // Função para registrar event listeners (só executa quando DOM estiver pronto)
         function registrarEventListeners() {
-            window.filterDebugger.log('info', `🔌 registrarEventListeners() chamado - listenersRegistrados = ${listenersRegistrados}`);
-
             if (!listenersRegistrados) {
                 listenersRegistrados = true;
-                window.filterDebugger.log('info', '✅ Flag listenersRegistrados definida como true');
 
                 const elemFiltroRota = getElemFiltroRota();
                 const elemFiltroSubRota = getElemFiltroSubRota();
 
-                window.filterDebugger.log('info', 'Elementos obtidos', {
-                    filtroRota: elemFiltroRota ? 'OK' : 'NULL',
-                    filtroSubRota: elemFiltroSubRota ? 'OK' : 'NULL'
-                });
-
                 if (elemFiltroRota) {
                     elemFiltroRota.addEventListener('change', handleFiltroRotaChange);
-                    window.filterDebugger.log('listener', '✅ Listener registrado: filtroRota -> handleFiltroRotaChange');
                 }
                 if (elemFiltroSubRota) {
                     elemFiltroSubRota.addEventListener('change', handleFiltroSubRotaChange);
-                    window.filterDebugger.log('listener', '✅ Listener registrado: filtroSubRota -> handleFiltroSubRotaChange');
                 }
-            } else {
-                window.filterDebugger.log('warn', '⚠️ Listeners JÁ REGISTRADOS! Pulando registro (listenersRegistrados = true)');
             }
         }
 
@@ -1491,16 +1362,8 @@
         // ========== INICIALIZAÇÃO DOS FILTROS ==========
 
         const initFiltros = async (event) => {
-            window.filterDebugger.log('info', `🎬 initFiltros() chamado - Tipo de evento: ${event?.type || 'nenhum'}`);
-
             // Se for evento pageshow e a página veio do cache (persisted)
             if (event && event.type === 'pageshow' && event.persisted) {
-                window.filterDebugger.log('warn', '📄 Página restaurada do bfcache (Back-Forward Cache)!', {
-                    persisted: event.persisted,
-                    listenersRegistrados: listenersRegistrados,
-                    filterSearchesExistem: !!window.filterSearches,
-                    filterSearchesKeys: window.filterSearches ? Object.keys(window.filterSearches) : []
-                });
                 console.log('📄 Página restaurada do bfcache');
 
                 // MANTÉM FilterSearch e listeners vivos (não destroi)
@@ -1508,26 +1371,18 @@
                 const restaurou = restaurarEstadoFiltros();
 
                 if (!restaurou) {
-                    window.filterDebugger.log('info', '🔄 Estado não restaurado, recarregando filtros...');
                     // Se não tinha estado salvo, recarrega filtros
                     await carregarFiltros();
-                } else {
-                    window.filterDebugger.log('info', '✅ Estado restaurado com sucesso');
                 }
 
-                window.filterDebugger.log('info', '📊 Cache Stats', cache.getStats());
                 return;
             }
-
-            window.filterDebugger.log('info', '🆕 Primeira carga ou reload - carregando filtros...');
 
             // Primeira carga ou reload - carrega filtros
             await carregarFiltros();
 
             // Tenta restaurar estado após carregar
             restaurarEstadoFiltros();
-
-            window.filterDebugger.log('info', '📊 Cache Stats', cache.getStats());
         };
 
         // Usa apenas pageshow para evitar dupla inicialização (load + pageshow disparam juntos)

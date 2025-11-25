@@ -621,6 +621,7 @@
         import { Pagination, injectPaginationStyles } from '../js/pagination.js';
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
+        import { serializeDbResult, validateCacheStructure } from '../js/db-utils.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Análise de Produtos');
@@ -686,22 +687,10 @@
 
                 let origens, familias, produtos;
 
-                // Valida se o cache existe E tem dados não vazios E estrutura correta
-                let cacheValido = cached &&
-                    cached.origens?.rows?.length > 0 &&
-                    cached.familias?.rows?.length > 0 &&
-                    cached.produtos?.rows?.length > 0;
-
-                // Valida se os dados têm a estrutura correta
-                if (cacheValido) {
-                    const primeiraOrigem = cached.origens.rows[0];
-                    const hasProperty = primeiraOrigem && typeof primeiraOrigem === 'object' && 'desc_origem' in primeiraOrigem;
-
-                    if (!hasProperty) {
-                        cache.delete(cacheKey);
-                        cacheValido = false;
-                    }
-                }
+                // Valida se o cache existe E tem dados não vazios E estrutura correta usando validateCacheStructure
+                const cacheValido = validateCacheStructure(cached?.origens, 'desc_origem') &&
+                    validateCacheStructure(cached?.familias, 'familia') &&
+                    validateCacheStructure(cached?.produtos, 'desc_item');
 
                 if (cacheValido) {
                     origens = cached.origens;
@@ -719,13 +708,6 @@
 
                     // Valida antes de salvar no cache
                     if (origens?.rows?.length > 0 && familias?.rows?.length > 0 && produtos?.rows?.length > 0) {
-                        // Converte resultados do LibSQL para objetos simples antes de cachear
-                        const serializeDbResult = (result) => ({
-                            rows: result.rows.map(row => ({ ...row })),
-                            columns: result.columns,
-                            rowsAffected: result.rowsAffected
-                        });
-
                         cache.set(cacheKey, {
                             origens: serializeDbResult(origens),
                             familias: serializeDbResult(familias),
