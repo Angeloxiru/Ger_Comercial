@@ -618,6 +618,7 @@
         import { Pagination, injectPaginationStyles } from '../js/pagination.js';
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
+        import { serializeDbResult } from '../js/db-utils.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Performance de Clientes');
@@ -711,13 +712,6 @@
 
                     // Valida antes de salvar no cache
                     if (grupos?.rows?.length > 0 && clientes?.rows?.length > 0 && cidades?.rows?.length > 0) {
-                        // Converte resultados do LibSQL para objetos simples antes de cachear
-                        const serializeDbResult = (result) => ({
-                            rows: result.rows.map(row => ({ ...row })),
-                            columns: result.columns,
-                            rowsAffected: result.rowsAffected
-                        });
-
                         cache.set(cacheKey, {
                             grupos: serializeDbResult(grupos),
                             clientes: serializeDbResult(clientes),
