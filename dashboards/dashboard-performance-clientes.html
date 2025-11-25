@@ -70,43 +70,43 @@
 
         .filters-section {
             background: white;
-            padding: 24px;
+            padding: 16px;
             margin: 20px;
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
         }
 
-        .filters-title {
-            color: #212529;
-            font-size: 1.2em;
-            margin-bottom: 20px;
-            font-weight: 600;
+        .filters-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .filters-buttons {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 160px;
         }
 
         .btn-limpar {
             background: #6c757d;
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 10px 16px;
             border-radius: 6px;
-            font-size: 0.85em;
+            font-size: 0.9em;
             cursor: pointer;
             transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .btn-limpar:hover {
             background: #5a6268;
-        }
-
-        .filters-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
         }
 
         .filter-group {
@@ -179,13 +179,13 @@
             background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
             color: white;
             border: none;
-            padding: 12px 32px;
+            padding: 10px 16px;
             border-radius: 6px;
-            font-size: 1em;
+            font-size: 0.9em;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
-            width: 100%;
+            white-space: nowrap;
         }
 
         .btn-atualizar:hover {
@@ -466,11 +466,6 @@
 
     <!-- Seção de Filtros -->
     <div class="filters-section">
-        <div class="filters-title">
-            <span>🔍 Filtros de Pesquisa</span>
-            <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar Filtros</button>
-        </div>
-
         <div class="filters-grid">
             <!-- Período -->
             <div class="filter-group">
@@ -512,9 +507,10 @@
             </div>
         </div>
 
-        <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">
-            🔄 Atualizar Dados
-        </button>
+        <div class="filters-buttons">
+            <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar Filtros</button>
+            <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">🔄 Atualizar Dados</button>
+        </div>
     </div>
 
     <!-- Loading -->
