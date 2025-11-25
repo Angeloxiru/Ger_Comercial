@@ -493,7 +493,8 @@
 
         <div class="filters-buttons">
             <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar Filtros</button>
-            <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">🔄 Atualizar Dados</button>
+            <button class="btn-atualizar" id="btnItens" onclick="atualizarDadosItens()">📦 Itens</button>
+            <button class="btn-atualizar" id="btnClientes" onclick="atualizarDadosClientes()">👥 Clientes</button>
         </div>
     </div>
 
@@ -519,8 +520,8 @@
 
             <div class="table-container" id="tableContainer" style="display: none;">
                 <table>
-                    <thead>
-                        <tr>
+                    <thead id="tableHead">
+                        <tr id="tableHeadRow">
                             <th>Cód</th>
                             <th>Descrição</th>
                             <th class="text-right">Qtde</th>
@@ -872,7 +873,13 @@
             preencherSelect('filtroCidade', []);
         };
 
-        window.atualizarDados = async function() {
+        // Variável global para controlar modo de visualização
+        window.modoVisualizacao = 'itens'; // 'itens' ou 'clientes'
+
+        // Função para atualizar dados por ITENS (produtos)
+        window.atualizarDadosItens = async function() {
+            window.modoVisualizacao = 'itens';
+
             const elemDataInicio = getElemDataInicio();
             const elemDataFim = getElemDataFim();
             const elemFiltroRota = getElemFiltroRota();
@@ -897,7 +904,8 @@
 
             try {
                 document.getElementById('loading').classList.add('active');
-                document.getElementById('btnAtualizar').disabled = true;
+                document.getElementById('btnItens').disabled = true;
+                document.getElementById('btnClientes').disabled = true;
                 if (!db.isConnected()) await db.connect();
 
                 let sql = `SELECT v.produto as cod, v.complemento as descricao, SUM(v.qtde_faturada) as qtde, SUM(v.valor_liquido) as valor, SUM(v.peso_liq) as peso FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.emissao >= ? AND v.emissao <= ?`;
@@ -927,7 +935,72 @@
                 alert('Erro ao buscar dados: ' + error.message);
             } finally {
                 document.getElementById('loading').classList.remove('active');
-                document.getElementById('btnAtualizar').disabled = false;
+                document.getElementById('btnItens').disabled = false;
+                document.getElementById('btnClientes').disabled = false;
+            }
+        };
+
+        // Função para atualizar dados por CLIENTES
+        window.atualizarDadosClientes = async function() {
+            window.modoVisualizacao = 'clientes';
+
+            const elemDataInicio = getElemDataInicio();
+            const elemDataFim = getElemDataFim();
+            const elemFiltroRota = getElemFiltroRota();
+            const elemFiltroSubRota = getElemFiltroSubRota();
+            const elemFiltroCidade = getElemFiltroCidade();
+
+            if (!elemDataInicio || !elemDataFim || !elemFiltroRota || !elemFiltroSubRota || !elemFiltroCidade) {
+                alert('Erro: Elementos do formulário não encontrados');
+                return;
+            }
+
+            const dataInicio = elemDataInicio.value;
+            const dataFim = elemDataFim.value;
+            const rotas = Array.from(elemFiltroRota.selectedOptions).map(o => o.value);
+            const subRotas = Array.from(elemFiltroSubRota.selectedOptions).map(o => o.value);
+            const cidades = Array.from(elemFiltroCidade.selectedOptions).map(o => o.value);
+
+            if (!dataInicio || !dataFim) {
+                alert('Por favor, selecione o período (data início e fim)');
+                return;
+            }
+
+            try {
+                document.getElementById('loading').classList.add('active');
+                document.getElementById('btnItens').disabled = true;
+                document.getElementById('btnClientes').disabled = true;
+                if (!db.isConnected()) await db.connect();
+
+                let sql = `SELECT v.cliente as cod_cliente, c.nome as razao_social, SUM(v.qtde_faturada) as qtde, SUM(v.valor_liquido) as valor, SUM(v.peso_liq) as peso FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.emissao >= ? AND v.emissao <= ?`;
+                const params = [dataInicio, dataFim];
+
+                if (rotas.length > 0) {
+                    sql += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
+                    params.push(...rotas);
+                }
+                if (subRotas.length > 0) {
+                    sql += ` AND c.sub_rota IN (${subRotas.map(() => '?').join(',')})`;
+                    params.push(...subRotas);
+                }
+                if (cidades.length > 0) {
+                    sql += ` AND v.cidade IN (${cidades.map(() => '?').join(',')})`;
+                    params.push(...cidades);
+                }
+
+                sql += ' GROUP BY v.cliente, c.nome ORDER BY valor DESC';
+
+                const result = await db.execute(sql, params);
+                window.dadosCompletos = result.rows;
+                mostrarResultados(result.rows);
+
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao buscar dados: ' + error.message);
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('btnItens').disabled = false;
+                document.getElementById('btnClientes').disabled = false;
             }
         };
 
@@ -982,17 +1055,53 @@
 
         function renderizarTabela(pageData) {
             const tbody = document.getElementById('tableBody');
+            const theadRow = document.getElementById('tableHeadRow');
+            const tableTitle = document.querySelector('.table-title');
             tbody.innerHTML = '';
 
+            // Atualizar cabeçalho da tabela conforme modo
+            if (window.modoVisualizacao === 'clientes') {
+                theadRow.innerHTML = `
+                    <th>CodCliente</th>
+                    <th>Razão Social</th>
+                    <th class="text-right">Qtde</th>
+                    <th class="text-right">Valor (R$)</th>
+                    <th class="text-right">Peso (kg)</th>
+                `;
+                tableTitle.textContent = '👥 Clientes';
+            } else {
+                theadRow.innerHTML = `
+                    <th>Cód</th>
+                    <th>Descrição</th>
+                    <th class="text-right">Qtde</th>
+                    <th class="text-right">Valor (R$)</th>
+                    <th class="text-right">Peso (kg)</th>
+                `;
+                tableTitle.textContent = '📦 Itens';
+            }
+
+            // Renderizar linhas conforme modo
             pageData.forEach(row => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${row.cod || '-'}</td>
-                    <td>${row.descricao || '-'}</td>
-                    <td class="text-right">${parseFloat(row.qtde || 0).toLocaleString('pt-BR')}</td>
-                    <td class="text-right">R$ ${parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                    <td class="text-right">${parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                `;
+
+                if (window.modoVisualizacao === 'clientes') {
+                    tr.innerHTML = `
+                        <td>${row.cod_cliente || '-'}</td>
+                        <td>${row.razao_social || '-'}</td>
+                        <td class="text-right">${parseFloat(row.qtde || 0).toLocaleString('pt-BR')}</td>
+                        <td class="text-right">R$ ${parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td class="text-right">${parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    `;
+                } else {
+                    tr.innerHTML = `
+                        <td>${row.cod || '-'}</td>
+                        <td>${row.descricao || '-'}</td>
+                        <td class="text-right">${parseFloat(row.qtde || 0).toLocaleString('pt-BR')}</td>
+                        <td class="text-right">R$ ${parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td class="text-right">${parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    `;
+                }
+
                 tbody.appendChild(tr);
             });
         }
@@ -1003,13 +1112,29 @@
 
             if (window.chartTopProdutos) window.chartTopProdutos.destroy();
 
+            // Adaptar labels conforme modo
+            let labels, chartTitle;
+            if (window.modoVisualizacao === 'clientes') {
+                labels = top10.map(d => (d.razao_social || d.cod_cliente || '').substring(0, 20));
+                chartTitle = 'Top 10 Clientes';
+            } else {
+                labels = top10.map(d => (d.descricao || d.cod || '').substring(0, 15));
+                chartTitle = 'Top 10 Produtos';
+            }
+
+            // Atualizar título do gráfico no HTML
+            const chartTitleEl = document.querySelector('#chartTopProdutos').closest('.chart-card').querySelector('.chart-title');
+            if (chartTitleEl) {
+                chartTitleEl.textContent = `🏆 ${chartTitle}`;
+            }
+
             window.chartTopProdutos = new Chart(ctx1, {
                 type: 'bar',
                 data: {
-                    labels: top10.map(d => (d.descricao || d.cod).substring(0, 15)),
+                    labels: labels,
                     datasets: [{
-                        label: 'Quantidade',
-                        data: top10.map(d => parseFloat(d.qtde)),
+                        label: window.modoVisualizacao === 'clientes' ? 'Valor (R$)' : 'Quantidade',
+                        data: top10.map(d => window.modoVisualizacao === 'clientes' ? parseFloat(d.valor) : parseFloat(d.qtde)),
                         backgroundColor: 'rgba(252, 3, 3, 0.7)',
                         borderColor: '#fc0303',
                         borderWidth: 2
@@ -1177,19 +1302,36 @@
             }
             try {
                 const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
-                const dados = window.dadosCompletos.map(row => ({
-                    'Código': row.cod,
-                    'Descrição': row.descricao,
-                    'Quantidade': parseFloat(row.qtde || 0),
-                    'Valor': parseFloat(row.valor || 0),
-                    'Peso': parseFloat(row.peso || 0)
-                }));
+
+                let dados;
+                if (window.modoVisualizacao === 'clientes') {
+                    dados = window.dadosCompletos.map(row => ({
+                        'CodCliente': row.cod_cliente,
+                        'Razão Social': row.razao_social,
+                        'Quantidade': parseFloat(row.qtde || 0),
+                        'Valor': parseFloat(row.valor || 0),
+                        'Peso': parseFloat(row.peso || 0)
+                    }));
+                } else {
+                    dados = window.dadosCompletos.map(row => ({
+                        'Código': row.cod,
+                        'Descrição': row.descricao,
+                        'Quantidade': parseFloat(row.qtde || 0),
+                        'Valor': parseFloat(row.valor || 0),
+                        'Peso': parseFloat(row.peso || 0)
+                    }));
+                }
+
                 const ws = XLSX.utils.json_to_sheet(dados);
                 const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, 'Vendas por Região');
+                const sheetName = window.modoVisualizacao === 'clientes' ? 'Clientes' : 'Itens';
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
                 const dataInicio = document.getElementById('dataInicio').value;
                 const dataFim = document.getElementById('dataFim').value;
-                XLSX.writeFile(wb, `vendas_regiao_${dataInicio}_${dataFim}.xlsx`);
+                const fileName = window.modoVisualizacao === 'clientes' ?
+                    `vendas_clientes_${dataInicio}_${dataFim}.xlsx` :
+                    `vendas_itens_${dataInicio}_${dataFim}.xlsx`;
+                XLSX.writeFile(wb, fileName);
             } catch (error) {
                 console.error('Erro ao exportar:', error);
                 alert('Erro ao exportar: ' + error.message);
@@ -1206,19 +1348,36 @@
                 const doc = new jsPDF();
                 doc.setFontSize(18);
                 doc.setTextColor(252, 3, 3);
-                doc.text('Vendas por Região', 14, 20);
+
+                const titulo = window.modoVisualizacao === 'clientes' ? 'Vendas por Clientes' : 'Vendas por Itens';
+                doc.text(titulo, 14, 20);
                 doc.setFontSize(10);
                 doc.setTextColor(100);
                 doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
-                const tableData = window.dadosCompletos.map(row => [
-                    row.cod,
-                    row.descricao,
-                    parseFloat(row.qtde || 0).toLocaleString('pt-BR'),
-                    'R$ ' + parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
-                    parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg'
-                ]);
+
+                let tableData, headers;
+                if (window.modoVisualizacao === 'clientes') {
+                    headers = [['CodCliente', 'Razão Social', 'Qtde', 'Valor', 'Peso']];
+                    tableData = window.dadosCompletos.map(row => [
+                        row.cod_cliente,
+                        row.razao_social,
+                        parseFloat(row.qtde || 0).toLocaleString('pt-BR'),
+                        'R$ ' + parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                        parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg'
+                    ]);
+                } else {
+                    headers = [['Código', 'Descrição', 'Qtde', 'Valor', 'Peso']];
+                    tableData = window.dadosCompletos.map(row => [
+                        row.cod,
+                        row.descricao,
+                        parseFloat(row.qtde || 0).toLocaleString('pt-BR'),
+                        'R$ ' + parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                        parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg'
+                    ]);
+                }
+
                 doc.autoTable({
-                    head: [['Código', 'Descrição', 'Qtde', 'Valor', 'Peso']],
+                    head: headers,
                     body: tableData,
                     startY: 35,
                     theme: 'striped',
