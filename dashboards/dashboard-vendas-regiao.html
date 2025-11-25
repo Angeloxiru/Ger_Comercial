@@ -671,11 +671,28 @@
                     fullCache: JSON.stringify(cached, null, 2)
                 });
 
-                // Valida se o cache existe E tem dados não vazios
-                const cacheValido = cached &&
+                // Valida se o cache existe E tem dados não vazios E estrutura correta
+                let cacheValido = cached &&
                     cached.rotas?.rows?.length > 0 &&
                     cached.subRotas?.rows?.length > 0 &&
                     cached.cidades?.rows?.length > 0;
+
+                // Valida se os dados têm a estrutura correta (objetos serializáveis)
+                // LibSQL retorna objetos especiais que precisam ser convertidos
+                if (cacheValido) {
+                    const primeiraRota = cached.rotas.rows[0];
+                    const hasRotaProperty = primeiraRota && typeof primeiraRota === 'object' && 'rota' in primeiraRota;
+
+                    if (!hasRotaProperty) {
+                        console.warn('🗑️ [CACHE CORROMPIDO] Cache tem estrutura inválida - será recriado');
+                        window.filterDebugger.log('warn', '🗑️ Cache CORROMPIDO detectado - limpando', {
+                            primeiraRota: primeiraRota,
+                            hasRotaProperty: hasRotaProperty
+                        });
+                        cache.delete(cacheKey);
+                        cacheValido = false;
+                    }
+                }
 
                 console.log('🔍 [DEBUG] Validação do cache:', {
                     cached: !!cached,
@@ -754,7 +771,20 @@
                     // VALIDAÇÃO EXTRA: Não salva cache se os dados estiverem vazios
                     if (rotas?.rows?.length > 0 && subRotas?.rows?.length > 0 && cidades?.rows?.length > 0) {
                         console.log('💾 Salvando dados no cache...');
-                        cache.set(cacheKey, { rotas, subRotas, cidades }, CACHE_TTL.FILTERS);
+
+                        // Converte resultados do LibSQL para objetos simples antes de cachear
+                        // LibSQL retorna objetos especiais que não são serializáveis corretamente
+                        const serializeDbResult = (result) => ({
+                            rows: result.rows.map(row => ({ ...row })),
+                            columns: result.columns,
+                            rowsAffected: result.rowsAffected
+                        });
+
+                        cache.set(cacheKey, {
+                            rotas: serializeDbResult(rotas),
+                            subRotas: serializeDbResult(subRotas),
+                            cidades: serializeDbResult(cidades)
+                        }, CACHE_TTL.FILTERS);
                     } else {
                         console.warn('⚠️ [AVISO] Dados do banco estão vazios - NÃO salvando no cache', {
                             rotasRows: rotas?.rows?.length || 0,
