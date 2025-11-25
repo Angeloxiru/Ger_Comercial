@@ -618,7 +618,7 @@
         import { Pagination, injectPaginationStyles } from '../js/pagination.js';
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
-        import { serializeDbResult } from '../js/db-utils.js';
+        import { serializeDbResult, validateCacheStructure } from '../js/db-utils.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Performance de Clientes');
@@ -679,22 +679,10 @@
 
                 let grupos, clientes, cidades;
 
-                // Valida se o cache existe E tem dados não vazios E estrutura correta
-                let cacheValido = cached &&
-                    cached.grupos?.rows?.length > 0 &&
-                    cached.clientes?.rows?.length > 0 &&
-                    cached.cidades?.rows?.length > 0;
-
-                // Valida se os dados têm a estrutura correta
-                if (cacheValido) {
-                    const primeiroGrupo = cached.grupos.rows[0];
-                    const hasProperty = primeiroGrupo && typeof primeiroGrupo === 'object' && 'grupo_desc' in primeiroGrupo;
-
-                    if (!hasProperty) {
-                        cache.delete(cacheKey);
-                        cacheValido = false;
-                    }
-                }
+                // Valida se o cache existe E tem dados não vazios E estrutura correta usando validateCacheStructure
+                const cacheValido = validateCacheStructure(cached?.grupos, 'grupo_desc') &&
+                    validateCacheStructure(cached?.clientes, 'cliente') &&
+                    validateCacheStructure(cached?.cidades, 'cidade');
 
                 if (cacheValido) {
                     grupos = cached.grupos;

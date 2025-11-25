@@ -638,23 +638,10 @@
                 const cached = cache.get(cacheKey);
                 let rotas, subRotas, cidades;
 
-                // Valida se o cache existe E tem dados não vazios E estrutura correta
-                let cacheValido = cached &&
-                    cached.rotas?.rows?.length > 0 &&
-                    cached.subRotas?.rows?.length > 0 &&
-                    cached.cidades?.rows?.length > 0;
-
-                // Valida se os dados têm a estrutura correta (objetos serializáveis)
-                // LibSQL retorna objetos especiais que precisam ser convertidos
-                if (cacheValido) {
-                    const primeiraRota = cached.rotas.rows[0];
-                    const hasRotaProperty = primeiraRota && typeof primeiraRota === 'object' && 'rota' in primeiraRota;
-
-                    if (!hasRotaProperty) {
-                        cache.delete(cacheKey);
-                        cacheValido = false;
-                    }
-                }
+                // Valida se o cache existe E tem dados não vazios E estrutura correta usando validateCacheStructure
+                const cacheValido = validateCacheStructure(cached?.rotas, 'rota') &&
+                    validateCacheStructure(cached?.subRotas, 'sub_rota') &&
+                    validateCacheStructure(cached?.cidades, 'cidade');
 
                 if (cacheValido) {
                     rotas = cached.rotas;

@@ -21,6 +21,14 @@
  * cache.set('users', serialized, CACHE_TTL.DATA);
  */
 export function serializeDbResult(result) {
+    if (!result || !Array.isArray(result.rows)) {
+        // Retorna uma estrutura vazia e válida para evitar erros em cascata
+        return {
+            rows: [],
+            columns: result?.columns || [],
+            rowsAffected: result?.rowsAffected || 0
+        };
+    }
     return {
         rows: result.rows.map(row => ({ ...row })),
         columns: result.columns,
@@ -73,6 +81,9 @@ export function validateCacheStructure(cached, propertyName) {
  * cache.set('filtros', serialized, CACHE_TTL.FILTERS);
  */
 export function serializeMultipleResults(results) {
+    if (!results) {
+        return {};
+    }
     const serialized = {};
     for (const [key, result] of Object.entries(results)) {
         serialized[key] = serializeDbResult(result);

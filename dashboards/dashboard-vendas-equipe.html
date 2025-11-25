@@ -613,7 +613,7 @@
         import { Pagination } from '../js/pagination.js';
         import { FilterSearch } from '../js/filter-search.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
-        import { serializeDbResult } from '../js/db-utils.js';
+        import { serializeDbResult, validateCacheStructure } from '../js/db-utils.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Vendas por Equipe Comercial');
@@ -672,22 +672,10 @@
 
                 let supervisores, representantes, cidades;
 
-                // Valida se o cache existe E tem dados não vazios E estrutura correta
-                let cacheValido = cachedData &&
-                    cachedData.supervisores?.rows?.length > 0 &&
-                    cachedData.representantes?.rows?.length > 0 &&
-                    cachedData.cidades?.rows?.length > 0;
-
-                // Valida se os dados têm a estrutura correta
-                if (cacheValido) {
-                    const primeiroSupervisor = cachedData.supervisores.rows[0];
-                    const hasProperty = primeiroSupervisor && typeof primeiroSupervisor === 'object' && 'rep_supervisor' in primeiroSupervisor;
-
-                    if (!hasProperty) {
-                        cache.delete(cacheKey);
-                        cacheValido = false;
-                    }
-                }
+                // Valida se o cache existe E tem dados não vazios E estrutura correta usando validateCacheStructure
+                const cacheValido = validateCacheStructure(cachedData?.supervisores, 'rep_supervisor') &&
+                    validateCacheStructure(cachedData?.representantes, 'representante') &&
+                    validateCacheStructure(cachedData?.cidades, 'cidade');
 
                 if (cacheValido) {
                     supervisores = cachedData.supervisores;
