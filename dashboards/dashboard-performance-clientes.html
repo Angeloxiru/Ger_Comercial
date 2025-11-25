@@ -664,13 +664,11 @@
             try {
                 // Inicializa busca nos filtros PRIMEIRO (antes de preencher)
                 if (!window.filterSearches || Object.keys(window.filterSearches).length === 0) {
-                    console.log('📝 Inicializando FilterSearch...');
                     window.filterSearches = {
                         grupo: new FilterSearch('filtroGrupo', { placeholder: 'Digite para buscar grupo...' }),
                         cliente: new FilterSearch('filtroCliente', { placeholder: 'Digite para buscar cliente...' }),
                         cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
                     };
-                    console.log('✅ FilterSearch inicializado:', window.filterSearches);
                 }
 
                 if (!db.isConnected()) await db.connect();
@@ -680,19 +678,52 @@
 
                 let grupos, clientes, cidades;
 
-                if (cached) {
-                    console.log('✅ Usando filtros do cache');
+                // Valida se o cache existe E tem dados não vazios E estrutura correta
+                let cacheValido = cached &&
+                    cached.grupos?.rows?.length > 0 &&
+                    cached.clientes?.rows?.length > 0 &&
+                    cached.cidades?.rows?.length > 0;
+
+                // Valida se os dados têm a estrutura correta
+                if (cacheValido) {
+                    const primeiroGrupo = cached.grupos.rows[0];
+                    const hasProperty = primeiroGrupo && typeof primeiroGrupo === 'object' && 'grupo_desc' in primeiroGrupo;
+
+                    if (!hasProperty) {
+                        cache.delete(cacheKey);
+                        cacheValido = false;
+                    }
+                }
+
+                if (cacheValido) {
                     grupos = cached.grupos;
                     clientes = cached.clientes;
                     cidades = cached.cidades;
                 } else {
-                    console.log('🔄 Buscando filtros do banco...');
+                    if (cached) {
+                        // Remove cache inválido
+                        cache.delete(cacheKey);
+                    }
 
                     grupos = await db.execute('SELECT DISTINCT grupo_desc FROM tab_cliente WHERE grupo_desc IS NOT NULL ORDER BY grupo_desc');
                     clientes = await db.execute('SELECT DISTINCT cliente, nome, grupo_desc FROM tab_cliente WHERE nome IS NOT NULL ORDER BY nome');
                     cidades = await db.execute('SELECT DISTINCT cidade, grupo_desc FROM tab_cliente WHERE cidade IS NOT NULL ORDER BY cidade');
 
-                    cache.set(cacheKey, { grupos, clientes, cidades }, CACHE_TTL.FILTERS);
+                    // Valida antes de salvar no cache
+                    if (grupos?.rows?.length > 0 && clientes?.rows?.length > 0 && cidades?.rows?.length > 0) {
+                        // Converte resultados do LibSQL para objetos simples antes de cachear
+                        const serializeDbResult = (result) => ({
+                            rows: result.rows.map(row => ({ ...row })),
+                            columns: result.columns,
+                            rowsAffected: result.rowsAffected
+                        });
+
+                        cache.set(cacheKey, {
+                            grupos: serializeDbResult(grupos),
+                            clientes: serializeDbResult(clientes),
+                            cidades: serializeDbResult(cidades)
+                        }, CACHE_TTL.FILTERS);
+                    }
                 }
 
                 window.todosGrupos = grupos.rows;
@@ -741,10 +772,7 @@
 
             // Atualiza o FilterSearch se existir
             if (window.filterSearches && window.filterSearches[searchId]) {
-                console.log(`🔄 Atualizando FilterSearch para ${id} (${opcoes.length} opções)`);
                 window.filterSearches[searchId].updateOptions(opcoes);
-            } else {
-                console.warn(`⚠️ FilterSearch não encontrado para ${id} (buscando por '${searchId}')`);
             }
         }
 
@@ -1080,8 +1108,6 @@
         const initFiltros = (event) => {
             // Se for evento pageshow e a página veio do cache (persisted)
             if (event && event.type === 'pageshow' && event.persisted) {
-                console.log('📄 Página restaurada do cache - limpando estado dos filtros...');
-
                 // Destrói FilterSearch existentes para evitar estado obsoleto
                 if (window.filterSearches) {
                     Object.values(window.filterSearches).forEach(fs => {
@@ -1092,7 +1118,6 @@
             }
 
             carregarFiltros();
-            console.log('📊 Cache Stats:', cache.getStats());
         };
 
         // Usa apenas pageshow para evitar dupla inicialização (load + pageshow disparam juntos)

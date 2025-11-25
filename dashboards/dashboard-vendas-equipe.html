@@ -671,11 +671,33 @@
 
                 let supervisores, representantes, cidades;
 
-                if (cachedData) {
+                // Valida se o cache existe E tem dados não vazios E estrutura correta
+                let cacheValido = cachedData &&
+                    cachedData.supervisores?.rows?.length > 0 &&
+                    cachedData.representantes?.rows?.length > 0 &&
+                    cachedData.cidades?.rows?.length > 0;
+
+                // Valida se os dados têm a estrutura correta
+                if (cacheValido) {
+                    const primeiroSupervisor = cachedData.supervisores.rows[0];
+                    const hasProperty = primeiroSupervisor && typeof primeiroSupervisor === 'object' && 'rep_supervisor' in primeiroSupervisor;
+
+                    if (!hasProperty) {
+                        cache.delete(cacheKey);
+                        cacheValido = false;
+                    }
+                }
+
+                if (cacheValido) {
                     supervisores = cachedData.supervisores;
                     representantes = cachedData.representantes;
                     cidades = cachedData.cidades;
                 } else {
+                    if (cachedData) {
+                        // Remove cache inválido
+                        cache.delete(cacheKey);
+                    }
+
                     supervisores = await db.execute('SELECT DISTINCT rep_supervisor FROM tab_representante WHERE rep_supervisor IS NOT NULL ORDER BY rep_supervisor');
                     representantes = await db.execute('SELECT DISTINCT representante, desc_representante, rep_supervisor FROM tab_representante WHERE desc_representante IS NOT NULL ORDER BY desc_representante');
                     cidades = await db.execute(`
@@ -686,11 +708,21 @@
                         ORDER BY v.cidade
                     `);
 
-                    cache.set(cacheKey, {
-                        supervisores,
-                        representantes,
-                        cidades
-                    }, CACHE_TTL.FILTERS);
+                    // Valida antes de salvar no cache
+                    if (supervisores?.rows?.length > 0 && representantes?.rows?.length > 0 && cidades?.rows?.length > 0) {
+                        // Converte resultados do LibSQL para objetos simples antes de cachear
+                        const serializeDbResult = (result) => ({
+                            rows: result.rows.map(row => ({ ...row })),
+                            columns: result.columns,
+                            rowsAffected: result.rowsAffected
+                        });
+
+                        cache.set(cacheKey, {
+                            supervisores: serializeDbResult(supervisores),
+                            representantes: serializeDbResult(representantes),
+                            cidades: serializeDbResult(cidades)
+                        }, CACHE_TTL.FILTERS);
+                    }
                 }
 
                 window.todosSupervisores = supervisores.rows;

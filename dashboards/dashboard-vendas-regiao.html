@@ -637,7 +637,6 @@
                 // IMPORTANTE: Não recria se já existir (mantém estado)
                 if (!window.filterSearches || Object.keys(window.filterSearches).length === 0) {
                     window.filterDebugger.log('info', '📝 Inicializando FilterSearch pela primeira vez...');
-                    console.log('📝 Inicializando FilterSearch pela primeira vez...');
                     window.filterSearches = {
                         rota: new FilterSearch('filtroRota', { placeholder: 'Digite para buscar rota...' }),
                         subrota: new FilterSearch('filtroSubRota', { placeholder: 'Digite para buscar subrota...' }),
@@ -646,30 +645,16 @@
                     window.filterDebugger.log('info', '✅ FilterSearch inicializado', {
                         keys: Object.keys(window.filterSearches)
                     });
-                    console.log('✅ FilterSearch inicializado:', window.filterSearches);
                 } else {
                     window.filterDebugger.log('warn', '♻️ Reutilizando FilterSearch existente (possível cache)', {
                         keys: Object.keys(window.filterSearches),
                         instances: window.filterSearches
                     });
-                    console.log('♻️ Reutilizando FilterSearch existente');
                 }
 
                 const cacheKey = 'filtros_regiao';
                 const cached = cache.get(cacheKey);
                 let rotas, subRotas, cidades;
-
-                // LOG DETALHADO: Estado inicial do cache
-                console.log('🔍 [DEBUG] Estado do cache:', {
-                    cached: cached,
-                    isCachedNull: cached === null,
-                    isCachedUndefined: cached === undefined,
-                    cachedType: typeof cached,
-                    hasRotas: cached?.rotas !== undefined,
-                    hasRows: cached?.rotas?.rows !== undefined,
-                    rowsLength: cached?.rotas?.rows?.length,
-                    fullCache: JSON.stringify(cached, null, 2)
-                });
 
                 // Valida se o cache existe E tem dados não vazios E estrutura correta
                 let cacheValido = cached &&
@@ -684,7 +669,6 @@
                     const hasRotaProperty = primeiraRota && typeof primeiraRota === 'object' && 'rota' in primeiraRota;
 
                     if (!hasRotaProperty) {
-                        console.warn('🗑️ [CACHE CORROMPIDO] Cache tem estrutura inválida - será recriado');
                         window.filterDebugger.log('warn', '🗑️ Cache CORROMPIDO detectado - limpando', {
                             primeiraRota: primeiraRota,
                             hasRotaProperty: hasRotaProperty
@@ -694,16 +678,7 @@
                     }
                 }
 
-                console.log('🔍 [DEBUG] Validação do cache:', {
-                    cached: !!cached,
-                    rotasLength: cached?.rotas?.rows?.length || 0,
-                    subRotasLength: cached?.subRotas?.rows?.length || 0,
-                    cidadesLength: cached?.cidades?.rows?.length || 0,
-                    cacheValido: cacheValido
-                });
-
                 if (cacheValido) {
-                    console.log('📦 [CACHE HIT] Usando dados do CACHE');
                     window.filterDebugger.log('warn', '📦 Usando dados do CACHE', {
                         cached: cached,
                         rotasType: typeof cached.rotas,
@@ -717,12 +692,6 @@
                     subRotas = cached.subRotas;
                     cidades = cached.cidades;
 
-                    console.log('📊 Dados recuperados do cache:', {
-                        rotasRows: rotas?.rows?.length || 0,
-                        subRotasRows: subRotas?.rows?.length || 0,
-                        cidadesRows: cidades?.rows?.length || 0
-                    });
-
                     window.filterDebugger.log('info', '📊 Dados recuperados do cache', {
                         rotas: rotas,
                         rotasRows: rotas?.rows?.length || 0,
@@ -731,11 +700,6 @@
                     });
                 } else {
                     if (cached) {
-                        console.warn('🗑️ [CACHE INVÁLIDO] Cache existe mas está vazio - descartando', {
-                            rotasRows: cached.rotas?.rows?.length || 0,
-                            subRotasRows: cached.subRotas?.rows?.length || 0,
-                            cidadesRows: cached.cidades?.rows?.length || 0
-                        });
                         window.filterDebugger.log('warn', '🗑️ Cache INVÁLIDO (vazio) - descartando e buscando do banco', {
                             rotasRows: cached.rotas?.rows?.length || 0,
                             subRotasRows: cached.subRotas?.rows?.length || 0,
@@ -743,24 +707,17 @@
                         });
                         // Remove cache inválido
                         cache.delete(cacheKey);
-                    } else {
-                        console.log('🔄 [CACHE MISS] Nenhum cache encontrado - buscando do banco...');
                     }
 
                     window.filterDebugger.log('info', '🔄 Cache MISS - buscando do banco...');
 
-                    console.log('🔌 Conectando ao banco...');
                     if (!db.isConnected()) await db.connect();
 
-                    console.log('🔍 Executando queries...');
                     rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL ORDER BY rota');
-                    console.log('✅ Rotas buscadas:', rotas?.rows?.length || 0);
 
                     subRotas = await db.execute('SELECT DISTINCT sub_rota, rota FROM tab_cliente WHERE sub_rota IS NOT NULL ORDER BY sub_rota');
-                    console.log('✅ SubRotas buscadas:', subRotas?.rows?.length || 0);
 
                     cidades = await db.execute('SELECT DISTINCT v.cidade, c.rota, c.sub_rota FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.cidade IS NOT NULL ORDER BY v.cidade');
-                    console.log('✅ Cidades buscadas:', cidades?.rows?.length || 0);
 
                     window.filterDebugger.log('info', '✅ Dados buscados do banco', {
                         rotasRows: rotas?.rows?.length || 0,
@@ -770,8 +727,6 @@
 
                     // VALIDAÇÃO EXTRA: Não salva cache se os dados estiverem vazios
                     if (rotas?.rows?.length > 0 && subRotas?.rows?.length > 0 && cidades?.rows?.length > 0) {
-                        console.log('💾 Salvando dados no cache...');
-
                         // Converte resultados do LibSQL para objetos simples antes de cachear
                         // LibSQL retorna objetos especiais que não são serializáveis corretamente
                         const serializeDbResult = (result) => ({
@@ -785,12 +740,6 @@
                             subRotas: serializeDbResult(subRotas),
                             cidades: serializeDbResult(cidades)
                         }, CACHE_TTL.FILTERS);
-                    } else {
-                        console.warn('⚠️ [AVISO] Dados do banco estão vazios - NÃO salvando no cache', {
-                            rotasRows: rotas?.rows?.length || 0,
-                            subRotasRows: subRotas?.rows?.length || 0,
-                            cidadesRows: cidades?.rows?.length || 0
-                        });
                     }
                 }
 
@@ -876,11 +825,9 @@
             // Atualiza o FilterSearch se existir
             if (window.filterSearches && window.filterSearches[searchId]) {
                 window.filterDebugger.monitorFilterSearch(id, 'updateOptions', opcoes.length);
-                console.log(`🔄 Atualizando FilterSearch para ${id} (${opcoes.length} opções)`);
                 window.filterSearches[searchId].updateOptions(opcoes);
             } else {
                 window.filterDebugger.log('error', `⚠️ FilterSearch não encontrado para ${id} (chave: '${searchId}')`);
-                console.warn(`⚠️ FilterSearch não encontrado para ${id} (buscando por '${searchId}')`);
             }
         }
 
@@ -998,16 +945,13 @@
                 if (elemFiltroRota) {
                     elemFiltroRota.addEventListener('change', handleFiltroRotaChange);
                     window.filterDebugger.log('listener', '✅ Listener registrado: filtroRota -> handleFiltroRotaChange');
-                    console.log('✅ Listener registrado: filtroRota');
                 }
                 if (elemFiltroSubRota) {
                     elemFiltroSubRota.addEventListener('change', handleFiltroSubRotaChange);
                     window.filterDebugger.log('listener', '✅ Listener registrado: filtroSubRota -> handleFiltroSubRotaChange');
-                    console.log('✅ Listener registrado: filtroSubRota');
                 }
             } else {
                 window.filterDebugger.log('warn', '⚠️ Listeners JÁ REGISTRADOS! Pulando registro (listenersRegistrados = true)');
-                console.log('♻️ Listeners já registrados, reutilizando');
             }
         }
 
@@ -1449,9 +1393,8 @@
                     timestamp: Date.now()
                 };
                 sessionStorage.setItem(CACHE_KEY_ESTADO, JSON.stringify(estado));
-                console.log('💾 Estado dos filtros salvo:', estado);
             } catch (error) {
-                console.warn('⚠️ Erro ao salvar estado dos filtros:', error);
+                // Erro ao salvar estado
             }
         }
 
@@ -1465,7 +1408,6 @@
             try {
                 const estadoStr = sessionStorage.getItem(CACHE_KEY_ESTADO);
                 if (!estadoStr) {
-                    console.log('📭 Nenhum estado salvo encontrado');
                     return false;
                 }
 
@@ -1473,12 +1415,9 @@
 
                 // Verifica se o estado ainda é válido (6 horas)
                 if (Date.now() - estado.timestamp > ESTADO_VALIDO_MS) {
-                    console.log('⏰ Estado expirado, removendo...');
                     sessionStorage.removeItem(CACHE_KEY_ESTADO);
                     return false;
                 }
-
-                console.log('📦 Restaurando estado dos filtros:', estado);
 
                 // Obtém elementos (lazy loading)
                 const elemDataInicio = getElemDataInicio();
@@ -1489,7 +1428,6 @@
 
                 // Verifica se elementos existem
                 if (!elemDataInicio || !elemDataFim || !elemFiltroRota || !elemFiltroSubRota || !elemFiltroCidade) {
-                    console.warn('⚠️ Elementos DOM não encontrados, aguardando próxima carga');
                     return false;
                 }
 
@@ -1510,7 +1448,6 @@
                         });
                         // Dispara handler para popular sub-rotas e cidades dependentes
                         elemFiltroRota.dispatchEvent(new Event('change'));
-                        console.log('✅ Rotas restauradas e handler disparado');
                     }
 
                     // Aguarda próximo tick para garantir que sub-rotas foram populadas
@@ -1525,7 +1462,6 @@
                         });
                         // Dispara handler para popular cidades dependentes
                         elemFiltroSubRota.dispatchEvent(new Event('change'));
-                        console.log('✅ SubRotas restauradas e handler disparado');
                     }
 
                     return Promise.resolve();
@@ -1537,17 +1473,13 @@
                         Array.from(elemFiltroCidade.options).forEach(opt => {
                             opt.selected = cidadesSet.has(opt.value);
                         });
-                        console.log('✅ Cidades restauradas');
                     }
-
-                    console.log('✅ Estado restaurado com sucesso (sem race condition)');
                 }).catch(error => {
-                    console.warn('⚠️ Erro ao restaurar seleções:', error);
+                    // Erro ao restaurar seleções
                 });
 
                 return true;
             } catch (error) {
-                console.warn('⚠️ Erro ao restaurar estado dos filtros:', error);
                 return false;
             }
         }
@@ -1583,7 +1515,6 @@
                     window.filterDebugger.log('info', '✅ Estado restaurado com sucesso');
                 }
 
-                console.log('📊 Cache Stats:', cache.getStats());
                 window.filterDebugger.log('info', '📊 Cache Stats', cache.getStats());
                 return;
             }
@@ -1596,7 +1527,6 @@
             // Tenta restaurar estado após carregar
             restaurarEstadoFiltros();
 
-            console.log('📊 Cache Stats:', cache.getStats());
             window.filterDebugger.log('info', '📊 Cache Stats', cache.getStats());
         };
 
