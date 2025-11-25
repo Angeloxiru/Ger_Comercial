@@ -432,6 +432,53 @@ Ver mais: `docs/AUTENTICACAO.md`
 2. Execute `sql/maintenance/02-maintenance.sql` mensalmente
 3. Limpe cache usando `tools/limpar-cache.html`
 
+### ❌ Filtros de dashboard não carregam (aparecem vazios)
+**Problema:** Ao retornar a um dashboard, os filtros (select/dropdowns) aparecem vazios mesmo com dados em cache.
+
+**Causa:** LibSQL retorna objetos com estrutura especial (`rows`, `columns`) que não são serializáveis corretamente para JSON no LocalStorage.
+
+**Solução Implementada:**
+Todos os dashboards agora convertem os resultados do LibSQL para objetos JavaScript simples antes de salvar no cache:
+
+```javascript
+// Função de serialização
+const serializeDbResult = (result) => ({
+    rows: result.rows.map(row => ({ ...row })),
+    columns: result.columns,
+    rowsAffected: result.rowsAffected
+});
+
+// Ao salvar no cache
+cache.set(cacheKey, {
+    filtro1: serializeDbResult(dados1),
+    filtro2: serializeDbResult(dados2)
+}, CACHE_TTL.FILTERS);
+```
+
+**Validação do Cache:**
+O sistema também valida a estrutura dos dados ao recuperar do cache:
+
+```javascript
+// Verifica se cache tem estrutura válida
+if (cached?.dados?.rows?.length > 0) {
+    const primeiroItem = cached.dados.rows[0];
+    const temPropriedade = primeiroItem && typeof primeiroItem === 'object' && 'campo_esperado' in primeiroItem;
+
+    if (!temPropriedade) {
+        cache.delete(cacheKey); // Remove cache corrompido
+    }
+}
+```
+
+**Dashboards Corrigidos:**
+- ✅ dashboard-vendas-regiao.html
+- ✅ dashboard-analise-produtos.html
+- ✅ dashboard-performance-clientes.html
+- ✅ dashboard-vendas-equipe.html
+
+**⚠️ IMPORTANTE para novos desenvolvimentos:**
+Sempre use a função `serializeDbResult()` ao salvar dados do LibSQL no cache. Nunca salve resultados diretos de `db.execute()` sem conversão.
+
 **Mais problemas?** Consulte `docs/TROUBLESHOOTING.md`
 
 ---

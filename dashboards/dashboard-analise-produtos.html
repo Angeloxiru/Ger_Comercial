@@ -686,20 +686,52 @@
 
                 let origens, familias, produtos;
 
-                if (cached) {
-                    console.log('✅ Usando filtros do cache');
+                // Valida se o cache existe E tem dados não vazios E estrutura correta
+                let cacheValido = cached &&
+                    cached.origens?.rows?.length > 0 &&
+                    cached.familias?.rows?.length > 0 &&
+                    cached.produtos?.rows?.length > 0;
+
+                // Valida se os dados têm a estrutura correta
+                if (cacheValido) {
+                    const primeiraOrigem = cached.origens.rows[0];
+                    const hasProperty = primeiraOrigem && typeof primeiraOrigem === 'object' && 'desc_origem' in primeiraOrigem;
+
+                    if (!hasProperty) {
+                        cache.delete(cacheKey);
+                        cacheValido = false;
+                    }
+                }
+
+                if (cacheValido) {
                     origens = cached.origens;
                     familias = cached.familias;
                     produtos = cached.produtos;
                 } else {
-                    console.log('🔄 Buscando filtros do banco...');
+                    if (cached) {
+                        // Remove cache inválido
+                        cache.delete(cacheKey);
+                    }
 
                     origens = await db.execute('SELECT DISTINCT desc_origem FROM tab_produto WHERE desc_origem IS NOT NULL ORDER BY desc_origem');
                     familias = await db.execute('SELECT DISTINCT desc_familia, desc_origem FROM tab_produto WHERE desc_familia IS NOT NULL ORDER BY desc_familia');
                     produtos = await db.execute('SELECT produto, desc_produto, desc_familia, desc_origem FROM tab_produto WHERE desc_produto IS NOT NULL ORDER BY desc_produto');
 
-                    // Salva no cache (1 hora)
-                    cache.set(cacheKey, { origens, familias, produtos }, CACHE_TTL.FILTERS);
+                    // Valida antes de salvar no cache
+                    if (origens?.rows?.length > 0 && familias?.rows?.length > 0 && produtos?.rows?.length > 0) {
+                        // Converte resultados do LibSQL para objetos simples antes de cachear
+                        const serializeDbResult = (result) => ({
+                            rows: result.rows.map(row => ({ ...row })),
+                            columns: result.columns,
+                            rowsAffected: result.rowsAffected
+                        });
+
+                        cache.set(cacheKey, {
+                            origens: serializeDbResult(origens),
+                            familias: serializeDbResult(familias),
+                            produtos: serializeDbResult(produtos)
+                        }, CACHE_TTL.FILTERS);
+                    }
                 }
 
                 window.todasOrigens = origens.rows;
@@ -1101,8 +1133,6 @@
         const initFiltros = (event) => {
             // Se for evento pageshow e a página veio do cache (persisted)
             if (event && event.type === 'pageshow' && event.persisted) {
-                console.log('📄 Página restaurada do cache - limpando estado dos filtros...');
-
                 // Destrói FilterSearch existentes para evitar estado obsoleto
                 if (window.filterSearches) {
                     Object.values(window.filterSearches).forEach(fs => {
@@ -1113,7 +1143,6 @@
             }
 
             carregarFiltros();
-            console.log('📊 Cache Stats:', cache.getStats());
         };
 
         // Usa apenas pageshow para evitar dupla inicialização (load + pageshow disparam juntos)
