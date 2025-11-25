@@ -775,6 +775,15 @@
                     todasRotasSample: window.todasRotas?.slice(0, 3) || []
                 });
 
+                // DEBUG: Inspecionar estrutura REAL dos dados
+                window.filterDebugger.log('info', '🔬 Estrutura dos dados (primeiras 3 rotas)', {
+                    primeiraRota: rotas.rows[0],
+                    segundaRota: rotas.rows[1],
+                    terceiraRota: rotas.rows[2],
+                    keysDoObjeto: rotas.rows[0] ? Object.keys(rotas.rows[0]) : [],
+                    valoresPrimeiraRota: rotas.rows[0] ? Object.values(rotas.rows[0]) : []
+                });
+
                 // Filtra valores nulos/undefined antes de preencher
                 const rotasFiltradas = rotas.rows
                     .map(r => r.rota)
