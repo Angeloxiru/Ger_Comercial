@@ -634,6 +634,14 @@
                     <canvas id="chartABC"></canvas>
                 </div>
             </div>
+
+            <!-- Gráfico Distribuição por Faixa de Valor -->
+            <div class="chart-card">
+                <div class="chart-title">💰 Distribuição por Faixa de Valor</div>
+                <div class="chart-container">
+                    <canvas id="chartFaixas"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -663,6 +671,7 @@
         let chartTop10 = null;
         let chartCidades = null;
         let chartABC = null;
+        let chartFaixas = null;
 
         window.pagination = new Pagination('#paginationContainer', {
             pageSize: 50,
@@ -999,18 +1008,99 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom' }
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + '%';
+                                }
+                            }
+                        }
                     },
                     scales: {
                         x: {
+                            type: 'linear',
                             title: { display: true, text: '% de Clientes' },
                             min: 0,
-                            max: 100
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
                         },
                         y: {
                             title: { display: true, text: '% Acumulado de Vendas' },
                             min: 0,
-                            max: 100
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Gráfico Distribuição por Faixa de Valor
+            const faixas = [
+                { label: '🟢 R$ 0 - 50k', min: 0, max: 50000, count: 0, color: '#28a745' },
+                { label: '🟡 R$ 50k - 100k', min: 50000, max: 100000, count: 0, color: '#ffc107' },
+                { label: '🟠 R$ 100k - 200k', min: 100000, max: 200000, count: 0, color: '#fd7e14' },
+                { label: '🔴 R$ 200k+', min: 200000, max: Infinity, count: 0, color: '#dc3545' }
+            ];
+
+            dados.forEach(row => {
+                const valor = parseFloat(row.valor_total || 0);
+                for (let faixa of faixas) {
+                    if (valor >= faixa.min && valor < faixa.max) {
+                        faixa.count++;
+                        break;
+                    }
+                }
+            });
+
+            if (chartFaixas) chartFaixas.destroy();
+            chartFaixas = new Chart(document.getElementById('chartFaixas'), {
+                type: 'bar',
+                data: {
+                    labels: faixas.map(f => f.label),
+                    datasets: [{
+                        label: 'Número de Clientes',
+                        data: faixas.map(f => f.count),
+                        backgroundColor: faixas.map(f => f.color),
+                        borderColor: faixas.map(f => f.color),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = dados.length;
+                                    const count = context.parsed.y;
+                                    const percent = ((count / total) * 100).toFixed(1);
+                                    return `${count} clientes (${percent}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Quantidade de Clientes' },
+                            ticks: {
+                                stepSize: 1,
+                                precision: 0
+                            }
+                        },
+                        x: {
+                            title: { display: true, text: 'Faixa de Valor' }
                         }
                     }
                 }
