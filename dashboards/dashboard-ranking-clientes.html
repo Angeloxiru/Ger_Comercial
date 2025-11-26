@@ -354,7 +354,9 @@
         }
 
         .medal {
-            font-size: 1.2em;
+            font-size: 1.5em;
+            display: inline-block;
+            margin-right: 4px;
         }
 
         .table-footer {
@@ -468,7 +470,7 @@
     <div class="header">
         <div class="header-left">
             <div class="header-logo">
-                <img src="../logo.png" alt="Germani Alimentos">
+                <img src="https://static.wixstatic.com/media/ce3165_c01db19c0ef64e2abb8c894c7ecc6f95~mv2.png/v1/fill/w_161,h_69,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/logomarca-Germani-2023-Branca-borda-dour.png" alt="Logo Germani Alimentos">
             </div>
             <h1>🏆 Ranking de Clientes</h1>
         </div>
@@ -877,8 +879,7 @@
         function atualizarKPIs(dados) {
             const totalClientes = dados.length;
             const totalValor = dados.reduce((sum, row) => sum + parseFloat(row.valor_total || 0), 0);
-            const totalCompras = dados.reduce((sum, row) => sum + parseInt(row.num_compras || 0), 0);
-            const ticketMedio = totalCompras > 0 ? totalValor / totalCompras : 0;
+            const ticketMedio = totalClientes > 0 ? totalValor / totalClientes : 0;
 
             // Calcular concentração Top 10
             const top10Valor = dados.slice(0, 10).reduce((sum, row) => sum + parseFloat(row.valor_total || 0), 0);
