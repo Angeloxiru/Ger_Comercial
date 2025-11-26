@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ranking de Clientes - Ger Comercial">
+    <meta name="theme-color" content="#fc0303">
+    <title>Ranking de Clientes - Ger Comercial</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/Ger_Comercial/manifest.json">
+    <link rel="apple-touch-icon" href="/Ger_Comercial/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/Ger_Comercial/icon-192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-logo img {
+            height: 60px;
+            width: auto;
+        }
+
+        .header h1 {
+            font-size: 1.6em;
+            font-weight: 600;
+        }
+
+        .btn-voltar {
+            background: white;
+            color: #fc0303;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-voltar:hover {
+            background: #f8f9fa;
+        }
+
+        .filters-section {
+            background: white;
+            padding: 16px;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .filters-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .filters-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 160px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-group label {
+            font-size: 0.9em;
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 0.95em;
+            background: white;
+            transition: border-color 0.2s;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #fc0303;
+        }
+
+        .filter-group select[multiple] {
+            min-height: 120px;
+        }
+
+        .btn-limpar {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-limpar:hover {
+            background: #5a6268;
+        }
+
+        .btn-atualizar {
+            background: #fc0303;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-atualizar:hover {
+            background: #b50909;
+        }
+
+        .btn-atualizar:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .loading.active {
+            display: flex;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #fc0303;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading div:last-child {
+            color: white;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .empty-state {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state.active {
+            display: block;
+        }
+
+        .empty-state h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .main-content {
+            display: none;
+            margin: 20px;
+            gap: 20px;
+            grid-template-columns: 70% 30%;
+        }
+
+        /* SEÇÃO DA TABELA (70%) */
+        .table-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .table-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .table-stats {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9em;
+        }
+
+        .table-container {
+            flex: 1;
+            overflow-x: auto;
+            max-height: calc(100vh - 450px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            background: #f8f9fa;
+            z-index: 10;
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+
+        th.text-right {
+            text-align: right;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #dee2e6;
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #fafbfc;
+        }
+
+        tbody tr:nth-child(even):hover {
+            background: #f1f3f5;
+        }
+
+        td {
+            padding: 12px 16px;
+            color: #212529;
+            font-size: 0.9em;
+        }
+
+        td.text-right {
+            text-align: right;
+        }
+
+        td.rank {
+            font-weight: 700;
+            color: #fc0303;
+            font-size: 1em;
+        }
+
+        .medal {
+            font-size: 1.2em;
+        }
+
+        .table-footer {
+            padding: 16px 20px;
+            background: #f8f9fa;
+            border-top: 2px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .total-value {
+            color: #212529;
+            font-weight: 700;
+            font-size: 1.05em;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-export {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-export:hover {
+            background: #218838;
+        }
+
+        /* SEÇÃO DO DASHBOARD (30%) */
+        .dashboard-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .kpi-icon {
+            font-size: 2em;
+        }
+
+        .kpi-label {
+            color: #6c757d;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .kpi-value {
+            color: #212529;
+            font-size: 1.4em;
+            font-weight: 700;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 1em;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 16px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+
+        .chart-container.tall {
+            height: 350px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="header-logo">
+                <img src="../logo.png" alt="Germani Alimentos">
+            </div>
+            <h1>🏆 Ranking de Clientes</h1>
+        </div>
+        <a href="../index.html" class="btn-voltar">⬅ Voltar</a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-section">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label for="dataInicio">📅 Data Início *</label>
+                <input type="date" id="dataInicio" required>
+            </div>
+
+            <div class="filter-group">
+                <label for="dataFim">📅 Data Fim *</label>
+                <input type="date" id="dataFim" required>
+            </div>
+
+            <div class="filter-group">
+                <label for="tipoRanking">📊 Tipo de Ranking</label>
+                <select id="tipoRanking">
+                    <option value="valor">💰 Por Valor (R$)</option>
+                    <option value="quantidade">📦 Por Quantidade</option>
+                    <option value="peso">⚖️ Por Peso (kg)</option>
+                    <option value="ticket">💵 Por Ticket Médio</option>
+                    <option value="frequencia">🔄 Por Frequência</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filtroRota">🛣️ Rota</label>
+                <select id="filtroRota" multiple>
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filtroSubRota">🗺️ Sub-Rota</label>
+                <select id="filtroSubRota" multiple>
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filtroCidade">🏙️ Cidade</label>
+                <select id="filtroCidade" multiple>
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filtroGrupo">👥 Grupo de Clientes</label>
+                <select id="filtroGrupo" multiple>
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filtroSupervisor">👨‍💼 Supervisor</label>
+                <select id="filtroSupervisor" multiple>
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filtroRepresentante">🧑‍💼 Representante</label>
+                <select id="filtroRepresentante" multiple>
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="filters-buttons">
+            <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar Filtros</button>
+            <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">🔄 Atualizar Dados</button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Carregando dados...</div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState">
+        <h2>📊 Selecione os filtros</h2>
+        <p>Escolha o período e clique em "Atualizar Dados" para visualizar o ranking de clientes</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- SEÇÃO DA TABELA (70%) -->
+        <div class="table-section">
+            <div class="table-header">
+                <div class="table-title">🏆 Ranking de Clientes</div>
+                <div class="table-stats" id="tableStats">0 registros</div>
+            </div>
+
+            <div class="table-container" id="tableContainer">
+                <table>
+                    <thead>
+                        <tr id="tableHeadRow">
+                            <th>#</th>
+                            <th>CodCliente</th>
+                            <th>Razão Social</th>
+                            <th>Cidade</th>
+                            <th>Rota</th>
+                            <th class="text-right">Valor (R$)</th>
+                            <th class="text-right">Qtde</th>
+                            <th class="text-right">Peso (kg)</th>
+                            <th class="text-right">Ticket Médio</th>
+                            <th class="text-right">Nº Compras</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginação -->
+            <div id="paginationContainer"></div>
+
+            <div class="table-footer" id="tableFooter" style="display: none;">
+                <div class="total-value" id="totalValue">Total: R$ 0,00</div>
+                <div class="export-buttons">
+                    <button class="btn-export" onclick="exportarExcel()">📊 Excel</button>
+                    <button class="btn-export" onclick="exportarPDF()">📄 PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO DO DASHBOARD (30%) -->
+        <div class="dashboard-section">
+            <!-- KPIs 2x2 -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon">👥</div>
+                    <div class="kpi-label">Clientes Ativos</div>
+                    <div class="kpi-value" id="kpiClientes">0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">💰</div>
+                    <div class="kpi-label">Valor Total</div>
+                    <div class="kpi-value" id="kpiValor">R$ 0,00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">🎯</div>
+                    <div class="kpi-label">Ticket Médio</div>
+                    <div class="kpi-value" id="kpiTicket">R$ 0,00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">📊</div>
+                    <div class="kpi-label">Top 10</div>
+                    <div class="kpi-value" id="kpiTop10">0%</div>
+                </div>
+            </div>
+
+            <!-- Gráfico Top 10 -->
+            <div class="chart-card">
+                <div class="chart-title">🏆 Top 10 Clientes</div>
+                <div class="chart-container">
+                    <canvas id="chartTop10"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico Distribuição por Cidade -->
+            <div class="chart-card">
+                <div class="chart-title">🏙️ Distribuição por Cidade</div>
+                <div class="chart-container">
+                    <canvas id="chartCidades"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico Curva ABC -->
+            <div class="chart-card">
+                <div class="chart-title">📈 Curva ABC</div>
+                <div class="chart-container tall">
+                    <canvas id="chartABC"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <script type="module">
+        import { db } from '../js/db.js';
+        import { config } from '../js/config.js';
+        import { cache, CACHE_TTL } from '../js/cache.js';
+        import { Pagination, injectPaginationStyles } from '../js/pagination.js';
+        import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
+        import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
+        import { serializeDbResult, validateCacheStructure } from '../js/db-utils.js';
+
+        // Inicializa isolamento do dashboard
+        initDashboard('Ranking de Clientes');
+        registerCleanup();
+        preventStaleCache();
+
+        injectPaginationStyles();
+        injectFilterSearchStyles();
+
+        window.db = db;
+        window.dadosAtuais = [];
+        window.filterSearches = {};
+        let chartTop10 = null;
+        let chartCidades = null;
+        let chartABC = null;
+
+        window.pagination = new Pagination('#paginationContainer', {
+            itemsPerPage: 50,
+            onPageChange: renderizarTabela
+        });
+
+        // Definir datas padrão
+        window.addEventListener('load', () => {
+            const hoje = new Date();
+            const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+
+            document.getElementById('dataInicio').value = inicioMes.toISOString().split('T')[0];
+            document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
+
+            carregarFiltros();
+        });
+
+        // Carregar filtros
+        async function carregarFiltros() {
+            const cacheKey = 'ranking_clientes_filtros';
+            const cached = cache.get(cacheKey);
+
+            if (cached?.rotas?.rows?.length > 0) {
+                popularFiltros(cached);
+                return;
+            }
+
+            try {
+                if (!db.isConnected()) await db.connect();
+
+                const [rotas, subRotas, cidades, grupos, supervisores, representantes] = await Promise.all([
+                    db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL ORDER BY rota'),
+                    db.execute('SELECT DISTINCT sub_rota FROM tab_cliente WHERE sub_rota IS NOT NULL ORDER BY sub_rota'),
+                    db.execute('SELECT DISTINCT cidade FROM tab_cliente WHERE cidade IS NOT NULL ORDER BY cidade'),
+                    db.execute('SELECT DISTINCT grupo_desc FROM tab_cliente WHERE grupo_desc IS NOT NULL ORDER BY grupo_desc'),
+                    db.execute('SELECT DISTINCT rep_supervisor FROM tab_representante WHERE rep_supervisor IS NOT NULL ORDER BY rep_supervisor'),
+                    db.execute('SELECT DISTINCT desc_representante FROM tab_representante WHERE desc_representante IS NOT NULL ORDER BY desc_representante')
+                ]);
+
+                const dados = {
+                    rotas: serializeDbResult(rotas),
+                    subRotas: serializeDbResult(subRotas),
+                    cidades: serializeDbResult(cidades),
+                    grupos: serializeDbResult(grupos),
+                    supervisores: serializeDbResult(supervisores),
+                    representantes: serializeDbResult(representantes)
+                };
+
+                cache.set(cacheKey, dados, CACHE_TTL.FILTERS);
+                popularFiltros(dados);
+
+            } catch (error) {
+                console.error('Erro ao carregar filtros:', error);
+            }
+        }
+
+        function popularFiltros(dados) {
+            popularSelect('filtroRota', dados.rotas.rows, 'rota', 'Rota');
+            popularSelect('filtroSubRota', dados.subRotas.rows, 'sub_rota', 'Sub-Rota');
+            popularSelect('filtroCidade', dados.cidades.rows, 'cidade', 'Cidade');
+            popularSelect('filtroGrupo', dados.grupos.rows, 'grupo_desc', 'Grupo');
+            popularSelect('filtroSupervisor', dados.supervisores.rows, 'rep_supervisor', 'Supervisor');
+            popularSelect('filtroRepresentante', dados.representantes.rows, 'desc_representante', 'Representante');
+        }
+
+        function popularSelect(elemId, dados, campo, placeholder) {
+            const select = document.getElementById(elemId);
+            select.innerHTML = '';
+
+            dados.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item[campo];
+                option.textContent = item[campo];
+                select.appendChild(option);
+            });
+
+            // Adicionar busca
+            window.filterSearches[elemId] = new FilterSearch(select, {
+                placeholder: `🔍 Buscar ${placeholder}...`,
+                noResultsText: `Nenhum ${placeholder} encontrado`
+            });
+        }
+
+        window.limparFiltros = function() {
+            document.getElementById('filtroRota').selectedIndex = -1;
+            document.getElementById('filtroSubRota').selectedIndex = -1;
+            document.getElementById('filtroCidade').selectedIndex = -1;
+            document.getElementById('filtroGrupo').selectedIndex = -1;
+            document.getElementById('filtroSupervisor').selectedIndex = -1;
+            document.getElementById('filtroRepresentante').selectedIndex = -1;
+
+            Object.values(window.filterSearches).forEach(fs => fs.clearSearch());
+        };
+
+        // Atualizar dados
+        window.atualizarDados = async function() {
+            const dataInicio = document.getElementById('dataInicio').value;
+            const dataFim = document.getElementById('dataFim').value;
+            const tipoRanking = document.getElementById('tipoRanking').value;
+            const rotas = Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value);
+            const subRotas = Array.from(document.getElementById('filtroSubRota').selectedOptions).map(o => o.value);
+            const cidades = Array.from(document.getElementById('filtroCidade').selectedOptions).map(o => o.value);
+            const grupos = Array.from(document.getElementById('filtroGrupo').selectedOptions).map(o => o.value);
+            const supervisores = Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value);
+            const representantes = Array.from(document.getElementById('filtroRepresentante').selectedOptions).map(o => o.value);
+
+            if (!dataInicio || !dataFim) {
+                alert('Por favor, selecione o período (data início e fim)');
+                return;
+            }
+
+            try {
+                document.getElementById('loading').classList.add('active');
+                document.getElementById('btnAtualizar').disabled = true;
+                document.getElementById('emptyState').style.display = 'none';
+
+                if (!db.isConnected()) await db.connect();
+
+                let sql = `
+                    SELECT
+                        v.cliente as cod_cliente,
+                        c.nome as razao_social,
+                        c.cidade,
+                        c.rota,
+                        c.sub_rota,
+                        c.grupo_desc,
+                        COUNT(DISTINCT DATE(v.emissao)) as num_compras,
+                        SUM(v.qtde_faturada) as qtde_total,
+                        SUM(v.valor_liquido) as valor_total,
+                        SUM(v.peso_liq) as peso_total,
+                        SUM(v.valor_liquido) / COUNT(DISTINCT DATE(v.emissao)) as ticket_medio
+                    FROM vendas v
+                    LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+                    LEFT JOIN tab_representante r ON v.representante = r.representante
+                    WHERE v.emissao >= ? AND v.emissao <= ?
+                `;
+
+                const params = [dataInicio, dataFim];
+
+                if (rotas.length > 0) {
+                    sql += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
+                    params.push(...rotas);
+                }
+                if (subRotas.length > 0) {
+                    sql += ` AND c.sub_rota IN (${subRotas.map(() => '?').join(',')})`;
+                    params.push(...subRotas);
+                }
+                if (cidades.length > 0) {
+                    sql += ` AND c.cidade IN (${cidades.map(() => '?').join(',')})`;
+                    params.push(...cidades);
+                }
+                if (grupos.length > 0) {
+                    sql += ` AND c.grupo_desc IN (${grupos.map(() => '?').join(',')})`;
+                    params.push(...grupos);
+                }
+                if (supervisores.length > 0) {
+                    sql += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`;
+                    params.push(...supervisores);
+                }
+                if (representantes.length > 0) {
+                    sql += ` AND r.desc_representante IN (${representantes.map(() => '?').join(',')})`;
+                    params.push(...representantes);
+                }
+
+                sql += ' GROUP BY v.cliente, c.nome, c.cidade, c.rota, c.sub_rota, c.grupo_desc';
+
+                // Ordenação dinâmica baseada no tipo de ranking
+                const orderMap = {
+                    'valor': 'valor_total DESC',
+                    'quantidade': 'qtde_total DESC',
+                    'peso': 'peso_total DESC',
+                    'ticket': 'ticket_medio DESC',
+                    'frequencia': 'num_compras DESC'
+                };
+                sql += ` ORDER BY ${orderMap[tipoRanking]}`;
+
+                const result = await db.execute(sql, params);
+                window.dadosAtuais = result.rows;
+
+                // Configurar paginação
+                window.pagination.setData(result.rows);
+
+                // Renderizar
+                renderizarTabela();
+                atualizarKPIs(result.rows);
+                atualizarGraficos(result.rows);
+
+                document.getElementById('mainContent').style.display = 'grid';
+                document.getElementById('tableFooter').style.display = 'flex';
+
+            } catch (error) {
+                console.error('Erro ao buscar dados:', error);
+                alert('Erro ao buscar dados: ' + error.message);
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('btnAtualizar').disabled = false;
+            }
+        };
+
+        function renderizarTabela() {
+            const pageData = window.pagination.getCurrentPageData();
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            if (pageData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px; color: #6c757d;">Nenhum resultado encontrado</td></tr>';
+                return;
+            }
+
+            const offset = window.pagination.currentPage * window.pagination.itemsPerPage;
+
+            pageData.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                const posicao = offset + index + 1;
+
+                let medalha = '';
+                if (posicao === 1) medalha = '<span class="medal">🥇</span> ';
+                else if (posicao === 2) medalha = '<span class="medal">🥈</span> ';
+                else if (posicao === 3) medalha = '<span class="medal">🥉</span> ';
+
+                tr.innerHTML = `
+                    <td class="rank">${medalha}${posicao}</td>
+                    <td>${row.cod_cliente || '-'}</td>
+                    <td>${row.razao_social || '-'}</td>
+                    <td>${row.cidade || '-'}</td>
+                    <td>${row.rota || '-'}</td>
+                    <td class="text-right">R$ ${parseFloat(row.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    <td class="text-right">${parseFloat(row.qtde_total || 0).toLocaleString('pt-BR')}</td>
+                    <td class="text-right">${parseFloat(row.peso_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    <td class="text-right">R$ ${parseFloat(row.ticket_medio || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    <td class="text-right">${parseInt(row.num_compras || 0)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Atualizar stats
+            const totalValor = window.dadosAtuais.reduce((sum, row) => sum + parseFloat(row.valor_total || 0), 0);
+            document.getElementById('tableStats').textContent = `${window.dadosAtuais.length} cliente(s)`;
+            document.getElementById('totalValue').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        }
+
+        function atualizarKPIs(dados) {
+            const totalClientes = dados.length;
+            const totalValor = dados.reduce((sum, row) => sum + parseFloat(row.valor_total || 0), 0);
+            const totalCompras = dados.reduce((sum, row) => sum + parseInt(row.num_compras || 0), 0);
+            const ticketMedio = totalCompras > 0 ? totalValor / totalCompras : 0;
+
+            // Calcular concentração Top 10
+            const top10Valor = dados.slice(0, 10).reduce((sum, row) => sum + parseFloat(row.valor_total || 0), 0);
+            const concentracao = totalValor > 0 ? (top10Valor / totalValor * 100) : 0;
+
+            document.getElementById('kpiClientes').textContent = totalClientes.toLocaleString('pt-BR');
+            document.getElementById('kpiValor').textContent = `R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('kpiTicket').textContent = `R$ ${ticketMedio.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('kpiTop10').textContent = `${concentracao.toFixed(1)}%`;
+        }
+
+        function atualizarGraficos(dados) {
+            if (typeof Chart === 'undefined') {
+                setTimeout(() => atualizarGraficos(dados), 500);
+                return;
+            }
+
+            // Gráfico Top 10 Clientes
+            const top10 = dados.slice(0, 10);
+
+            if (chartTop10) chartTop10.destroy();
+            chartTop10 = new Chart(document.getElementById('chartTop10'), {
+                type: 'bar',
+                data: {
+                    labels: top10.map(d => (d.razao_social || '').substring(0, 20)),
+                    datasets: [{
+                        label: 'Valor (R$)',
+                        data: top10.map(d => parseFloat(d.valor_total || 0)),
+                        backgroundColor: '#fc0303',
+                        borderColor: '#b50909',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { beginAtZero: true }
+                    }
+                }
+            });
+
+            // Gráfico Distribuição por Cidade
+            const cidadesAgrupadas = {};
+            dados.forEach(d => {
+                const cidade = d.cidade || 'Sem cidade';
+                cidadesAgrupadas[cidade] = (cidadesAgrupadas[cidade] || 0) + parseFloat(d.valor_total || 0);
+            });
+
+            const cidadesOrdenadas = Object.entries(cidadesAgrupadas)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            if (chartCidades) chartCidades.destroy();
+            chartCidades = new Chart(document.getElementById('chartCidades'), {
+                type: 'pie',
+                data: {
+                    labels: cidadesOrdenadas.map(c => c[0]),
+                    datasets: [{
+                        data: cidadesOrdenadas.map(c => c[1]),
+                        backgroundColor: [
+                            'rgba(252, 3, 3, 0.8)',
+                            'rgba(181, 9, 9, 0.8)',
+                            'rgba(3, 255, 28, 0.8)',
+                            'rgba(255, 193, 7, 0.8)',
+                            'rgba(13, 110, 253, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            // Gráfico Curva ABC
+            const totalValor = dados.reduce((sum, row) => sum + parseFloat(row.valor_total || 0), 0);
+            let acumulado = 0;
+            const curvaABC = dados.map((row, index) => {
+                acumulado += parseFloat(row.valor_total || 0);
+                return {
+                    x: ((index + 1) / dados.length * 100),
+                    y: (acumulado / totalValor * 100)
+                };
+            });
+
+            if (chartABC) chartABC.destroy();
+            chartABC = new Chart(document.getElementById('chartABC'), {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: '% Acumulado de Vendas',
+                        data: curvaABC,
+                        borderColor: '#fc0303',
+                        backgroundColor: 'rgba(252, 3, 3, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Linha 80/20 (Pareto)',
+                        data: [{x: 0, y: 0}, {x: 20, y: 80}, {x: 100, y: 100}],
+                        borderColor: '#6c757d',
+                        borderWidth: 1,
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: '% de Clientes' },
+                            min: 0,
+                            max: 100
+                        },
+                        y: {
+                            title: { display: true, text: '% Acumulado de Vendas' },
+                            min: 0,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // Exportar Excel
+        window.exportarExcel = async function() {
+            if (window.dadosAtuais.length === 0) {
+                alert('Não há dados para exportar');
+                return;
+            }
+
+            try {
+                const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
+
+                const dados = window.dadosAtuais.map((row, index) => ({
+                    'Posição': index + 1,
+                    'CodCliente': row.cod_cliente,
+                    'Razão Social': row.razao_social,
+                    'Cidade': row.cidade,
+                    'Rota': row.rota,
+                    'Valor Total': parseFloat(row.valor_total || 0),
+                    'Quantidade Total': parseFloat(row.qtde_total || 0),
+                    'Peso Total': parseFloat(row.peso_total || 0),
+                    'Ticket Médio': parseFloat(row.ticket_medio || 0),
+                    'Nº Compras': parseInt(row.num_compras || 0)
+                }));
+
+                const ws = XLSX.utils.json_to_sheet(dados);
+                const wb = XLSX.utils.book_new();
+                const tipoRanking = document.getElementById('tipoRanking').selectedOptions[0].text;
+                XLSX.utils.book_append_sheet(wb, ws, 'Ranking');
+
+                const dataInicio = document.getElementById('dataInicio').value;
+                const dataFim = document.getElementById('dataFim').value;
+                const fileName = `ranking_clientes_${dataInicio}_${dataFim}.xlsx`;
+
+                XLSX.writeFile(wb, fileName);
+
+            } catch (error) {
+                console.error('Erro ao exportar Excel:', error);
+                alert('Erro ao exportar Excel: ' + error.message);
+            }
+        };
+
+        // Exportar PDF
+        window.exportarPDF = async function() {
+            if (window.dadosAtuais.length === 0) {
+                alert('Não há dados para exportar');
+                return;
+            }
+
+            try {
+                const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                const doc = new jsPDF('landscape');
+
+                doc.setFontSize(18);
+                doc.setTextColor(252, 3, 3);
+                const tipoRanking = document.getElementById('tipoRanking').selectedOptions[0].text;
+                doc.text(`Ranking de Clientes - ${tipoRanking}`, 14, 20);
+
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+
+                const tableData = window.dadosAtuais.map((row, index) => [
+                    index + 1,
+                    row.cod_cliente,
+                    (row.razao_social || '').substring(0, 30),
+                    row.cidade,
+                    row.rota,
+                    'R$ ' + parseFloat(row.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                    parseFloat(row.qtde_total || 0).toLocaleString('pt-BR'),
+                    parseFloat(row.peso_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                    'R$ ' + parseFloat(row.ticket_medio || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                    parseInt(row.num_compras || 0)
+                ]);
+
+                doc.autoTable({
+                    head: [['#', 'Cód', 'Razão Social', 'Cidade', 'Rota', 'Valor', 'Qtde', 'Peso', 'Ticket', 'Compras']],
+                    body: tableData,
+                    startY: 35,
+                    theme: 'striped',
+                    headStyles: { fillColor: [252, 3, 3], textColor: [255, 255, 255], fontStyle: 'bold' },
+                    alternateRowStyles: { fillColor: [248, 249, 250] },
+                    styles: { fontSize: 8 }
+                });
+
+                const dataInicio = document.getElementById('dataInicio').value;
+                const dataFim = document.getElementById('dataFim').value;
+                doc.save(`ranking_clientes_${dataInicio}_${dataFim}.pdf`);
+
+            } catch (error) {
+                console.error('Erro ao exportar PDF:', error);
+                alert('Erro ao exportar PDF: ' + error.message);
+            }
+        };
+
+        window.addEventListener('pageshow', carregarFiltros);
+    </script>
+</body>
+</html>
