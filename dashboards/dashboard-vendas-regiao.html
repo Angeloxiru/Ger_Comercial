@@ -876,9 +876,9 @@
         // Variável global para controlar modo de visualização
         window.modoVisualizacao = 'itens'; // 'itens' ou 'clientes'
 
-        // Função para atualizar dados por ITENS (produtos)
-        window.atualizarDadosItens = async function() {
-            window.modoVisualizacao = 'itens';
+        // Função unificada para atualizar dados (refatorada para eliminar duplicação)
+        async function atualizarDados(modo) {
+            window.modoVisualizacao = modo;
 
             const elemDataInicio = getElemDataInicio();
             const elemDataFim = getElemDataFim();
@@ -908,9 +908,19 @@
                 document.getElementById('btnClientes').disabled = true;
                 if (!db.isConnected()) await db.connect();
 
-                let sql = `SELECT v.produto as cod, v.complemento as descricao, SUM(v.qtde_faturada) as qtde, SUM(v.valor_liquido) as valor, SUM(v.peso_liq) as peso FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.emissao >= ? AND v.emissao <= ?`;
+                // Construir query SQL dinamicamente baseado no modo
+                let sql, groupBy;
+                if (modo === 'clientes') {
+                    sql = `SELECT v.cliente as cod_cliente, c.nome as razao_social, SUM(v.qtde_faturada) as qtde, SUM(v.valor_liquido) as valor, SUM(v.peso_liq) as peso FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.emissao >= ? AND v.emissao <= ?`;
+                    groupBy = ' GROUP BY v.cliente, c.nome ORDER BY valor DESC';
+                } else {
+                    sql = `SELECT v.produto as cod, v.complemento as descricao, SUM(v.qtde_faturada) as qtde, SUM(v.valor_liquido) as valor, SUM(v.peso_liq) as peso FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.emissao >= ? AND v.emissao <= ?`;
+                    groupBy = ' GROUP BY v.produto, v.complemento ORDER BY qtde DESC';
+                }
+
                 const params = [dataInicio, dataFim];
 
+                // Adicionar filtros dinamicamente
                 if (rotas.length > 0) {
                     sql += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
                     params.push(...rotas);
@@ -924,7 +934,7 @@
                     params.push(...cidades);
                 }
 
-                sql += ' GROUP BY v.produto, v.complemento ORDER BY qtde DESC';
+                sql += groupBy;
 
                 const result = await db.execute(sql, params);
                 window.dadosCompletos = result.rows;
@@ -938,71 +948,11 @@
                 document.getElementById('btnItens').disabled = false;
                 document.getElementById('btnClientes').disabled = false;
             }
-        };
+        }
 
-        // Função para atualizar dados por CLIENTES
-        window.atualizarDadosClientes = async function() {
-            window.modoVisualizacao = 'clientes';
-
-            const elemDataInicio = getElemDataInicio();
-            const elemDataFim = getElemDataFim();
-            const elemFiltroRota = getElemFiltroRota();
-            const elemFiltroSubRota = getElemFiltroSubRota();
-            const elemFiltroCidade = getElemFiltroCidade();
-
-            if (!elemDataInicio || !elemDataFim || !elemFiltroRota || !elemFiltroSubRota || !elemFiltroCidade) {
-                alert('Erro: Elementos do formulário não encontrados');
-                return;
-            }
-
-            const dataInicio = elemDataInicio.value;
-            const dataFim = elemDataFim.value;
-            const rotas = Array.from(elemFiltroRota.selectedOptions).map(o => o.value);
-            const subRotas = Array.from(elemFiltroSubRota.selectedOptions).map(o => o.value);
-            const cidades = Array.from(elemFiltroCidade.selectedOptions).map(o => o.value);
-
-            if (!dataInicio || !dataFim) {
-                alert('Por favor, selecione o período (data início e fim)');
-                return;
-            }
-
-            try {
-                document.getElementById('loading').classList.add('active');
-                document.getElementById('btnItens').disabled = true;
-                document.getElementById('btnClientes').disabled = true;
-                if (!db.isConnected()) await db.connect();
-
-                let sql = `SELECT v.cliente as cod_cliente, c.nome as razao_social, SUM(v.qtde_faturada) as qtde, SUM(v.valor_liquido) as valor, SUM(v.peso_liq) as peso FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.emissao >= ? AND v.emissao <= ?`;
-                const params = [dataInicio, dataFim];
-
-                if (rotas.length > 0) {
-                    sql += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
-                    params.push(...rotas);
-                }
-                if (subRotas.length > 0) {
-                    sql += ` AND c.sub_rota IN (${subRotas.map(() => '?').join(',')})`;
-                    params.push(...subRotas);
-                }
-                if (cidades.length > 0) {
-                    sql += ` AND v.cidade IN (${cidades.map(() => '?').join(',')})`;
-                    params.push(...cidades);
-                }
-
-                sql += ' GROUP BY v.cliente, c.nome ORDER BY valor DESC';
-
-                const result = await db.execute(sql, params);
-                window.dadosCompletos = result.rows;
-                mostrarResultados(result.rows);
-
-            } catch (error) {
-                console.error('Erro:', error);
-                alert('Erro ao buscar dados: ' + error.message);
-            } finally {
-                document.getElementById('loading').classList.remove('active');
-                document.getElementById('btnItens').disabled = false;
-                document.getElementById('btnClientes').disabled = false;
-            }
-        };
+        // Funções wrapper para os botões
+        window.atualizarDadosItens = () => atualizarDados('itens');
+        window.atualizarDadosClientes = () => atualizarDados('clientes');
 
         function mostrarResultados(dados) {
             document.getElementById('mainContent').style.display = dados.length > 0 ? 'grid' : 'none';
@@ -1053,54 +1003,66 @@
             document.getElementById('totalValue').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
         }
 
+        // Função de renderização de tabela refatorada com objeto de configuração
         function renderizarTabela(pageData) {
             const tbody = document.getElementById('tableBody');
             const theadRow = document.getElementById('tableHeadRow');
             const tableTitle = document.querySelector('.table-title');
             tbody.innerHTML = '';
 
-            // Atualizar cabeçalho da tabela conforme modo
-            if (window.modoVisualizacao === 'clientes') {
-                theadRow.innerHTML = `
-                    <th>CodCliente</th>
-                    <th>Razão Social</th>
-                    <th class="text-right">Qtde</th>
-                    <th class="text-right">Valor (R$)</th>
-                    <th class="text-right">Peso (kg)</th>
-                `;
-                tableTitle.textContent = '👥 Clientes';
-            } else {
-                theadRow.innerHTML = `
-                    <th>Cód</th>
-                    <th>Descrição</th>
-                    <th class="text-right">Qtde</th>
-                    <th class="text-right">Valor (R$)</th>
-                    <th class="text-right">Peso (kg)</th>
-                `;
-                tableTitle.textContent = '📦 Itens';
-            }
+            // Configuração baseada no modo de visualização
+            const config = {
+                clientes: {
+                    title: '👥 Clientes',
+                    headers: ['CodCliente', 'Razão Social', 'Qtde', 'Valor (R$)', 'Peso (kg)'],
+                    fields: [
+                        { key: 'cod_cliente', align: 'left' },
+                        { key: 'razao_social', align: 'left' },
+                        { key: 'qtde', align: 'right', format: 'number' },
+                        { key: 'valor', align: 'right', format: 'currency' },
+                        { key: 'peso', align: 'right', format: 'decimal' }
+                    ]
+                },
+                itens: {
+                    title: '📦 Itens',
+                    headers: ['Cód', 'Descrição', 'Qtde', 'Valor (R$)', 'Peso (kg)'],
+                    fields: [
+                        { key: 'cod', align: 'left' },
+                        { key: 'descricao', align: 'left' },
+                        { key: 'qtde', align: 'right', format: 'number' },
+                        { key: 'valor', align: 'right', format: 'currency' },
+                        { key: 'peso', align: 'right', format: 'decimal' }
+                    ]
+                }
+            };
 
-            // Renderizar linhas conforme modo
+            const currentConfig = config[window.modoVisualizacao] || config.itens;
+
+            // Atualizar cabeçalho da tabela
+            tableTitle.textContent = currentConfig.title;
+            theadRow.innerHTML = currentConfig.headers
+                .map((header, i) => `<th class="${currentConfig.fields[i].align === 'right' ? 'text-right' : ''}">${header}</th>`)
+                .join('');
+
+            // Renderizar linhas
             pageData.forEach(row => {
                 const tr = document.createElement('tr');
+                tr.innerHTML = currentConfig.fields.map(field => {
+                    const value = row[field.key] || (field.format ? 0 : '-');
+                    let formatted;
 
-                if (window.modoVisualizacao === 'clientes') {
-                    tr.innerHTML = `
-                        <td>${row.cod_cliente || '-'}</td>
-                        <td>${row.razao_social || '-'}</td>
-                        <td class="text-right">${parseFloat(row.qtde || 0).toLocaleString('pt-BR')}</td>
-                        <td class="text-right">R$ ${parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td class="text-right">${parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                    `;
-                } else {
-                    tr.innerHTML = `
-                        <td>${row.cod || '-'}</td>
-                        <td>${row.descricao || '-'}</td>
-                        <td class="text-right">${parseFloat(row.qtde || 0).toLocaleString('pt-BR')}</td>
-                        <td class="text-right">R$ ${parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td class="text-right">${parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                    `;
-                }
+                    if (field.format === 'number') {
+                        formatted = parseFloat(value).toLocaleString('pt-BR');
+                    } else if (field.format === 'currency') {
+                        formatted = `R$ ${parseFloat(value).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                    } else if (field.format === 'decimal') {
+                        formatted = parseFloat(value).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                    } else {
+                        formatted = value;
+                    }
+
+                    return `<td class="${field.align === 'right' ? 'text-right' : ''}">${formatted}</td>`;
+                }).join('');
 
                 tbody.appendChild(tr);
             });
@@ -1295,42 +1257,49 @@
             }
         }
 
+        // Função de exportação Excel refatorada com config object e spread operator
         window.exportarExcel = async function() {
             if (window.dadosCompletos.length === 0) {
                 alert('Não há dados para exportar');
                 return;
             }
+
             try {
                 const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
 
-                let dados;
-                if (window.modoVisualizacao === 'clientes') {
-                    dados = window.dadosCompletos.map(row => ({
-                        'CodCliente': row.cod_cliente,
-                        'Razão Social': row.razao_social,
-                        'Quantidade': parseFloat(row.qtde || 0),
-                        'Valor': parseFloat(row.valor || 0),
-                        'Peso': parseFloat(row.peso || 0)
-                    }));
-                } else {
-                    dados = window.dadosCompletos.map(row => ({
-                        'Código': row.cod,
-                        'Descrição': row.descricao,
-                        'Quantidade': parseFloat(row.qtde || 0),
-                        'Valor': parseFloat(row.valor || 0),
-                        'Peso': parseFloat(row.peso || 0)
-                    }));
-                }
+                // Configuração baseada no modo
+                const config = {
+                    clientes: {
+                        fields: { 'CodCliente': 'cod_cliente', 'Razão Social': 'razao_social', 'Quantidade': 'qtde', 'Valor': 'valor', 'Peso': 'peso' },
+                        sheetName: 'Clientes',
+                        filePrefix: 'vendas_clientes'
+                    },
+                    itens: {
+                        fields: { 'Código': 'cod', 'Descrição': 'descricao', 'Quantidade': 'qtde', 'Valor': 'valor', 'Peso': 'peso' },
+                        sheetName: 'Itens',
+                        filePrefix: 'vendas_itens'
+                    }
+                };
+
+                const currentConfig = config[window.modoVisualizacao] || config.itens;
+
+                // Mapear dados usando Object.fromEntries e spread
+                const dados = window.dadosCompletos.map(row =>
+                    Object.fromEntries(
+                        Object.entries(currentConfig.fields).map(([header, key]) =>
+                            [header, parseFloat(row[key] || 0)]
+                        )
+                    )
+                );
 
                 const ws = XLSX.utils.json_to_sheet(dados);
                 const wb = XLSX.utils.book_new();
-                const sheetName = window.modoVisualizacao === 'clientes' ? 'Clientes' : 'Itens';
-                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+                XLSX.utils.book_append_sheet(wb, ws, currentConfig.sheetName);
+
                 const dataInicio = document.getElementById('dataInicio').value;
                 const dataFim = document.getElementById('dataFim').value;
-                const fileName = window.modoVisualizacao === 'clientes' ?
-                    `vendas_clientes_${dataInicio}_${dataFim}.xlsx` :
-                    `vendas_itens_${dataInicio}_${dataFim}.xlsx`;
+                const fileName = `${currentConfig.filePrefix}_${dataInicio}_${dataFim}.xlsx`;
+
                 XLSX.writeFile(wb, fileName);
             } catch (error) {
                 console.error('Erro ao exportar:', error);
@@ -1338,52 +1307,61 @@
             }
         };
 
+        // Função de exportação PDF refatorada com estrutura limpa e config object
         window.exportarPDF = async function() {
             if (window.dadosCompletos.length === 0) {
                 alert('Não há dados para exportar');
                 return;
             }
+
             try {
                 const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
                 const doc = new jsPDF();
+
+                // Configuração baseada no modo
+                const config = {
+                    clientes: {
+                        title: 'Vendas por Clientes',
+                        headers: ['CodCliente', 'Razão Social', 'Qtde', 'Valor', 'Peso'],
+                        fields: ['cod_cliente', 'razao_social', 'qtde', 'valor', 'peso']
+                    },
+                    itens: {
+                        title: 'Vendas por Itens',
+                        headers: ['Código', 'Descrição', 'Qtde', 'Valor', 'Peso'],
+                        fields: ['cod', 'descricao', 'qtde', 'valor', 'peso']
+                    }
+                };
+
+                const currentConfig = config[window.modoVisualizacao] || config.itens;
+
+                // Configurar cabeçalho do PDF
                 doc.setFontSize(18);
                 doc.setTextColor(252, 3, 3);
-
-                const titulo = window.modoVisualizacao === 'clientes' ? 'Vendas por Clientes' : 'Vendas por Itens';
-                doc.text(titulo, 14, 20);
+                doc.text(currentConfig.title, 14, 20);
                 doc.setFontSize(10);
                 doc.setTextColor(100);
                 doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
 
-                let tableData, headers;
-                if (window.modoVisualizacao === 'clientes') {
-                    headers = [['CodCliente', 'Razão Social', 'Qtde', 'Valor', 'Peso']];
-                    tableData = window.dadosCompletos.map(row => [
-                        row.cod_cliente,
-                        row.razao_social,
-                        parseFloat(row.qtde || 0).toLocaleString('pt-BR'),
-                        'R$ ' + parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
-                        parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg'
-                    ]);
-                } else {
-                    headers = [['Código', 'Descrição', 'Qtde', 'Valor', 'Peso']];
-                    tableData = window.dadosCompletos.map(row => [
-                        row.cod,
-                        row.descricao,
-                        parseFloat(row.qtde || 0).toLocaleString('pt-BR'),
-                        'R$ ' + parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
-                        parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg'
-                    ]);
-                }
+                // Preparar dados da tabela
+                const tableData = window.dadosCompletos.map(row =>
+                    currentConfig.fields.map((field, idx) => {
+                        const value = parseFloat(row[field] || 0);
+                        if (idx === 0 || idx === 1) return row[field] || '-'; // Código/Nome - sem formatação
+                        if (idx === 2) return value.toLocaleString('pt-BR'); // Qtde
+                        if (idx === 3) return 'R$ ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 2}); // Valor
+                        if (idx === 4) return value.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg'; // Peso
+                    })
+                );
 
                 doc.autoTable({
-                    head: headers,
+                    head: [currentConfig.headers],
                     body: tableData,
                     startY: 35,
                     theme: 'striped',
                     headStyles: { fillColor: [252, 3, 3], textColor: [255, 255, 255], fontStyle: 'bold' },
                     alternateRowStyles: { fillColor: [248, 249, 250] }
                 });
+
                 const dataInicio = document.getElementById('dataInicio').value;
                 const dataFim = document.getElementById('dataFim').value;
                 doc.save(`vendas_regiao_${dataInicio}_${dataFim}.pdf`);

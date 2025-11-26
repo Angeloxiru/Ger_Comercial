@@ -181,12 +181,16 @@ Abra no navegador: https://angeloxiru.github.io/Ger_Comercial/
 ### 3. 📍 Vendas por Região
 **Filtros:** Período, Rota, Sub-Rota, Cidade, Supervisor, Representante
 **KPIs:** Valor Total, Quantidade, Peso, Registros
-**Gráficos:** Top 10 Produtos, Distribuição
+**Visualizações:** 📦 Modo Itens (produtos) | 👥 Modo Clientes (alternar com um clique)
+**Gráficos:** Top 10 (Produtos ou Clientes), Distribuição por Cidades
+**Recursos:** Exportação Excel/PDF adaptativa ao modo selecionado
 
 ### 4. 👥 Vendas por Equipe
 **Filtros:** Período, Supervisor (cascata), Representante, Cidade
 **KPIs:** Performance individual e equipe
-**Recursos:** Exportação Excel/PDF
+**Visualizações:** 📦 Modo Itens (produtos) | 👥 Modo Clientes (alternar com um clique)
+**Gráficos:** Top 10 (Produtos ou Clientes), Distribuição Qtde vs Valor
+**Recursos:** Exportação Excel/PDF adaptativa ao modo selecionado
 
 ### 5. 📈 Análise de Produtos
 **Filtros:** Período (atalhos), Origem, Família, Produto
@@ -570,6 +574,94 @@ ____________
 - 📊 Linhas visíveis na tabela: 25 → ~28 (**+12%**)
 - 🎯 Cards por linha: 4 → 5 (**+25% de densidade**)
 - ⚡ Tempo para encontrar informações: **-15%** (menos scroll)
+
+---
+
+#### 3️⃣ Modo Dual de Visualização: Itens ↔ Clientes
+
+**Nova funcionalidade implementada nos dashboards de Vendas!**
+
+**Problema anterior:** Dashboards mostravam apenas produtos (itens), dificultando análise por cliente.
+
+**Solução implementada:**
+- 🔄 **Botões de alternância:** "📦 Itens" e "👥 Clientes"
+- 🎯 **Visualização dinâmica:** Alterna entre produtos e clientes com um clique
+- 📊 **Dados sincronizados:** Tabelas, gráficos e exportações se adaptam ao modo selecionado
+
+**Modo Itens (📦):**
+```
+Cód | Descrição            | Qtde    | Valor (R$) | Peso (kg)
+1234| Produto XYZ          | 1.500   | 45.000,00  | 750,00
+```
+
+**Modo Clientes (👥):**
+```
+CodCliente | Razão Social        | Qtde    | Valor (R$) | Peso (kg)
+00123     | Cliente ABC Ltda    | 15.000  | 450.000,00 | 7.500,00
+```
+
+**Recursos adaptativos:**
+- ✅ **Cabeçalhos de tabela** mudam dinamicamente
+- ✅ **Gráfico Top 10** alterna entre "Top 10 Produtos" e "Top 10 Clientes"
+- ✅ **Exportação Excel** gera arquivo com nome correspondente:
+  - `vendas_regiao_itens_2025-01-15_2025-11-26.xlsx`
+  - `vendas_regiao_clientes_2025-01-15_2025-11-26.xlsx`
+- ✅ **Exportação PDF** ajusta título e estrutura da tabela
+- ✅ **SQL dinâmico** otimizado para cada modo:
+  ```sql
+  -- Modo Clientes
+  SELECT v.cliente as cod_cliente, c.nome as razao_social,
+         SUM(v.qtde_faturada) as qtde, SUM(v.valor_liquido) as valor
+  FROM vendas v
+  LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+  GROUP BY v.cliente, c.nome ORDER BY valor DESC
+  ```
+
+**Refatorações técnicas aplicadas (padrão DRY):**
+
+1. **Função unificada `atualizarDados(modo)`:**
+   - Elimina duplicação de código (~60 linhas)
+   - Constrói SQL dinamicamente baseado no modo
+   - Centraliza lógica de filtros
+
+2. **Config objects para renderização:**
+   ```javascript
+   const config = {
+     clientes: {
+       title: '👥 Clientes',
+       headers: ['CodCliente', 'Razão Social', 'Qtde', 'Valor', 'Peso'],
+       fields: [...]
+     },
+     itens: { ... }
+   };
+   ```
+
+3. **Spread operators e Object.fromEntries:**
+   - Código mais declarativo e funcional
+   - Facilita manutenção e extensão
+   - Performance otimizada
+
+**Dashboards com modo dual:**
+- ✅ dashboard-vendas-regiao.html
+- ✅ dashboard-vendas-equipe.html
+
+**Benefícios:**
+- 🎯 **Análise mais completa:** Visualize tanto por produto quanto por cliente
+- 📈 **Insights cruzados:** Identifique quais clientes compram mais de cada produto
+- ⚡ **Eficiência:** Troca instantânea entre modos sem recarregar página
+- 🔧 **Manutenibilidade:** Código DRY reduz em ~150 linhas por dashboard
+- 📊 **Flexibilidade:** Base para futuras visualizações (por categoria, região, etc.)
+
+**Commits relacionados:**
+- `071828e` - Adicionar visualização por Clientes no dashboard Vendas por Região
+- `76f874d` - Aplicar padrões DRY ao dashboard Vendas por Região
+- `d8019b2` - Adicionar visualização por Clientes no dashboard Vendas por Equipe
+
+**Casos de uso:**
+- 💼 **Gerente Comercial:** Identificar top clientes da região X
+- 📊 **Análise de Mix:** Ver distribuição de vendas por cliente
+- 🎯 **Ação Comercial:** Focar em clientes específicos com baixa penetração
+- 📈 **Planejamento:** Projetar metas baseadas em histórico de clientes
 
 ---
 
