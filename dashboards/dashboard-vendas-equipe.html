@@ -288,6 +288,7 @@
         .table-footer {
             padding: 16px 20px;
             background: #f8f9fa;
+            border-top: 2px solid #dee2e6;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -556,7 +557,7 @@
             <!-- Paginação -->
             <div id="paginationContainer"></div>
 
-            <div class="table-footer">
+            <div class="table-footer" id="tableFooter" style="display: none;">
                 <div class="total-value" id="totalValue">Total: R$ 0,00</div>
                 <div class="export-buttons">
                     <button class="btn-export" onclick="exportarExcel()">
@@ -993,6 +994,7 @@
                 atualizarGraficos(result.rows);
 
                 document.getElementById('mainContent').style.display = 'grid';
+                document.getElementById('tableFooter').style.display = 'flex';
 
             } catch (error) {
                 console.error('Erro ao buscar dados:', error);
