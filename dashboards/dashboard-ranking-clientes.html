@@ -665,7 +665,7 @@
         let chartABC = null;
 
         window.pagination = new Pagination('#paginationContainer', {
-            itemsPerPage: 50,
+            pageSize: 50,
             onPageChange: renderizarTabela
         });
 
@@ -737,7 +737,7 @@
             });
 
             // Adicionar busca
-            window.filterSearches[elemId] = new FilterSearch(select, {
+            window.filterSearches[elemId] = new FilterSearch(elemId, {
                 placeholder: `🔍 Buscar ${placeholder}...`,
                 noResultsText: `Nenhum ${placeholder} encontrado`
             });
@@ -847,7 +847,7 @@
                 return;
             }
 
-            const offset = window.pagination.currentPage * window.pagination.itemsPerPage;
+            const offset = (window.pagination.currentPage - 1) * window.pagination.pageSize;
 
             pageData.forEach((row, index) => {
                 const tr = document.createElement('tr');
