@@ -356,6 +356,12 @@ class AuthManager {
                 url: 'dashboards/dashboard-produtos-parados.html'
             },
             {
+                id: 'ranking-clientes',
+                name: 'Ranking de Clientes',
+                icon: '🏆',
+                url: 'dashboards/dashboard-ranking-clientes.html'
+            },
+            {
                 id: 'gerenciar-usuarios',
                 name: 'Gerenciar Usuários',
                 icon: '👥',

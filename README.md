@@ -12,7 +12,7 @@ Sistema de Gerenciamento Comercial desenvolvido com Turso Database (LibSQL), oti
 - ✅ **Sistema de Autenticação** - Login seguro com controle de permissões por dashboard
 - ✅ **Gerenciamento de Usuários** - Interface administrativa para criar e gerenciar usuários
 - ✅ **PWA (Progressive Web App)** - Funciona offline e pode ser instalado no dispositivo
-- ✅ **6 Dashboards Completos** - Vendas, equipe, produtos, clientes, cobrança e produtos parados
+- ✅ **7 Dashboards Completos** - Vendas, equipe, produtos, clientes, cobrança, produtos parados e ranking de clientes
 - ✅ **Filtros Inteligentes** - Busca digitável em tempo real e cascata automática
 - ✅ **Cache Tri-fonte** - LocalStorage + SessionStorage + Cookies para máxima confiabilidade
 - ✅ **Gráficos Interativos** - Chart.js com visualizações dinâmicas
@@ -50,7 +50,9 @@ Ger_Comercial/
 │   ├── dashboard-analise-produtos.html
 │   ├── dashboard-performance-clientes.html
 │   ├── cobranca-semanal.html
-│   └── dashboard-produtos-parados.html
+│   ├── dashboard-produtos-parados.html
+│   ├── dashboard-ranking-clientes.html
+│   └── dashboard-gerenciar-usuarios.html
 │
 ├── js/                            # 📦 Módulos JavaScript
 │   ├── config.js                  # ⚙️ Configurações (TOKEN AQUI!)
@@ -214,6 +216,20 @@ Abra no navegador: https://angeloxiru.github.io/Ger_Comercial/
 **Classificação:** Crítico (8+ sem), Alto (6-7), Médio (4-5), Baixo (4)
 **Documentação:** `docs/PRODUTOS_PARADOS.md`
 
+### 9. 🏆 Ranking de Clientes
+**Filtros:** Período (obrigatório), Rota, Sub-Rota, Cidade, Supervisor, Representante
+**KPIs:** Total de Clientes, Valor Total, Ticket Médio, Concentração Top 10
+**Visualizações:**
+- 📋 Tabela com medalhas para Top 3 (🥇🥈🥉)
+- 📊 Gráfico Top 10 Clientes por valor
+- 🗺️ Distribuição de Vendas por Cidade (Top 5)
+- 📈 Curva ABC (Pareto 80/20)
+**Recursos:**
+- Filtros digitáveis com busca em tempo real
+- Exportação Excel/PDF com estrutura otimizada
+- Ranking fixo por valor (principal métrica comercial)
+**Análise:** Performance detalhada de clientes com foco em concentração de vendas e análise ABC
+
 ---
 
 ## 🔐 Sistema de Autenticação
@@ -238,7 +254,9 @@ Abra no navegador: https://angeloxiru.github.io/Ger_Comercial/
   "analise-produtos",
   "performance-clientes",
   "cobranca-semanal",
-  "produtos-parados"
+  "produtos-parados",
+  "ranking-clientes",
+  "gerenciar-usuarios"
 ]
 ```
 
@@ -490,7 +508,7 @@ Sempre use a função `serializeDbResult()` ao salvar dados do LibSQL no cache. 
 ## 🎯 Roadmap
 
 ### ✅ Implementado
-- ✅ 7 Dashboards completos (Região, Equipe, Produtos, Clientes, Performance Semanal, Produtos Parados, Gerenciar Usuários)
+- ✅ 9 Dashboards completos (Região, Equipe, Produtos, Clientes, Performance Semanal, Produtos Parados, Ranking de Clientes, Gerenciar Usuários)
 - ✅ Sistema de Login e Autenticação completo
 - ✅ Gerenciamento de Usuários com controle de permissões
 - ✅ Controle de acesso por dashboard (permissões granulares)
@@ -662,6 +680,86 @@ CodCliente | Razão Social        | Qtde    | Valor (R$) | Peso (kg)
 - 📊 **Análise de Mix:** Ver distribuição de vendas por cliente
 - 🎯 **Ação Comercial:** Focar em clientes específicos com baixa penetração
 - 📈 **Planejamento:** Projetar metas baseadas em histórico de clientes
+
+---
+
+#### 4️⃣ Novo Dashboard: Ranking de Clientes 🏆
+
+**Dashboard implementado em Novembro 2025**
+
+**Objetivo:** Análise detalhada do desempenho de clientes com foco em concentração de vendas e identificação de clientes estratégicos.
+
+**Funcionalidades principais:**
+
+1. **Sistema de Filtros Otimizado:**
+   - 📅 Período (Data Início/Fim) em layout vertical compacto
+   - 🛣️ Filtros horizontais: Rota, Sub-Rota, Cidade, Supervisor, Representante
+   - 🔍 Busca digitável em tempo real em todos os filtros
+   - Layout otimizado para caber em uma única linha horizontal
+
+2. **Métricas e KPIs:**
+   - 👥 Total de Clientes
+   - 💰 Valor Total de Vendas
+   - 💵 Ticket Médio (valor total / número de clientes)
+   - 📊 Concentração Top 10 (% de vendas dos 10 maiores clientes)
+
+3. **Tabela de Ranking:**
+   - 🥇🥈🥉 Medalhas para os 3 primeiros colocados
+   - 7 colunas otimizadas: Posição, CodCliente, Razão Social, Cidade, Valor, Qtde, Peso
+   - Paginação com 25 registros por página
+   - Ordenação fixa por valor (principal métrica comercial)
+
+4. **Visualizações Gráficas:**
+   - 📊 **Top 10 Clientes:** Gráfico de barras horizontal com os 10 maiores clientes
+   - 🗺️ **Distribuição por Cidade:** Pizza com as 5 cidades com maior volume de vendas
+   - 📈 **Curva ABC:** Análise Pareto (80/20) mostrando concentração de vendas
+
+5. **Exportações:**
+   - 📑 **Excel:** Estrutura otimizada com 7 colunas
+   - 📄 **PDF:** Layout landscape com tabela formatada
+   - 📛 Nomes de arquivo com período: `ranking_clientes_2025-01-15_2025-11-26`
+
+**Decisões de Design:**
+
+- ❌ **Removido:** Filtro "Tipo de Ranking" (ranking fixo por valor)
+- ❌ **Removido:** Filtro "Grupo de Clientes" (redundante com outros filtros)
+- ❌ **Removido:** Colunas "Rota", "Ticket Médio" e "Nº Compras" da tabela (simplificação)
+- ✅ **Adicionado:** Sistema de filtros digitáveis (FilterSearch)
+- ✅ **Otimizado:** Layout de período em formato vertical para economizar espaço
+
+**SQL Otimizado:**
+```sql
+SELECT
+    v.cliente as cod_cliente,
+    c.nome as razao_social,
+    c.cidade,
+    SUM(v.qtde_faturada) as qtde_total,
+    SUM(v.valor_liquido) as valor_total,
+    SUM(v.peso_liq) as peso_total
+FROM vendas v
+LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+LEFT JOIN tab_representante r ON v.representante = r.representante
+WHERE v.emissao >= ? AND v.emissao <= ?
+GROUP BY v.cliente, c.nome, c.cidade
+ORDER BY valor_total DESC
+```
+
+**Índice recomendado:** `idx_vendas_cliente_emissao` (cliente, emissao)
+
+**Casos de uso:**
+- 🎯 Identificar clientes estratégicos (Top 10, Top 20)
+- 📊 Análise de concentração de vendas (risco comercial)
+- 🗺️ Mapeamento geográfico de clientes principais
+- 📈 Base para planejamento de ações comerciais focadas
+- 💼 Análise ABC para priorização de esforços de vendas
+
+**Permissão:** `ranking-clientes`
+
+**Arquivo:** `dashboards/dashboard-ranking-clientes.html`
+
+**Commits relacionados:**
+- `a3a65da` - feat: Implementar dashboard Ranking de Clientes
+- [Em andamento] - Ajustes de layout e remoção de filtros/colunas desnecessários
 
 ---
 

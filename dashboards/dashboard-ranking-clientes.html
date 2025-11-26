@@ -81,9 +81,42 @@
 
         .filters-grid {
             flex: 1;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .filter-group-periodo {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 140px;
+        }
+
+        .filter-group-periodo .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .filter-group-periodo .filter-item label {
+            font-size: 0.85em;
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .filter-group-periodo .filter-item input {
+            padding: 8px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 0.9em;
+            background: white;
+            transition: border-color 0.2s;
+        }
+
+        .filter-group-periodo .filter-item input:focus {
+            outline: none;
+            border-color: #fc0303;
         }
 
         .filters-buttons {
@@ -97,6 +130,7 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+            min-width: 180px;
         }
 
         .filter-group label {
@@ -444,25 +478,16 @@
     <!-- Filtros -->
     <div class="filters-section">
         <div class="filters-grid">
-            <div class="filter-group">
-                <label for="dataInicio">📅 Data Início *</label>
-                <input type="date" id="dataInicio" required>
-            </div>
-
-            <div class="filter-group">
-                <label for="dataFim">📅 Data Fim *</label>
-                <input type="date" id="dataFim" required>
-            </div>
-
-            <div class="filter-group">
-                <label for="tipoRanking">📊 Tipo de Ranking</label>
-                <select id="tipoRanking">
-                    <option value="valor">💰 Por Valor (R$)</option>
-                    <option value="quantidade">📦 Por Quantidade</option>
-                    <option value="peso">⚖️ Por Peso (kg)</option>
-                    <option value="ticket">💵 Por Ticket Médio</option>
-                    <option value="frequencia">🔄 Por Frequência</option>
-                </select>
+            <!-- Período (vertical) -->
+            <div class="filter-group-periodo">
+                <div class="filter-item">
+                    <label for="dataInicio">📅 Início *</label>
+                    <input type="date" id="dataInicio" required>
+                </div>
+                <div class="filter-item">
+                    <label for="dataFim">📅 Fim *</label>
+                    <input type="date" id="dataFim" required>
+                </div>
             </div>
 
             <div class="filter-group">
@@ -482,13 +507,6 @@
             <div class="filter-group">
                 <label for="filtroCidade">🏙️ Cidade</label>
                 <select id="filtroCidade" multiple>
-                    <option value="">Carregando...</option>
-                </select>
-            </div>
-
-            <div class="filter-group">
-                <label for="filtroGrupo">👥 Grupo de Clientes</label>
-                <select id="filtroGrupo" multiple>
                     <option value="">Carregando...</option>
                 </select>
             </div>
@@ -543,12 +561,9 @@
                             <th>CodCliente</th>
                             <th>Razão Social</th>
                             <th>Cidade</th>
-                            <th>Rota</th>
                             <th class="text-right">Valor (R$)</th>
                             <th class="text-right">Qtde</th>
                             <th class="text-right">Peso (kg)</th>
-                            <th class="text-right">Ticket Médio</th>
-                            <th class="text-right">Nº Compras</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
@@ -676,11 +691,10 @@
             try {
                 if (!db.isConnected()) await db.connect();
 
-                const [rotas, subRotas, cidades, grupos, supervisores, representantes] = await Promise.all([
+                const [rotas, subRotas, cidades, supervisores, representantes] = await Promise.all([
                     db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL ORDER BY rota'),
                     db.execute('SELECT DISTINCT sub_rota FROM tab_cliente WHERE sub_rota IS NOT NULL ORDER BY sub_rota'),
                     db.execute('SELECT DISTINCT cidade FROM tab_cliente WHERE cidade IS NOT NULL ORDER BY cidade'),
-                    db.execute('SELECT DISTINCT grupo_desc FROM tab_cliente WHERE grupo_desc IS NOT NULL ORDER BY grupo_desc'),
                     db.execute('SELECT DISTINCT rep_supervisor FROM tab_representante WHERE rep_supervisor IS NOT NULL ORDER BY rep_supervisor'),
                     db.execute('SELECT DISTINCT desc_representante FROM tab_representante WHERE desc_representante IS NOT NULL ORDER BY desc_representante')
                 ]);
@@ -689,7 +703,6 @@
                     rotas: serializeDbResult(rotas),
                     subRotas: serializeDbResult(subRotas),
                     cidades: serializeDbResult(cidades),
-                    grupos: serializeDbResult(grupos),
                     supervisores: serializeDbResult(supervisores),
                     representantes: serializeDbResult(representantes)
                 };
@@ -706,7 +719,6 @@
             popularSelect('filtroRota', dados.rotas.rows, 'rota', 'Rota');
             popularSelect('filtroSubRota', dados.subRotas.rows, 'sub_rota', 'Sub-Rota');
             popularSelect('filtroCidade', dados.cidades.rows, 'cidade', 'Cidade');
-            popularSelect('filtroGrupo', dados.grupos.rows, 'grupo_desc', 'Grupo');
             popularSelect('filtroSupervisor', dados.supervisores.rows, 'rep_supervisor', 'Supervisor');
             popularSelect('filtroRepresentante', dados.representantes.rows, 'desc_representante', 'Representante');
         }
@@ -733,7 +745,6 @@
             document.getElementById('filtroRota').selectedIndex = -1;
             document.getElementById('filtroSubRota').selectedIndex = -1;
             document.getElementById('filtroCidade').selectedIndex = -1;
-            document.getElementById('filtroGrupo').selectedIndex = -1;
             document.getElementById('filtroSupervisor').selectedIndex = -1;
             document.getElementById('filtroRepresentante').selectedIndex = -1;
 
@@ -744,11 +755,9 @@
         window.atualizarDados = async function() {
             const dataInicio = document.getElementById('dataInicio').value;
             const dataFim = document.getElementById('dataFim').value;
-            const tipoRanking = document.getElementById('tipoRanking').value;
             const rotas = Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value);
             const subRotas = Array.from(document.getElementById('filtroSubRota').selectedOptions).map(o => o.value);
             const cidades = Array.from(document.getElementById('filtroCidade').selectedOptions).map(o => o.value);
-            const grupos = Array.from(document.getElementById('filtroGrupo').selectedOptions).map(o => o.value);
             const supervisores = Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value);
             const representantes = Array.from(document.getElementById('filtroRepresentante').selectedOptions).map(o => o.value);
 
@@ -769,14 +778,9 @@
                         v.cliente as cod_cliente,
                         c.nome as razao_social,
                         c.cidade,
-                        c.rota,
-                        c.sub_rota,
-                        c.grupo_desc,
-                        COUNT(DISTINCT DATE(v.emissao)) as num_compras,
                         SUM(v.qtde_faturada) as qtde_total,
                         SUM(v.valor_liquido) as valor_total,
-                        SUM(v.peso_liq) as peso_total,
-                        SUM(v.valor_liquido) / COUNT(DISTINCT DATE(v.emissao)) as ticket_medio
+                        SUM(v.peso_liq) as peso_total
                     FROM vendas v
                     LEFT JOIN tab_cliente c ON v.cliente = c.cliente
                     LEFT JOIN tab_representante r ON v.representante = r.representante
@@ -797,10 +801,6 @@
                     sql += ` AND c.cidade IN (${cidades.map(() => '?').join(',')})`;
                     params.push(...cidades);
                 }
-                if (grupos.length > 0) {
-                    sql += ` AND c.grupo_desc IN (${grupos.map(() => '?').join(',')})`;
-                    params.push(...grupos);
-                }
                 if (supervisores.length > 0) {
                     sql += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`;
                     params.push(...supervisores);
@@ -810,17 +810,7 @@
                     params.push(...representantes);
                 }
 
-                sql += ' GROUP BY v.cliente, c.nome, c.cidade, c.rota, c.sub_rota, c.grupo_desc';
-
-                // Ordenação dinâmica baseada no tipo de ranking
-                const orderMap = {
-                    'valor': 'valor_total DESC',
-                    'quantidade': 'qtde_total DESC',
-                    'peso': 'peso_total DESC',
-                    'ticket': 'ticket_medio DESC',
-                    'frequencia': 'num_compras DESC'
-                };
-                sql += ` ORDER BY ${orderMap[tipoRanking]}`;
+                sql += ' GROUP BY v.cliente, c.nome, c.cidade ORDER BY valor_total DESC';
 
                 const result = await db.execute(sql, params);
                 window.dadosAtuais = result.rows;
@@ -851,7 +841,7 @@
             tbody.innerHTML = '';
 
             if (pageData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px; color: #6c757d;">Nenhum resultado encontrado</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: #6c757d;">Nenhum resultado encontrado</td></tr>';
                 return;
             }
 
@@ -871,12 +861,9 @@
                     <td>${row.cod_cliente || '-'}</td>
                     <td>${row.razao_social || '-'}</td>
                     <td>${row.cidade || '-'}</td>
-                    <td>${row.rota || '-'}</td>
                     <td class="text-right">R$ ${parseFloat(row.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                     <td class="text-right">${parseFloat(row.qtde_total || 0).toLocaleString('pt-BR')}</td>
                     <td class="text-right">${parseFloat(row.peso_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                    <td class="text-right">R$ ${parseFloat(row.ticket_medio || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                    <td class="text-right">${parseInt(row.num_compras || 0)}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1044,17 +1031,13 @@
                     'CodCliente': row.cod_cliente,
                     'Razão Social': row.razao_social,
                     'Cidade': row.cidade,
-                    'Rota': row.rota,
                     'Valor Total': parseFloat(row.valor_total || 0),
                     'Quantidade Total': parseFloat(row.qtde_total || 0),
-                    'Peso Total': parseFloat(row.peso_total || 0),
-                    'Ticket Médio': parseFloat(row.ticket_medio || 0),
-                    'Nº Compras': parseInt(row.num_compras || 0)
+                    'Peso Total': parseFloat(row.peso_total || 0)
                 }));
 
                 const ws = XLSX.utils.json_to_sheet(dados);
                 const wb = XLSX.utils.book_new();
-                const tipoRanking = document.getElementById('tipoRanking').selectedOptions[0].text;
                 XLSX.utils.book_append_sheet(wb, ws, 'Ranking');
 
                 const dataInicio = document.getElementById('dataInicio').value;
@@ -1082,8 +1065,7 @@
 
                 doc.setFontSize(18);
                 doc.setTextColor(252, 3, 3);
-                const tipoRanking = document.getElementById('tipoRanking').selectedOptions[0].text;
-                doc.text(`Ranking de Clientes - ${tipoRanking}`, 14, 20);
+                doc.text('Ranking de Clientes - Por Valor', 14, 20);
 
                 doc.setFontSize(10);
                 doc.setTextColor(100);
@@ -1092,18 +1074,15 @@
                 const tableData = window.dadosAtuais.map((row, index) => [
                     index + 1,
                     row.cod_cliente,
-                    (row.razao_social || '').substring(0, 30),
+                    (row.razao_social || '').substring(0, 40),
                     row.cidade,
-                    row.rota,
                     'R$ ' + parseFloat(row.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
                     parseFloat(row.qtde_total || 0).toLocaleString('pt-BR'),
-                    parseFloat(row.peso_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
-                    'R$ ' + parseFloat(row.ticket_medio || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
-                    parseInt(row.num_compras || 0)
+                    parseFloat(row.peso_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})
                 ]);
 
                 doc.autoTable({
-                    head: [['#', 'Cód', 'Razão Social', 'Cidade', 'Rota', 'Valor', 'Qtde', 'Peso', 'Ticket', 'Compras']],
+                    head: [['#', 'Cód', 'Razão Social', 'Cidade', 'Valor (R$)', 'Qtde', 'Peso (kg)']],
                     body: tableData,
                     startY: 35,
                     theme: 'striped',
