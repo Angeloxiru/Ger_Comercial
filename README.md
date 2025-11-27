@@ -11,8 +11,9 @@ Sistema de Gerenciamento Comercial desenvolvido com Turso Database (LibSQL), oti
 - ✅ **Turso Database** - Cloud SQLite otimizado com 26 índices de performance
 - ✅ **Sistema de Autenticação** - Login seguro com controle de permissões por dashboard
 - ✅ **Gerenciamento de Usuários** - Interface administrativa para criar e gerenciar usuários
+- ✅ **Importação de Dados** - Sistema completo de importação em massa via CSV com validações robustas
 - ✅ **PWA (Progressive Web App)** - Funciona offline e pode ser instalado no dispositivo
-- ✅ **7 Dashboards Completos** - Vendas, equipe, produtos, clientes, cobrança, produtos parados e ranking de clientes
+- ✅ **10 Dashboards Completos** - Vendas, equipe, produtos, clientes, cobrança, produtos parados, ranking, configurações e mais
 - ✅ **Filtros Inteligentes** - Busca digitável em tempo real e cascata automática
 - ✅ **Cache Tri-fonte** - LocalStorage + SessionStorage + Cookies para máxima confiabilidade
 - ✅ **Gráficos Interativos** - Chart.js com visualizações dinâmicas
@@ -180,43 +181,105 @@ Abra no navegador: https://angeloxiru.github.io/Ger_Comercial/
 - Informações do usuário no header
 - Botão de logout
 
-### 3. 📍 Vendas por Região
+### 3. ⚙️ Configurações (Admin Only)
+**Arquivo:** `dashboards/dashboard-gerenciar-usuarios.html`
+**Permissão:** `gerenciar-usuarios`
+
+Dashboard administrativo com duas funcionalidades principais:
+
+#### 👥 Gerenciamento de Usuários
+- Criar, editar e desativar usuários
+- Gerenciar permissões granulares por dashboard
+- Visualização de usuários ativos e inativos
+- Interface intuitiva com modal para edição
+
+#### 📊 Importação de Dados
+Sistema completo para importar dados em massa no Turso via CSV.
+
+**Tabelas suportadas:**
+- `tab_cliente` - Clientes (16 colunas)
+- `tab_produto` - Produtos (6 colunas)
+- `tab_representante` - Representantes (13 colunas)
+
+**Funcionalidades:**
+1. **Seletor de Tabela:** Escolha qual tabela importar
+2. **Template CSV:** Download automático com todas as colunas + exemplo
+3. **Separador Seguro:** Ponto-e-vírgula (;) ao invés de vírgula
+4. **Drag & Drop:** Arraste o arquivo ou clique para selecionar
+5. **Validações Robustas:**
+   - ✅ Verifica se todas as colunas do CSV existem na tabela
+   - ✅ Exige chave primária (PK) obrigatória em todas as linhas
+   - ✅ Valida que PK não está vazia
+   - ✅ Avisa sobre colunas vazias (mas permite importar)
+   - ✅ Limita tamanho a 50MB
+   - ✅ Aceita apenas formato CSV
+6. **INSERT OR REPLACE:** Substitui registros existentes automaticamente
+7. **Batch Import:** Performance otimizada com múltiplos registros
+8. **Feedback em Tempo Real:** Barra de progresso e log detalhado
+
+**Como Usar:**
+
+```
+1. Acesse "Configurações" (apenas Admin)
+2. Role até "Importação de Dados"
+3. Selecione a tabela (ex: tab_cliente)
+4. Baixe o template CSV
+5. Preencha com seus dados usando ponto-e-vírgula (;)
+6. Arraste o CSV ou clique para fazer upload
+7. Clique em "Iniciar Importação"
+8. Acompanhe o progresso e resultados
+```
+
+**Exemplo de Template (tab_cliente):**
+```csv
+cliente;nome;fantasia;insc_est;cnpj_cpf;grupo;endereco;cep;bairro;cidade;estado;grupo_desc;rota;sit_cliente;sub_rota;num_endereco
+001;EXEMPLO COMERCIO LTDA;Exemplo;123456789;12.345.678/0001-90;GRP01;Rua Exemplo;12345-678;Centro;São Paulo;SP;Grupo Exemplo;R01;ATIVO;SR01;100
+```
+
+**⚠️ Importante:**
+- Use **ponto-e-vírgula (;)** como separador (não vírgula)
+- Coluna de chave primária é **obrigatória**
+- Dados existentes serão **substituídos** (INSERT OR REPLACE)
+- Máximo de 50MB por arquivo
+- Apenas formato CSV aceito
+
+### 4. 📍 Vendas por Região
 **Filtros:** Período, Rota, Sub-Rota, Cidade, Supervisor, Representante
 **KPIs:** Valor Total, Quantidade, Peso, Registros
 **Visualizações:** 📦 Modo Itens (produtos) | 👥 Modo Clientes (alternar com um clique)
 **Gráficos:** Top 10 (Produtos ou Clientes), Distribuição por Cidades
 **Recursos:** Exportação Excel/PDF adaptativa ao modo selecionado
 
-### 4. 👥 Vendas por Equipe
+### 5. 👥 Vendas por Equipe
 **Filtros:** Período, Supervisor (cascata), Representante, Cidade
 **KPIs:** Performance individual e equipe
 **Visualizações:** 📦 Modo Itens (produtos) | 👥 Modo Clientes (alternar com um clique)
 **Gráficos:** Top 10 (Produtos ou Clientes), Distribuição Qtde vs Valor
 **Recursos:** Exportação Excel/PDF adaptativa ao modo selecionado
 
-### 5. 📈 Análise de Produtos
+### 6. 📈 Análise de Produtos
 **Filtros:** Período (atalhos), Origem, Família, Produto
 **Recursos:** Busca em tempo real, Limpar filtros
 **Análise:** Por origem, família e SKU
 
-### 6. 💰 Performance de Clientes
+### 7. 💰 Performance de Clientes
 **Filtros:** Período, Grupo de Clientes, Cliente, Cidade
 **Visualizações:** Top 10 Clientes, Vendas por cidade
 **Análise:** Performance detalhada
 
-### 7. 🎯 Cobrança Semanal
+### 8. 🎯 Cobrança Semanal
 **Filtros:** Semana
 **KPIs:** Performance vs Potencial
 **Análise:** Penetração de mercado, eficiência por rota
 **Ranking:** Por faturamento, peso, clientes
 
-### 8. 🛑 Produtos Parados
+### 9. 🛑 Produtos Parados
 **Filtros:** Supervisor, Representante, Categoria, Risco
 **KPIs:** Total de produtos parados, Valor em risco, Semanas paradas
 **Classificação:** Crítico (8+ sem), Alto (6-7), Médio (4-5), Baixo (4)
 **Documentação:** `docs/PRODUTOS_PARADOS.md`
 
-### 9. 🏆 Ranking de Clientes
+### 10. 🏆 Ranking de Clientes
 **Modo Dual:** 📊 Clientes (individual) ↔ 🏢 Grupos (consolidado)
 **Filtros:** Período (obrigatório), Rota, Sub-Rota, Cidade, Supervisor, Representante
 **KPIs:** Total de Clientes/Grupos, Valor Total, Ticket Médio, Concentração Top 10
