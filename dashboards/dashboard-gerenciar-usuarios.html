@@ -449,39 +449,96 @@
         }
 
         .import-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-        }
-
-        .import-card {
             background: #f9f9f9;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
-            padding: 20px;
-            transition: all 0.3s;
+            padding: 25px;
         }
 
-        .import-card:hover {
-            border-color: #fc0303;
-            box-shadow: 0 2px 8px rgba(252, 3, 3, 0.1);
+        .table-selector-group {
+            margin-bottom: 20px;
         }
 
-        .import-card h3 {
-            color: #212529;
-            font-size: 1.1em;
+        .table-selector-group label {
+            display: block;
+            margin-bottom: 8px;
             font-weight: 600;
-            margin: 0 0 10px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            color: #212529;
+            font-size: 0.95em;
         }
 
-        .import-card p {
-            color: #6c757d;
+        .table-selector {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.95em;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .table-selector:focus {
+            outline: none;
+            border-color: #fc0303;
+            box-shadow: 0 0 0 3px rgba(252, 3, 3, 0.1);
+        }
+
+        .table-info {
+            background: #e7f3ff;
+            border-left: 4px solid #0066cc;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .table-info.show {
+            display: block;
+        }
+
+        .table-info h4 {
+            margin: 0 0 8px 0;
+            color: #0066cc;
             font-size: 0.9em;
-            margin-bottom: 15px;
-            line-height: 1.6;
+            font-weight: 600;
+        }
+
+        .table-info p {
+            margin: 0;
+            color: #495057;
+            font-size: 0.85em;
+            line-height: 1.5;
+        }
+
+        .btn-download-template {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .btn-download-template.show {
+            display: inline-block;
+        }
+
+        .btn-download-template:hover {
+            background: #0052a3;
+        }
+
+        .upload-area {
+            display: none;
+        }
+
+        .upload-area.show {
+            display: block;
         }
 
         .file-upload-area {
@@ -655,62 +712,54 @@
             <div class="import-header">
                 <div>
                     <h2>📊 Importação de Dados</h2>
-                    <p>Importe dados de vendas e clientes em formato CSV ou Excel</p>
+                    <p>Selecione uma tabela, baixe o template e importe seus dados</p>
                 </div>
             </div>
 
             <div class="import-content">
-                <!-- Card de Importação de Vendas -->
-                <div class="import-card">
-                    <h3>💰 Importar Dados de Vendas</h3>
-                    <p>Importe arquivos CSV ou Excel contendo dados de vendas (pedidos, produtos, valores, datas, etc.)</p>
-
-                    <div class="file-upload-area" id="salesUploadArea" onclick="document.getElementById('salesFileInput').click()">
-                        <div class="file-upload-icon">📤</div>
-                        <div class="file-upload-text">Clique ou arraste um arquivo aqui</div>
-                        <div class="file-upload-hint">Formatos aceitos: CSV, XLSX, XLS (Máx: 50MB)</div>
-                    </div>
-
-                    <input type="file" id="salesFileInput" class="file-input" accept=".csv,.xlsx,.xls" onchange="importManager.handleFileSelect('sales', this)">
-
-                    <div id="salesSelectedFile" class="selected-file"></div>
-
-                    <button id="salesImportBtn" class="btn-import" disabled onclick="importManager.startImport('sales')">
-                        📊 Importar Vendas
-                    </button>
-
-                    <div id="salesProgress" class="import-progress">
-                        <div class="progress-bar">
-                            <div id="salesProgressFill" class="progress-bar-fill"></div>
-                        </div>
-                        <div id="salesLog" class="import-log"></div>
-                    </div>
+                <!-- Seletor de Tabela -->
+                <div class="table-selector-group">
+                    <label for="tableSelect">📋 Selecione a tabela para importar:</label>
+                    <select id="tableSelect" class="table-selector" onchange="importManager.handleTableSelect(this.value)">
+                        <option value="">-- Escolha uma tabela --</option>
+                        <option value="tab_cliente">👥 Clientes (tab_cliente)</option>
+                        <option value="tab_produto">📦 Produtos (tab_produto)</option>
+                        <option value="tab_representante">🤝 Representantes (tab_representante)</option>
+                    </select>
                 </div>
 
-                <!-- Card de Importação de Clientes -->
-                <div class="import-card">
-                    <h3>👥 Importar Dados de Clientes</h3>
-                    <p>Importe arquivos CSV ou Excel contendo dados de clientes (nome, cidade, grupo, contatos, etc.)</p>
+                <!-- Informações da Tabela -->
+                <div id="tableInfo" class="table-info">
+                    <h4>ℹ️ Informações da Tabela</h4>
+                    <p id="tableInfoText"></p>
+                </div>
 
-                    <div class="file-upload-area" id="clientsUploadArea" onclick="document.getElementById('clientsFileInput').click()">
+                <!-- Botão Download Template -->
+                <button id="btnDownloadTemplate" class="btn-download-template" onclick="importManager.downloadTemplate()">
+                    📥 Baixar Template CSV
+                </button>
+
+                <!-- Área de Upload -->
+                <div id="uploadArea" class="upload-area">
+                    <div class="file-upload-area" id="fileUploadArea" onclick="document.getElementById('fileInput').click()">
                         <div class="file-upload-icon">📤</div>
-                        <div class="file-upload-text">Clique ou arraste um arquivo aqui</div>
-                        <div class="file-upload-hint">Formatos aceitos: CSV, XLSX, XLS (Máx: 50MB)</div>
+                        <div class="file-upload-text">Clique ou arraste o arquivo CSV aqui</div>
+                        <div class="file-upload-hint">Formato aceito: CSV com separador ponto-e-vírgula (;) - Máx: 50MB</div>
                     </div>
 
-                    <input type="file" id="clientsFileInput" class="file-input" accept=".csv,.xlsx,.xls" onchange="importManager.handleFileSelect('clients', this)">
+                    <input type="file" id="fileInput" class="file-input" accept=".csv" onchange="importManager.handleFileSelect(this)">
 
-                    <div id="clientsSelectedFile" class="selected-file"></div>
+                    <div id="selectedFile" class="selected-file"></div>
 
-                    <button id="clientsImportBtn" class="btn-import" disabled onclick="importManager.startImport('clients')">
-                        👥 Importar Clientes
+                    <button id="importBtn" class="btn-import" disabled onclick="importManager.startImport()">
+                        📊 Iniciar Importação
                     </button>
 
-                    <div id="clientsProgress" class="import-progress">
+                    <div id="importProgress" class="import-progress">
                         <div class="progress-bar">
-                            <div id="clientsProgressFill" class="progress-bar-fill"></div>
+                            <div id="progressFill" class="progress-bar-fill"></div>
                         </div>
-                        <div id="clientsLog" class="import-log"></div>
+                        <div id="importLog" class="import-log"></div>
                     </div>
                 </div>
             </div>
@@ -1105,24 +1154,40 @@
         // Import Manager Class
         class ImportManager {
             constructor() {
-                this.selectedFiles = {
-                    sales: null,
-                    clients: null
+                this.selectedTable = null;
+                this.selectedFile = null;
+                this.CSV_SEPARATOR = ';'; // Ponto-e-vírgula é mais seguro
+
+                // Definição das tabelas
+                this.tables = {
+                    tab_cliente: {
+                        name: 'tab_cliente',
+                        displayName: 'Clientes',
+                        pk: 'cliente',
+                        columns: ['cliente', 'nome', 'fantasia', 'insc_est', 'cnpj_cpf', 'grupo', 'endereco', 'cep', 'bairro', 'cidade', 'estado', 'grupo_desc', 'rota', 'sit_cliente', 'sub_rota', 'num_endereco'],
+                        example: ['001', 'EXEMPLO COMERCIO LTDA', 'Exemplo', '123456789', '12.345.678/0001-90', 'GRP01', 'Rua Exemplo', '12345-678', 'Centro', 'São Paulo', 'SP', 'Grupo Exemplo', 'R01', 'ATIVO', 'SR01', '100']
+                    },
+                    tab_produto: {
+                        name: 'tab_produto',
+                        displayName: 'Produtos',
+                        pk: 'produto',
+                        columns: ['produto', 'desc_produto', 'origem', 'desc_origem', 'familia', 'desc_familia'],
+                        example: ['PROD001', 'Produto Exemplo', 'OR01', 'Origem Exemplo', 'FAM01', 'Família Exemplo']
+                    },
+                    tab_representante: {
+                        name: 'tab_representante',
+                        displayName: 'Representantes',
+                        pk: 'representante',
+                        columns: ['representante', 'desc_representante', 'rep_supervisor', 'rep_tipo', 'rep_cnpj_cpf', 'rep_endereco', 'rep_bairro', 'rep_cidade', 'rep_estado', 'rep_fone', 'rep_email', 'rep_data_inicio', 'rep_data_fim'],
+                        example: ['REP001', 'João Silva', 'SUP001', 'Externo', '123.456.789-00', 'Rua Rep', 'Centro', 'São Paulo', 'SP', '(11) 98765-4321', 'joao@email.com', '2024-01-01', '']
+                    }
                 };
+
                 this.setupDragAndDrop();
             }
 
             setupDragAndDrop() {
-                // Setup drag and drop for sales
-                const salesArea = document.getElementById('salesUploadArea');
-                this.setupDragAndDropArea(salesArea, 'salesFileInput');
-
-                // Setup drag and drop for clients
-                const clientsArea = document.getElementById('clientsUploadArea');
-                this.setupDragAndDropArea(clientsArea, 'clientsFileInput');
-            }
-
-            setupDragAndDropArea(area, inputId) {
+                const area = document.getElementById('fileUploadArea');
                 if (!area) return;
 
                 area.addEventListener('dragover', (e) => {
@@ -1140,22 +1205,68 @@
 
                     const files = e.dataTransfer.files;
                     if (files.length > 0) {
-                        const input = document.getElementById(inputId);
+                        const input = document.getElementById('fileInput');
                         input.files = files;
-
-                        // Trigger the change event
                         const event = new Event('change', { bubbles: true });
                         input.dispatchEvent(event);
                     }
                 });
             }
 
-            handleFileSelect(type, input) {
+            handleTableSelect(tableName) {
+                this.selectedTable = tableName;
+
+                const tableInfo = document.getElementById('tableInfo');
+                const tableInfoText = document.getElementById('tableInfoText');
+                const btnDownload = document.getElementById('btnDownloadTemplate');
+                const uploadArea = document.getElementById('uploadArea');
+
+                if (!tableName) {
+                    tableInfo.classList.remove('show');
+                    btnDownload.classList.remove('show');
+                    uploadArea.classList.remove('show');
+                    this.resetImport();
+                    return;
+                }
+
+                const table = this.tables[tableName];
+                tableInfoText.innerHTML = `
+                    <strong>Tabela:</strong> ${table.name}<br>
+                    <strong>Chave Primária (obrigatória):</strong> ${table.pk}<br>
+                    <strong>Total de colunas:</strong> ${table.columns.length}<br>
+                    <strong>Colunas:</strong> ${table.columns.join(', ')}
+                `;
+
+                tableInfo.classList.add('show');
+                btnDownload.classList.add('show');
+                uploadArea.classList.add('show');
+                this.resetImport();
+            }
+
+            downloadTemplate() {
+                if (!this.selectedTable) return;
+
+                const table = this.tables[this.selectedTable];
+
+                // Criar CSV com ponto-e-vírgula
+                const header = table.columns.join(this.CSV_SEPARATOR);
+                const example = table.example.join(this.CSV_SEPARATOR);
+                const csv = `${header}\n${example}`;
+
+                // Download do arquivo
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `template_${table.name}.csv`;
+                link.click();
+            }
+
+            handleFileSelect(input) {
                 const file = input.files[0];
                 if (!file) return;
 
                 // Validate file size (max 50MB)
-                const maxSize = 50 * 1024 * 1024; // 50MB in bytes
+                const maxSize = 50 * 1024 * 1024;
                 if (file.size > maxSize) {
                     alert('❌ Arquivo muito grande! O tamanho máximo é 50MB.');
                     input.value = '';
@@ -1163,22 +1274,16 @@
                 }
 
                 // Validate file type
-                const validExtensions = ['.csv', '.xlsx', '.xls'];
-                const fileName = file.name.toLowerCase();
-                const isValidType = validExtensions.some(ext => fileName.endsWith(ext));
-
-                if (!isValidType) {
-                    alert('❌ Formato de arquivo inválido! Use CSV, XLSX ou XLS.');
+                if (!file.name.toLowerCase().endsWith('.csv')) {
+                    alert('❌ Formato inválido! Use apenas arquivos CSV.');
                     input.value = '';
                     return;
                 }
 
-                // Store the file
-                this.selectedFiles[type] = file;
+                this.selectedFile = file;
 
-                // Update UI
-                const selectedFileDiv = document.getElementById(`${type}SelectedFile`);
-                const importBtn = document.getElementById(`${type}ImportBtn`);
+                const selectedFileDiv = document.getElementById('selectedFile');
+                const importBtn = document.getElementById('importBtn');
 
                 selectedFileDiv.style.display = 'block';
                 selectedFileDiv.innerHTML = `
@@ -1189,58 +1294,59 @@
                 importBtn.disabled = false;
             }
 
-            async startImport(type) {
-                const file = this.selectedFiles[type];
-                if (!file) {
-                    alert('Nenhum arquivo selecionado!');
+            async startImport() {
+                if (!this.selectedTable || !this.selectedFile) {
+                    alert('Selecione uma tabela e um arquivo!');
                     return;
                 }
 
-                const progressDiv = document.getElementById(`${type}Progress`);
-                const progressFill = document.getElementById(`${type}ProgressFill`);
-                const logDiv = document.getElementById(`${type}Log`);
-                const importBtn = document.getElementById(`${type}ImportBtn`);
+                const progressDiv = document.getElementById('importProgress');
+                const progressFill = document.getElementById('progressFill');
+                const logDiv = document.getElementById('importLog');
+                const importBtn = document.getElementById('importBtn');
 
-                // Show progress area
                 progressDiv.style.display = 'block';
                 importBtn.disabled = true;
                 logDiv.innerHTML = '🔄 Iniciando importação...<br>';
 
                 try {
-                    // Simulate file reading
+                    // Read file
+                    progressFill.style.width = '10%';
+                    logDiv.innerHTML += '📖 Lendo arquivo CSV...<br>';
+                    const content = await this.readFile(this.selectedFile);
+
+                    // Parse CSV
                     progressFill.style.width = '20%';
-                    logDiv.innerHTML += '📖 Lendo arquivo...<br>';
-                    await this.delay(500);
+                    logDiv.innerHTML += '🔍 Analisando dados...<br>';
+                    const parsedData = this.parseCSV(content);
 
-                    // Read file content
-                    const content = await this.readFile(file);
+                    // Validate
+                    progressFill.style.width = '30%';
+                    logDiv.innerHTML += '✔️ Validando colunas e dados...<br>';
+                    this.validateData(parsedData);
+
+                    logDiv.innerHTML += `✅ ${parsedData.rows.length} registros válidos<br>`;
                     progressFill.style.width = '40%';
-                    logDiv.innerHTML += '✅ Arquivo lido com sucesso!<br>';
-                    await this.delay(500);
 
-                    // Parse data
-                    progressFill.style.width = '60%';
-                    logDiv.innerHTML += '🔍 Processando dados...<br>';
-                    const parsedData = await this.parseFileContent(file, content);
-                    await this.delay(500);
-
-                    // Validate data
-                    progressFill.style.width = '80%';
-                    logDiv.innerHTML += `✅ ${parsedData.rowCount} registros encontrados<br>`;
-                    logDiv.innerHTML += '💾 Salvando no banco de dados...<br>';
-                    await this.delay(500);
+                    // Connect to database
+                    logDiv.innerHTML += '🔌 Conectando ao banco Turso...<br>';
+                    if (!db.isConnected()) {
+                        await db.connect();
+                    }
+                    progressFill.style.width = '50%';
 
                     // Import to database
-                    await this.importToDatabase(type, parsedData);
+                    logDiv.innerHTML += '💾 Importando para o banco de dados...<br>';
+                    const result = await this.importToDatabase(parsedData);
 
                     progressFill.style.width = '100%';
-                    logDiv.innerHTML += `<strong style="color: #28a745;">✅ Importação concluída com sucesso!</strong><br>`;
-                    logDiv.innerHTML += `📊 Total de registros importados: ${parsedData.rowCount}<br>`;
+                    logDiv.innerHTML += `<strong style="color: #28a745;">✅ Importação concluída!</strong><br>`;
+                    logDiv.innerHTML += `📊 Registros importados: ${result.success}<br>`;
+                    if (result.errors > 0) {
+                        logDiv.innerHTML += `⚠️ Erros: ${result.errors}<br>`;
+                    }
 
-                    // Reset after 3 seconds
-                    setTimeout(() => {
-                        this.resetImport(type);
-                    }, 3000);
+                    setTimeout(() => this.resetImport(), 5000);
 
                 } catch (error) {
                     console.error('Erro na importação:', error);
@@ -1254,65 +1360,116 @@
                 return new Promise((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = (e) => resolve(e.target.result);
-                    reader.onerror = (e) => reject(new Error('Erro ao ler arquivo'));
+                    reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+                    reader.readAsText(file, 'UTF-8');
+                });
+            }
 
-                    if (file.name.toLowerCase().endsWith('.csv')) {
-                        reader.readAsText(file);
-                    } else {
-                        reader.readAsArrayBuffer(file);
+            parseCSV(content) {
+                const lines = content.split('\n').filter(line => line.trim());
+                if (lines.length < 2) {
+                    throw new Error('Arquivo CSV vazio ou inválido');
+                }
+
+                const headers = lines[0].split(this.CSV_SEPARATOR).map(h => h.trim());
+                const rows = [];
+
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(this.CSV_SEPARATOR).map(v => v.trim());
+                    if (values.length === headers.length) {
+                        const row = {};
+                        headers.forEach((header, index) => {
+                            row[header] = values[index];
+                        });
+                        rows.push(row);
+                    }
+                }
+
+                return { headers, rows };
+            }
+
+            validateData(parsedData) {
+                const table = this.tables[this.selectedTable];
+
+                // Validar se todas as colunas do CSV existem na tabela
+                const invalidColumns = parsedData.headers.filter(h => !table.columns.includes(h));
+                if (invalidColumns.length > 0) {
+                    throw new Error(`Colunas inválidas: ${invalidColumns.join(', ')}`);
+                }
+
+                // Validar se a PK está presente
+                if (!parsedData.headers.includes(table.pk)) {
+                    throw new Error(`Coluna obrigatória ausente: ${table.pk} (chave primária)`);
+                }
+
+                // Validar cada linha
+                parsedData.rows.forEach((row, index) => {
+                    // PK não pode estar vazia
+                    if (!row[table.pk] || row[table.pk].trim() === '') {
+                        throw new Error(`Linha ${index + 2}: ${table.pk} não pode estar vazio`);
+                    }
+
+                    // Avisar sobre colunas vazias (mas permitir)
+                    const emptyColumns = Object.entries(row)
+                        .filter(([key, value]) => !value || value.trim() === '')
+                        .map(([key]) => key);
+
+                    if (emptyColumns.length > 0 && index < 3) {
+                        console.warn(`Linha ${index + 2}: Colunas vazias: ${emptyColumns.join(', ')}`);
                     }
                 });
             }
 
-            async parseFileContent(file, content) {
-                // Simplified parsing - in production, use a proper CSV/Excel library
-                const fileName = file.name.toLowerCase();
+            async importToDatabase(parsedData) {
+                const table = this.tables[this.selectedTable];
+                let success = 0;
+                let errors = 0;
 
-                if (fileName.endsWith('.csv')) {
-                    const lines = content.split('\n').filter(line => line.trim());
-                    return {
-                        rowCount: lines.length - 1, // subtract header
-                        headers: lines[0].split(','),
-                        data: lines.slice(1).map(line => line.split(','))
-                    };
-                } else {
-                    // For Excel files, you would need a library like SheetJS (xlsx)
-                    // For now, we'll simulate
-                    return {
-                        rowCount: Math.floor(Math.random() * 100) + 10,
-                        headers: ['col1', 'col2', 'col3'],
-                        data: []
-                    };
+                // Preparar batch de INSERT OR REPLACE
+                const statements = [];
+
+                for (const row of parsedData.rows) {
+                    const columns = Object.keys(row);
+                    const values = Object.values(row);
+                    const placeholders = columns.map(() => '?').join(', ');
+
+                    const sql = `INSERT OR REPLACE INTO ${table.name} (${columns.join(', ')}) VALUES (${placeholders})`;
+
+                    statements.push({
+                        sql: sql,
+                        args: values
+                    });
                 }
+
+                // Executar em batch
+                try {
+                    await db.batch(statements);
+                    success = statements.length;
+                } catch (error) {
+                    console.error('Erro no batch:', error);
+                    errors = statements.length;
+                    throw new Error(`Falha ao importar: ${error.message}`);
+                }
+
+                return { success, errors };
             }
 
-            async importToDatabase(type, parsedData) {
-                // This is where you would implement the actual database import
-                // For now, we'll simulate it
-                console.log(`Importing ${type} data:`, parsedData);
+            resetImport() {
+                const progressDiv = document.getElementById('importProgress');
+                const progressFill = document.getElementById('progressFill');
+                const logDiv = document.getElementById('importLog');
+                const importBtn = document.getElementById('importBtn');
+                const selectedFileDiv = document.getElementById('selectedFile');
+                const fileInput = document.getElementById('fileInput');
 
-                // Simulate database operation
-                await this.delay(1000);
+                if (progressDiv) progressDiv.style.display = 'none';
+                if (progressFill) progressFill.style.width = '0%';
+                if (logDiv) logDiv.innerHTML = '';
+                if (selectedFileDiv) selectedFileDiv.style.display = 'none';
+                if (fileInput) fileInput.value = '';
+                if (importBtn) importBtn.disabled = true;
 
-                // In production, you would do something like:
-                // await db.execute('INSERT INTO sales_data ...');
-            }
-
-            resetImport(type) {
-                const progressDiv = document.getElementById(`${type}Progress`);
-                const progressFill = document.getElementById(`${type}ProgressFill`);
-                const logDiv = document.getElementById(`${type}Log`);
-                const importBtn = document.getElementById(`${type}ImportBtn`);
-                const selectedFileDiv = document.getElementById(`${type}SelectedFile`);
-                const fileInput = document.getElementById(`${type}FileInput`);
-
-                progressDiv.style.display = 'none';
-                progressFill.style.width = '0%';
-                logDiv.innerHTML = '';
-                selectedFileDiv.style.display = 'none';
-                fileInput.value = '';
-                this.selectedFiles[type] = null;
-                importBtn.disabled = true;
+                this.selectedFile = null;
             }
 
             formatFileSize(bytes) {
@@ -1321,10 +1478,6 @@
                 const sizes = ['Bytes', 'KB', 'MB', 'GB'];
                 const i = Math.floor(Math.log(bytes) / Math.log(k));
                 return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-            }
-
-            delay(ms) {
-                return new Promise(resolve => setTimeout(resolve, ms));
             }
         }
 
