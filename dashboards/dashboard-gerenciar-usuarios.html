@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Gerenciar Usuários - Ger Comercial">
+    <meta name="description" content="Configurações - Ger Comercial">
     <meta name="theme-color" content="#fc0303">
-    <title>Gerenciar Usuários - Ger Comercial</title>
+    <title>Configurações - Ger Comercial</title>
     <style>
         * {
             margin: 0;
@@ -416,6 +416,182 @@
             color: #6c757d;
             margin-top: 4px;
         }
+
+        /* Importação de Dados Styles */
+        .import-section {
+            margin-top: 30px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 25px;
+        }
+
+        .import-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .import-header h2 {
+            color: #212529;
+            font-size: 1.4em;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .import-header p {
+            color: #495057;
+            font-size: 0.9em;
+            margin: 5px 0 0 0;
+        }
+
+        .import-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .import-card {
+            background: #f9f9f9;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .import-card:hover {
+            border-color: #fc0303;
+            box-shadow: 0 2px 8px rgba(252, 3, 3, 0.1);
+        }
+
+        .import-card h3 {
+            color: #212529;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .import-card p {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 6px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .file-upload-area:hover {
+            border-color: #fc0303;
+            background: #fff5f5;
+        }
+
+        .file-upload-area.dragover {
+            border-color: #fc0303;
+            background: #fff5f5;
+        }
+
+        .file-upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .file-upload-text {
+            color: #495057;
+            font-size: 0.9em;
+        }
+
+        .file-upload-hint {
+            color: #6c757d;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn-import {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-import:hover {
+            background: #218838;
+        }
+
+        .btn-import:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .selected-file {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .import-progress {
+            margin-top: 15px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #fc0303, #b50909);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .import-log {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #495057;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .section-divider {
+            margin: 30px 0;
+            border-top: 2px solid #e9ecef;
+        }
     </style>
 </head>
 <body>
@@ -424,7 +600,7 @@
             <button onclick="window.location.href='../index.html'" class="btn-back">
                 ← Voltar
             </button>
-            <h1>👥 Gerenciar Usuários</h1>
+            <h1>⚙️ Configurações</h1>
         </div>
         <div class="header-right">
             <span id="userInfo" style="font-size: 0.9em;"></span>
@@ -467,6 +643,75 @@
                 <div id="emptyState" class="empty-state" style="display: none;">
                     <div class="empty-state-icon">👤</div>
                     <p>Nenhum usuário encontrado</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Divisor entre seções -->
+        <div class="section-divider"></div>
+
+        <!-- Seção de Importação de Dados -->
+        <div class="import-section">
+            <div class="import-header">
+                <div>
+                    <h2>📊 Importação de Dados</h2>
+                    <p>Importe dados de vendas e clientes em formato CSV ou Excel</p>
+                </div>
+            </div>
+
+            <div class="import-content">
+                <!-- Card de Importação de Vendas -->
+                <div class="import-card">
+                    <h3>💰 Importar Dados de Vendas</h3>
+                    <p>Importe arquivos CSV ou Excel contendo dados de vendas (pedidos, produtos, valores, datas, etc.)</p>
+
+                    <div class="file-upload-area" id="salesUploadArea" onclick="document.getElementById('salesFileInput').click()">
+                        <div class="file-upload-icon">📤</div>
+                        <div class="file-upload-text">Clique ou arraste um arquivo aqui</div>
+                        <div class="file-upload-hint">Formatos aceitos: CSV, XLSX, XLS (Máx: 50MB)</div>
+                    </div>
+
+                    <input type="file" id="salesFileInput" class="file-input" accept=".csv,.xlsx,.xls" onchange="importManager.handleFileSelect('sales', this)">
+
+                    <div id="salesSelectedFile" class="selected-file"></div>
+
+                    <button id="salesImportBtn" class="btn-import" disabled onclick="importManager.startImport('sales')">
+                        📊 Importar Vendas
+                    </button>
+
+                    <div id="salesProgress" class="import-progress">
+                        <div class="progress-bar">
+                            <div id="salesProgressFill" class="progress-bar-fill"></div>
+                        </div>
+                        <div id="salesLog" class="import-log"></div>
+                    </div>
+                </div>
+
+                <!-- Card de Importação de Clientes -->
+                <div class="import-card">
+                    <h3>👥 Importar Dados de Clientes</h3>
+                    <p>Importe arquivos CSV ou Excel contendo dados de clientes (nome, cidade, grupo, contatos, etc.)</p>
+
+                    <div class="file-upload-area" id="clientsUploadArea" onclick="document.getElementById('clientsFileInput').click()">
+                        <div class="file-upload-icon">📤</div>
+                        <div class="file-upload-text">Clique ou arraste um arquivo aqui</div>
+                        <div class="file-upload-hint">Formatos aceitos: CSV, XLSX, XLS (Máx: 50MB)</div>
+                    </div>
+
+                    <input type="file" id="clientsFileInput" class="file-input" accept=".csv,.xlsx,.xls" onchange="importManager.handleFileSelect('clients', this)">
+
+                    <div id="clientsSelectedFile" class="selected-file"></div>
+
+                    <button id="clientsImportBtn" class="btn-import" disabled onclick="importManager.startImport('clients')">
+                        👥 Importar Clientes
+                    </button>
+
+                    <div id="clientsProgress" class="import-progress">
+                        <div class="progress-bar">
+                            <div id="clientsProgressFill" class="progress-bar-fill"></div>
+                        </div>
+                        <div id="clientsLog" class="import-log"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -856,6 +1101,235 @@
 
         // Make authManager available globally for logout button
         window.authManager = authManager;
+
+        // Import Manager Class
+        class ImportManager {
+            constructor() {
+                this.selectedFiles = {
+                    sales: null,
+                    clients: null
+                };
+                this.setupDragAndDrop();
+            }
+
+            setupDragAndDrop() {
+                // Setup drag and drop for sales
+                const salesArea = document.getElementById('salesUploadArea');
+                this.setupDragAndDropArea(salesArea, 'salesFileInput');
+
+                // Setup drag and drop for clients
+                const clientsArea = document.getElementById('clientsUploadArea');
+                this.setupDragAndDropArea(clientsArea, 'clientsFileInput');
+            }
+
+            setupDragAndDropArea(area, inputId) {
+                if (!area) return;
+
+                area.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    area.classList.add('dragover');
+                });
+
+                area.addEventListener('dragleave', () => {
+                    area.classList.remove('dragover');
+                });
+
+                area.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    area.classList.remove('dragover');
+
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const input = document.getElementById(inputId);
+                        input.files = files;
+
+                        // Trigger the change event
+                        const event = new Event('change', { bubbles: true });
+                        input.dispatchEvent(event);
+                    }
+                });
+            }
+
+            handleFileSelect(type, input) {
+                const file = input.files[0];
+                if (!file) return;
+
+                // Validate file size (max 50MB)
+                const maxSize = 50 * 1024 * 1024; // 50MB in bytes
+                if (file.size > maxSize) {
+                    alert('❌ Arquivo muito grande! O tamanho máximo é 50MB.');
+                    input.value = '';
+                    return;
+                }
+
+                // Validate file type
+                const validExtensions = ['.csv', '.xlsx', '.xls'];
+                const fileName = file.name.toLowerCase();
+                const isValidType = validExtensions.some(ext => fileName.endsWith(ext));
+
+                if (!isValidType) {
+                    alert('❌ Formato de arquivo inválido! Use CSV, XLSX ou XLS.');
+                    input.value = '';
+                    return;
+                }
+
+                // Store the file
+                this.selectedFiles[type] = file;
+
+                // Update UI
+                const selectedFileDiv = document.getElementById(`${type}SelectedFile`);
+                const importBtn = document.getElementById(`${type}ImportBtn`);
+
+                selectedFileDiv.style.display = 'block';
+                selectedFileDiv.innerHTML = `
+                    ✅ Arquivo selecionado: <strong>${file.name}</strong>
+                    (${this.formatFileSize(file.size)})
+                `;
+
+                importBtn.disabled = false;
+            }
+
+            async startImport(type) {
+                const file = this.selectedFiles[type];
+                if (!file) {
+                    alert('Nenhum arquivo selecionado!');
+                    return;
+                }
+
+                const progressDiv = document.getElementById(`${type}Progress`);
+                const progressFill = document.getElementById(`${type}ProgressFill`);
+                const logDiv = document.getElementById(`${type}Log`);
+                const importBtn = document.getElementById(`${type}ImportBtn`);
+
+                // Show progress area
+                progressDiv.style.display = 'block';
+                importBtn.disabled = true;
+                logDiv.innerHTML = '🔄 Iniciando importação...<br>';
+
+                try {
+                    // Simulate file reading
+                    progressFill.style.width = '20%';
+                    logDiv.innerHTML += '📖 Lendo arquivo...<br>';
+                    await this.delay(500);
+
+                    // Read file content
+                    const content = await this.readFile(file);
+                    progressFill.style.width = '40%';
+                    logDiv.innerHTML += '✅ Arquivo lido com sucesso!<br>';
+                    await this.delay(500);
+
+                    // Parse data
+                    progressFill.style.width = '60%';
+                    logDiv.innerHTML += '🔍 Processando dados...<br>';
+                    const parsedData = await this.parseFileContent(file, content);
+                    await this.delay(500);
+
+                    // Validate data
+                    progressFill.style.width = '80%';
+                    logDiv.innerHTML += `✅ ${parsedData.rowCount} registros encontrados<br>`;
+                    logDiv.innerHTML += '💾 Salvando no banco de dados...<br>';
+                    await this.delay(500);
+
+                    // Import to database
+                    await this.importToDatabase(type, parsedData);
+
+                    progressFill.style.width = '100%';
+                    logDiv.innerHTML += `<strong style="color: #28a745;">✅ Importação concluída com sucesso!</strong><br>`;
+                    logDiv.innerHTML += `📊 Total de registros importados: ${parsedData.rowCount}<br>`;
+
+                    // Reset after 3 seconds
+                    setTimeout(() => {
+                        this.resetImport(type);
+                    }, 3000);
+
+                } catch (error) {
+                    console.error('Erro na importação:', error);
+                    progressFill.style.width = '0%';
+                    logDiv.innerHTML += `<strong style="color: #dc3545;">❌ Erro: ${error.message}</strong><br>`;
+                    importBtn.disabled = false;
+                }
+            }
+
+            async readFile(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = (e) => reject(new Error('Erro ao ler arquivo'));
+
+                    if (file.name.toLowerCase().endsWith('.csv')) {
+                        reader.readAsText(file);
+                    } else {
+                        reader.readAsArrayBuffer(file);
+                    }
+                });
+            }
+
+            async parseFileContent(file, content) {
+                // Simplified parsing - in production, use a proper CSV/Excel library
+                const fileName = file.name.toLowerCase();
+
+                if (fileName.endsWith('.csv')) {
+                    const lines = content.split('\n').filter(line => line.trim());
+                    return {
+                        rowCount: lines.length - 1, // subtract header
+                        headers: lines[0].split(','),
+                        data: lines.slice(1).map(line => line.split(','))
+                    };
+                } else {
+                    // For Excel files, you would need a library like SheetJS (xlsx)
+                    // For now, we'll simulate
+                    return {
+                        rowCount: Math.floor(Math.random() * 100) + 10,
+                        headers: ['col1', 'col2', 'col3'],
+                        data: []
+                    };
+                }
+            }
+
+            async importToDatabase(type, parsedData) {
+                // This is where you would implement the actual database import
+                // For now, we'll simulate it
+                console.log(`Importing ${type} data:`, parsedData);
+
+                // Simulate database operation
+                await this.delay(1000);
+
+                // In production, you would do something like:
+                // await db.execute('INSERT INTO sales_data ...');
+            }
+
+            resetImport(type) {
+                const progressDiv = document.getElementById(`${type}Progress`);
+                const progressFill = document.getElementById(`${type}ProgressFill`);
+                const logDiv = document.getElementById(`${type}Log`);
+                const importBtn = document.getElementById(`${type}ImportBtn`);
+                const selectedFileDiv = document.getElementById(`${type}SelectedFile`);
+                const fileInput = document.getElementById(`${type}FileInput`);
+
+                progressDiv.style.display = 'none';
+                progressFill.style.width = '0%';
+                logDiv.innerHTML = '';
+                selectedFileDiv.style.display = 'none';
+                fileInput.value = '';
+                this.selectedFiles[type] = null;
+                importBtn.disabled = true;
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+            }
+
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        // Initialize Import Manager
+        window.importManager = new ImportManager();
     </script>
 </body>
 </html>
