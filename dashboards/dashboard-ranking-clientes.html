@@ -566,8 +566,8 @@
             <div class="mode-buttons">
                 <button class="btn-mode active" id="btnClientes" onclick="alternarModo('clientes')">📊 Clientes</button>
                 <button class="btn-mode" id="btnGrupos" onclick="alternarModo('grupos')">🏢 Grupos</button>
-                <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">🔄 Atualizar Dados</button>
             </div>
+            <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">🔄 Atualizar Dados</button>
         </div>
     </div>
 
@@ -722,10 +722,14 @@
 
         // Função para atualizar cabeçalhos da tabela
         function atualizarCabecalhosTabela() {
-            const thead = document.querySelector('#rankingTable thead tr');
+            const theadRow = document.getElementById('tableHeadRow');
+            if (!theadRow) {
+                console.error('Elemento #tableHeadRow não encontrado!');
+                return;
+            }
 
             if (window.modoAtual === 'clientes') {
-                thead.innerHTML = `
+                theadRow.innerHTML = `
                     <th>#</th>
                     <th>CodCliente</th>
                     <th>Razão Social</th>
@@ -735,7 +739,7 @@
                     <th class="text-right">Peso (kg)</th>
                 `;
             } else {
-                thead.innerHTML = `
+                theadRow.innerHTML = `
                     <th>#</th>
                     <th>CodGrupo</th>
                     <th>Grupo de Cliente</th>
