@@ -720,7 +720,7 @@
                 <!-- Seletor de Tabela -->
                 <div class="table-selector-group">
                     <label for="tableSelect">📋 Selecione a tabela para importar:</label>
-                    <select id="tableSelect" class="table-selector" onchange="importManager.handleTableSelect(this.value)">
+                    <select id="tableSelect" class="table-selector">
                         <option value="">-- Escolha uma tabela --</option>
                         <option value="tab_cliente">👥 Clientes (tab_cliente)</option>
                         <option value="tab_produto">📦 Produtos (tab_produto)</option>
@@ -735,23 +735,23 @@
                 </div>
 
                 <!-- Botão Download Template -->
-                <button id="btnDownloadTemplate" class="btn-download-template" onclick="importManager.downloadTemplate()">
+                <button id="btnDownloadTemplate" class="btn-download-template">
                     📥 Baixar Template CSV
                 </button>
 
                 <!-- Área de Upload -->
                 <div id="uploadArea" class="upload-area">
-                    <div class="file-upload-area" id="fileUploadArea" onclick="document.getElementById('fileInput').click()">
+                    <div class="file-upload-area" id="fileUploadArea">
                         <div class="file-upload-icon">📤</div>
                         <div class="file-upload-text">Clique ou arraste o arquivo CSV aqui</div>
                         <div class="file-upload-hint">Formato aceito: CSV com separador ponto-e-vírgula (;) - Máx: 50MB</div>
                     </div>
 
-                    <input type="file" id="fileInput" class="file-input" accept=".csv" onchange="importManager.handleFileSelect(this)">
+                    <input type="file" id="fileInput" class="file-input" accept=".csv">
 
                     <div id="selectedFile" class="selected-file"></div>
 
-                    <button id="importBtn" class="btn-import" disabled onclick="importManager.startImport()">
+                    <button id="importBtn" class="btn-import" disabled>
                         📊 Iniciar Importação
                     </button>
 
@@ -1157,6 +1157,8 @@
                 this.selectedTable = null;
                 this.selectedFile = null;
                 this.CSV_SEPARATOR = ';'; // Ponto-e-vírgula é mais seguro
+                this.MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+                this.ALLOWED_EXTENSIONS = ['.csv'];
 
                 // Definição das tabelas
                 this.tables = {
@@ -1183,7 +1185,42 @@
                     }
                 };
 
+                this.initializeEventListeners();
                 this.setupDragAndDrop();
+            }
+
+            initializeEventListeners() {
+                // Table selector
+                const tableSelect = document.getElementById('tableSelect');
+                if (tableSelect) {
+                    tableSelect.addEventListener('change', (e) => this.handleTableSelect(e.target.value));
+                }
+
+                // Template download button
+                const btnDownload = document.getElementById('btnDownloadTemplate');
+                if (btnDownload) {
+                    btnDownload.addEventListener('click', () => this.downloadTemplate());
+                }
+
+                // File upload area
+                const uploadArea = document.getElementById('fileUploadArea');
+                if (uploadArea) {
+                    uploadArea.addEventListener('click', () => {
+                        document.getElementById('fileInput').click();
+                    });
+                }
+
+                // File input
+                const fileInput = document.getElementById('fileInput');
+                if (fileInput) {
+                    fileInput.addEventListener('change', (e) => this.handleFileSelect(e.target));
+                }
+
+                // Import button
+                const importBtn = document.getElementById('importBtn');
+                if (importBtn) {
+                    importBtn.addEventListener('click', () => this.startImport());
+                }
             }
 
             setupDragAndDrop() {
@@ -1265,17 +1302,19 @@
                 const file = input.files[0];
                 if (!file) return;
 
-                // Validate file size (max 50MB)
-                const maxSize = 50 * 1024 * 1024;
-                if (file.size > maxSize) {
-                    alert('❌ Arquivo muito grande! O tamanho máximo é 50MB.');
+                // Validate file size
+                if (file.size > this.MAX_FILE_SIZE) {
+                    this.showError('selectedFile', `Arquivo muito grande! O tamanho máximo é ${this.formatFileSize(this.MAX_FILE_SIZE)}.`);
                     input.value = '';
                     return;
                 }
 
                 // Validate file type
-                if (!file.name.toLowerCase().endsWith('.csv')) {
-                    alert('❌ Formato inválido! Use apenas arquivos CSV.');
+                const fileName = file.name.toLowerCase();
+                const isValidType = this.ALLOWED_EXTENSIONS.some(ext => fileName.endsWith(ext));
+
+                if (!isValidType) {
+                    this.showError('selectedFile', `Formato inválido! Use apenas: ${this.ALLOWED_EXTENSIONS.join(', ')}`);
                     input.value = '';
                     return;
                 }
@@ -1285,18 +1324,40 @@
                 const selectedFileDiv = document.getElementById('selectedFile');
                 const importBtn = document.getElementById('importBtn');
 
+                // Usar textContent para prevenir XSS
                 selectedFileDiv.style.display = 'block';
-                selectedFileDiv.innerHTML = `
-                    ✅ Arquivo selecionado: <strong>${file.name}</strong>
-                    (${this.formatFileSize(file.size)})
-                `;
+                selectedFileDiv.innerHTML = ''; // Limpar primeiro
+
+                const checkmark = document.createTextNode('✅ Arquivo selecionado: ');
+                const strong = document.createElement('strong');
+                strong.textContent = file.name; // Previne XSS
+                const fileSize = document.createTextNode(` (${this.formatFileSize(file.size)})`);
+
+                selectedFileDiv.appendChild(checkmark);
+                selectedFileDiv.appendChild(strong);
+                selectedFileDiv.appendChild(fileSize);
 
                 importBtn.disabled = false;
             }
 
+            showError(elementId, message) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.style.display = 'block';
+                    element.style.background = '#f8d7da';
+                    element.style.color = '#721c24';
+                    element.textContent = `❌ ${message}`;
+
+                    // Auto-hide após 5 segundos
+                    setTimeout(() => {
+                        element.style.display = 'none';
+                    }, 5000);
+                }
+            }
+
             async startImport() {
                 if (!this.selectedTable || !this.selectedFile) {
-                    alert('Selecione uma tabela e um arquivo!');
+                    this.showError('selectedFile', 'Selecione uma tabela e um arquivo!');
                     return;
                 }
 
@@ -1307,43 +1368,45 @@
 
                 progressDiv.style.display = 'block';
                 importBtn.disabled = true;
-                logDiv.innerHTML = '🔄 Iniciando importação...<br>';
+                logDiv.innerHTML = ''; // Limpar log anterior
+
+                this.addLogEntry(logDiv, '🔄 Iniciando importação...');
 
                 try {
                     // Read file
                     progressFill.style.width = '10%';
-                    logDiv.innerHTML += '📖 Lendo arquivo CSV...<br>';
+                    this.addLogEntry(logDiv, '📖 Lendo arquivo CSV...');
                     const content = await this.readFile(this.selectedFile);
 
                     // Parse CSV
                     progressFill.style.width = '20%';
-                    logDiv.innerHTML += '🔍 Analisando dados...<br>';
+                    this.addLogEntry(logDiv, '🔍 Analisando dados...');
                     const parsedData = this.parseCSV(content);
 
                     // Validate
                     progressFill.style.width = '30%';
-                    logDiv.innerHTML += '✔️ Validando colunas e dados...<br>';
+                    this.addLogEntry(logDiv, '✔️ Validando colunas e dados...');
                     this.validateData(parsedData);
 
-                    logDiv.innerHTML += `✅ ${parsedData.rows.length} registros válidos<br>`;
+                    this.addLogEntry(logDiv, `✅ ${parsedData.rows.length} registros válidos`);
                     progressFill.style.width = '40%';
 
                     // Connect to database
-                    logDiv.innerHTML += '🔌 Conectando ao banco Turso...<br>';
+                    this.addLogEntry(logDiv, '🔌 Conectando ao banco Turso...');
                     if (!db.isConnected()) {
                         await db.connect();
                     }
                     progressFill.style.width = '50%';
 
                     // Import to database
-                    logDiv.innerHTML += '💾 Importando para o banco de dados...<br>';
+                    this.addLogEntry(logDiv, '💾 Importando para o banco de dados...');
                     const result = await this.importToDatabase(parsedData);
 
                     progressFill.style.width = '100%';
-                    logDiv.innerHTML += `<strong style="color: #28a745;">✅ Importação concluída!</strong><br>`;
-                    logDiv.innerHTML += `📊 Registros importados: ${result.success}<br>`;
+                    this.addLogEntry(logDiv, '✅ Importação concluída!', '#28a745', true);
+                    this.addLogEntry(logDiv, `📊 Registros importados: ${result.success}`);
                     if (result.errors > 0) {
-                        logDiv.innerHTML += `⚠️ Erros: ${result.errors}<br>`;
+                        this.addLogEntry(logDiv, `⚠️ Erros: ${result.errors}`, '#dc3545');
                     }
 
                     setTimeout(() => this.resetImport(), 5000);
@@ -1351,9 +1414,20 @@
                 } catch (error) {
                     console.error('Erro na importação:', error);
                     progressFill.style.width = '0%';
-                    logDiv.innerHTML += `<strong style="color: #dc3545;">❌ Erro: ${error.message}</strong><br>`;
+                    this.addLogEntry(logDiv, `❌ Erro: ${error.message}`, '#dc3545', true);
                     importBtn.disabled = false;
                 }
+            }
+
+            addLogEntry(container, message, color = null, bold = false) {
+                const entry = document.createElement('div');
+                entry.textContent = message;
+                if (color) entry.style.color = color;
+                if (bold) entry.style.fontWeight = 'bold';
+                container.appendChild(entry);
+
+                // Auto-scroll para o final
+                container.scrollTop = container.scrollHeight;
             }
 
             async readFile(file) {
@@ -1371,21 +1445,59 @@
                     throw new Error('Arquivo CSV vazio ou inválido');
                 }
 
-                const headers = lines[0].split(this.CSV_SEPARATOR).map(h => h.trim());
+                // Parse headers
+                const headers = this.parseCSVLine(lines[0]);
                 const rows = [];
 
+                // Parse data rows
                 for (let i = 1; i < lines.length; i++) {
-                    const values = lines[i].split(this.CSV_SEPARATOR).map(v => v.trim());
+                    const values = this.parseCSVLine(lines[i]);
+
                     if (values.length === headers.length) {
                         const row = {};
                         headers.forEach((header, index) => {
                             row[header] = values[index];
                         });
                         rows.push(row);
+                    } else if (values.length > 0) {
+                        // Linha com número incorreto de colunas
+                        console.warn(`Linha ${i + 1} ignorada: ${values.length} colunas encontradas, esperadas ${headers.length}`);
                     }
                 }
 
                 return { headers, rows };
+            }
+
+            parseCSVLine(line) {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    const nextChar = line[i + 1];
+
+                    if (char === '"') {
+                        // Aspas duplas escapadas ("")
+                        if (inQuotes && nextChar === '"') {
+                            current += '"';
+                            i++; // Skip next quote
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === this.CSV_SEPARATOR && !inQuotes) {
+                        // Separador encontrado fora de aspas
+                        result.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+
+                // Add last field
+                result.push(current.trim());
+
+                return result;
             }
 
             validateData(parsedData) {
