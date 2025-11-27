@@ -196,6 +196,39 @@
             cursor: not-allowed;
         }
 
+        .mode-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-mode {
+            background: #e9ecef;
+            color: #495057;
+            border: 2px solid #dee2e6;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-mode:hover {
+            background: #dee2e6;
+            border-color: #adb5bd;
+        }
+
+        .btn-mode.active {
+            background: #fc0303;
+            color: white;
+            border-color: #fc0303;
+        }
+
+        .btn-mode.active:hover {
+            background: #b50909;
+            border-color: #b50909;
+        }
+
         .loading {
             display: none;
             position: fixed;
@@ -530,7 +563,10 @@
 
         <div class="filters-buttons">
             <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar Filtros</button>
-            <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">🔄 Atualizar Dados</button>
+            <div class="mode-buttons">
+                <button class="btn-mode active" id="btnClientes" onclick="alternarModo('clientes')">📊 Clientes</button>
+                <button class="btn-mode" id="btnGrupos" onclick="alternarModo('grupos')">🏢 Grupos</button>
+            </div>
         </div>
     </div>
 
@@ -543,7 +579,7 @@
     <!-- Empty State -->
     <div class="empty-state" id="emptyState">
         <h2>📊 Selecione os filtros</h2>
-        <p>Escolha o período e clique em "Atualizar Dados" para visualizar o ranking de clientes</p>
+        <p>Escolha o período e clique em um dos botões (Clientes ou Grupos) para visualizar o ranking</p>
     </div>
 
     <!-- Main Content -->
@@ -668,10 +704,53 @@
         window.db = db;
         window.dadosAtuais = [];
         window.filterSearches = {};
+        window.modoAtual = 'clientes'; // Estado do modo: 'clientes' ou 'grupos'
         let chartTop10 = null;
         let chartCidades = null;
         let chartABC = null;
         let chartFaixas = null;
+
+        // Função para alternar entre modos
+        window.alternarModo = function(modo) {
+            window.modoAtual = modo;
+
+            // Atualizar visual dos botões
+            document.getElementById('btnClientes').classList.toggle('active', modo === 'clientes');
+            document.getElementById('btnGrupos').classList.toggle('active', modo === 'grupos');
+
+            // Atualizar cabeçalhos da tabela
+            atualizarCabecalhosTabela();
+
+            // Buscar dados do novo modo
+            atualizarDados();
+        };
+
+        // Função para atualizar cabeçalhos da tabela
+        function atualizarCabecalhosTabela() {
+            const thead = document.querySelector('#rankingTable thead tr');
+
+            if (window.modoAtual === 'clientes') {
+                thead.innerHTML = `
+                    <th>#</th>
+                    <th>CodCliente</th>
+                    <th>Razão Social</th>
+                    <th>Cidade</th>
+                    <th class="text-right">Valor (R$)</th>
+                    <th class="text-right">Qtde</th>
+                    <th class="text-right">Peso (kg)</th>
+                `;
+            } else {
+                thead.innerHTML = `
+                    <th>#</th>
+                    <th>CodGrupo</th>
+                    <th>Grupo de Cliente</th>
+                    <th class="text-right">Valor (R$)</th>
+                    <th class="text-right">Qtde</th>
+                    <th class="text-right">Peso (kg)</th>
+                    <th class="text-right">Clientes</th>
+                `;
+            }
+        }
 
         window.pagination = new Pagination('#paginationContainer', {
             pageSize: 50,
@@ -779,49 +858,100 @@
 
             try {
                 document.getElementById('loading').classList.add('active');
-                document.getElementById('btnAtualizar').disabled = true;
                 document.getElementById('emptyState').style.display = 'none';
+
+                // Desabilitar botões durante carregamento
+                document.getElementById('btnClientes').disabled = true;
+                document.getElementById('btnGrupos').disabled = true;
 
                 if (!db.isConnected()) await db.connect();
 
-                let sql = `
-                    SELECT
-                        v.cliente as cod_cliente,
-                        c.nome as razao_social,
-                        c.cidade,
-                        SUM(v.qtde_faturada) as qtde_total,
-                        SUM(v.valor_liquido) as valor_total,
-                        SUM(v.peso_liq) as peso_total
-                    FROM vendas v
-                    LEFT JOIN tab_cliente c ON v.cliente = c.cliente
-                    LEFT JOIN tab_representante r ON v.representante = r.representante
-                    WHERE v.emissao >= ? AND v.emissao <= ?
-                `;
+                let sql, params;
 
-                const params = [dataInicio, dataFim];
+                if (window.modoAtual === 'clientes') {
+                    // SQL para modo CLIENTES
+                    sql = `
+                        SELECT
+                            v.cliente as cod_cliente,
+                            c.nome as razao_social,
+                            c.cidade,
+                            SUM(v.qtde_faturada) as qtde_total,
+                            SUM(v.valor_liquido) as valor_total,
+                            SUM(v.peso_liq) as peso_total
+                        FROM vendas v
+                        LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+                        LEFT JOIN tab_representante r ON v.representante = r.representante
+                        WHERE v.emissao >= ? AND v.emissao <= ?
+                    `;
 
-                if (rotas.length > 0) {
-                    sql += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
-                    params.push(...rotas);
-                }
-                if (subRotas.length > 0) {
-                    sql += ` AND c.sub_rota IN (${subRotas.map(() => '?').join(',')})`;
-                    params.push(...subRotas);
-                }
-                if (cidades.length > 0) {
-                    sql += ` AND c.cidade IN (${cidades.map(() => '?').join(',')})`;
-                    params.push(...cidades);
-                }
-                if (supervisores.length > 0) {
-                    sql += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`;
-                    params.push(...supervisores);
-                }
-                if (representantes.length > 0) {
-                    sql += ` AND r.desc_representante IN (${representantes.map(() => '?').join(',')})`;
-                    params.push(...representantes);
-                }
+                    params = [dataInicio, dataFim];
 
-                sql += ' GROUP BY v.cliente, c.nome, c.cidade ORDER BY valor_total DESC';
+                    if (rotas.length > 0) {
+                        sql += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
+                        params.push(...rotas);
+                    }
+                    if (subRotas.length > 0) {
+                        sql += ` AND c.sub_rota IN (${subRotas.map(() => '?').join(',')})`;
+                        params.push(...subRotas);
+                    }
+                    if (cidades.length > 0) {
+                        sql += ` AND c.cidade IN (${cidades.map(() => '?').join(',')})`;
+                        params.push(...cidades);
+                    }
+                    if (supervisores.length > 0) {
+                        sql += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`;
+                        params.push(...supervisores);
+                    }
+                    if (representantes.length > 0) {
+                        sql += ` AND r.desc_representante IN (${representantes.map(() => '?').join(',')})`;
+                        params.push(...representantes);
+                    }
+
+                    sql += ' GROUP BY v.cliente, c.nome, c.cidade ORDER BY valor_total DESC';
+
+                } else {
+                    // SQL para modo GRUPOS
+                    sql = `
+                        SELECT
+                            c.grupo as cod_grupo,
+                            c.grupo_desc,
+                            COUNT(DISTINCT v.cliente) as num_clientes,
+                            SUM(v.qtde_faturada) as qtde_total,
+                            SUM(v.valor_liquido) as valor_total,
+                            SUM(v.peso_liq) as peso_total
+                        FROM vendas v
+                        LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+                        LEFT JOIN tab_representante r ON v.representante = r.representante
+                        WHERE v.emissao >= ? AND v.emissao <= ?
+                          AND c.grupo IS NOT NULL
+                          AND c.grupo_desc IS NOT NULL
+                    `;
+
+                    params = [dataInicio, dataFim];
+
+                    if (rotas.length > 0) {
+                        sql += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
+                        params.push(...rotas);
+                    }
+                    if (subRotas.length > 0) {
+                        sql += ` AND c.sub_rota IN (${subRotas.map(() => '?').join(',')})`;
+                        params.push(...subRotas);
+                    }
+                    if (cidades.length > 0) {
+                        sql += ` AND c.cidade IN (${cidades.map(() => '?').join(',')})`;
+                        params.push(...cidades);
+                    }
+                    if (supervisores.length > 0) {
+                        sql += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`;
+                        params.push(...supervisores);
+                    }
+                    if (representantes.length > 0) {
+                        sql += ` AND r.desc_representante IN (${representantes.map(() => '?').join(',')})`;
+                        params.push(...representantes);
+                    }
+
+                    sql += ' GROUP BY c.grupo, c.grupo_desc ORDER BY valor_total DESC';
+                }
 
                 const result = await db.execute(sql, params);
                 window.dadosAtuais = result.rows;
@@ -842,7 +972,8 @@
                 alert('Erro ao buscar dados: ' + error.message);
             } finally {
                 document.getElementById('loading').classList.remove('active');
-                document.getElementById('btnAtualizar').disabled = false;
+                document.getElementById('btnClientes').disabled = false;
+                document.getElementById('btnGrupos').disabled = false;
             }
         };
 
@@ -867,21 +998,35 @@
                 else if (posicao === 2) medalha = '<span class="medal">🥈</span> ';
                 else if (posicao === 3) medalha = '<span class="medal">🥉</span> ';
 
-                tr.innerHTML = `
-                    <td class="rank">${medalha}${posicao}</td>
-                    <td>${row.cod_cliente || '-'}</td>
-                    <td>${row.razao_social || '-'}</td>
-                    <td>${row.cidade || '-'}</td>
-                    <td class="text-right">R$ ${parseFloat(row.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                    <td class="text-right">${parseFloat(row.qtde_total || 0).toLocaleString('pt-BR')}</td>
-                    <td class="text-right">${parseFloat(row.peso_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                `;
+                if (window.modoAtual === 'clientes') {
+                    tr.innerHTML = `
+                        <td class="rank">${medalha}${posicao}</td>
+                        <td>${row.cod_cliente || '-'}</td>
+                        <td>${row.razao_social || '-'}</td>
+                        <td>${row.cidade || '-'}</td>
+                        <td class="text-right">R$ ${parseFloat(row.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td class="text-right">${parseFloat(row.qtde_total || 0).toLocaleString('pt-BR')}</td>
+                        <td class="text-right">${parseFloat(row.peso_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    `;
+                } else {
+                    tr.innerHTML = `
+                        <td class="rank">${medalha}${posicao}</td>
+                        <td>${row.cod_grupo || '-'}</td>
+                        <td>${row.grupo_desc || '-'}</td>
+                        <td class="text-right">R$ ${parseFloat(row.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td class="text-right">${parseFloat(row.qtde_total || 0).toLocaleString('pt-BR')}</td>
+                        <td class="text-right">${parseFloat(row.peso_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td class="text-right">${parseInt(row.num_clientes || 0)}</td>
+                    `;
+                }
+
                 tbody.appendChild(tr);
             });
 
             // Atualizar stats
             const totalValor = window.dadosAtuais.reduce((sum, row) => sum + parseFloat(row.valor_total || 0), 0);
-            document.getElementById('tableStats').textContent = `${window.dadosAtuais.length} cliente(s)`;
+            const labelEntidade = window.modoAtual === 'clientes' ? 'cliente(s)' : 'grupo(s)';
+            document.getElementById('tableStats').textContent = `${window.dadosAtuais.length} ${labelEntidade}`;
             document.getElementById('totalValue').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
         }
 
@@ -1117,15 +1262,28 @@
             try {
                 const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
 
-                const dados = window.dadosAtuais.map((row, index) => ({
-                    'Posição': index + 1,
-                    'CodCliente': row.cod_cliente,
-                    'Razão Social': row.razao_social,
-                    'Cidade': row.cidade,
-                    'Valor Total': parseFloat(row.valor_total || 0),
-                    'Quantidade Total': parseFloat(row.qtde_total || 0),
-                    'Peso Total': parseFloat(row.peso_total || 0)
-                }));
+                let dados;
+                if (window.modoAtual === 'clientes') {
+                    dados = window.dadosAtuais.map((row, index) => ({
+                        'Posição': index + 1,
+                        'CodCliente': row.cod_cliente,
+                        'Razão Social': row.razao_social,
+                        'Cidade': row.cidade,
+                        'Valor Total': parseFloat(row.valor_total || 0),
+                        'Quantidade Total': parseFloat(row.qtde_total || 0),
+                        'Peso Total': parseFloat(row.peso_total || 0)
+                    }));
+                } else {
+                    dados = window.dadosAtuais.map((row, index) => ({
+                        'Posição': index + 1,
+                        'CodGrupo': row.cod_grupo,
+                        'Grupo de Cliente': row.grupo_desc,
+                        'Valor Total': parseFloat(row.valor_total || 0),
+                        'Quantidade Total': parseFloat(row.qtde_total || 0),
+                        'Peso Total': parseFloat(row.peso_total || 0),
+                        'Clientes': parseInt(row.num_clientes || 0)
+                    }));
+                }
 
                 const ws = XLSX.utils.json_to_sheet(dados);
                 const wb = XLSX.utils.book_new();
@@ -1133,7 +1291,8 @@
 
                 const dataInicio = document.getElementById('dataInicio').value;
                 const dataFim = document.getElementById('dataFim').value;
-                const fileName = `ranking_clientes_${dataInicio}_${dataFim}.xlsx`;
+                const modo = window.modoAtual === 'clientes' ? 'clientes' : 'grupos';
+                const fileName = `ranking_${modo}_${dataInicio}_${dataFim}.xlsx`;
 
                 XLSX.writeFile(wb, fileName);
 
@@ -1156,24 +1315,41 @@
 
                 doc.setFontSize(18);
                 doc.setTextColor(252, 3, 3);
-                doc.text('Ranking de Clientes - Por Valor', 14, 20);
+                const titulo = window.modoAtual === 'clientes' ? 'Ranking de Clientes' : 'Ranking de Grupos de Clientes';
+                doc.text(titulo, 14, 20);
 
                 doc.setFontSize(10);
                 doc.setTextColor(100);
                 doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
 
-                const tableData = window.dadosAtuais.map((row, index) => [
-                    index + 1,
-                    row.cod_cliente,
-                    (row.razao_social || '').substring(0, 40),
-                    row.cidade,
-                    'R$ ' + parseFloat(row.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
-                    parseFloat(row.qtde_total || 0).toLocaleString('pt-BR'),
-                    parseFloat(row.peso_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})
-                ]);
+                let tableData, headers;
+
+                if (window.modoAtual === 'clientes') {
+                    tableData = window.dadosAtuais.map((row, index) => [
+                        index + 1,
+                        row.cod_cliente,
+                        (row.razao_social || '').substring(0, 40),
+                        row.cidade,
+                        'R$ ' + parseFloat(row.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                        parseFloat(row.qtde_total || 0).toLocaleString('pt-BR'),
+                        parseFloat(row.peso_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})
+                    ]);
+                    headers = [['#', 'Cód', 'Razão Social', 'Cidade', 'Valor (R$)', 'Qtde', 'Peso (kg)']];
+                } else {
+                    tableData = window.dadosAtuais.map((row, index) => [
+                        index + 1,
+                        row.cod_grupo,
+                        (row.grupo_desc || '').substring(0, 40),
+                        'R$ ' + parseFloat(row.valor_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                        parseFloat(row.qtde_total || 0).toLocaleString('pt-BR'),
+                        parseFloat(row.peso_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                        parseInt(row.num_clientes || 0)
+                    ]);
+                    headers = [['#', 'Cód', 'Grupo', 'Valor (R$)', 'Qtde', 'Peso (kg)', 'Clientes']];
+                }
 
                 doc.autoTable({
-                    head: [['#', 'Cód', 'Razão Social', 'Cidade', 'Valor (R$)', 'Qtde', 'Peso (kg)']],
+                    head: headers,
                     body: tableData,
                     startY: 35,
                     theme: 'striped',
@@ -1184,7 +1360,8 @@
 
                 const dataInicio = document.getElementById('dataInicio').value;
                 const dataFim = document.getElementById('dataFim').value;
-                doc.save(`ranking_clientes_${dataInicio}_${dataFim}.pdf`);
+                const modo = window.modoAtual === 'clientes' ? 'clientes' : 'grupos';
+                doc.save(`ranking_${modo}_${dataInicio}_${dataFim}.pdf`);
 
             } catch (error) {
                 console.error('Erro ao exportar PDF:', error);
