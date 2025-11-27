@@ -217,18 +217,31 @@ Abra no navegador: https://angeloxiru.github.io/Ger_Comercial/
 **Documentação:** `docs/PRODUTOS_PARADOS.md`
 
 ### 9. 🏆 Ranking de Clientes
+**Modo Dual:** 📊 Clientes (individual) ↔ 🏢 Grupos (consolidado)
 **Filtros:** Período (obrigatório), Rota, Sub-Rota, Cidade, Supervisor, Representante
-**KPIs:** Total de Clientes, Valor Total, Ticket Médio, Concentração Top 10
+**KPIs:** Total de Clientes/Grupos, Valor Total, Ticket Médio, Concentração Top 10
+
+**Modo Clientes:**
+- Colunas: #, CodCliente, Razão Social, Cidade, Valor, Qtde, Peso
+- Análise individual de performance por cliente
+
+**Modo Grupos:**
+- Colunas: #, CodGrupo, Grupo de Cliente, Valor, Qtde, Peso, Clientes
+- Análise consolidada por segmento/categoria
+- Mostra quantidade de clientes em cada grupo
+
 **Visualizações:**
 - 📋 Tabela com medalhas para Top 3 (🥇🥈🥉)
-- 📊 Gráfico Top 10 Clientes por valor
+- 📊 Gráfico Top 10 por valor
 - 🗺️ Distribuição de Vendas por Cidade (Top 5)
 - 📈 Curva ABC (Pareto 80/20)
+- 💰 Distribuição por Faixa de Valor
+
 **Recursos:**
 - Filtros digitáveis com busca em tempo real
-- Exportação Excel/PDF com estrutura otimizada
-- Ranking fixo por valor (principal métrica comercial)
-**Análise:** Performance detalhada de clientes com foco em concentração de vendas e análise ABC
+- Exportação Excel/PDF adaptativa ao modo selecionado
+- Alternância instantânea entre modos
+**Análise:** Performance detalhada com dupla perspectiva (individual vs consolidada)
 
 ---
 

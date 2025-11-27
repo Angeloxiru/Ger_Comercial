@@ -566,6 +566,7 @@
             <div class="mode-buttons">
                 <button class="btn-mode active" id="btnClientes" onclick="alternarModo('clientes')">📊 Clientes</button>
                 <button class="btn-mode" id="btnGrupos" onclick="alternarModo('grupos')">🏢 Grupos</button>
+                <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">🔄 Atualizar Dados</button>
             </div>
         </div>
     </div>
@@ -578,8 +579,8 @@
 
     <!-- Empty State -->
     <div class="empty-state" id="emptyState">
-        <h2>📊 Selecione os filtros</h2>
-        <p>Escolha o período e clique em um dos botões (Clientes ou Grupos) para visualizar o ranking</p>
+        <h2>📊 Selecione os filtros e o modo</h2>
+        <p>1. Escolha o período<br>2. Selecione o modo (📊 Clientes ou 🏢 Grupos)<br>3. Clique em "🔄 Atualizar Dados"</p>
     </div>
 
     <!-- Main Content -->
@@ -717,12 +718,6 @@
             // Atualizar visual dos botões
             document.getElementById('btnClientes').classList.toggle('active', modo === 'clientes');
             document.getElementById('btnGrupos').classList.toggle('active', modo === 'grupos');
-
-            // Atualizar cabeçalhos da tabela
-            atualizarCabecalhosTabela();
-
-            // Buscar dados do novo modo
-            atualizarDados();
         };
 
         // Função para atualizar cabeçalhos da tabela
@@ -857,12 +852,16 @@
             }
 
             try {
+                // Atualizar cabeçalhos baseado no modo selecionado
+                atualizarCabecalhosTabela();
+
                 document.getElementById('loading').classList.add('active');
                 document.getElementById('emptyState').style.display = 'none';
 
                 // Desabilitar botões durante carregamento
                 document.getElementById('btnClientes').disabled = true;
                 document.getElementById('btnGrupos').disabled = true;
+                document.getElementById('btnAtualizar').disabled = true;
 
                 if (!db.isConnected()) await db.connect();
 
@@ -974,6 +973,7 @@
                 document.getElementById('loading').classList.remove('active');
                 document.getElementById('btnClientes').disabled = false;
                 document.getElementById('btnGrupos').disabled = false;
+                document.getElementById('btnAtualizar').disabled = false;
             }
         };
 
