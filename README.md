@@ -273,11 +273,13 @@ cliente;nome;fantasia;insc_est;cnpj_cpf;grupo;endereco;cep;bairro;cidade;estado;
 **Análise:** Penetração de mercado, eficiência por rota
 **Ranking:** Por faturamento, peso, clientes
 
-### 9. 🛑 Produtos Parados
-**Filtros:** Supervisor, Representante, Categoria, Risco
-**KPIs:** Total de produtos parados, Valor em risco, Semanas paradas
-**Classificação:** Crítico (8+ sem), Alto (6-7), Médio (4-5), Baixo (4)
+### 9. 🛑 Produtos Parados (Versão 2.0)
+**Filtros:** Supervisor, Representante, Categoria, Risco (com busca digitável)
+**KPIs:** Total de produtos parados, Valor em risco, Representantes afetados, Média de semanas
+**Classificação:** Extremo (6+ sem), Muito Alto (5), Alto (4), Moderado (3), Baixo (2), Mínimo (1)
+**Período de Análise:** 2-4 semanas atrás → últimas 2 semanas
 **Documentação:** `docs/PRODUTOS_PARADOS.md`
+**Novidade:** Sistema de busca nos filtros + Detecção precoce + 6 níveis de risco
 
 ### 10. 🏆 Ranking de Clientes
 **Modo Dual:** 📊 Clientes (individual) ↔ 🏢 Grupos (consolidado)
@@ -840,6 +842,49 @@ ORDER BY valor_total DESC
 ---
 
 ____________
+
+## 🎉 Atualizações Recentes
+
+### 🛑 Dashboard Produtos Parados V2.0 (Dezembro 2024)
+
+**Transformação completa do sistema de detecção de produtos parados:**
+
+#### ✨ Novidades Principais
+
+1. **Nova Classificação de Risco (6 Níveis)**
+   - ⚫ Extremo (6+ sem) | 🔴 Muito Alto (5 sem) | 🟠 Alto (4 sem)
+   - 🟡 Moderado (3 sem) | 🟢 Baixo (2 sem) | 🔵 Mínimo (1 sem)
+
+2. **Detecção Mais Precoce**
+   - Antes: Análise de 4-6 semanas
+   - Agora: Análise de 2-4 semanas
+   - Benefício: Ação preventiva mais rápida
+
+3. **Filtros com Busca Digitável**
+   - Campo de busca em Supervisor, Representante e Categoria
+   - Encontre informações instantaneamente
+   - Limpar busca com botão "✕" ou tecla ESC
+
+#### 🐛 Correções Críticas
+
+- **Bug SQL Corrigido**: Precedência de operadores estava incluindo vendas incorretamente
+- **Filtro Removido**: `nat_oper` era redundante e causava problemas
+- **Query Simplificada**: Código mais limpo e performático
+
+#### 📊 Melhorias Visuais
+
+- Badges coloridos para cada nível de risco
+- Layout otimizado e consistente
+- Gráfico de pizza com 6 categorias
+- Interface mais intuitiva
+
+**Arquivos Atualizados:**
+- `sql/views/create_view_produtos_parados.sql` (View V2.0)
+- `dashboards/dashboard-produtos-parados.html` (Interface completa)
+- `docs/PRODUTOS_PARADOS.md` (Documentação atualizada)
+
+---
+
 att:
 📊 Atualizações - Dashboard de Cobrança Semanal
 Novo Módulo: Performance vs Potencial
