@@ -273,13 +273,13 @@ cliente;nome;fantasia;insc_est;cnpj_cpf;grupo;endereco;cep;bairro;cidade;estado;
 **Análise:** Penetração de mercado, eficiência por rota
 **Ranking:** Por faturamento, peso, clientes
 
-### 9. 🛑 Produtos Parados (Versão 2.0)
+### 9. 🛑 Produtos Parados (Versão 2.1.1)
 **Filtros:** Supervisor, Representante, Categoria, Risco (com busca digitável)
 **KPIs:** Total de produtos parados, Valor em risco, Representantes afetados, Média de semanas
 **Classificação:** Extremo (6+ sem), Muito Alto (5), Alto (4), Moderado (3), Baixo (2), Mínimo (1)
-**Período de Análise:** 2-4 semanas atrás → últimas 2 semanas
+**Período de Análise:** 4-8 semanas atrás → últimas 4 semanas (28 dias cada)
 **Documentação:** `docs/PRODUTOS_PARADOS.md`
-**Novidade:** Sistema de busca nos filtros + Detecção precoce + 6 níveis de risco
+**Novidades:** Sistema de busca nos filtros + Usa MAX(emissao) + 6 níveis de risco
 
 ### 10. 🏆 Ranking de Clientes
 **Modo Dual:** 📊 Clientes (individual) ↔ 🏢 Grupos (consolidado)
@@ -845,7 +845,7 @@ ____________
 
 ## 🎉 Atualizações Recentes
 
-### 🛑 Dashboard Produtos Parados V2.0 (Dezembro 2024)
+### 🛑 Dashboard Produtos Parados V2.1.1 (Dezembro 2024)
 
 **Transformação completa do sistema de detecção de produtos parados:**
 
@@ -855,10 +855,10 @@ ____________
    - ⚫ Extremo (6+ sem) | 🔴 Muito Alto (5 sem) | 🟠 Alto (4 sem)
    - 🟡 Moderado (3 sem) | 🟢 Baixo (2 sem) | 🔵 Mínimo (1 sem)
 
-2. **Detecção Mais Precoce**
-   - Antes: Análise de 4-6 semanas
-   - Agora: Análise de 2-4 semanas
-   - Benefício: Ação preventiva mais rápida
+2. **Período de Análise Otimizado**
+   - Período anterior: 4-8 semanas atrás (28 dias)
+   - Período recente: Últimas 4 semanas (28 dias)
+   - Benefício: Tempo suficiente para detectar padrões reais
 
 3. **Filtros com Busca Digitável**
    - Campo de busca em Supervisor, Representante e Categoria
@@ -867,9 +867,9 @@ ____________
 
 #### 🐛 Correções Críticas
 
-- **Bug SQL Corrigido**: Precedência de operadores estava incluindo vendas incorretamente
-- **Filtro Removido**: `nat_oper` era redundante e causava problemas
-- **Query Simplificada**: Código mais limpo e performático
+- **Bug date('now')**: Substituído por MAX(emissao) para referência temporal confiável
+- **Bug SQL**: Precedência de operadores corrigida (nat_oper removido)
+- **Período ajustado**: De 2-4 semanas para 4-8 semanas (mais realista)
 
 #### 📊 Melhorias Visuais
 
@@ -879,7 +879,7 @@ ____________
 - Interface mais intuitiva
 
 **Arquivos Atualizados:**
-- `sql/views/create_view_produtos_parados.sql` (View V2.0)
+- `sql/views/create_view_produtos_parados.sql` (View V2.1.1)
 - `dashboards/dashboard-produtos-parados.html` (Interface completa)
 - `docs/PRODUTOS_PARADOS.md` (Documentação atualizada)
 
