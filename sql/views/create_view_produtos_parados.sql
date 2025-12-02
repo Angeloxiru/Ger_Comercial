@@ -26,7 +26,7 @@ WITH data_referencia AS (
     WHERE emissao != ''
 ),
 vendas_periodo_anterior AS (
-    -- Produtos vendidos entre 2-4 semanas antes da data mais recente
+    -- Produtos vendidos entre 4-8 semanas antes da data mais recente
     SELECT DISTINCT
         tr.rep_supervisor,
         tr.desc_representante,
@@ -42,7 +42,7 @@ vendas_periodo_anterior AS (
     CROSS JOIN data_referencia dr
     INNER JOIN tab_representante tr ON v.representante = tr.representante
     LEFT JOIN tab_produto tp ON v.produto = tp.produto
-    WHERE v.emissao BETWEEN date(dr.data_maxima, '-4 weeks') AND date(dr.data_maxima, '-2 weeks')
+    WHERE v.emissao BETWEEN date(dr.data_maxima, '-8 weeks') AND date(dr.data_maxima, '-4 weeks')
         AND v.emissao != ''
         AND v.representante != ''
     GROUP BY tr.rep_supervisor, tr.desc_representante, v.representante,
@@ -50,13 +50,13 @@ vendas_periodo_anterior AS (
     HAVING COUNT(*) >= 2
 ),
 vendas_recentes AS (
-    -- Produtos vendidos nas últimas 2 semanas (baseado na data máxima)
+    -- Produtos vendidos nas últimas 4 semanas (baseado na data máxima)
     SELECT DISTINCT
         v.representante,
         v.produto
     FROM vendas v
     CROSS JOIN data_referencia dr
-    WHERE v.emissao >= date(dr.data_maxima, '-2 weeks')
+    WHERE v.emissao >= date(dr.data_maxima, '-4 weeks')
         AND v.emissao != ''
         AND v.representante != ''
 )
@@ -153,6 +153,12 @@ LIMIT 10;
 
 -- LÓGICA:
 -- - Data referência: MAX(emissao) da tabela vendas
--- - Período anterior: 2-4 semanas antes da data referência
--- - Período recente: Últimas 2 semanas da data referência
--- - Produtos parados: Vendidos no período anterior mas NÃO no recente
+-- - Período anterior: 4-8 semanas antes da data referência (28 dias)
+-- - Período recente: Últimas 4 semanas da data referência (28 dias)
+-- - Produtos parados: Vendidos 2+ vezes no período anterior mas NÃO no recente
+
+-- AJUSTE v2.1.1:
+-- - Mudado de 2-4 semanas para 4-8 semanas (período anterior)
+-- - Mudado de 2 semanas para 4 semanas (período recente)
+-- - Motivo: Período de 14 dias era muito curto para detectar produtos parados
+-- - Benefício: Mais tempo para produtos terem vendas regulares e depois pararem
