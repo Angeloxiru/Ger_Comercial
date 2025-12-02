@@ -2,7 +2,7 @@
 
 ## ✅ ARQUIVO A USAR NO TURSO:
 
-### **`sql/views/create_view_produtos_parados.sql`**
+### **`sql/views/create_view_produtos_parados.sql`** (Versão 2.1 FINAL)
 
 Este é o **único arquivo** que você precisa executar no Turso para criar/atualizar a view de produtos parados.
 
@@ -15,10 +15,11 @@ Este é o **único arquivo** que você precisa executar no Turso para criar/atua
 6. Execute
 
 **O que ele faz:**
-- Cria a view `vw_produtos_parados` (versão 2.0 - corrigida)
-- Detecta produtos vendidos 2-4 semanas atrás que pararam nas últimas 2 semanas
-- Usa `date(emissao)` em todas as comparações (correção do bug TEXT vs DATE)
+- Remove view antiga e cria nova (`DROP VIEW IF EXISTS` + `CREATE VIEW`)
+- Usa **MAX(emissao)** da tabela como referência temporal (ao invés de `date('now')`)
+- Detecta produtos vendidos 2-4 semanas antes da data máxima que pararam nas últimas 2 semanas
 - 6 níveis de risco: MÍNIMO, BAIXO, MODERADO, ALTO, MUITO ALTO, EXTREMO
+- Inclui 4 testes automáticos para validação
 
 ---
 
