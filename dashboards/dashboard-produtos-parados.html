@@ -279,7 +279,12 @@
             font-weight: 600;
         }
 
-        .badge-critico {
+        .badge-extremo {
+            background: #8b0000;
+            color: white;
+        }
+
+        .badge-muito-alto {
             background: #dc3545;
             color: white;
         }
@@ -289,13 +294,18 @@
             color: white;
         }
 
-        .badge-medio {
+        .badge-moderado {
             background: #ffc107;
             color: #000;
         }
 
         .badge-baixo {
             background: #28a745;
+            color: white;
+        }
+
+        .badge-minimo {
+            background: #20c997;
             color: white;
         }
 
@@ -379,7 +389,7 @@
     </div>
 
     <div class="alert-info" style="margin: 20px;">
-        <strong>ℹ️ Sobre este Dashboard:</strong> Identifica produtos que os representantes vendiam regularmente há 4+ semanas, mas pararam de vender. Útil para detectar perda de clientes ou produtos descontinuados.
+        <strong>ℹ️ Sobre este Dashboard:</strong> Identifica produtos que os representantes vendiam regularmente (2-4 semanas atrás), mas pararam de vender nas últimas 2 semanas. Classificação por risco: Mínimo (1 sem), Baixo (2 sem), Moderado (3 sem), Alto (4 sem), Muito Alto (5 sem), Extremo (6+ sem).
     </div>
 
     <!-- Filtros -->
@@ -415,10 +425,12 @@
                 <label for="filterRisco">Nível de Risco</label>
                 <select id="filterRisco" onchange="aplicarFiltros()">
                     <option value="">Todos os Níveis</option>
-                    <option value="CRÍTICO">🔴 Crítico</option>
-                    <option value="ALTO">🟠 Alto</option>
-                    <option value="MÉDIO">🟡 Médio</option>
-                    <option value="BAIXO">🟢 Baixo</option>
+                    <option value="EXTREMO">⚫ Extremo (6+ sem)</option>
+                    <option value="MUITO ALTO">🔴 Muito Alto (5 sem)</option>
+                    <option value="ALTO">🟠 Alto (4 sem)</option>
+                    <option value="MODERADO">🟡 Moderado (3 sem)</option>
+                    <option value="BAIXO">🟢 Baixo (2 sem)</option>
+                    <option value="MÍNIMO">🔵 Mínimo (1 sem)</option>
                 </select>
             </div>
         </div>
@@ -510,12 +522,17 @@
     <script type="module">
         import { db } from '../js/db.js';
         import { cache, CACHE_TTL } from '../js/cache.js';
+        import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
+
+        // Injetar estilos do FilterSearch
+        injectFilterSearchStyles();
 
         // Estado global
         let dadosCompletos = [];
         let dadosFiltrados = [];
         let chartTopProdutos = null;
         let chartRisco = null;
+        let filterSearchInstances = {};
 
         // Carregar dados
         async function carregarDados() {
@@ -551,22 +568,47 @@
         // Popular filtros
         function popularFiltros() {
             // Supervisores únicos
-            const supervisores = [...new Set(dadosCompletos.map(d => d.rep_supervisor))].sort();
+            const supervisores = [...new Set(dadosCompletos.map(d => d.rep_supervisor).filter(s => s))].sort();
             const selectSupervisor = document.getElementById('filterSupervisor');
             selectSupervisor.innerHTML = '<option value="">Todos os Supervisores</option>' +
                 supervisores.map(s => `<option value="${s}">${s}</option>`).join('');
 
             // Representantes únicos
-            const representantes = [...new Set(dadosCompletos.map(d => d.desc_representante))].sort();
+            const representantes = [...new Set(dadosCompletos.map(d => d.desc_representante).filter(r => r))].sort();
             const selectRepresentante = document.getElementById('filterRepresentante');
             selectRepresentante.innerHTML = '<option value="">Todos os Representantes</option>' +
                 representantes.map(r => `<option value="${r}">${r}</option>`).join('');
 
             // Categorias únicas
-            const categorias = [...new Set(dadosCompletos.map(d => d.categoria_produto))].sort();
+            const categorias = [...new Set(dadosCompletos.map(d => d.categoria_produto).filter(c => c))].sort();
             const selectCategoria = document.getElementById('filterCategoria');
             selectCategoria.innerHTML = '<option value="">Todas as Categorias</option>' +
                 categorias.map(c => `<option value="${c}">${c}</option>`).join('');
+
+            // Inicializar FilterSearch nos filtros
+            if (!filterSearchInstances.filterSupervisor) {
+                filterSearchInstances.filterSupervisor = new FilterSearch('filterSupervisor', {
+                    placeholder: 'Digite para buscar supervisor...'
+                });
+            } else {
+                filterSearchInstances.filterSupervisor.updateOptions(supervisores);
+            }
+
+            if (!filterSearchInstances.filterRepresentante) {
+                filterSearchInstances.filterRepresentante = new FilterSearch('filterRepresentante', {
+                    placeholder: 'Digite para buscar representante...'
+                });
+            } else {
+                filterSearchInstances.filterRepresentante.updateOptions(representantes);
+            }
+
+            if (!filterSearchInstances.filterCategoria) {
+                filterSearchInstances.filterCategoria = new FilterSearch('filterCategoria', {
+                    placeholder: 'Digite para buscar categoria...'
+                });
+            } else {
+                filterSearchInstances.filterCategoria.updateOptions(categorias);
+            }
         }
 
         // Aplicar filtros
@@ -627,10 +669,12 @@
                 const tr = document.createElement('tr');
 
                 const badgeClass = {
-                    'CRÍTICO': 'badge-critico',
+                    'EXTREMO': 'badge-extremo',
+                    'MUITO ALTO': 'badge-muito-alto',
                     'ALTO': 'badge-alto',
-                    'MÉDIO': 'badge-medio',
-                    'BAIXO': 'badge-baixo'
+                    'MODERADO': 'badge-moderado',
+                    'BAIXO': 'badge-baixo',
+                    'MÍNIMO': 'badge-minimo'
                 }[item.nivel_risco] || 'badge-baixo';
 
                 tr.innerHTML = `
@@ -715,10 +759,12 @@
         // Gráfico de Risco
         function atualizarGraficoRisco() {
             const riscos = {
-                'CRÍTICO': 0,
+                'EXTREMO': 0,
+                'MUITO ALTO': 0,
                 'ALTO': 0,
-                'MÉDIO': 0,
-                'BAIXO': 0
+                'MODERADO': 0,
+                'BAIXO': 0,
+                'MÍNIMO': 0
             };
 
             dadosFiltrados.forEach(item => {
@@ -735,10 +781,10 @@
             chartRisco = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Crítico', 'Alto', 'Médio', 'Baixo'],
+                    labels: ['Extremo', 'Muito Alto', 'Alto', 'Moderado', 'Baixo', 'Mínimo'],
                     datasets: [{
-                        data: [riscos.CRÍTICO, riscos.ALTO, riscos.MÉDIO, riscos.BAIXO],
-                        backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#28a745']
+                        data: [riscos.EXTREMO, riscos['MUITO ALTO'], riscos.ALTO, riscos.MODERADO, riscos.BAIXO, riscos.MÍNIMO],
+                        backgroundColor: ['#8b0000', '#dc3545', '#fd7e14', '#ffc107', '#28a745', '#20c997']
                     }]
                 },
                 options: {
@@ -759,6 +805,18 @@
             document.getElementById('filterRepresentante').value = '';
             document.getElementById('filterCategoria').value = '';
             document.getElementById('filterRisco').value = '';
+
+            // Limpar campos de busca do FilterSearch
+            if (filterSearchInstances.filterSupervisor) {
+                filterSearchInstances.filterSupervisor.clear();
+            }
+            if (filterSearchInstances.filterRepresentante) {
+                filterSearchInstances.filterRepresentante.clear();
+            }
+            if (filterSearchInstances.filterCategoria) {
+                filterSearchInstances.filterCategoria.clear();
+            }
+
             aplicarFiltros();
         }
 

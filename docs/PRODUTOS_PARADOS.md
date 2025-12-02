@@ -1,8 +1,10 @@
 # 🛑 Dashboard de Produtos Parados
 
+**Versão 2.0** - Atualizado em Dezembro 2024
+
 ## 📋 Descrição
 
-Dashboard analítico que identifica produtos que os representantes vendiam regularmente há 4+ semanas, mas pararam de vender recentemente. Ferramenta essencial para gestão comercial e prevenção de perda de clientes.
+Dashboard analítico que identifica produtos que os representantes vendiam regularmente (2-4 semanas atrás), mas pararam de vender nas últimas 2 semanas. Ferramenta essencial para gestão comercial e prevenção de perda de clientes.
 
 ---
 
@@ -12,6 +14,7 @@ Dashboard analítico que identifica produtos que os representantes vendiam regul
 - **Produtos descontinuados**: Descobrir produtos que os representantes pararam de oferecer
 - **Análise de risco**: Quantificar o valor potencial perdido com produtos parados
 - **Ação proativa**: Permitir que supervisores ajam antes de perder clientes definitivamente
+- **Detecção precoce**: Sistema refinado com 6 níveis de risco para ação mais rápida
 
 ---
 
@@ -26,19 +29,21 @@ Dashboard analítico que identifica produtos que os representantes vendiam regul
 
 ### Filtros Disponíveis
 
-- ✅ **Supervisor**: Filtrar por supervisor de vendas
-- ✅ **Representante**: Filtrar por vendedor específico
-- ✅ **Categoria de Produto**: Filtrar por família/categoria
-- ✅ **Nível de Risco**: Crítico / Alto / Médio / Baixo
+- ✅ **Supervisor**: Filtrar por supervisor de vendas (com busca digitável)
+- ✅ **Representante**: Filtrar por vendedor específico (com busca digitável)
+- ✅ **Categoria de Produto**: Filtrar por família/categoria (com busca digitável)
+- ✅ **Nível de Risco**: Extremo / Muito Alto / Alto / Moderado / Baixo / Mínimo
 
-### Classificação de Risco
+### Classificação de Risco (Nova Escala)
 
-| Nível | Semanas Parado | Ação Recomendada |
-|-------|----------------|------------------|
-| 🔴 **CRÍTICO** | 8+ semanas | Ação imediata! Cliente pode estar perdido |
-| 🟠 **ALTO** | 6-7 semanas | Urgente - Contatar representante e cliente |
-| 🟡 **MÉDIO** | 4-5 semanas | Monitorar - Verificar motivo |
-| 🟢 **BAIXO** | 4 semanas | Observar tendência |
+| Nível | Semanas Parado | Cor | Ação Recomendada |
+|-------|----------------|-----|------------------|
+| ⚫ **EXTREMO** | 6+ semanas | Bordô Escuro | **CRÍTICO!** Cliente provavelmente perdido - Ação emergencial |
+| 🔴 **MUITO ALTO** | 5 semanas | Vermelho | **URGENTE** - Contato imediato com representante e cliente |
+| 🟠 **ALTO** | 4 semanas | Laranja | **IMPORTANTE** - Investigar motivo e tomar ação |
+| 🟡 **MODERADO** | 3 semanas | Amarelo | **ATENÇÃO** - Monitorar de perto e verificar situação |
+| 🟢 **BAIXO** | 2 semanas | Verde | **OBSERVAR** - Acompanhar evolução na próxima semana |
+| 🔵 **MÍNIMO** | 1 semana | Azul Claro | **NORMAL** - Pode ser variação sazonal ou estoque |
 
 ### Visualizações
 
@@ -50,13 +55,20 @@ Dashboard analítico que identifica produtos que os representantes vendiam regul
 
 ## 🗄️ Estrutura do Banco de Dados
 
-### View: `vw_produtos_parados`
+### View: `vw_produtos_parados` (Versão 2.0)
 
 ```sql
 CREATE VIEW vw_produtos_parados AS
--- Identifica produtos vendidos há 4-6 semanas
--- mas que NÃO foram vendidos nas últimas 4 semanas
+-- Identifica produtos vendidos entre 2-4 semanas atrás (período de referência)
+-- mas que NÃO foram vendidos nas últimas 2 semanas
+-- Requer mínimo de 2 vendas no período de referência
 ```
+
+**Lógica de Detecção:**
+1. **Período de Referência**: 2-4 semanas atrás
+2. **Período Recente**: Últimas 2 semanas
+3. **Critério**: Produto com 2+ vendas no período de referência, mas 0 vendas no período recente
+4. **Cálculo**: Semanas desde a última venda até hoje
 
 **Colunas retornadas:**
 
@@ -68,11 +80,11 @@ CREATE VIEW vw_produtos_parados AS
 | `sku_produto` | TEXT | SKU do produto |
 | `desc_produto` | TEXT | Descrição do produto |
 | `categoria_produto` | TEXT | Categoria/família do produto |
-| `ultima_venda` | DATE | Data da última venda |
+| `ultima_venda` | DATE | Data da última venda (no período de referência) |
 | `qtd_semanas_parado` | INTEGER | Semanas desde a última venda |
 | `valor_medio_perdido` | DECIMAL | Valor médio das vendas anteriores |
 | `qtd_vendas_anteriores` | INTEGER | Quantidade de vendas no período de referência |
-| `nivel_risco` | TEXT | CRÍTICO / ALTO / MÉDIO / BAIXO |
+| `nivel_risco` | TEXT | EXTREMO / MUITO ALTO / ALTO / MODERADO / BAIXO / MÍNIMO |
 
 ---
 
@@ -278,12 +290,75 @@ PRAGMA table_info(vendas);
 
 ---
 
+## 📝 CHANGELOG - Versão 2.0 (Dezembro 2024)
+
+### ✨ Novidades
+
+#### 1. Nova Classificação de Risco (6 Níveis)
+- ⚫ **EXTREMO** (6+ semanas) - Bordô escuro
+- 🔴 **MUITO ALTO** (5 semanas) - Vermelho
+- 🟠 **ALTO** (4 semanas) - Laranja
+- 🟡 **MODERADO** (3 semanas) - Amarelo
+- 🟢 **BAIXO** (2 semanas) - Verde
+- 🔵 **MÍNIMO** (1 semana) - Azul claro
+
+**Benefício**: Classificação mais granular permite ações mais específicas e rápidas
+
+#### 2. Período de Análise Otimizado
+- **Antes**: 4-6 semanas atrás → últimas 4 semanas
+- **Agora**: 2-4 semanas atrás → últimas 2 semanas
+
+**Benefício**: Detecção mais precoce de produtos parados, permitindo ação preventiva
+
+#### 3. Filtros com Busca Digitável
+- ✅ Campo de busca em Supervisor
+- ✅ Campo de busca em Representante
+- ✅ Campo de busca em Categoria
+- ✅ Botão "✕" para limpar busca rapidamente
+- ✅ Atalho ESC para limpar busca
+
+**Benefício**: Encontrar informações específicas em listas grandes é muito mais rápido
+
+### 🐛 Correções de Bugs
+
+#### 1. Bug Crítico: Precedência de Operadores SQL ❌→✅
+**Problema**: Filtro `nat_oper LIKE '5%' OR v.nat_oper LIKE '6%'` sem parênteses causava inclusão incorreta de vendas fora do período
+
+**Solução**: Removido filtro `nat_oper` (todas as linhas da tabela vendas já são vendas)
+
+**Impacto**: Dados agora refletem corretamente produtos parados
+
+#### 2. Simplificação da Query
+- Removido filtro redundante de `nat_oper`
+- Renomeado CTE para `vendas_periodo_anterior` (mais claro)
+- Comentários SQL melhorados
+
+### 🎨 Melhorias de Interface
+
+- Badges coloridos para cada nível de risco
+- Layout consistente com outros dashboards do sistema
+- Filtros mais compactos e organizados
+- Texto informativo atualizado com nova lógica
+
+### 🗄️ Alterações no Banco de Dados
+
+**Arquivo**: `sql/views/create_view_produtos_parados.sql`
+
+**CTEs atualizados**:
+- `vendas_4_semanas_atras` → `vendas_periodo_anterior`
+- `vendas_recentes`: Ajustado para últimas 2 semanas
+
+**Classificação CASE WHEN**: Atualizada para 6 níveis
+
+---
+
 ## 📞 Suporte
 
 Para dúvidas sobre:
-- **SQL e View**: Verifique `sql/create_view_produtos_parados.sql`
-- **Permissões**: Consulte `INSTRUCOES_AUTENTICACAO.md`
+- **SQL e View**: Verifique `sql/views/create_view_produtos_parados.sql`
+- **Permissões**: Consulte `docs/AUTENTICACAO.md`
 - **Interface**: Arquivo `dashboards/dashboard-produtos-parados.html`
+- **Filtros Digitáveis**: Módulo `js/filter-search.js`
 
 ---
 
@@ -296,10 +371,12 @@ Melhorias planejadas:
 - [ ] Histórico de reativações
 - [ ] Comparação período a período
 - [ ] Sugestões automáticas de ação
+- [ ] Gráfico de evolução temporal (linha do tempo)
+- [ ] Integração com WhatsApp para notificações
 
 ---
 
 **Desenvolvido para Germani Alimentos** 🏭
 **Sistema:** Ger Comercial
 **Dashboard:** Produtos Parados 🛑
-**Versão:** 1.0.0
+**Versão:** 2.0.0 (Dezembro 2024)
