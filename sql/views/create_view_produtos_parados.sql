@@ -30,7 +30,7 @@ WITH vendas_periodo_anterior AS (
     FROM vendas v
     INNER JOIN tab_representante tr ON v.representante = tr.representante
     LEFT JOIN tab_produto tp ON v.produto = tp.produto
-    WHERE v.emissao BETWEEN date('now', '-4 weeks') AND date('now', '-2 weeks')
+    WHERE date(v.emissao) BETWEEN date('now', '-4 weeks') AND date('now', '-2 weeks')
         AND v.emissao != ''  -- Filtrar registros sem data
         AND v.representante != ''  -- Filtrar registros sem representante
     GROUP BY tr.rep_supervisor, tr.desc_representante, v.representante,
@@ -43,7 +43,7 @@ vendas_recentes AS (
         representante,
         produto
     FROM vendas
-    WHERE emissao >= date('now', '-2 weeks')
+    WHERE date(emissao) >= date('now', '-2 weeks')
         AND emissao != ''
         AND representante != ''
 )
