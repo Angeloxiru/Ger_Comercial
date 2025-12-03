@@ -918,19 +918,26 @@ ____________
 - ✅ Usa MAX(emissao) como referência (sem problemas de date('now'))
 - ✅ Elimina necessidade de comparar dois períodos
 
+#### 🎨 Melhorias de Interface
+- ✅ **Layout otimizado:** Removida caixa de descrição azul
+- ✅ **Filtros reorganizados:** Botões laterais (padrão do sistema)
+- ✅ **Mais compacto:** Botão "Atualizar" à direita dos filtros
+- ✅ **Consistência visual:** Seguindo padrão dos outros dashboards
+
 #### 📊 Classificação de Risco (mantida)
 - ⚫ Extremo (6+ sem) | 🔴 Muito Alto (5 sem) | 🟠 Alto (4 sem)
 - 🟡 Moderado (3 sem) | 🟢 Baixo (2 sem) | 🔵 Mínimo (1 sem)
 
-**Arquivo Atualizado:**
+**Arquivos Atualizados:**
 - `sql/views/create_view_produtos_parados.sql` (View V3.0)
+- `dashboards/dashboard-produtos-parados.html` (Interface V3.0)
 
 **Histórico de Versões:**
 - v2.0: Lógica de períodos, 6 níveis de risco
 - v2.1: Mudança de date('now') para MAX(emissao)
 - v2.1.1: Período ajustado de 2-4 para 4-8 semanas
 - v2.1.2: Critério mudado de 2+ para 1+ vendas
-- v3.0: **Reformulação completa - última venda ao invés de períodos**
+- v3.0: **Reformulação completa - última venda ao invés de períodos + interface otimizada**
 
 ---
 
