@@ -1,0 +1,432 @@
+[
+  {
+    "tabela": "potencial_cidade",
+    "coluna": "cidade",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "potencial_cidade",
+    "coluna": "rota",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "potencial_cidade",
+    "coluna": "sub_rota",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "potencial_cidade",
+    "coluna": "uf",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "potencial_cidade",
+    "coluna": "latitude",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "potencial_cidade",
+    "coluna": "longitude",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "potencial_cidade",
+    "coluna": "populacao",
+    "tipo": "INTEGER"
+  },
+  {
+    "tabela": "potencial_representante",
+    "coluna": "representante",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "potencial_representante",
+    "coluna": "ano_semana",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "potencial_representante",
+    "coluna": "meta_peso",
+    "tipo": "REAL"
+  },
+  {
+    "tabela": "potencial_representante",
+    "coluna": "meta_clientes_novos",
+    "tipo": "INTEGER"
+  },
+  {
+    "tabela": "potencial_representante",
+    "coluna": "meta_clientes_positivados",
+    "tipo": "INTEGER"
+  },
+  {
+    "tabela": "potencial_representante",
+    "coluna": "meta_skus",
+    "tipo": "INTEGER"
+  },
+  {
+    "tabela": "potencial_representante",
+    "coluna": "desc_representante",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "representante_cidades",
+    "coluna": "representante",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "representante_cidades",
+    "coluna": "cidade",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "sqlite_sequence",
+    "coluna": "name",
+    "tipo": ""
+  },
+  {
+    "tabela": "sqlite_sequence",
+    "coluna": "seq",
+    "tipo": ""
+  },
+  {
+    "tabela": "tab_cliente",
+    "coluna": "cliente",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_cliente",
+    "coluna": "nome",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_cliente",
+    "coluna": "fantasia",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_cliente",
+    "coluna": "insc_est",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_cliente",
+    "coluna": "cnpj_cpf",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_cliente",
+    "coluna": "grupo",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_cliente",
+    "coluna": "endereco",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_cliente",
+    "coluna": "cep",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_cliente",
+    "coluna": "bairro",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_cliente",
+    "coluna": "cidade",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_cliente",
+    "coluna": "estado",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_cliente",
+    "coluna": "grupo_desc",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_cliente",
+    "coluna": "rota",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_cliente",
+    "coluna": "sit_cliente",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_cliente",
+    "coluna": "sub_rota",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_cliente",
+    "coluna": "num_endereco",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_produto",
+    "coluna": "produto",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_produto",
+    "coluna": "desc_produto",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_produto",
+    "coluna": "origem",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_produto",
+    "coluna": "desc_origem",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_produto",
+    "coluna": "familia",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_produto",
+    "coluna": "desc_familia",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_representante",
+    "coluna": "representante",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_representante",
+    "coluna": "desc_representante",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_representante",
+    "coluna": "rep_supervisor",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_representante",
+    "coluna": "rep_tipo",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_representante",
+    "coluna": "rep_cnpj_cpf",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_representante",
+    "coluna": "rep_endereco",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_representante",
+    "coluna": "rep_bairro",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_representante",
+    "coluna": "rep_cidade",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_representante",
+    "coluna": "rep_estado",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_representante",
+    "coluna": "rep_fone",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_representante",
+    "coluna": "rep_email",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_representante",
+    "coluna": "rep_data_inicio",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "tab_representante",
+    "coluna": "rep_data_fim",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "users",
+    "coluna": "id",
+    "tipo": "INTEGER"
+  },
+  {
+    "tabela": "users",
+    "coluna": "username",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "users",
+    "coluna": "password",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "users",
+    "coluna": "full_name",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "users",
+    "coluna": "permissions",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "users",
+    "coluna": "active",
+    "tipo": "INTEGER"
+  },
+  {
+    "tabela": "users",
+    "coluna": "created_at",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "users",
+    "coluna": "updated_at",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "chave_primaria",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "serie",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "nota_fiscal",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "emissao",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "produto",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "qtde_faturada",
+    "tipo": "numeric"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "nat_oper",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "familia",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "complemento",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "cliente",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "nome",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "fantasia",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "representante",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "uf",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "cidade",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "peso_liq",
+    "tipo": "numeric"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "preco_unitario",
+    "tipo": "numeric"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "perc_desc",
+    "tipo": "numeric"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "valor_bruto",
+    "tipo": "numeric"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "valor_desconto",
+    "tipo": "numeric"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "valor_liquido",
+    "tipo": "numeric"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "valor_financeiro",
+    "tipo": "numeric"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "grupo_empresa",
+    "tipo": "TEXT"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "preco_unit_liq",
+    "tipo": "numeric"
+  },
+  {
+    "tabela": "vendas",
+    "coluna": "preco_bruto",
+    "tipo": "REAL"
+  }
+]
