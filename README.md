@@ -13,7 +13,7 @@ Sistema de Gerenciamento Comercial desenvolvido com Turso Database (LibSQL), oti
 - ✅ **Gerenciamento de Usuários** - Interface administrativa para criar e gerenciar usuários
 - ✅ **Importação de Dados** - Sistema completo de importação em massa via CSV com validações robustas
 - ✅ **PWA (Progressive Web App)** - Funciona offline e pode ser instalado no dispositivo
-- ✅ **10 Dashboards Completos** - Vendas, equipe, produtos, clientes, cobrança, produtos parados, ranking, configurações e mais
+- ✅ **11 Dashboards Completos** - Vendas, equipe, produtos, clientes, cobrança, produtos parados, ranking, repositores, configurações e mais
 - ✅ **Filtros Inteligentes** - Busca digitável em tempo real e cascata automática
 - ✅ **Cache Tri-fonte** - LocalStorage + SessionStorage + Cookies para máxima confiabilidade
 - ✅ **Gráficos Interativos** - Chart.js com visualizações dinâmicas
@@ -175,11 +175,22 @@ Abra no navegador: https://angeloxiru.github.io/Ger_Comercial/
 - Redirecionamento automático
 
 ### 2. 🏠 Home (index.html)
-- Menu de dashboards com cards
+- Menu de dashboards com cards organizados
 - Controle de acesso por permissões
 - Cards bloqueados ficam esmaecidos + ícone 🔒
 - Informações do usuário no header
 - Botão de logout
+
+**Ordem dos Cards:**
+1. Vendas por Região
+2. Vendas por Equipe
+3. Ranking de Clientes
+4. Performance de Clientes
+5. Performance Semanal
+6. Produtos Parados
+7. Análise de Produtos
+8. Repositores (externo)
+9. Configurações (Admin)
 
 ### 3. ⚙️ Configurações (Admin Only)
 **Arquivo:** `dashboards/dashboard-gerenciar-usuarios.html`
@@ -273,13 +284,13 @@ cliente;nome;fantasia;insc_est;cnpj_cpf;grupo;endereco;cep;bairro;cidade;estado;
 **Análise:** Penetração de mercado, eficiência por rota
 **Ranking:** Por faturamento, peso, clientes
 
-### 9. 🛑 Produtos Parados (Versão 2.1.1)
+### 9. 🛑 Produtos Parados (Versão 3.0)
 **Filtros:** Supervisor, Representante, Categoria, Risco (com busca digitável)
 **KPIs:** Total de produtos parados, Valor em risco, Representantes afetados, Média de semanas
 **Classificação:** Extremo (6+ sem), Muito Alto (5), Alto (4), Moderado (3), Baixo (2), Mínimo (1)
-**Período de Análise:** 4-8 semanas atrás → últimas 4 semanas (28 dias cada)
+**Lógica:** Detecta última venda de cada produto e calcula semanas paradas (1+ semanas = produto parado)
 **Documentação:** `docs/PRODUTOS_PARADOS.md`
-**Novidades:** Sistema de busca nos filtros + Usa MAX(emissao) + 6 níveis de risco
+**Novidades v3.0:** Lógica completamente reformulada - detecta TODAS as faixas de risco (1-6+ semanas)
 
 ### 10. 🏆 Ranking de Clientes
 **Modo Dual:** 📊 Clientes (individual) ↔ 🏢 Grupos (consolidado)
@@ -307,6 +318,15 @@ cliente;nome;fantasia;insc_est;cnpj_cpf;grupo;endereco;cep;bairro;cidade;estado;
 - Exportação Excel/PDF adaptativa ao modo selecionado
 - Alternância instantânea entre modos
 **Análise:** Performance detalhada com dupla perspectiva (individual vs consolidada)
+
+### 11. 🚚 Repositores
+**Tipo:** Link externo para sistema especializado
+**URL:** https://financeiro-btw8.vercel.app
+**Funcionalidades:**
+- Controles de Rotas
+- Performance dos Repositores
+- Sistema de gestão de entregas e logística
+**Comportamento:** Abre em nova aba ao clicar no card
 
 ---
 
@@ -845,7 +865,76 @@ ____________
 
 ## 🎉 Atualizações Recentes
 
-### 🛑 Dashboard Produtos Parados V2.1.1 (Dezembro 2024)
+### 🏠 Reorganização da Home + Novo Card Repositores (Dezembro 2024)
+
+**Mudanças na página inicial (index.html):**
+
+1. **Novo Card: Repositores 🚚**
+   - Acesso direto ao sistema externo de gestão de repositores
+   - Link: https://financeiro-btw8.vercel.app
+   - Funcionalidades: Controles de Rotas e Performance dos Repositores
+   - Abre em nova aba para não perder contexto do Ger Comercial
+
+2. **Reorganização dos Cards**
+   - Nova ordem otimizada seguindo fluxo de trabalho:
+     1. Vendas por Região
+     2. Vendas por Equipe
+     3. Ranking de Clientes
+     4. Performance de Clientes
+     5. Performance Semanal
+     6. Produtos Parados
+     7. Análise de Produtos
+     8. Repositores (novo)
+     9. Configurações
+
+**Benefícios:**
+- ✅ Acesso rápido ao sistema de repositores
+- ✅ Organização lógica dos dashboards
+- ✅ Melhor experiência de navegação
+- ✅ Integração com sistema externo mantendo contexto
+
+---
+
+### 🛑 Dashboard Produtos Parados V3.0 (Dezembro 2024)
+
+**REFORMULAÇÃO COMPLETA DA LÓGICA DE DETECÇÃO!**
+
+#### 🎯 Problema das Versões Anteriores (v2.x)
+- ❌ Comparava dois períodos: "4-8 semanas atrás" vs "últimas 4 semanas"
+- ❌ Só detectava produtos parados há **4+ semanas**
+- ❌ Produtos parados há 1, 2 ou 3 semanas eram **ignorados**
+- ❌ Retornava 0 produtos mesmo com vendas recentes
+
+#### ✨ Nova Lógica V3.0
+1. **Pega a última venda** de cada representante+produto (MAX(emissao))
+2. **Calcula semanas desde a última venda**
+3. **Se passou 1+ semana** = produto parado
+4. **Classifica por nível de risco** (1-6+ semanas)
+
+#### 🎉 Resultados
+- ✅ Detecta produtos em **TODAS as faixas** (1, 2, 3, 4, 5, 6+ semanas)
+- ✅ Lógica **mais simples e direta**
+- ✅ **Mais fácil de entender e manter**
+- ✅ Usa MAX(emissao) como referência (sem problemas de date('now'))
+- ✅ Elimina necessidade de comparar dois períodos
+
+#### 📊 Classificação de Risco (mantida)
+- ⚫ Extremo (6+ sem) | 🔴 Muito Alto (5 sem) | 🟠 Alto (4 sem)
+- 🟡 Moderado (3 sem) | 🟢 Baixo (2 sem) | 🔵 Mínimo (1 sem)
+
+**Arquivo Atualizado:**
+- `sql/views/create_view_produtos_parados.sql` (View V3.0)
+
+**Histórico de Versões:**
+- v2.0: Lógica de períodos, 6 níveis de risco
+- v2.1: Mudança de date('now') para MAX(emissao)
+- v2.1.1: Período ajustado de 2-4 para 4-8 semanas
+- v2.1.2: Critério mudado de 2+ para 1+ vendas
+- v3.0: **Reformulação completa - última venda ao invés de períodos**
+
+---
+
+### 🛑 Dashboard Produtos Parados V2.1.1 (Histórico)
 
 **Transformação completa do sistema de detecção de produtos parados:**
 

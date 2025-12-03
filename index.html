@@ -239,19 +239,19 @@
             <!-- Card 2: Vendas por Equipe Comercial -->
             <div class="card" onclick="window.location.href='dashboards/dashboard-vendas-equipe.html'">
                 <div class="card-icon">👥</div>
-                <div class="card-title">Vendas por Equipe Comercial</div>
+                <div class="card-title">Vendas por Equipe</div>
                 <div class="card-description">
                     Acompanhe o desempenho por supervisor, representante e cidade com filtros dinâmicos.
                 </div>
                 <span class="badge">Disponível</span>
             </div>
 
-            <!-- Card 3: Análise de Produtos -->
-            <div class="card" onclick="window.location.href='dashboards/dashboard-analise-produtos.html'">
-                <div class="card-icon">📈</div>
-                <div class="card-title">Análise de Produtos</div>
+            <!-- Card 3: Ranking de Clientes -->
+            <div class="card" onclick="window.location.href='dashboards/dashboard-ranking-clientes.html'">
+                <div class="card-icon">🏆</div>
+                <div class="card-title">Ranking de Clientes</div>
                 <div class="card-description">
-                    Analise vendas por origem, família e produto com filtros em cascata e exportação de dados.
+                    Rankings por valor, quantidade, ticket médio e frequência com análise Curva ABC e Top 10.
                 </div>
                 <span class="badge">Disponível</span>
             </div>
@@ -281,12 +281,32 @@
                 <div class="card-icon">🛑</div>
                 <div class="card-title">Produtos Parados</div>
                 <div class="card-description">
-                    Identifique produtos que os representantes vendiam há 4+ semanas mas pararam de vender. Detecte perda de clientes.
+                    Identifique produtos que os representantes pararam de vender nas últimas semanas. Detecte perda de clientes.
                 </div>
                 <span class="badge">Disponível</span>
             </div>
 
-            <!-- Card 7: Configurações (Admin Only) -->
+            <!-- Card 7: Análise de Produtos -->
+            <div class="card" onclick="window.location.href='dashboards/dashboard-analise-produtos.html'">
+                <div class="card-icon">📈</div>
+                <div class="card-title">Análise de Produtos</div>
+                <div class="card-description">
+                    Analise vendas por origem, família e produto com filtros em cascata e exportação de dados.
+                </div>
+                <span class="badge">Disponível</span>
+            </div>
+
+            <!-- Card 8: Repositores -->
+            <div class="card" onclick="window.open('https://financeiro-btw8.vercel.app', '_blank')">
+                <div class="card-icon">🚚</div>
+                <div class="card-title">Repositores</div>
+                <div class="card-description">
+                    Controles de Rotas, e Performances dos Repositores. Sistema de gestão de entregas e logística.
+                </div>
+                <span class="badge">Disponível</span>
+            </div>
+
+            <!-- Card 9: Configurações (Admin Only) -->
             <div class="card" id="card-gerenciar-usuarios" onclick="window.location.href='dashboards/dashboard-gerenciar-usuarios.html'" style="border: 2px solid #ffc107;">
                 <div class="card-icon" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);">⚙️</div>
                 <div class="card-title">Configurações</div>
@@ -294,26 +314,6 @@
                     Gerencie usuários, permissões e importação de dados do sistema.
                 </div>
                 <span class="badge" style="background: #ffc107;">🔐 Admin</span>
-            </div>
-
-            <!-- Outros cards (em breve) -->
-
-            <div class="card coming-soon">
-                <div class="card-icon">📊</div>
-                <div class="card-title">Análise Mensal</div>
-                <div class="card-description">
-                    Relatórios financeiros completos com receitas, descontos, análise de margem e projeções.
-                </div>
-                <span class="badge">Em Breve</span>
-            </div>
-
-            <div class="card" onclick="window.location.href='dashboards/dashboard-ranking-clientes.html'">
-                <div class="card-icon">🏆</div>
-                <div class="card-title">Ranking de Clientes</div>
-                <div class="card-description">
-                    Rankings por valor, quantidade, ticket médio e frequência com análise Curva ABC e Top 10.
-                </div>
-                <span class="badge">Disponível</span>
             </div>
         </div>
     </div>

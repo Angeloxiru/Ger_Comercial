@@ -1,11 +1,11 @@
 -- =====================================================
--- VIEW: PRODUTOS PARADOS - Ger Comercial (VERSÃO 2.1 FINAL)
+-- VIEW: PRODUTOS PARADOS - Ger Comercial (VERSÃO 3.0 FINAL)
 -- =====================================================
--- Identifica produtos que os representantes vendiam regularmente
--- mas pararam de vender nas últimas semanas
+-- Identifica produtos que os representantes não vendem há 1+ semanas
 --
--- CORREÇÃO v2.1: Usa MAX(emissao) ao invés de date('now')
--- Motivo: date('now') apresenta inconsistências nas comparações WHERE
+-- CORREÇÃO v3.0: Lógica completamente reformulada
+-- Motivo: Versão anterior só detectava produtos parados há 4+ semanas
+-- Nova lógica: Detecta última venda de cada produto e calcula semanas paradas
 --
 -- Classificação de Risco:
 --   1 semana  = MÍNIMO
@@ -25,9 +25,9 @@ WITH data_referencia AS (
     FROM vendas
     WHERE emissao != ''
 ),
-vendas_periodo_anterior AS (
-    -- Produtos vendidos entre 4-8 semanas antes da data mais recente
-    SELECT DISTINCT
+ultima_venda_por_produto AS (
+    -- Para cada representante+produto, pega a última venda
+    SELECT
         tr.rep_supervisor,
         tr.desc_representante,
         v.representante,
@@ -35,55 +35,39 @@ vendas_periodo_anterior AS (
         tp.desc_produto,
         v.familia,
         tp.desc_familia,
+        MAX(v.emissao) as ultima_venda,
         AVG(v.valor_bruto) as valor_medio_venda,
-        COUNT(*) as qtd_vendas_anteriores,
-        MAX(v.emissao) as ultima_venda_periodo
+        COUNT(*) as total_vendas_historico
     FROM vendas v
-    CROSS JOIN data_referencia dr
     INNER JOIN tab_representante tr ON v.representante = tr.representante
     LEFT JOIN tab_produto tp ON v.produto = tp.produto
-    WHERE v.emissao BETWEEN date(dr.data_maxima, '-8 weeks') AND date(dr.data_maxima, '-4 weeks')
-        AND v.emissao != ''
+    WHERE v.emissao != ''
         AND v.representante != ''
     GROUP BY tr.rep_supervisor, tr.desc_representante, v.representante,
              v.produto, tp.desc_produto, v.familia, tp.desc_familia
-    HAVING COUNT(*) >= 2
-),
-vendas_recentes AS (
-    -- Produtos vendidos nas últimas 4 semanas (baseado na data máxima)
-    SELECT DISTINCT
-        v.representante,
-        v.produto
-    FROM vendas v
-    CROSS JOIN data_referencia dr
-    WHERE v.emissao >= date(dr.data_maxima, '-4 weeks')
-        AND v.emissao != ''
-        AND v.representante != ''
 )
 SELECT
-    vp.rep_supervisor,
-    vp.desc_representante,
-    vp.representante as cod_representante,
-    vp.produto as sku_produto,
-    vp.desc_produto,
-    COALESCE(vp.desc_familia, vp.familia) as categoria_produto,
-    vp.ultima_venda_periodo as ultima_venda,
-    CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(vp.ultima_venda_periodo)) / 7 AS INTEGER) as qtd_semanas_parado,
-    ROUND(vp.valor_medio_venda, 2) as valor_medio_perdido,
-    vp.qtd_vendas_anteriores,
+    uvp.rep_supervisor,
+    uvp.desc_representante,
+    uvp.representante as cod_representante,
+    uvp.produto as sku_produto,
+    uvp.desc_produto,
+    COALESCE(uvp.desc_familia, uvp.familia) as categoria_produto,
+    uvp.ultima_venda,
+    CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvp.ultima_venda)) / 7 AS INTEGER) as qtd_semanas_parado,
+    ROUND(uvp.valor_medio_venda, 2) as valor_medio_perdido,
+    uvp.total_vendas_historico as qtd_vendas_anteriores,
     CASE
-        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(vp.ultima_venda_periodo)) / 7 AS INTEGER) >= 6 THEN 'EXTREMO'
-        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(vp.ultima_venda_periodo)) / 7 AS INTEGER) >= 5 THEN 'MUITO ALTO'
-        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(vp.ultima_venda_periodo)) / 7 AS INTEGER) >= 4 THEN 'ALTO'
-        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(vp.ultima_venda_periodo)) / 7 AS INTEGER) >= 3 THEN 'MODERADO'
-        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(vp.ultima_venda_periodo)) / 7 AS INTEGER) >= 2 THEN 'BAIXO'
+        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvp.ultima_venda)) / 7 AS INTEGER) >= 6 THEN 'EXTREMO'
+        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvp.ultima_venda)) / 7 AS INTEGER) >= 5 THEN 'MUITO ALTO'
+        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvp.ultima_venda)) / 7 AS INTEGER) >= 4 THEN 'ALTO'
+        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvp.ultima_venda)) / 7 AS INTEGER) >= 3 THEN 'MODERADO'
+        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvp.ultima_venda)) / 7 AS INTEGER) >= 2 THEN 'BAIXO'
         ELSE 'MÍNIMO'
     END as nivel_risco
-FROM vendas_periodo_anterior vp
-LEFT JOIN vendas_recentes vr
-    ON vp.representante = vr.representante
-    AND vp.produto = vr.produto
-WHERE vr.produto IS NULL
+FROM ultima_venda_por_produto uvp
+CROSS JOIN data_referencia dr
+WHERE CAST((julianday(dr.data_maxima) - julianday(uvp.ultima_venda)) / 7 AS INTEGER) >= 1
 ORDER BY qtd_semanas_parado DESC, valor_medio_perdido DESC;
 
 -- =====================================================
@@ -129,36 +113,76 @@ FROM vw_produtos_parados
 ORDER BY qtd_semanas_parado DESC, valor_medio_perdido DESC
 LIMIT 10;
 
+-- TESTE 5: Verificar produtos com diferentes períodos parados
+SELECT
+    'Parados 1 semana (MÍNIMO)' as categoria,
+    COUNT(*) as quantidade
+FROM vw_produtos_parados
+WHERE nivel_risco = 'MÍNIMO'
+UNION ALL
+SELECT
+    'Parados 2 semanas (BAIXO)' as categoria,
+    COUNT(*) as quantidade
+FROM vw_produtos_parados
+WHERE nivel_risco = 'BAIXO'
+UNION ALL
+SELECT
+    'Parados 3 semanas (MODERADO)' as categoria,
+    COUNT(*) as quantidade
+FROM vw_produtos_parados
+WHERE nivel_risco = 'MODERADO'
+UNION ALL
+SELECT
+    'Parados 4 semanas (ALTO)' as categoria,
+    COUNT(*) as quantidade
+FROM vw_produtos_parados
+WHERE nivel_risco = 'ALTO'
+UNION ALL
+SELECT
+    'Parados 5 semanas (MUITO ALTO)' as categoria,
+    COUNT(*) as quantidade
+FROM vw_produtos_parados
+WHERE nivel_risco = 'MUITO ALTO'
+UNION ALL
+SELECT
+    'Parados 6+ semanas (EXTREMO)' as categoria,
+    COUNT(*) as quantidade
+FROM vw_produtos_parados
+WHERE nivel_risco = 'EXTREMO';
+
 -- =====================================================
 -- OBSERVAÇÕES E CHANGELOG
 -- =====================================================
 
--- VERSÃO 2.1 - Correção DEFINITIVA:
--- Problema: date('now', '-2 weeks') no WHERE retornava 0 resultados
--- Causa: Inconsistência do date('now') nas comparações do Turso
--- Solução: Usar MAX(emissao) da tabela como referência temporal
+-- VERSÃO 3.0 - REFORMULAÇÃO COMPLETA DA LÓGICA:
 
--- MUDANÇAS v2.1:
--- 1. ✅ Adicionada CTE data_referencia com MAX(emissao)
--- 2. ✅ Linha 47: date(dr.data_maxima, '-4 weeks') (antes: date('now', '-4 weeks'))
--- 3. ✅ Linha 60: date(dr.data_maxima, '-2 weeks') (antes: date('now', '-2 weeks'))
--- 4. ✅ Linha 72: julianday(data_maxima) (antes: julianday('now'))
--- 5. ✅ Adicionado DROP VIEW IF EXISTS (garante atualização)
+-- PROBLEMA nas versões anteriores (2.x):
+-- A query comparava "período anterior (4-8 semanas)" vs "período recente (últimas 4 semanas)"
+-- Isso só detectava produtos parados há 4+ semanas!
+-- Produtos parados há 1, 2 ou 3 semanas ainda apareciam no "período recente" e eram ignorados
 
--- VANTAGENS:
--- - Funciona independente de date('now')
--- - Usa dados reais da tabela
--- - Mais confiável e previsível
--- - Elimina bugs de timezone/configuração
+-- NOVA LÓGICA v3.0:
+-- 1. Pega a última venda de cada representante+produto (MAX(emissao))
+-- 2. Calcula quantas semanas se passaram desde a última venda
+-- 3. Se passou 1+ semana = produto parado
+-- 4. Classifica por nível de risco conforme semanas paradas
 
--- LÓGICA:
--- - Data referência: MAX(emissao) da tabela vendas
--- - Período anterior: 4-8 semanas antes da data referência (28 dias)
--- - Período recente: Últimas 4 semanas da data referência (28 dias)
--- - Produtos parados: Vendidos 2+ vezes no período anterior mas NÃO no recente
+-- VANTAGENS v3.0:
+-- ✅ Detecta produtos parados há 1, 2, 3, 4, 5, 6+ semanas (todas as faixas)
+-- ✅ Lógica mais simples e direta
+-- ✅ Mais fácil de entender e manter
+-- ✅ Usa MAX(emissao) como referência (sem problemas de date('now'))
+-- ✅ Elimina necessidade de comparar dois períodos diferentes
 
--- AJUSTE v2.1.1:
--- - Mudado de 2-4 semanas para 4-8 semanas (período anterior)
--- - Mudado de 2 semanas para 4 semanas (período recente)
--- - Motivo: Período de 14 dias era muito curto para detectar produtos parados
--- - Benefício: Mais tempo para produtos terem vendas regulares e depois pararem
+-- MUDANÇAS ESTRUTURAIS:
+-- - Removida CTE "vendas_periodo_anterior" (não mais necessária)
+-- - Removida CTE "vendas_recentes" (não mais necessária)
+-- - Adicionada CTE "ultima_venda_por_produto" (simples e direta)
+-- - WHERE final: >= 1 semana parada (ao invés de comparação entre períodos)
+
+-- HISTÓRICO:
+-- v2.0: Introduzida lógica de períodos, níveis de risco 6 categorias
+-- v2.1: Mudança de date('now') para MAX(emissao)
+-- v2.1.1: Período ajustado de 2-4 para 4-8 semanas
+-- v2.1.2: Critério mudado de 2+ para 1+ vendas
+-- v3.0: Reformulação completa - última venda ao invés de comparação de períodos
