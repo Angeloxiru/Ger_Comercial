@@ -284,14 +284,15 @@ cliente;nome;fantasia;insc_est;cnpj_cpf;grupo;endereco;cep;bairro;cidade;estado;
 **Análise:** Penetração de mercado, eficiência por rota
 **Ranking:** Por faturamento, peso, clientes
 
-### 9. 🛑 Produtos Parados (Versão 3.1)
-**Filtros:** Supervisor, Representante, Risco (com busca digitável)
+### 9. 🛑 Produtos Parados (Versão 3.2)
+**Filtros:** Supervisor, Representante, Risco (com busca digitável - UTF-8 corrigido)
 **KPIs:** Total de produtos parados, Valor em risco, Representantes afetados, Média de semanas
 **Classificação:** Extremo (6+ sem), Muito Alto (5), Alto (4), Moderado (3), Baixo (2), Mínimo (1)
 **Lógica:** Detecta última venda de cada produto e calcula semanas paradas (1+ semanas = produto parado)
-**Exportação:** PDF landscape + Envio direto via WhatsApp Web
+**Exportação:** 📄 PDF landscape | 📱 WhatsApp dinâmico com mensagem formatada
+**WhatsApp Inteligente:** Busca telefone do representante (rep_fone) e envia mensagem de texto formatada direto
 **Documentação:** `docs/PRODUTOS_PARADOS.md`
-**Novidades v3.1:** Botão WhatsApp + PDF otimizado (7 colunas sem Categoria)
+**Novidades v3.2:** WhatsApp dinâmico + TOP 5 produtos + Fix acentuação (ç, á, ã, etc)
 
 ### 10. 🏆 Ranking de Clientes
 **Modo Dual:** 📊 Clientes (individual) ↔ 🏢 Grupos (consolidado)
@@ -866,7 +867,64 @@ ____________
 
 ## 🎉 Atualizações Recentes
 
-### 📱 Dashboard Produtos Parados V3.1 - WhatsApp + PDF (Dezembro 2024)
+### 📱 Dashboard Produtos Parados V3.2 - WhatsApp Dinâmico (Dezembro 2024)
+
+**Evolução do envio via WhatsApp: de PDF para mensagem de texto inteligente!**
+
+#### ✨ Duas Ações Separadas
+- 📄 **Botão PDF** - Exporta relatório completo em PDF (opcional)
+- 📱 **Botão WhatsApp** - Envia mensagem de texto formatada direto para o representante
+
+#### 🎯 WhatsApp Inteligente
+**Busca automática do telefone:**
+- Quando há **representante filtrado** → Busca telefone em `tab_representante.rep_fone`
+- Abre WhatsApp **direto para o número** do representante
+- Sem representante filtrado → Abre WhatsApp sem número específico
+
+**Mensagem formatada automaticamente:**
+```
+🛑 PRODUTOS PARADOS - Germani Alimentos
+
+📅 Data: 05/12/2024
+⏰ Hora: 14:30
+
+📊 RESUMO GERAL
+├─ Total de produtos: 15
+├─ Valor em risco: R$ 12.345,67
+└─ Representantes afetados: 3
+
+⚠️ DISTRIBUIÇÃO POR RISCO
+⚫ EXTREMO: 2 produtos
+🔴 MUITO ALTO: 3 produtos
+🟠 ALTO: 5 produtos
+...
+
+📋 TOP 5 PRODUTOS CRÍTICOS
+1. ⚫ PRODUTO A
+   Rep: João Silva
+   Parado: 7 semanas
+   Valor médio: R$ 1.234,56
+...
+```
+
+#### 🐛 Correção de Encoding UTF-8
+- ✅ **Fix acentuação** - ç, á, ã, õ, é agora exibem corretamente
+- 🔧 **Método:** Uso de `textContent` ao invés de `innerHTML` para preservar encoding
+- 📝 **Função auxiliar:** `criarOption()` garante UTF-8 em todas as opções
+
+**Benefícios v3.2:**
+- ✅ Envio instantâneo sem precisar baixar/anexar PDF
+- ✅ Mensagem formatada profissionalmente
+- ✅ Telefone do representante buscado automaticamente
+- ✅ TOP 5 produtos críticos destacados
+- ✅ Caracteres especiais (ç, acentos) funcionando 100%
+- ✅ Separação clara: PDF para relatório, WhatsApp para comunicação rápida
+
+**Arquivo:** `dashboards/dashboard-produtos-parados.html` (v3.2)
+
+---
+
+### 📱 Dashboard Produtos Parados V3.1 - WhatsApp + PDF (Histórico)
 
 **Nova funcionalidade: Envio direto via WhatsApp!**
 
@@ -982,6 +1040,7 @@ ____________
 - v2.1.2: Critério mudado de 2+ para 1+ vendas
 - v3.0: **Reformulação completa - última venda ao invés de períodos + interface otimizada**
 - v3.1: **Botão WhatsApp + PDF otimizado + Remoção filtro Categoria**
+- v3.2: **WhatsApp dinâmico com busca de telefone + Mensagem formatada + Fix UTF-8**
 
 ---
 
