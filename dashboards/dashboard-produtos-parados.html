@@ -157,6 +157,27 @@
             cursor: not-allowed;
         }
 
+        .btn-whatsapp {
+            background: #25D366;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-whatsapp:hover {
+            background: #1da851;
+        }
+
+        .btn-whatsapp:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .main-content {
             display: grid;
             grid-template-columns: 70% 30%;
@@ -401,13 +422,6 @@
             </div>
 
             <div class="filter-group">
-                <label for="filterCategoria">Categoria de Produto</label>
-                <select id="filterCategoria" onchange="aplicarFiltros()">
-                    <option value="">Todas as Categorias</option>
-                </select>
-            </div>
-
-            <div class="filter-group">
                 <label for="filterRisco">Nível de Risco</label>
                 <select id="filterRisco" onchange="aplicarFiltros()">
                     <option value="">Todos os Níveis</option>
@@ -424,6 +438,7 @@
         <div class="filters-buttons">
             <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar</button>
             <button class="btn-atualizar" onclick="carregarDados()" id="btnAtualizar">🔄 Atualizar</button>
+            <button class="btn-whatsapp" onclick="enviarWhatsApp()" id="btnWhatsApp" style="display: none;">📱 WhatsApp</button>
         </div>
     </div>
 
@@ -475,7 +490,6 @@
                                 <th>Supervisor</th>
                                 <th>Representante</th>
                                 <th>Produto</th>
-                                <th>Categoria</th>
                                 <th>Última Venda</th>
                                 <th>Semanas Parado</th>
                                 <th>Valor Médio</th>
@@ -566,12 +580,6 @@
             selectRepresentante.innerHTML = '<option value="">Todos os Representantes</option>' +
                 representantes.map(r => `<option value="${r}">${r}</option>`).join('');
 
-            // Categorias únicas
-            const categorias = [...new Set(dadosCompletos.map(d => d.categoria_produto).filter(c => c))].sort();
-            const selectCategoria = document.getElementById('filterCategoria');
-            selectCategoria.innerHTML = '<option value="">Todas as Categorias</option>' +
-                categorias.map(c => `<option value="${c}">${c}</option>`).join('');
-
             // Inicializar FilterSearch nos filtros
             if (!filterSearchInstances.filterSupervisor) {
                 filterSearchInstances.filterSupervisor = new FilterSearch('filterSupervisor', {
@@ -588,27 +596,17 @@
             } else {
                 filterSearchInstances.filterRepresentante.updateOptions(representantes);
             }
-
-            if (!filterSearchInstances.filterCategoria) {
-                filterSearchInstances.filterCategoria = new FilterSearch('filterCategoria', {
-                    placeholder: 'Digite para buscar categoria...'
-                });
-            } else {
-                filterSearchInstances.filterCategoria.updateOptions(categorias);
-            }
         }
 
         // Aplicar filtros
         function aplicarFiltros() {
             const supervisor = document.getElementById('filterSupervisor').value;
             const representante = document.getElementById('filterRepresentante').value;
-            const categoria = document.getElementById('filterCategoria').value;
             const risco = document.getElementById('filterRisco').value;
 
             dadosFiltrados = dadosCompletos.filter(item => {
                 if (supervisor && item.rep_supervisor !== supervisor) return false;
                 if (representante && item.desc_representante !== representante) return false;
-                if (categoria && item.categoria_produto !== categoria) return false;
                 if (risco && item.nivel_risco !== risco) return false;
                 return true;
             });
@@ -622,13 +620,17 @@
             atualizarTabela();
             atualizarGraficos();
 
-            // Mostrar/ocultar empty state
+            const btnWhatsApp = document.getElementById('btnWhatsApp');
+
+            // Mostrar/ocultar empty state e botão WhatsApp
             if (dadosFiltrados.length === 0) {
                 document.getElementById('emptyTable').classList.add('show');
                 document.getElementById('tableContainer').style.display = 'none';
+                btnWhatsApp.style.display = 'none'; // Ocultar botão se não há dados
             } else {
                 document.getElementById('emptyTable').classList.remove('show');
                 document.getElementById('tableContainer').style.display = 'block';
+                btnWhatsApp.style.display = 'block'; // Mostrar botão quando há dados
             }
         }
 
@@ -669,7 +671,6 @@
                     <td>${item.rep_supervisor || '-'}</td>
                     <td>${item.desc_representante || '-'}</td>
                     <td>${item.desc_produto || '-'}</td>
-                    <td>${item.categoria_produto || '-'}</td>
                     <td>${formatarData(item.ultima_venda)}</td>
                     <td>${item.qtd_semanas_parado} semanas</td>
                     <td>R$ ${(item.valor_medio_perdido || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
@@ -790,7 +791,6 @@
         function limparFiltros() {
             document.getElementById('filterSupervisor').value = '';
             document.getElementById('filterRepresentante').value = '';
-            document.getElementById('filterCategoria').value = '';
             document.getElementById('filterRisco').value = '';
 
             // Limpar campos de busca do FilterSearch
@@ -799,9 +799,6 @@
             }
             if (filterSearchInstances.filterRepresentante) {
                 filterSearchInstances.filterRepresentante.clear();
-            }
-            if (filterSearchInstances.filterCategoria) {
-                filterSearchInstances.filterCategoria.clear();
             }
 
             aplicarFiltros();
@@ -823,10 +820,115 @@
             }
         }
 
+        // Exportar PDF
+        async function exportarPDF() {
+            if (dadosFiltrados.length === 0) {
+                alert('Não há dados para exportar');
+                return null;
+            }
+
+            try {
+                const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                const doc = new jsPDF('landscape');
+
+                // Cabeçalho
+                doc.setFontSize(18);
+                doc.setTextColor(252, 3, 3);
+                doc.text('Produtos Parados - Germani Alimentos', 14, 20);
+
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+                doc.text(`Total de produtos: ${dadosFiltrados.length}`, 14, 34);
+
+                // Preparar dados da tabela
+                const tableData = dadosFiltrados.map(row => [
+                    row.nivel_risco || '-',
+                    row.rep_supervisor || '-',
+                    row.desc_representante || '-',
+                    row.desc_produto || '-',
+                    formatarData(row.ultima_venda),
+                    row.qtd_semanas_parado + ' sem',
+                    'R$ ' + (row.valor_medio_perdido || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})
+                ]);
+
+                doc.autoTable({
+                    head: [['Risco', 'Supervisor', 'Representante', 'Produto', 'Última Venda', 'Semanas', 'Valor Médio']],
+                    body: tableData,
+                    startY: 40,
+                    theme: 'striped',
+                    headStyles: {
+                        fillColor: [252, 3, 3],
+                        textColor: [255, 255, 255],
+                        fontStyle: 'bold',
+                        fontSize: 9
+                    },
+                    bodyStyles: {
+                        fontSize: 8
+                    },
+                    alternateRowStyles: {
+                        fillColor: [248, 249, 250]
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 25 },
+                        3: { cellWidth: 60 }
+                    }
+                });
+
+                const dataAtual = new Date().toISOString().split('T')[0];
+                const fileName = `produtos_parados_${dataAtual}.pdf`;
+                doc.save(fileName);
+
+                return fileName; // Retorna o nome do arquivo para uso no WhatsApp
+            } catch (error) {
+                console.error('Erro ao exportar PDF:', error);
+                alert('Erro ao exportar PDF: ' + error.message);
+                return null;
+            }
+        }
+
+        // Enviar por WhatsApp
+        async function enviarWhatsApp() {
+            if (dadosFiltrados.length === 0) {
+                alert('Não há dados para enviar');
+                return;
+            }
+
+            try {
+                // Gerar PDF primeiro
+                const fileName = await exportarPDF();
+
+                if (!fileName) return;
+
+                // Preparar mensagem para WhatsApp
+                const totalProdutos = dadosFiltrados.length;
+                const valorTotal = dadosFiltrados.reduce((sum, item) => sum + (item.valor_medio_perdido || 0), 0);
+
+                const mensagem = `*📊 Relatório Produtos Parados - Germani Alimentos*\n\n` +
+                    `📅 Data: ${new Date().toLocaleDateString('pt-BR')}\n` +
+                    `📦 Total de produtos: ${totalProdutos}\n` +
+                    `💰 Valor em risco: R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}\n\n` +
+                    `O arquivo PDF "${fileName}" foi gerado.\n` +
+                    `Por favor, anexe o arquivo baixado ao enviar esta mensagem.`;
+
+                // Abrir WhatsApp Web
+                const mensagemEncoded = encodeURIComponent(mensagem);
+                const whatsappURL = `https://wa.me/?text=${mensagemEncoded}`;
+
+                window.open(whatsappURL, '_blank');
+
+            } catch (error) {
+                console.error('Erro ao enviar WhatsApp:', error);
+                alert('Erro ao preparar envio: ' + error.message);
+            }
+        }
+
         // Tornar funções globais
         window.carregarDados = carregarDados;
         window.aplicarFiltros = aplicarFiltros;
         window.limparFiltros = limparFiltros;
+        window.exportarPDF = exportarPDF;
+        window.enviarWhatsApp = enviarWhatsApp;
 
         // Carregar dados ao iniciar
         carregarDados();
