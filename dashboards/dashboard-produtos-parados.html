@@ -592,44 +592,60 @@
 
         // Popular filtros
         function popularFiltros() {
-            // Função auxiliar para criar opções com encoding correto
-            const criarOption = (valor, texto = null) => {
-                const option = document.createElement('option');
-                option.value = valor;
-                option.textContent = texto || valor; // textContent preserva UTF-8
-                return option;
-            };
-
             // Supervisores únicos
             const supervisores = [...new Set(dadosCompletos.map(d => d.rep_supervisor).filter(s => s))].sort();
             const selectSupervisor = document.getElementById('filterSupervisor');
-            selectSupervisor.innerHTML = ''; // Limpar
-            selectSupervisor.appendChild(criarOption('', 'Todos os Supervisores'));
-            supervisores.forEach(s => selectSupervisor.appendChild(criarOption(s)));
 
             // Representantes únicos
             const representantes = [...new Set(dadosCompletos.map(d => d.desc_representante).filter(r => r))].sort();
             const selectRepresentante = document.getElementById('filterRepresentante');
-            selectRepresentante.innerHTML = ''; // Limpar
-            selectRepresentante.appendChild(criarOption('', 'Todos os Representantes'));
-            representantes.forEach(r => selectRepresentante.appendChild(criarOption(r)));
 
-            // Inicializar FilterSearch nos filtros
-            if (!filterSearchInstances.filterSupervisor) {
-                filterSearchInstances.filterSupervisor = new FilterSearch('filterSupervisor', {
-                    placeholder: 'Digite para buscar supervisor...'
-                });
-            } else {
-                filterSearchInstances.filterSupervisor.updateOptions(supervisores);
+            // Destruir instâncias anteriores do FilterSearch para recriar com dados novos
+            if (filterSearchInstances.filterSupervisor) {
+                filterSearchInstances.filterSupervisor.destroy();
+                filterSearchInstances.filterSupervisor = null;
+            }
+            if (filterSearchInstances.filterRepresentante) {
+                filterSearchInstances.filterRepresentante.destroy();
+                filterSearchInstances.filterRepresentante = null;
             }
 
-            if (!filterSearchInstances.filterRepresentante) {
-                filterSearchInstances.filterRepresentante = new FilterSearch('filterRepresentante', {
-                    placeholder: 'Digite para buscar representante...'
-                });
-            } else {
-                filterSearchInstances.filterRepresentante.updateOptions(representantes);
-            }
+            // Limpar e popular supervisores
+            selectSupervisor.innerHTML = '';
+            const optSupervisorDefault = document.createElement('option');
+            optSupervisorDefault.value = '';
+            optSupervisorDefault.textContent = 'Todos os Supervisores';
+            selectSupervisor.appendChild(optSupervisorDefault);
+
+            supervisores.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                selectSupervisor.appendChild(opt);
+            });
+
+            // Limpar e popular representantes
+            selectRepresentante.innerHTML = '';
+            const optRepresentanteDefault = document.createElement('option');
+            optRepresentanteDefault.value = '';
+            optRepresentanteDefault.textContent = 'Todos os Representantes';
+            selectRepresentante.appendChild(optRepresentanteDefault);
+
+            representantes.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r;
+                opt.textContent = r;
+                selectRepresentante.appendChild(opt);
+            });
+
+            // Criar novas instâncias do FilterSearch DEPOIS de popular as opções
+            filterSearchInstances.filterSupervisor = new FilterSearch('filterSupervisor', {
+                placeholder: 'Digite para buscar supervisor...'
+            });
+
+            filterSearchInstances.filterRepresentante = new FilterSearch('filterRepresentante', {
+                placeholder: 'Digite para buscar representante...'
+            });
         }
 
         // Aplicar filtros
@@ -967,50 +983,49 @@
                     porRisco[risco] = (porRisco[risco] || 0) + 1;
                 });
 
-                // Montar mensagem formatada em texto
-                let mensagem = `*🛑 PRODUTOS PARADOS - Germani Alimentos*\n\n`;
-                mensagem += `📅 *Data:* ${new Date().toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric'})}\n`;
-                mensagem += `⏰ *Hora:* ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}\n\n`;
+                // Montar mensagem formatada em texto (sem emojis para evitar problemas de encoding)
+                let mensagem = `*PRODUTOS PARADOS - Germani Alimentos*\n\n`;
+                mensagem += `Data: ${new Date().toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric'})} - ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}\n\n`;
 
-                mensagem += `📊 *RESUMO GERAL*\n`;
-                mensagem += `├─ Total de produtos: *${totalProdutos}*\n`;
-                mensagem += `├─ Valor em risco: *R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}*\n`;
-                mensagem += `└─ Representantes afetados: *${new Set(dadosFiltrados.map(d => d.desc_representante)).size}*\n\n`;
+                mensagem += `*RESUMO GERAL*\n`;
+                mensagem += `Total de produtos: *${totalProdutos}*\n`;
+                mensagem += `Valor em risco: *R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}*\n`;
+                mensagem += `Representantes afetados: *${new Set(dadosFiltrados.map(d => d.desc_representante)).size}*\n\n`;
 
-                mensagem += `⚠️ *DISTRIBUIÇÃO POR RISCO*\n`;
-                const riscoEmojis = {
-                    'EXTREMO': '⚫',
-                    'MUITO ALTO': '🔴',
-                    'ALTO': '🟠',
-                    'MODERADO': '🟡',
-                    'BAIXO': '🟢',
-                    'MÍNIMO': '🔵'
+                mensagem += `*DISTRIBUICAO POR RISCO*\n`;
+                const riscoSimbolos = {
+                    'EXTREMO': '[EXTREMO]',
+                    'MUITO ALTO': '[MUITO ALTO]',
+                    'ALTO': '[ALTO]',
+                    'MODERADO': '[MODERADO]',
+                    'BAIXO': '[BAIXO]',
+                    'MINIMO': '[MINIMO]'
                 };
 
                 Object.entries(porRisco).sort((a, b) => {
-                    const ordem = ['EXTREMO', 'MUITO ALTO', 'ALTO', 'MODERADO', 'BAIXO', 'MÍNIMO'];
+                    const ordem = ['EXTREMO', 'MUITO ALTO', 'ALTO', 'MODERADO', 'BAIXO', 'MINIMO'];
                     return ordem.indexOf(a[0]) - ordem.indexOf(b[0]);
                 }).forEach(([risco, qtd]) => {
-                    const emoji = riscoEmojis[risco] || '⚪';
-                    mensagem += `${emoji} ${risco}: *${qtd} produto${qtd > 1 ? 's' : ''}*\n`;
+                    const simbolo = riscoSimbolos[risco] || '[?]';
+                    mensagem += `${simbolo} ${risco}: *${qtd} produto${qtd > 1 ? 's' : ''}*\n`;
                 });
 
-                mensagem += `\n📋 *TOP 5 PRODUTOS CRÍTICOS*\n`;
+                mensagem += `\n*TOP 5 PRODUTOS CRITICOS*\n`;
                 const top5 = dadosFiltrados
                     .sort((a, b) => (b.valor_medio_perdido || 0) - (a.valor_medio_perdido || 0))
                     .slice(0, 5);
 
                 top5.forEach((item, index) => {
-                    const emoji = riscoEmojis[item.nivel_risco] || '⚪';
-                    mensagem += `\n${index + 1}. ${emoji} *${item.desc_produto || 'Produto'}*\n`;
+                    const simbolo = riscoSimbolos[item.nivel_risco] || '[?]';
+                    mensagem += `\n${index + 1}. ${simbolo} *${item.desc_produto || 'Produto'}*\n`;
                     mensagem += `   Rep: ${item.desc_representante || '-'}\n`;
                     mensagem += `   Parado: ${item.qtd_semanas_parado} semana${item.qtd_semanas_parado > 1 ? 's' : ''}\n`;
-                    mensagem += `   Valor médio: R$ ${(item.valor_medio_perdido || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}\n`;
+                    mensagem += `   Valor medio: R$ ${(item.valor_medio_perdido || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}\n`;
                 });
 
-                mensagem += `\n━━━━━━━━━━━━━━━━━━━━━━\n`;
-                mensagem += `💡 *Ação recomendada:* Contatar clientes e reativar vendas\n`;
-                mensagem += `📄 Para relatório completo em PDF, use o botão de exportação no sistema.`;
+                mensagem += `\n========================================\n`;
+                mensagem += `*Acao recomendada:* Contatar clientes e reativar vendas\n`;
+                mensagem += `Para relatorio completo em PDF, use o botao de exportacao no sistema.`;
 
                 // Abrir WhatsApp
                 const mensagemEncoded = encodeURIComponent(mensagem);

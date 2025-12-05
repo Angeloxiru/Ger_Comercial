@@ -284,15 +284,15 @@ cliente;nome;fantasia;insc_est;cnpj_cpf;grupo;endereco;cep;bairro;cidade;estado;
 **Análise:** Penetração de mercado, eficiência por rota
 **Ranking:** Por faturamento, peso, clientes
 
-### 9. 🛑 Produtos Parados (Versão 3.2)
-**Filtros:** Supervisor, Representante, Risco (com busca digitável - UTF-8 corrigido)
+### 9. 🛑 Produtos Parados (Versão 3.3)
+**Filtros:** Supervisor, Representante, Risco (com busca digitável)
 **KPIs:** Total de produtos parados, Valor em risco, Representantes afetados, Média de semanas
 **Classificação:** Extremo (6+ sem), Muito Alto (5), Alto (4), Moderado (3), Baixo (2), Mínimo (1)
 **Lógica:** Detecta última venda de cada produto e calcula semanas paradas (1+ semanas = produto parado)
 **Exportação:** 📄 PDF landscape | 📱 WhatsApp dinâmico com mensagem formatada
 **WhatsApp Inteligente:** Busca telefone do representante (rep_fone) e envia mensagem de texto formatada direto
 **Documentação:** `docs/PRODUTOS_PARADOS.md`
-**Novidades v3.2:** WhatsApp dinâmico + TOP 5 produtos + Fix acentuação (ç, á, ã, etc)
+**Novidades v3.3:** UTF-8 completamente corrigido em filtros + WhatsApp com ASCII puro (sem emojis)
 
 ### 10. 🏆 Ranking de Clientes
 **Modo Dual:** 📊 Clientes (individual) ↔ 🏢 Grupos (consolidado)
@@ -1040,7 +1040,8 @@ ____________
 - v2.1.2: Critério mudado de 2+ para 1+ vendas
 - v3.0: **Reformulação completa - última venda ao invés de períodos + interface otimizada**
 - v3.1: **Botão WhatsApp + PDF otimizado + Remoção filtro Categoria**
-- v3.2: **WhatsApp dinâmico com busca de telefone + Mensagem formatada + Fix UTF-8**
+- v3.2: **WhatsApp dinâmico com busca de telefone + Mensagem formatada + Fix UTF-8 inicial**
+- v3.3: **Fix definitivo UTF-8: FilterSearch recriado + WhatsApp com ASCII puro (sem emojis)**
 
 ---
 
