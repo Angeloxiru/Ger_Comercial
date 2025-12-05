@@ -284,13 +284,14 @@ cliente;nome;fantasia;insc_est;cnpj_cpf;grupo;endereco;cep;bairro;cidade;estado;
 **Análise:** Penetração de mercado, eficiência por rota
 **Ranking:** Por faturamento, peso, clientes
 
-### 9. 🛑 Produtos Parados (Versão 3.0)
-**Filtros:** Supervisor, Representante, Categoria, Risco (com busca digitável)
+### 9. 🛑 Produtos Parados (Versão 3.1)
+**Filtros:** Supervisor, Representante, Risco (com busca digitável)
 **KPIs:** Total de produtos parados, Valor em risco, Representantes afetados, Média de semanas
 **Classificação:** Extremo (6+ sem), Muito Alto (5), Alto (4), Moderado (3), Baixo (2), Mínimo (1)
 **Lógica:** Detecta última venda de cada produto e calcula semanas paradas (1+ semanas = produto parado)
+**Exportação:** PDF landscape + Envio direto via WhatsApp Web
 **Documentação:** `docs/PRODUTOS_PARADOS.md`
-**Novidades v3.0:** Lógica completamente reformulada - detecta TODAS as faixas de risco (1-6+ semanas)
+**Novidades v3.1:** Botão WhatsApp + PDF otimizado (7 colunas sem Categoria)
 
 ### 10. 🏆 Ranking de Clientes
 **Modo Dual:** 📊 Clientes (individual) ↔ 🏢 Grupos (consolidado)
@@ -865,6 +866,48 @@ ____________
 
 ## 🎉 Atualizações Recentes
 
+### 📱 Dashboard Produtos Parados V3.1 - WhatsApp + PDF (Dezembro 2024)
+
+**Nova funcionalidade: Envio direto via WhatsApp!**
+
+#### ✨ Novo Botão WhatsApp
+- 📱 **Botão verde** "Enviar por WhatsApp" na área de filtros
+- 🔒 **Inicialmente oculto** - aparece apenas após carregar dados
+- ✅ **Habilitado dinamicamente** - visível somente quando há produtos filtrados
+
+#### 📄 Exportação PDF Otimizada
+- 📐 **Layout landscape** (horizontal) para melhor visualização
+- 🎨 **Cabeçalho Germani** com cores oficiais (#fc0303)
+- 📊 **7 colunas:** Risco, Supervisor, Representante, Produto, Última Venda, Semanas, Valor
+- 💾 **Nome automático:** produtos_parados_YYYY-MM-DD.pdf
+- 🔧 **Fontes otimizadas:** 9pt header, 8pt body
+
+#### 📱 Integração WhatsApp Web
+**Fluxo completo:**
+1. Clique no botão → PDF é gerado e baixado
+2. Mensagem pré-formatada com métricas:
+   - Data do relatório
+   - Total de produtos parados
+   - Valor total em risco
+   - Nome do arquivo PDF
+3. WhatsApp Web abre em nova aba
+4. Usuário anexa PDF e envia
+
+#### 🗑️ Limpeza de Interface
+- ❌ **Removido filtro** "Categoria de Produto" (simplificação)
+- ❌ **Removida coluna** "Categoria" da tabela (de 8 para 7 colunas)
+- ✅ **Interface mais limpa** e focada
+
+**Benefícios:**
+- ✅ Compartilhamento instantâneo de relatórios
+- ✅ Mensagem profissional pré-formatada
+- ✅ Zero configuração - funciona imediatamente
+- ✅ Compatível com desktop e mobile
+
+**Arquivo:** `dashboards/dashboard-produtos-parados.html` (v3.1)
+
+---
+
 ### 🏠 Reorganização da Home + Novo Card Repositores (Dezembro 2024)
 
 **Mudanças na página inicial (index.html):**
@@ -938,6 +981,7 @@ ____________
 - v2.1.1: Período ajustado de 2-4 para 4-8 semanas
 - v2.1.2: Critério mudado de 2+ para 1+ vendas
 - v3.0: **Reformulação completa - última venda ao invés de períodos + interface otimizada**
+- v3.1: **Botão WhatsApp + PDF otimizado + Remoção filtro Categoria**
 
 ---
 
