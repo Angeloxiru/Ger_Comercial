@@ -180,6 +180,27 @@
             cursor: not-allowed;
         }
 
+        .btn-export {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-export:hover {
+            background: #c82333;
+        }
+
+        .btn-export:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .main-content {
             display: grid;
             grid-template-columns: 70% 30%;
@@ -440,6 +461,7 @@
         <div class="filters-buttons">
             <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar</button>
             <button class="btn-atualizar" onclick="carregarDados()" id="btnAtualizar">🔄 Atualizar</button>
+            <button class="btn-export" onclick="exportarPDF()" id="btnPDF" style="display: none;">📄 PDF</button>
             <button class="btn-whatsapp" onclick="enviarWhatsApp()" id="btnWhatsApp" style="display: none;">📱 WhatsApp</button>
         </div>
     </div>
@@ -570,17 +592,27 @@
 
         // Popular filtros
         function popularFiltros() {
+            // Função auxiliar para criar opções com encoding correto
+            const criarOption = (valor, texto = null) => {
+                const option = document.createElement('option');
+                option.value = valor;
+                option.textContent = texto || valor; // textContent preserva UTF-8
+                return option;
+            };
+
             // Supervisores únicos
             const supervisores = [...new Set(dadosCompletos.map(d => d.rep_supervisor).filter(s => s))].sort();
             const selectSupervisor = document.getElementById('filterSupervisor');
-            selectSupervisor.innerHTML = '<option value="">Todos os Supervisores</option>' +
-                supervisores.map(s => `<option value="${s}">${s}</option>`).join('');
+            selectSupervisor.innerHTML = ''; // Limpar
+            selectSupervisor.appendChild(criarOption('', 'Todos os Supervisores'));
+            supervisores.forEach(s => selectSupervisor.appendChild(criarOption(s)));
 
             // Representantes únicos
             const representantes = [...new Set(dadosCompletos.map(d => d.desc_representante).filter(r => r))].sort();
             const selectRepresentante = document.getElementById('filterRepresentante');
-            selectRepresentante.innerHTML = '<option value="">Todos os Representantes</option>' +
-                representantes.map(r => `<option value="${r}">${r}</option>`).join('');
+            selectRepresentante.innerHTML = ''; // Limpar
+            selectRepresentante.appendChild(criarOption('', 'Todos os Representantes'));
+            representantes.forEach(r => selectRepresentante.appendChild(criarOption(r)));
 
             // Inicializar FilterSearch nos filtros
             if (!filterSearchInstances.filterSupervisor) {
@@ -623,16 +655,19 @@
             atualizarGraficos();
 
             const btnWhatsApp = document.getElementById('btnWhatsApp');
+            const btnPDF = document.getElementById('btnPDF');
 
-            // Mostrar/ocultar empty state e botão WhatsApp
+            // Mostrar/ocultar empty state e botões de exportação
             if (dadosFiltrados.length === 0) {
                 document.getElementById('emptyTable').classList.add('show');
                 document.getElementById('tableContainer').style.display = 'none';
-                btnWhatsApp.style.display = 'none'; // Ocultar botão se não há dados
+                btnWhatsApp.style.display = 'none';
+                btnPDF.style.display = 'none';
             } else {
                 document.getElementById('emptyTable').classList.remove('show');
                 document.getElementById('tableContainer').style.display = 'block';
-                btnWhatsApp.style.display = 'block'; // Mostrar botão quando há dados
+                btnWhatsApp.style.display = 'block';
+                btnPDF.style.display = 'block';
             }
         }
 
@@ -889,33 +924,105 @@
             }
         }
 
-        // Enviar por WhatsApp
-        function enviarWhatsApp() {
+        // Enviar por WhatsApp (nova versão dinâmica)
+        async function enviarWhatsApp() {
             if (dadosFiltrados.length === 0) {
                 alert('Não há dados para enviar');
                 return;
             }
 
             try {
-                // Gerar PDF primeiro
-                const fileName = exportarPDF();
+                // Buscar telefone do representante se houver filtro aplicado
+                let telefoneDestino = '';
+                const representanteFiltrado = document.getElementById('filterRepresentante').value;
 
-                if (!fileName) return;
+                if (representanteFiltrado) {
+                    // Buscar telefone do representante no banco
+                    const result = await db.execute(`
+                        SELECT rep_fone
+                        FROM tab_representante
+                        WHERE desc_representante = ?
+                        LIMIT 1
+                    `, [representanteFiltrado]);
 
-                // Preparar mensagem para WhatsApp
+                    if (result.rows && result.rows.length > 0 && result.rows[0].rep_fone) {
+                        // Limpar telefone (remover caracteres especiais)
+                        telefoneDestino = result.rows[0].rep_fone.replace(/\D/g, '');
+
+                        // Garantir código do país (Brasil)
+                        if (telefoneDestino.length === 11 && !telefoneDestino.startsWith('55')) {
+                            telefoneDestino = '55' + telefoneDestino;
+                        }
+                    }
+                }
+
+                // Preparar dados do relatório
                 const totalProdutos = dadosFiltrados.length;
                 const valorTotal = dadosFiltrados.reduce((sum, item) => sum + (item.valor_medio_perdido || 0), 0);
 
-                const mensagem = `*📊 Relatório Produtos Parados - Germani Alimentos*\n\n` +
-                    `📅 Data: ${new Date().toLocaleDateString('pt-BR')}\n` +
-                    `📦 Total de produtos: ${totalProdutos}\n` +
-                    `💰 Valor em risco: R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}\n\n` +
-                    `O arquivo PDF "${fileName}" foi gerado.\n` +
-                    `Por favor, anexe o arquivo baixado ao enviar esta mensagem.`;
+                // Agrupar por nível de risco
+                const porRisco = {};
+                dadosFiltrados.forEach(item => {
+                    const risco = item.nivel_risco || 'INDEFINIDO';
+                    porRisco[risco] = (porRisco[risco] || 0) + 1;
+                });
 
-                // Abrir WhatsApp Web
+                // Montar mensagem formatada em texto
+                let mensagem = `*🛑 PRODUTOS PARADOS - Germani Alimentos*\n\n`;
+                mensagem += `📅 *Data:* ${new Date().toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric'})}\n`;
+                mensagem += `⏰ *Hora:* ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}\n\n`;
+
+                mensagem += `📊 *RESUMO GERAL*\n`;
+                mensagem += `├─ Total de produtos: *${totalProdutos}*\n`;
+                mensagem += `├─ Valor em risco: *R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}*\n`;
+                mensagem += `└─ Representantes afetados: *${new Set(dadosFiltrados.map(d => d.desc_representante)).size}*\n\n`;
+
+                mensagem += `⚠️ *DISTRIBUIÇÃO POR RISCO*\n`;
+                const riscoEmojis = {
+                    'EXTREMO': '⚫',
+                    'MUITO ALTO': '🔴',
+                    'ALTO': '🟠',
+                    'MODERADO': '🟡',
+                    'BAIXO': '🟢',
+                    'MÍNIMO': '🔵'
+                };
+
+                Object.entries(porRisco).sort((a, b) => {
+                    const ordem = ['EXTREMO', 'MUITO ALTO', 'ALTO', 'MODERADO', 'BAIXO', 'MÍNIMO'];
+                    return ordem.indexOf(a[0]) - ordem.indexOf(b[0]);
+                }).forEach(([risco, qtd]) => {
+                    const emoji = riscoEmojis[risco] || '⚪';
+                    mensagem += `${emoji} ${risco}: *${qtd} produto${qtd > 1 ? 's' : ''}*\n`;
+                });
+
+                mensagem += `\n📋 *TOP 5 PRODUTOS CRÍTICOS*\n`;
+                const top5 = dadosFiltrados
+                    .sort((a, b) => (b.valor_medio_perdido || 0) - (a.valor_medio_perdido || 0))
+                    .slice(0, 5);
+
+                top5.forEach((item, index) => {
+                    const emoji = riscoEmojis[item.nivel_risco] || '⚪';
+                    mensagem += `\n${index + 1}. ${emoji} *${item.desc_produto || 'Produto'}*\n`;
+                    mensagem += `   Rep: ${item.desc_representante || '-'}\n`;
+                    mensagem += `   Parado: ${item.qtd_semanas_parado} semana${item.qtd_semanas_parado > 1 ? 's' : ''}\n`;
+                    mensagem += `   Valor médio: R$ ${(item.valor_medio_perdido || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}\n`;
+                });
+
+                mensagem += `\n━━━━━━━━━━━━━━━━━━━━━━\n`;
+                mensagem += `💡 *Ação recomendada:* Contatar clientes e reativar vendas\n`;
+                mensagem += `📄 Para relatório completo em PDF, use o botão de exportação no sistema.`;
+
+                // Abrir WhatsApp
                 const mensagemEncoded = encodeURIComponent(mensagem);
-                const whatsappURL = `https://wa.me/?text=${mensagemEncoded}`;
+                let whatsappURL;
+
+                if (telefoneDestino) {
+                    whatsappURL = `https://wa.me/${telefoneDestino}?text=${mensagemEncoded}`;
+                    console.log('📱 Enviando para:', telefoneDestino);
+                } else {
+                    whatsappURL = `https://wa.me/?text=${mensagemEncoded}`;
+                    console.log('📱 Abrindo WhatsApp sem número específico');
+                }
 
                 window.open(whatsappURL, '_blank');
 
