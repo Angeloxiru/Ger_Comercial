@@ -743,11 +743,12 @@
                 <div id="uploadArea" class="upload-area">
                     <div class="file-upload-area" id="fileUploadArea">
                         <div class="file-upload-icon">📤</div>
-                        <div class="file-upload-text">Clique ou arraste o arquivo CSV aqui</div>
-                        <div class="file-upload-hint">Formato aceito: CSV com separador ponto-e-vírgula (;) - Máx: 50MB</div>
+                        <div class="file-upload-text">Clique ou arraste o arquivo aqui</div>
+                        <div class="file-upload-hint">Formatos aceitos: CSV (.csv), Texto em Unicode (.txt), TSV (.tsv, .tab) - Máx: 50MB</div>
+                        <div class="file-upload-hint" style="font-size: 0.85em; color: #666;">Separador detectado automaticamente (tab, ponto-e-vírgula ou vírgula)</div>
                     </div>
 
-                    <input type="file" id="fileInput" class="file-input" accept=".csv">
+                    <input type="file" id="fileInput" class="file-input" accept=".csv,.txt,.tab,.tsv">
 
                     <div id="selectedFile" class="selected-file"></div>
 
@@ -1156,9 +1157,9 @@
             constructor() {
                 this.selectedTable = null;
                 this.selectedFile = null;
-                this.CSV_SEPARATOR = ';'; // Ponto-e-vírgula é mais seguro
+                this.CSV_SEPARATOR = ';'; // Será detectado automaticamente se necessário
                 this.MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-                this.ALLOWED_EXTENSIONS = ['.csv'];
+                this.ALLOWED_EXTENSIONS = ['.csv', '.txt', '.tab', '.tsv']; // Suporta CSV e Texto em Unicode
 
                 // Definição das tabelas
                 this.tables = {
@@ -1499,7 +1500,39 @@
                 });
             }
 
+            detectSeparator(content) {
+                // Detecta automaticamente o separador (ponto-e-vírgula, vírgula ou tab)
+                // Pega a primeira linha não comentada para análise
+                const lines = content.split('\n').filter(line => line.trim() && !line.trim().startsWith('#'));
+
+                if (lines.length === 0) return ';';
+
+                const firstLine = lines[0];
+
+                // Conta ocorrências de cada possível separador
+                const semicolonCount = (firstLine.match(/;/g) || []).length;
+                const tabCount = (firstLine.match(/\t/g) || []).length;
+                const commaCount = (firstLine.match(/,/g) || []).length;
+
+                // Retorna o separador mais comum
+                if (tabCount > semicolonCount && tabCount > commaCount) {
+                    console.log('🔍 Separador detectado: TAB (Texto em Unicode)');
+                    return '\t';
+                } else if (commaCount > semicolonCount && commaCount > tabCount) {
+                    console.log('🔍 Separador detectado: VÍRGULA');
+                    return ',';
+                } else {
+                    console.log('🔍 Separador detectado: PONTO-E-VÍRGULA');
+                    return ';';
+                }
+            }
+
             parseCSV(content) {
+                // Detectar separador automaticamente
+                const detectedSeparator = this.detectSeparator(content);
+                const originalSeparator = this.CSV_SEPARATOR;
+                this.CSV_SEPARATOR = detectedSeparator;
+
                 // Filtrar linhas vazias e comentários (começam com #)
                 const lines = content.split('\n')
                     .filter(line => line.trim() && !line.trim().startsWith('#'));
@@ -1527,6 +1560,9 @@
                         console.warn(`Linha ${i + 1} ignorada: ${values.length} colunas encontradas, esperadas ${headers.length}`);
                     }
                 }
+
+                // Restaurar separador original
+                this.CSV_SEPARATOR = originalSeparator;
 
                 return { headers, rows };
             }
