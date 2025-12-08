@@ -1167,21 +1167,21 @@
                         displayName: 'Clientes',
                         pk: 'cliente',
                         columns: ['cliente', 'nome', 'fantasia', 'insc_est', 'cnpj_cpf', 'grupo', 'endereco', 'cep', 'bairro', 'cidade', 'estado', 'grupo_desc', 'rota', 'sit_cliente', 'sub_rota', 'num_endereco'],
-                        example: ['001', 'EXEMPLO COMERCIO LTDA', 'Exemplo', '123456789', '12.345.678/0001-90', 'GRP01', 'Rua Exemplo', '12345-678', 'Centro', 'São Paulo', 'SP', 'Grupo Exemplo', 'R01', 'ATIVO', 'SR01', '100']
+                        example: ['001', 'COMÉRCIO AÇÃO E SOLUÇÃO LTDA', 'Ação e Solução', '123456789', '12.345.678/0001-90', 'GRP01', 'AVENIDA INDEPENDÊNCIA', '12345-678', 'Centro', 'São Paulo', 'SP', 'Distribuição', 'R01', 'ATIVO', 'SR01', '100']
                     },
                     tab_produto: {
                         name: 'tab_produto',
                         displayName: 'Produtos',
                         pk: 'produto',
                         columns: ['produto', 'desc_produto', 'origem', 'desc_origem', 'familia', 'desc_familia'],
-                        example: ['PROD001', 'Produto Exemplo', 'OR01', 'Origem Exemplo', 'FAM01', 'Família Exemplo']
+                        example: ['PROD001', 'Solução de Informática', 'OR01', 'Nacional', 'FAM01', 'Eletrônicos']
                     },
                     tab_representante: {
                         name: 'tab_representante',
                         displayName: 'Representantes',
                         pk: 'representante',
                         columns: ['representante', 'desc_representante', 'rep_supervisor', 'rep_tipo', 'rep_cnpj_cpf', 'rep_endereco', 'rep_bairro', 'rep_cidade', 'rep_estado', 'rep_fone', 'rep_email', 'rep_data_inicio', 'rep_data_fim'],
-                        example: ['REP001', 'João Silva', 'SUP001', 'Externo', '123.456.789-00', 'Rua Rep', 'Centro', 'São Paulo', 'SP', '(11) 98765-4321', 'joao@email.com', '2024-01-01', '']
+                        example: ['REP001', 'João José da Conceição', 'SUP001', 'Externo', '123.456.789-00', 'Rua São José', 'Centro', 'São Paulo', 'SP', '(11) 98765-4321', 'joao@email.com', '2024-01-01', '']
                     }
                 };
 
@@ -1288,9 +1288,14 @@
                 // Criar CSV com ponto-e-vírgula
                 const header = table.columns.join(this.CSV_SEPARATOR);
                 const example = table.example.join(this.CSV_SEPARATOR);
-                const csv = `${header}\n${example}`;
 
-                // Download do arquivo
+                // Adicionar BOM UTF-8 (\uFEFF) para garantir encoding correto no Excel e outros programas
+                const BOM = '\uFEFF';
+                // Instrução importante sobre encoding - ficará como primeira linha e será ignorada no parse
+                const instruction = `# IMPORTANTE: Ao editar este arquivo no Excel, salve como "CSV UTF-8 (Delimitado por vírgula)" para preservar acentos e caracteres especiais`;
+                const csv = `${BOM}${instruction}\n${header}\n${example}`;
+
+                // Download do arquivo com encoding UTF-8
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
@@ -1433,19 +1438,31 @@
             async readFile(file) {
                 return new Promise((resolve, reject) => {
                     const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onload = (e) => {
+                        let content = e.target.result;
+
+                        // Remover BOM UTF-8 se presente (\uFEFF ou bytes EF BB BF)
+                        if (content.charCodeAt(0) === 0xFEFF) {
+                            content = content.substring(1);
+                        }
+
+                        resolve(content);
+                    };
                     reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
                     reader.readAsText(file, 'UTF-8');
                 });
             }
 
             parseCSV(content) {
-                const lines = content.split('\n').filter(line => line.trim());
+                // Filtrar linhas vazias e comentários (começam com #)
+                const lines = content.split('\n')
+                    .filter(line => line.trim() && !line.trim().startsWith('#'));
+
                 if (lines.length < 2) {
                     throw new Error('Arquivo CSV vazio ou inválido');
                 }
 
-                // Parse headers
+                // Parse headers (primeira linha não comentada)
                 const headers = this.parseCSVLine(lines[0]);
                 const rows = [];
 
