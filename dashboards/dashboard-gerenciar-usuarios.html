@@ -1291,9 +1291,12 @@
 
                 // Adicionar BOM UTF-8 (\uFEFF) para garantir encoding correto no Excel e outros programas
                 const BOM = '\uFEFF';
-                // Instrução importante sobre encoding - ficará como primeira linha e será ignorada no parse
-                const instruction = `# IMPORTANTE: Ao editar este arquivo no Excel, salve como "CSV UTF-8 (Delimitado por vírgula)" para preservar acentos e caracteres especiais`;
-                const csv = `${BOM}${instruction}\n${header}\n${example}`;
+                // Instruções importantes sobre encoding - ficarão como comentários e serão ignoradas no parse
+                const instruction1 = `# IMPORTANTE: Para preservar acentos (ç, ã, ê, etc) ao salvar:`;
+                const instruction2 = `# - OPÇÃO 1 (Excel): Use "Texto em Unicode" ou mantenha "CSV (separado por vírgulas)"`;
+                const instruction3 = `# - OPÇÃO 2 (Editor): Use Notepad++, VSCode ou Bloco de Notas e salve como UTF-8`;
+                const instruction4 = `# - OPÇÃO 3 (LibreOffice): Salve como "Texto CSV (.csv)" e escolha encoding "Unicode (UTF-8)"`;
+                const csv = `${BOM}${instruction1}\n${instruction2}\n${instruction3}\n${instruction4}\n${header}\n${example}`;
 
                 // Download do arquivo com encoding UTF-8
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1435,6 +1438,19 @@
                 container.scrollTop = container.scrollHeight;
             }
 
+            detectEncodingIssues(content) {
+                // Detecta caracteres de substituição Unicode (�) ou outros problemas comuns
+                // Caractere � aparece como U+FFFD quando há erro de encoding
+                const replacementChar = '\uFFFD';
+                const hasReplacementChar = content.includes(replacementChar);
+
+                // Detecta padrões comuns de encoding errado (Windows-1252 interpretado como UTF-8)
+                // Exemplo: "Independ�ncia" tem bytes que não formam UTF-8 válido
+                const hasInvalidUTF8Pattern = /[\x80-\xFF]{1}/.test(content);
+
+                return hasReplacementChar || hasInvalidUTF8Pattern;
+            }
+
             async readFile(file) {
                 return new Promise((resolve, reject) => {
                     const reader = new FileReader();
@@ -1446,7 +1462,37 @@
                             content = content.substring(1);
                         }
 
-                        resolve(content);
+                        // Verificar se há problemas de encoding
+                        if (this.detectEncodingIssues(content)) {
+                            console.warn('⚠️ Detectados possíveis problemas de encoding. Tentando ler com Windows-1252...');
+
+                            // Tentar ler novamente com Windows-1252
+                            const reader2 = new FileReader();
+                            reader2.onload = (e2) => {
+                                let content2 = e2.target.result;
+
+                                // Remover BOM se presente
+                                if (content2.charCodeAt(0) === 0xFEFF) {
+                                    content2 = content2.substring(1);
+                                }
+
+                                // Se ainda tiver problemas, usa o original e avisa o usuário
+                                if (this.detectEncodingIssues(content2)) {
+                                    console.warn('⚠️ Não foi possível corrigir automaticamente. Usando conteúdo original.');
+                                    resolve(content);
+                                } else {
+                                    console.log('✅ Encoding corrigido automaticamente!');
+                                    resolve(content2);
+                                }
+                            };
+                            reader2.onerror = () => {
+                                console.warn('⚠️ Erro ao tentar ler com encoding alternativo. Usando original.');
+                                resolve(content);
+                            };
+                            reader2.readAsText(file, 'Windows-1252');
+                        } else {
+                            resolve(content);
+                        }
                     };
                     reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
                     reader.readAsText(file, 'UTF-8');
