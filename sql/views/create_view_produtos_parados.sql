@@ -25,8 +25,20 @@ WITH data_referencia AS (
     FROM vendas
     WHERE emissao != ''
 ),
-ultima_venda_por_produto AS (
-    -- Para cada representante+produto, pega a última venda
+todas_vendas_agregadas AS (
+    -- Agregar todas as vendas para calcular médias e totais
+    SELECT
+        v.representante,
+        v.produto,
+        AVG(v.valor_bruto) as valor_medio_venda,
+        COUNT(*) as total_vendas_historico
+    FROM vendas v
+    WHERE v.emissao != ''
+        AND v.representante != ''
+    GROUP BY v.representante, v.produto
+),
+vendas_ranqueadas AS (
+    -- Ranquear vendas por data para pegar a última venda com o cliente
     SELECT
         tr.rep_supervisor,
         tr.desc_representante,
@@ -35,39 +47,63 @@ ultima_venda_por_produto AS (
         tp.desc_produto,
         v.familia,
         tp.desc_familia,
-        MAX(v.emissao) as ultima_venda,
-        AVG(v.valor_bruto) as valor_medio_venda,
-        COUNT(*) as total_vendas_historico
+        v.emissao,
+        v.cliente,
+        tc.nome as nome_cliente,
+        ROW_NUMBER() OVER (
+            PARTITION BY v.representante, v.produto
+            ORDER BY v.emissao DESC
+        ) as rn
     FROM vendas v
     INNER JOIN tab_representante tr ON v.representante = tr.representante
     LEFT JOIN tab_produto tp ON v.produto = tp.produto
+    LEFT JOIN tab_cliente tc ON v.cliente = tc.cliente
     WHERE v.emissao != ''
         AND v.representante != ''
-    GROUP BY tr.rep_supervisor, tr.desc_representante, v.representante,
-             v.produto, tp.desc_produto, v.familia, tp.desc_familia
+),
+ultima_venda_com_cliente AS (
+    -- Filtrar apenas a última venda (rn = 1)
+    SELECT
+        rep_supervisor,
+        desc_representante,
+        representante,
+        produto,
+        desc_produto,
+        familia,
+        desc_familia,
+        emissao as ultima_venda,
+        cliente as ultimo_cliente_cod,
+        nome_cliente as ultimo_cliente_nome
+    FROM vendas_ranqueadas
+    WHERE rn = 1
 )
 SELECT
-    uvp.rep_supervisor,
-    uvp.desc_representante,
-    uvp.representante as cod_representante,
-    uvp.produto as sku_produto,
-    uvp.desc_produto,
-    COALESCE(uvp.desc_familia, uvp.familia) as categoria_produto,
-    uvp.ultima_venda,
-    CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvp.ultima_venda)) / 7 AS INTEGER) as qtd_semanas_parado,
-    ROUND(uvp.valor_medio_venda, 2) as valor_medio_perdido,
-    uvp.total_vendas_historico as qtd_vendas_anteriores,
+    uvc.rep_supervisor,
+    uvc.desc_representante,
+    uvc.representante as cod_representante,
+    uvc.produto as sku_produto,
+    uvc.desc_produto,
+    COALESCE(uvc.desc_familia, uvc.familia) as categoria_produto,
+    uvc.ultima_venda,
+    uvc.ultimo_cliente_cod,
+    uvc.ultimo_cliente_nome,
+    CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvc.ultima_venda)) / 7 AS INTEGER) as qtd_semanas_parado,
+    ROUND(tva.valor_medio_venda, 2) as valor_medio_perdido,
+    tva.total_vendas_historico as qtd_vendas_anteriores,
     CASE
-        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvp.ultima_venda)) / 7 AS INTEGER) >= 6 THEN 'EXTREMO'
-        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvp.ultima_venda)) / 7 AS INTEGER) >= 5 THEN 'MUITO ALTO'
-        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvp.ultima_venda)) / 7 AS INTEGER) >= 4 THEN 'ALTO'
-        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvp.ultima_venda)) / 7 AS INTEGER) >= 3 THEN 'MODERADO'
-        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvp.ultima_venda)) / 7 AS INTEGER) >= 2 THEN 'BAIXO'
+        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvc.ultima_venda)) / 7 AS INTEGER) >= 6 THEN 'EXTREMO'
+        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvc.ultima_venda)) / 7 AS INTEGER) >= 5 THEN 'MUITO ALTO'
+        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvc.ultima_venda)) / 7 AS INTEGER) >= 4 THEN 'ALTO'
+        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvc.ultima_venda)) / 7 AS INTEGER) >= 3 THEN 'MODERADO'
+        WHEN CAST((julianday((SELECT data_maxima FROM data_referencia)) - julianday(uvc.ultima_venda)) / 7 AS INTEGER) >= 2 THEN 'BAIXO'
         ELSE 'MÍNIMO'
     END as nivel_risco
-FROM ultima_venda_por_produto uvp
+FROM ultima_venda_com_cliente uvc
+INNER JOIN todas_vendas_agregadas tva
+    ON uvc.representante = tva.representante
+    AND uvc.produto = tva.produto
 CROSS JOIN data_referencia dr
-WHERE CAST((julianday(dr.data_maxima) - julianday(uvp.ultima_venda)) / 7 AS INTEGER) >= 1
+WHERE CAST((julianday(dr.data_maxima) - julianday(uvc.ultima_venda)) / 7 AS INTEGER) >= 1
 ORDER BY qtd_semanas_parado DESC, valor_medio_perdido DESC;
 
 -- =====================================================
@@ -186,3 +222,4 @@ WHERE nivel_risco = 'EXTREMO';
 -- v2.1.1: Período ajustado de 2-4 para 4-8 semanas
 -- v2.1.2: Critério mudado de 2+ para 1+ vendas
 -- v3.0: Reformulação completa - última venda ao invés de comparação de períodos
+-- v3.4: Adicionado último cliente que comprou (ultimo_cliente_cod, ultimo_cliente_nome)

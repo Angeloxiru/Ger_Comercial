@@ -514,6 +514,7 @@
                                 <th>Supervisor</th>
                                 <th>Representante</th>
                                 <th>Produto</th>
+                                <th>Último Cliente</th>
                                 <th>Última Venda</th>
                                 <th>Semanas Parado</th>
                                 <th>Valor Médio</th>
@@ -724,6 +725,7 @@
                     <td>${item.rep_supervisor || '-'}</td>
                     <td>${item.desc_representante || '-'}</td>
                     <td>${item.desc_produto || '-'}</td>
+                    <td>${item.ultimo_cliente_nome || '-'}</td>
                     <td>${formatarData(item.ultima_venda)}</td>
                     <td>${item.qtd_semanas_parado} semanas</td>
                     <td>R$ ${(item.valor_medio_perdido || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
@@ -900,13 +902,14 @@
                     row.rep_supervisor || '-',
                     row.desc_representante || '-',
                     row.desc_produto || '-',
+                    row.ultimo_cliente_nome || '-',
                     formatarData(row.ultima_venda),
                     row.qtd_semanas_parado + ' sem',
                     'R$ ' + (row.valor_medio_perdido || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})
                 ]);
 
                 doc.autoTable({
-                    head: [['Risco', 'Supervisor', 'Representante', 'Produto', 'Última Venda', 'Semanas', 'Valor Médio']],
+                    head: [['Risco', 'Supervisor', 'Representante', 'Produto', 'Último Cliente', 'Última Venda', 'Semanas', 'Valor Médio']],
                     body: tableData,
                     startY: 40,
                     theme: 'striped',
@@ -1018,14 +1021,13 @@
                 top5.forEach((item, index) => {
                     const simbolo = riscoSimbolos[item.nivel_risco] || '[?]';
                     mensagem += `\n${index + 1}. ${simbolo} *${item.desc_produto || 'Produto'}*\n`;
-                    mensagem += `   Rep: ${item.desc_representante || '-'}\n`;
+                    mensagem += `   Cliente: ${item.ultimo_cliente_nome || '-'}\n`;
                     mensagem += `   Parado: ${item.qtd_semanas_parado} semana${item.qtd_semanas_parado > 1 ? 's' : ''}\n`;
                     mensagem += `   Valor medio: R$ ${(item.valor_medio_perdido || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}\n`;
                 });
 
                 mensagem += `\n========================================\n`;
-                mensagem += `*Acao recomendada:* Contatar clientes e reativar vendas\n`;
-                mensagem += `Para relatorio completo em PDF, use o botao de exportacao no sistema.`;
+                mensagem += `*Acao recomendada:* Contatar clientes e reativar vendas`;
 
                 // Abrir WhatsApp
                 const mensagemEncoded = encodeURIComponent(mensagem);

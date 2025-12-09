@@ -284,15 +284,16 @@ cliente;nome;fantasia;insc_est;cnpj_cpf;grupo;endereco;cep;bairro;cidade;estado;
 **Análise:** Penetração de mercado, eficiência por rota
 **Ranking:** Por faturamento, peso, clientes
 
-### 9. 🛑 Produtos Parados (Versão 3.3)
+### 9. 🛑 Produtos Parados (Versão 3.4)
 **Filtros:** Supervisor, Representante, Risco (com busca digitável)
 **KPIs:** Total de produtos parados, Valor em risco, Representantes afetados, Média de semanas
 **Classificação:** Extremo (6+ sem), Muito Alto (5), Alto (4), Moderado (3), Baixo (2), Mínimo (1)
 **Lógica:** Detecta última venda de cada produto e calcula semanas paradas (1+ semanas = produto parado)
+**Tabela:** Risco, Supervisor, Representante, Produto, **Último Cliente**, Última Venda, Semanas, Valor Médio
 **Exportação:** 📄 PDF landscape | 📱 WhatsApp dinâmico com mensagem formatada
 **WhatsApp Inteligente:** Busca telefone do representante (rep_fone) e envia mensagem de texto formatada direto
 **Documentação:** `docs/PRODUTOS_PARADOS.md`
-**Novidades v3.3:** UTF-8 completamente corrigido em filtros + WhatsApp com ASCII puro (sem emojis)
+**Novidades v3.4:** 👤 Último cliente que comprou cada produto + WhatsApp mostra cliente ao invés de representante
 
 ### 10. 🏆 Ranking de Clientes
 **Modo Dual:** 📊 Clientes (individual) ↔ 🏢 Grupos (consolidado)
@@ -1042,6 +1043,7 @@ ____________
 - v3.1: **Botão WhatsApp + PDF otimizado + Remoção filtro Categoria**
 - v3.2: **WhatsApp dinâmico com busca de telefone + Mensagem formatada + Fix UTF-8 inicial**
 - v3.3: **Fix definitivo UTF-8: FilterSearch recriado + WhatsApp com ASCII puro (sem emojis)**
+- v3.4: **👤 Último cliente que comprou + View SQL refatorada com ROW_NUMBER()**
 
 ---
 
