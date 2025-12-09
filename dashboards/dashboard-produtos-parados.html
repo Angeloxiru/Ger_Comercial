@@ -987,13 +987,12 @@
                 });
 
                 // Montar mensagem formatada em texto (sem emojis para evitar problemas de encoding)
-                let mensagem = `*PRODUTOS PARADOS - Germani Alimentos*\n\n`;
+                let mensagem = `*Atencao aos Produtos sem Venda*\n\n`;
                 mensagem += `Data: ${new Date().toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric'})} - ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}\n\n`;
 
                 mensagem += `*RESUMO GERAL*\n`;
                 mensagem += `Total de produtos: *${totalProdutos}*\n`;
-                mensagem += `Valor em risco: *R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}*\n`;
-                mensagem += `Representantes afetados: *${new Set(dadosFiltrados.map(d => d.desc_representante)).size}*\n\n`;
+                mensagem += `Valor em risco: *R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}*\n\n`;
 
                 mensagem += `*DISTRIBUICAO POR RISCO*\n`;
                 const riscoSimbolos = {
@@ -1002,23 +1001,23 @@
                     'ALTO': '[ALTO]',
                     'MODERADO': '[MODERADO]',
                     'BAIXO': '[BAIXO]',
-                    'MINIMO': '[MINIMO]'
+                    'MÍNIMO': '[MINIMO]'
                 };
 
                 Object.entries(porRisco).sort((a, b) => {
-                    const ordem = ['EXTREMO', 'MUITO ALTO', 'ALTO', 'MODERADO', 'BAIXO', 'MINIMO'];
+                    const ordem = ['EXTREMO', 'MUITO ALTO', 'ALTO', 'MODERADO', 'BAIXO', 'MÍNIMO'];
                     return ordem.indexOf(a[0]) - ordem.indexOf(b[0]);
                 }).forEach(([risco, qtd]) => {
                     const simbolo = riscoSimbolos[risco] || '[?]';
                     mensagem += `${simbolo} ${risco}: *${qtd} produto${qtd > 1 ? 's' : ''}*\n`;
                 });
 
-                mensagem += `\n*TOP 5 PRODUTOS CRITICOS*\n`;
-                const top5 = dadosFiltrados
+                mensagem += `\n*TOP 10 PRODUTOS CRITICOS*\n`;
+                const top10 = dadosFiltrados
                     .sort((a, b) => (b.valor_medio_perdido || 0) - (a.valor_medio_perdido || 0))
-                    .slice(0, 5);
+                    .slice(0, 10);
 
-                top5.forEach((item, index) => {
+                top10.forEach((item, index) => {
                     const simbolo = riscoSimbolos[item.nivel_risco] || '[?]';
                     mensagem += `\n${index + 1}. ${simbolo} *${item.desc_produto || 'Produto'}*\n`;
                     mensagem += `   Cliente: ${item.ultimo_cliente_nome || '-'}\n`;
