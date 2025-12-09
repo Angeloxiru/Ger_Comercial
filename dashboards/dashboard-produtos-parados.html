@@ -987,13 +987,12 @@
                 });
 
                 // Montar mensagem formatada em texto (sem emojis para evitar problemas de encoding)
-                let mensagem = `*PRODUTOS PARADOS - Germani Alimentos*\n\n`;
+                let mensagem = `*Atencao aos Produtos sem Venda*\n\n`;
                 mensagem += `Data: ${new Date().toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric'})} - ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}\n\n`;
 
                 mensagem += `*RESUMO GERAL*\n`;
                 mensagem += `Total de produtos: *${totalProdutos}*\n`;
-                mensagem += `Valor em risco: *R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}*\n`;
-                mensagem += `Representantes afetados: *${new Set(dadosFiltrados.map(d => d.desc_representante)).size}*\n\n`;
+                mensagem += `Valor em risco: *R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}*\n\n`;
 
                 mensagem += `*DISTRIBUICAO POR RISCO*\n`;
                 const riscoSimbolos = {
