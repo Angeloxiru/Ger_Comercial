@@ -950,9 +950,9 @@
                     if (!db.isConnected()) await db.connect();
 
                     // Carregar filtros de tab_cliente (apenas ATIVOS)
-                    rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL AND sit_cliente = "ATIVO" ORDER BY rota');
-                    subRotas = await db.execute('SELECT DISTINCT sub_rota, rota FROM tab_cliente WHERE sub_rota IS NOT NULL AND sit_cliente = "ATIVO" ORDER BY sub_rota');
-                    cidades = await db.execute('SELECT DISTINCT cidade, rota, sub_rota FROM tab_cliente WHERE cidade IS NOT NULL AND sit_cliente = "ATIVO" ORDER BY cidade');
+                    rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL AND sit_cliente = "Ativo" ORDER BY rota');
+                    subRotas = await db.execute('SELECT DISTINCT sub_rota, rota FROM tab_cliente WHERE sub_rota IS NOT NULL AND sit_cliente = "Ativo" ORDER BY sub_rota');
+                    cidades = await db.execute('SELECT DISTINCT cidade, rota, sub_rota FROM tab_cliente WHERE cidade IS NOT NULL AND sit_cliente = "Ativo" ORDER BY cidade');
 
                     // Carregar coordenadas das cidades
                     coordenadas = await db.execute('SELECT cidade, latitude, longitude FROM potencial_cidade WHERE latitude IS NOT NULL AND longitude IS NOT NULL');
@@ -1492,6 +1492,7 @@
 
             try {
                 const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js');
                 const doc = new jsPDF('landscape');
 
                 doc.setFontSize(18);
