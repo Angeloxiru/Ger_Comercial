@@ -13,7 +13,7 @@ Sistema de Gerenciamento Comercial desenvolvido com Turso Database (LibSQL), oti
 - ✅ **Gerenciamento de Usuários** - Interface administrativa para criar e gerenciar usuários
 - ✅ **Importação de Dados** - Sistema completo de importação em massa via CSV com validações robustas
 - ✅ **PWA (Progressive Web App)** - Funciona offline e pode ser instalado no dispositivo
-- ✅ **11 Dashboards Completos** - Vendas, equipe, produtos, clientes, cobrança, produtos parados, ranking, repositores, configurações e mais
+- ✅ **12 Dashboards Completos** - Vendas, equipe, produtos, clientes, cobrança, produtos parados, ranking, clientes sem compras (mapa), repositores, configurações e mais
 - ✅ **Filtros Inteligentes** - Busca digitável em tempo real e cascata automática
 - ✅ **Cache Tri-fonte** - LocalStorage + SessionStorage + Cookies para máxima confiabilidade
 - ✅ **Gráficos Interativos** - Chart.js com visualizações dinâmicas
@@ -53,6 +53,7 @@ Ger_Comercial/
 │   ├── cobranca-semanal.html
 │   ├── dashboard-produtos-parados.html
 │   ├── dashboard-ranking-clientes.html
+│   ├── dashboard-clientes-semcompras.html
 │   └── dashboard-gerenciar-usuarios.html
 │
 ├── js/                            # 📦 Módulos JavaScript
@@ -189,8 +190,9 @@ Abra no navegador: https://angeloxiru.github.io/Ger_Comercial/
 5. Performance Semanal
 6. Produtos Parados
 7. Análise de Produtos
-8. Repositores (externo)
-9. Configurações (Admin)
+8. Clientes Sem Compras (mapa interativo)
+9. Repositores (externo)
+10. Configurações (Admin)
 
 ### 3. ⚙️ Configurações (Admin Only)
 **Arquivo:** `dashboards/dashboard-gerenciar-usuarios.html`
@@ -300,6 +302,97 @@ cliente;nome;fantasia;insc_est;cnpj_cpf;grupo;endereco;cep;bairro;cidade;estado;
 **Filtros:** Período (obrigatório), Rota, Sub-Rota, Cidade, Supervisor, Representante
 **KPIs:** Total de Clientes/Grupos, Valor Total, Ticket Médio, Concentração Top 10
 
+### 11. 🗺️ Clientes Sem Compras (NOVO)
+**Arquivo:** `dashboards/dashboard-clientes-semcompras.html`
+**Permissão:** `clientes-semcompras`
+
+Dashboard interativo com mapa para identificar clientes ativos que não compraram em um período.
+
+**Filtros:**
+- 📅 Período de Análise (30, 60, 90 dias ou customizado)
+- 🛣️ Rota (cascata)
+- 🗺️ SubRota (cascata)
+- 🏙️ Cidade (cascata)
+
+**Layout 60/40:**
+- **60% Esquerda:** Tabela de clientes + Mapa interativo (Leaflet.js)
+- **40% Direita:** KPIs + Resumo por tempo + Resumo por Rota/SubRota
+
+**Classificação de Risco:**
+- 🟢 **Mínimo** - Até 30 dias sem compra
+- 🟡 **Médio** - 30 a 60 dias sem compra
+- 🔴 **Máximo** - 60+ dias sem compra
+- ⚫ **Extremo** - Nunca comprou (cliente novo sem histórico)
+
+**Tabela de Clientes:**
+| Coluna | Descrição |
+|--------|-----------|
+| Risco | Badge colorido com classificação |
+| Cod | Código do cliente |
+| Cliente | Nome/Razão Social |
+| Cidade | Cidade do cliente |
+| Rota | Rota de atendimento |
+| SubRota | Sub-rota de atendimento |
+| Representante(s) | Representantes que atendem a cidade |
+| Dias | Dias sem compra ou "Nunca" |
+
+**Mapa Interativo:**
+- Biblioteca: Leaflet.js (gratuita, open-source)
+- Tiles: OpenStreetMap
+- Clusterização: MarkerCluster para agrupar pontos próximos
+- Cores dos marcadores por nível de risco
+- Popup com detalhes do cliente ao clicar
+
+**Resumo por Rota/SubRota:**
+```
+Rota 1 = 50x
+  ↳ SubRota A = 20x
+  ↳ SubRota B = 18x
+  ↳ SubRota C = 12x
+Rota 2 = 30x
+  ↳ SubRota D = 30x
+```
+
+**KPIs:**
+- 👥 Total de Clientes sem compra
+- 🛣️ Rotas Afetadas
+- 🏙️ Cidades
+- ⚠️ Risco Extremo (nunca compraram)
+
+**Exportações:**
+- 📊 Excel com todas as colunas
+- 📄 PDF landscape formatado
+- 📱 WhatsApp com resumo e Top 10 críticos
+
+**Tabelas Utilizadas:**
+- `tab_cliente` - Dados dos clientes (filtro sit_cliente = 'ATIVO')
+- `vendas` - Histórico de vendas para calcular última compra
+- `potencial_cidade` - Coordenadas (latitude/longitude) para o mapa
+- `representante_cidades` - Relacionamento representante ↔ cidade
+- `tab_representante` - Nome do representante
+
+**SQL Principal:**
+```sql
+WITH ultima_compra AS (
+    SELECT cliente, MAX(emissao) as ultima_venda
+    FROM vendas WHERE emissao <= ?
+    GROUP BY cliente
+)
+SELECT c.cliente, c.nome, c.cidade, c.rota, c.sub_rota,
+       uc.ultima_venda,
+       CAST(julianday(?) - julianday(uc.ultima_venda) AS INTEGER) as dias_sem_compra
+FROM tab_cliente c
+LEFT JOIN ultima_compra uc ON c.cliente = uc.cliente
+WHERE c.sit_cliente = 'ATIVO'
+AND (uc.ultima_venda IS NULL OR uc.ultima_venda < ?)
+```
+
+**Casos de Uso:**
+- 🎯 Identificar clientes que pararam de comprar
+- 🗺️ Visualizar geograficamente áreas com problemas
+- 📊 Priorizar visitas por nível de risco
+- 📱 Enviar alertas para equipe comercial via WhatsApp
+
 **Modo Clientes:**
 - Colunas: #, CodCliente, Razão Social, Cidade, Valor, Qtde, Peso
 - Análise individual de performance por cliente
@@ -357,6 +450,7 @@ cliente;nome;fantasia;insc_est;cnpj_cpf;grupo;endereco;cep;bairro;cidade;estado;
   "cobranca-semanal",
   "produtos-parados",
   "ranking-clientes",
+  "clientes-semcompras",
   "gerenciar-usuarios"
 ]
 ```
@@ -609,7 +703,7 @@ Sempre use a função `serializeDbResult()` ao salvar dados do LibSQL no cache. 
 ## 🎯 Roadmap
 
 ### ✅ Implementado
-- ✅ 9 Dashboards completos (Região, Equipe, Produtos, Clientes, Performance Semanal, Produtos Parados, Ranking de Clientes, Gerenciar Usuários)
+- ✅ 10 Dashboards completos (Região, Equipe, Produtos, Clientes, Performance Semanal, Produtos Parados, Ranking de Clientes, Clientes Sem Compras, Gerenciar Usuários)
 - ✅ Sistema de Login e Autenticação completo
 - ✅ Gerenciamento de Usuários com controle de permissões
 - ✅ Controle de acesso por dashboard (permissões granulares)
@@ -622,6 +716,48 @@ Sempre use a função `serializeDbResult()` ao salvar dados do LibSQL no cache. 
 - ✅ Dashboard de Produtos Parados com análise de risco
 
 ____________
+
+## 🗺️ Novo Dashboard: Clientes Sem Compras (Dez 2025)
+
+**Dashboard interativo com mapa para identificar oportunidades de venda!**
+
+### ✨ Funcionalidades Principais
+
+1. **Mapa Interativo com Leaflet.js**
+   - Visualização geográfica de clientes sem compras
+   - Marcadores coloridos por nível de risco
+   - Clusterização para melhor visualização
+   - Popup com detalhes ao clicar no marcador
+
+2. **Classificação de Risco**
+   - 🟢 **Mínimo** - Até 30 dias sem compra
+   - 🟡 **Médio** - 30 a 60 dias sem compra
+   - 🔴 **Máximo** - 60+ dias sem compra
+   - ⚫ **Extremo** - Nunca comprou (cadastro novo)
+
+3. **Resumo Detalhado**
+   - Por Rota e SubRota com contagem hierárquica
+   - Por tempo sem compra
+   - KPIs: Total, Rotas Afetadas, Cidades, Risco Extremo
+
+4. **Integração com Representantes**
+   - Mostra representantes que atendem cada cidade
+   - Usa tabela `representante_cidades` para relacionamento N:N
+
+5. **Exportações**
+   - 📊 Excel completo
+   - 📄 PDF landscape
+   - 📱 WhatsApp com resumo e Top 10 críticos
+
+**Arquivo:** `dashboards/dashboard-clientes-semcompras.html`
+**Permissão:** `clientes-semcompras`
+
+**Tecnologias:**
+- Leaflet.js 1.9.4 para mapas
+- MarkerCluster para agrupamento
+- OpenStreetMap como tile provider
+
+---
 
 ## 🎨 Atualizações Recentes - Otimização de Layout (Nov 2025)
 
