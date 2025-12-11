@@ -202,10 +202,10 @@
             cursor: not-allowed;
         }
 
-        /* Layout: 60% Tabela+Mapa / 40% Resumo */
+        /* Layout: 75% Tabela+Mapa / 25% Resumo */
         .main-content {
             display: grid;
-            grid-template-columns: 60% 40%;
+            grid-template-columns: 75% 25%;
             gap: 20px;
             margin: 20px;
             min-height: calc(100vh - 300px);
@@ -1241,7 +1241,7 @@
                     FROM tab_cliente c
                     CROSS JOIN data_ref dr
                     LEFT JOIN ultima_compra uc ON c.cliente = uc.cliente
-                    WHERE c.sit_cliente = 'ATIVO'
+                    WHERE c.sit_cliente = 'Ativo'
                     AND (
                         uc.ultima_venda IS NULL
                         OR uc.ultima_venda < ?
