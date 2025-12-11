@@ -906,10 +906,24 @@
             document.getElementById('btnAtualizar').disabled = true;
         }
 
-        // Inicializar mapa
+        // Inicializar mapa (chamado quando o container fica visível)
         function inicializarMapa() {
-            if (window.map) return;
+            // Se já existe, apenas atualiza o tamanho
+            if (window.map) {
+                setTimeout(() => {
+                    window.map.invalidateSize();
+                }, 100);
+                return;
+            }
 
+            // Aguarda o container estar visível
+            const mapContainer = document.getElementById('map');
+            if (!mapContainer || mapContainer.offsetWidth === 0) {
+                console.log('Container do mapa não visível, aguardando...');
+                return;
+            }
+
+            console.log('Inicializando mapa Leaflet...');
             window.map = L.map('map').setView([-27.5954, -48.5480], 8); // Centro de SC
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -918,6 +932,11 @@
 
             window.markersLayer = L.markerClusterGroup();
             window.map.addLayer(window.markersLayer);
+
+            // Força recalculo do tamanho após inicialização
+            setTimeout(() => {
+                window.map.invalidateSize();
+            }, 200);
         }
 
         async function carregarFiltros() {
@@ -1007,9 +1026,6 @@
 
                 preencherSelect('filtroRota', rotasFiltradas);
                 registrarEventListeners();
-
-                // Inicializar mapa
-                inicializarMapa();
 
             } catch (error) {
                 console.error('Erro ao carregar filtros:', error);
@@ -1336,8 +1352,11 @@
             document.getElementById('totalValue').textContent = `Total: ${dados.length} clientes`;
             document.getElementById('summaryTotalCount').textContent = dados.length;
 
-            // Mapa
-            atualizarMapa(dados);
+            // Mapa - inicializa após container visível e atualiza
+            setTimeout(() => {
+                inicializarMapa();
+                atualizarMapa(dados);
+            }, 100);
         }
 
         function atualizarResumoRotas(dados) {
@@ -1551,31 +1570,25 @@
             const maximos = window.dadosCompletos.filter(d => d.risco === 'MAXIMO').length;
             const extremos = window.dadosCompletos.filter(d => d.risco === 'EXTREMO').length;
 
-            // Top 10 clientes criticos
-            const top10 = window.dadosCompletos
-                .filter(d => d.risco === 'EXTREMO' || d.risco === 'MAXIMO')
-                .slice(0, 10);
-
-            let mensagem = `CLIENTES SEM COMPRAS - Germani Alimentos\n\n`;
+            let mensagem = `*CLIENTES SEM COMPRAS*\n`;
+            mensagem += `Germani Alimentos\n\n`;
             mensagem += `Data: ${agora.toLocaleDateString('pt-BR')}\n`;
-            mensagem += `Hora: ${agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}\n`;
-            mensagem += `Periodo: ${dataInicio} a ${dataFim}\n\n`;
-            mensagem += `RESUMO GERAL\n`;
-            mensagem += `Total de clientes: ${total}\n\n`;
-            mensagem += `DISTRIBUICAO POR RISCO\n`;
-            mensagem += `EXTREMO (nunca comprou): ${extremos}\n`;
-            mensagem += `MAXIMO (60+ dias): ${maximos}\n`;
-            mensagem += `MEDIO (30-60 dias): ${medios}\n`;
-            mensagem += `MINIMO (ate 30 dias): ${minimos}\n\n`;
+            mensagem += `Periodo: ${dataInicio} a ${dataFim}\n`;
+            mensagem += `Total: ${total} clientes\n\n`;
+            mensagem += `*RESUMO*\n`;
+            mensagem += `EXTREMO: ${extremos} | MAXIMO: ${maximos}\n`;
+            mensagem += `MEDIO: ${medios} | MINIMO: ${minimos}\n\n`;
+            mensagem += `*LISTA DE CLIENTES*\n`;
+            mensagem += `Cod | Nome | Cidade\n`;
+            mensagem += `─────────────────────\n`;
 
-            if (top10.length > 0) {
-                mensagem += `TOP ${top10.length} CLIENTES CRITICOS\n`;
-                top10.forEach((c, i) => {
-                    mensagem += `${i+1}. ${c.nome || c.cod_cliente}\n`;
-                    mensagem += `   Cidade: ${c.cidade || '-'}\n`;
-                    mensagem += `   Dias: ${c.dias_sem_compra}\n`;
-                });
-            }
+            // Listar todos os clientes
+            window.dadosCompletos.forEach(c => {
+                const cod = c.cod_cliente || '-';
+                const nome = (c.nome || '-').substring(0, 25);
+                const cidade = c.cidade || '-';
+                mensagem += `${cod} | ${nome} | ${cidade}\n`;
+            });
 
             const url = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
             window.open(url, '_blank');
