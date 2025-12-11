@@ -1,0 +1,1697 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dashboard de Clientes Sem Compras - Ger Comercial">
+    <meta name="theme-color" content="#fc0303">
+    <title>Clientes Sem Compras - Ger Comercial</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/Ger_Comercial/manifest.json">
+    <link rel="apple-touch-icon" href="/Ger_Comercial/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/Ger_Comercial/icon-192.png">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #fc0303;
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-logo img {
+            height: 60px;
+            width: auto;
+        }
+
+        .header h1 {
+            font-size: 1.6em;
+            font-weight: 600;
+        }
+
+        .btn-voltar {
+            background: white;
+            color: #fc0303;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-voltar:hover {
+            background: #f8f9fa;
+        }
+
+        .filters-section {
+            background: white;
+            padding: 16px;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .filters-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .filters-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 160px;
+        }
+
+        .btn-limpar {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-limpar:hover {
+            background: #5a6268;
+        }
+
+        .filter-group label {
+            color: #495057;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 0.9em;
+            display: block;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.95em;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #fc0303;
+            box-shadow: 0 0 0 3px rgba(252, 3, 3, 0.1);
+        }
+
+        .filter-group select {
+            cursor: pointer;
+        }
+
+        .filter-group select option:checked {
+            background: #03ff1c;
+            color: #000;
+            font-weight: 600;
+        }
+
+        .date-range {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .quick-dates {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quick-date-btn {
+            background: #e9ecef;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-date-btn:hover {
+            background: #fc0303;
+            color: white;
+        }
+
+        .btn-atualizar {
+            background: #fc0303;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-atualizar:hover {
+            background: #b50909;
+        }
+
+        .btn-atualizar:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Layout: 60% Tabela+Mapa / 40% Resumo */
+        .main-content {
+            display: grid;
+            grid-template-columns: 60% 40%;
+            gap: 20px;
+            margin: 20px;
+            min-height: calc(100vh - 300px);
+        }
+
+        .left-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .table-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
+            padding: 16px 20px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .table-stats {
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .table-container {
+            flex: 1;
+            overflow-y: auto;
+            max-height: calc(20 * 44px + 50px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.85em;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        th.text-right,
+        td.text-right {
+            text-align: right;
+        }
+
+        th.text-center,
+        td.text-center {
+            text-align: center;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f1f3f5;
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        td {
+            padding: 10px 16px;
+            color: #212529;
+            font-size: 0.85em;
+        }
+
+        .table-footer {
+            padding: 16px 20px;
+            background: #f8f9fa;
+            border-top: 2px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-value {
+            color: #495057;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-export {
+            background: #fc0303;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9em;
+        }
+
+        .btn-export:hover {
+            background: #b50909;
+        }
+
+        .btn-whatsapp {
+            background: #25D366;
+        }
+
+        .btn-whatsapp:hover {
+            background: #128C7E;
+        }
+
+        /* Mapa */
+        .map-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .map-header {
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
+            padding: 12px 20px;
+            color: white;
+            font-weight: 600;
+        }
+
+        #map {
+            height: 350px;
+            width: 100%;
+        }
+
+        .map-legend {
+            padding: 12px 20px;
+            background: #f8f9fa;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 0.85em;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        /* Resumo Lateral */
+        .right-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .summary-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .summary-header {
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
+            padding: 12px 20px;
+            color: white;
+            font-weight: 600;
+        }
+
+        .summary-content {
+            padding: 16px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .summary-total {
+            padding: 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .summary-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-rota {
+            font-weight: 600;
+            color: #212529;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            cursor: pointer;
+        }
+
+        .summary-rota:hover {
+            background: #f8f9fa;
+        }
+
+        .summary-subrota {
+            padding-left: 20px;
+            color: #6c757d;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            padding: 4px 0 4px 20px;
+        }
+
+        .summary-count {
+            background: #fc0303;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .summary-count-subrota {
+            background: #6c757d;
+        }
+
+        /* KPIs */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 10px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .kpi-card:hover {
+            border-color: #fc0303;
+            transform: translateY(-2px);
+        }
+
+        .kpi-icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .kpi-label {
+            color: #6c757d;
+            font-size: 0.75em;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .kpi-value {
+            color: #212529;
+            font-size: 1.4em;
+            font-weight: 700;
+        }
+
+        /* Resumo por Tempo */
+        .time-summary {
+            padding: 16px;
+        }
+
+        .time-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .time-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .time-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .time-badge {
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        /* Badges de Risco */
+        .badge-minimo {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-medio {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-maximo {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-extremo {
+            background: #343a40;
+            color: white;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px;
+            background: white;
+            margin: 20px;
+            border-radius: 12px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #fc0303;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            padding: 60px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 20px;
+            font-size: 0.9em;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+        }
+
+        /* Responsivo */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Leaflet Custom Markers */
+        .marker-minimo {
+            background-color: #28a745;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+        }
+
+        .marker-medio {
+            background-color: #ffc107;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+        }
+
+        .marker-maximo {
+            background-color: #dc3545;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+        }
+
+        .marker-extremo {
+            background-color: #343a40;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="header-logo">
+                <img src="https://static.wixstatic.com/media/ce3165_c01db19c0ef64e2abb8c894c7ecc6f95~mv2.png/v1/fill/w_161,h_69,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/logomarca-Germani-2023-Branca-borda-dour.png" alt="Logo Germani Alimentos">
+            </div>
+            <h1>🗺️ Clientes Sem Compras</h1>
+        </div>
+        <a href=".." class="btn-voltar">← Voltar</a>
+    </div>
+
+    <!-- Alerta -->
+    <div id="configAlert" class="alert alert-warning" style="display: none;">
+        <strong>⚠️ Configuração Necessária!</strong><br>
+        Configure suas credenciais do Turso no arquivo <code>js/config.js</code>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-section">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label>📅 Periodo de Analise</label>
+                <div class="date-range">
+                    <input type="date" id="dataInicio">
+                    <input type="date" id="dataFim">
+                </div>
+                <div class="quick-dates">
+                    <button class="quick-date-btn" onclick="setQuickDate('30dias')">30 Dias</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('60dias')">60 Dias</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('90dias')">90 Dias</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>🛣️ Rota</label>
+                <select id="filtroRota" multiple size="3">
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>🗺️ SubRota</label>
+                <select id="filtroSubRota" multiple size="3">
+                    <option value="">Selecione uma Rota primeiro</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>🏙️ Cidade</label>
+                <select id="filtroCidade" multiple size="3">
+                    <option value="">Selecione Rota ou SubRota</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="filters-buttons">
+            <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar Filtros</button>
+            <button class="btn-atualizar" id="btnAtualizar" onclick="buscarClientes()">🔍 Buscar Clientes</button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Buscando clientes sem compras...</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent" style="display: none;">
+        <!-- Left Section: Tabela + Mapa -->
+        <div class="left-section">
+            <!-- Tabela -->
+            <div class="table-section">
+                <div class="table-header">
+                    <div class="table-title">👥 Clientes Ativos Sem Compras no Periodo</div>
+                    <div class="table-stats" id="tableStats">0 clientes</div>
+                </div>
+
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">✅</div>
+                    <div>Nenhum cliente sem compras encontrado!</div>
+                </div>
+
+                <div class="table-container" id="tableContainer">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="text-center">Risco</th>
+                                <th>Cod</th>
+                                <th>Cliente</th>
+                                <th>Cidade</th>
+                                <th>Rota</th>
+                                <th>SubRota</th>
+                                <th>Representante(s)</th>
+                                <th class="text-center">Dias</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+
+                <div id="paginationContainer"></div>
+
+                <div class="table-footer" id="tableFooter">
+                    <div class="total-value" id="totalValue">Total: 0 clientes</div>
+                    <div class="export-buttons">
+                        <button class="btn-export" onclick="exportarExcel()">📊 Excel</button>
+                        <button class="btn-export" onclick="exportarPDF()">📄 PDF</button>
+                        <button class="btn-export btn-whatsapp" onclick="enviarWhatsApp()">📱 WhatsApp</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mapa -->
+            <div class="map-section">
+                <div class="map-header">🗺️ Mapa de Clientes</div>
+                <div id="map"></div>
+                <div class="map-legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #28a745;"></div>
+                        <span>Minimo (ate 30d)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffc107;"></div>
+                        <span>Medio (30-60d)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #dc3545;"></div>
+                        <span>Maximo (60+d)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #343a40;"></div>
+                        <span>Extremo (nunca)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Section: Resumo -->
+        <div class="right-section">
+            <!-- KPIs -->
+            <div class="kpi-grid" id="kpiGrid">
+                <div class="kpi-card">
+                    <div class="kpi-icon">👥</div>
+                    <div class="kpi-label">Total Clientes</div>
+                    <div class="kpi-value" id="kpiTotal">0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">🛣️</div>
+                    <div class="kpi-label">Rotas Afetadas</div>
+                    <div class="kpi-value" id="kpiRotas">0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">🏙️</div>
+                    <div class="kpi-label">Cidades</div>
+                    <div class="kpi-value" id="kpiCidades">0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">⚠️</div>
+                    <div class="kpi-label">Risco Extremo</div>
+                    <div class="kpi-value" id="kpiExtremo">0</div>
+                </div>
+            </div>
+
+            <!-- Resumo por Tempo -->
+            <div class="summary-section">
+                <div class="summary-header">⏰ Distribuicao por Tempo</div>
+                <div class="time-summary" id="timeSummary">
+                    <div class="time-item badge-minimo">
+                        <div class="time-label">🟢 Minimo (ate 30 dias)</div>
+                        <span class="time-badge badge-minimo" id="countMinimo">0</span>
+                    </div>
+                    <div class="time-item badge-medio">
+                        <div class="time-label">🟡 Medio (30-60 dias)</div>
+                        <span class="time-badge badge-medio" id="countMedio">0</span>
+                    </div>
+                    <div class="time-item badge-maximo">
+                        <div class="time-label">🔴 Maximo (60+ dias)</div>
+                        <span class="time-badge badge-maximo" id="countMaximo">0</span>
+                    </div>
+                    <div class="time-item badge-extremo">
+                        <div class="time-label">⚫ Extremo (nunca comprou)</div>
+                        <span class="time-badge badge-extremo" id="countExtremo">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumo por Rota -->
+            <div class="summary-section">
+                <div class="summary-header">📊 Resumo por Rota/SubRota</div>
+                <div class="summary-total" id="summaryTotal">
+                    Clientes ativos sem venda: <span id="summaryTotalCount">0</span>
+                </div>
+                <div class="summary-content" id="summaryContent">
+                    <!-- Preenchido dinamicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet MarkerCluster -->
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
+    <script type="module">
+        import { db } from '../js/db.js';
+        import { config } from '../js/config.js';
+        import { cache, CACHE_TTL } from '../js/cache.js';
+        import { Pagination, injectPaginationStyles } from '../js/pagination.js';
+        import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
+        import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
+        import { serializeDbResult, validateCacheStructure } from '../js/db-utils.js';
+
+        // Inicializa isolamento do dashboard
+        initDashboard('Clientes Sem Compras');
+        registerCleanup();
+        preventStaleCache();
+
+        injectPaginationStyles();
+        injectFilterSearchStyles();
+
+        window.db = db;
+        window.dadosCompletos = [];
+        window.todasRotas = [];
+        window.todasSubRotas = [];
+        window.todasCidades = [];
+        window.coordenadasCidades = {};
+        window.representantesCidades = {};
+        window.filterSearches = {};
+        window.map = null;
+        window.markersLayer = null;
+
+        window.pagination = new Pagination('#paginationContainer', {
+            pageSize: 25,
+            renderCallback: renderizarTabela
+        });
+
+        // Cache de elementos DOM
+        let _elemDataInicio, _elemDataFim, _elemFiltroRota, _elemFiltroSubRota, _elemFiltroCidade;
+
+        const getElemDataInicio = () => _elemDataInicio || (_elemDataInicio = document.getElementById('dataInicio'));
+        const getElemDataFim = () => _elemDataFim || (_elemDataFim = document.getElementById('dataFim'));
+        const getElemFiltroRota = () => _elemFiltroRota || (_elemFiltroRota = document.getElementById('filtroRota'));
+        const getElemFiltroSubRota = () => _elemFiltroSubRota || (_elemFiltroSubRota = document.getElementById('filtroSubRota'));
+        const getElemFiltroCidade = () => _elemFiltroCidade || (_elemFiltroCidade = document.getElementById('filtroCidade'));
+
+        let listenersRegistrados = false;
+
+        if (!config.authToken || config.authToken === 'SEU_TOKEN_AQUI') {
+            document.getElementById('configAlert').style.display = 'block';
+            document.getElementById('btnAtualizar').disabled = true;
+        }
+
+        // Inicializar mapa
+        function inicializarMapa() {
+            if (window.map) return;
+
+            window.map = L.map('map').setView([-27.5954, -48.5480], 8); // Centro de SC
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(window.map);
+
+            window.markersLayer = L.markerClusterGroup();
+            window.map.addLayer(window.markersLayer);
+        }
+
+        async function carregarFiltros() {
+            try {
+                if (!window.filterSearches || Object.keys(window.filterSearches).length === 0) {
+                    window.filterSearches = {
+                        rota: new FilterSearch('filtroRota', { placeholder: 'Digite para buscar rota...' }),
+                        subrota: new FilterSearch('filtroSubRota', { placeholder: 'Digite para buscar subrota...' }),
+                        cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
+                    };
+                }
+
+                const cacheKey = 'filtros_clientes_semcompras';
+                const cached = cache.get(cacheKey);
+                let rotas, subRotas, cidades, coordenadas, repCidades;
+
+                const cacheValido = validateCacheStructure(cached?.rotas, 'rota') &&
+                    validateCacheStructure(cached?.subRotas, 'sub_rota') &&
+                    validateCacheStructure(cached?.cidades, 'cidade');
+
+                if (cacheValido) {
+                    rotas = cached.rotas;
+                    subRotas = cached.subRotas;
+                    cidades = cached.cidades;
+                    coordenadas = cached.coordenadas;
+                    repCidades = cached.repCidades;
+                } else {
+                    if (cached) cache.delete(cacheKey);
+
+                    if (!db.isConnected()) await db.connect();
+
+                    // Carregar filtros de tab_cliente (apenas ATIVOS)
+                    rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL AND sit_cliente = "ATIVO" ORDER BY rota');
+                    subRotas = await db.execute('SELECT DISTINCT sub_rota, rota FROM tab_cliente WHERE sub_rota IS NOT NULL AND sit_cliente = "ATIVO" ORDER BY sub_rota');
+                    cidades = await db.execute('SELECT DISTINCT cidade, rota, sub_rota FROM tab_cliente WHERE cidade IS NOT NULL AND sit_cliente = "ATIVO" ORDER BY cidade');
+
+                    // Carregar coordenadas das cidades
+                    coordenadas = await db.execute('SELECT cidade, latitude, longitude FROM potencial_cidade WHERE latitude IS NOT NULL AND longitude IS NOT NULL');
+
+                    // Carregar relacionamento representante-cidade
+                    repCidades = await db.execute(`
+                        SELECT rc.cidade, rc.representante, tr.desc_representante
+                        FROM representante_cidades rc
+                        LEFT JOIN tab_representante tr ON rc.representante = tr.representante
+                    `);
+
+                    if (rotas?.rows?.length > 0 && subRotas?.rows?.length > 0 && cidades?.rows?.length > 0) {
+                        cache.set(cacheKey, {
+                            rotas: serializeDbResult(rotas),
+                            subRotas: serializeDbResult(subRotas),
+                            cidades: serializeDbResult(cidades),
+                            coordenadas: serializeDbResult(coordenadas),
+                            repCidades: serializeDbResult(repCidades)
+                        }, CACHE_TTL.FILTERS);
+                    }
+                }
+
+                window.todasRotas = rotas.rows;
+                window.todasSubRotas = subRotas.rows;
+                window.todasCidades = cidades.rows;
+
+                // Indexar coordenadas por cidade
+                if (coordenadas?.rows) {
+                    coordenadas.rows.forEach(c => {
+                        window.coordenadasCidades[c.cidade] = {
+                            lat: parseFloat(c.latitude),
+                            lng: parseFloat(c.longitude)
+                        };
+                    });
+                }
+
+                // Indexar representantes por cidade
+                if (repCidades?.rows) {
+                    repCidades.rows.forEach(r => {
+                        if (!window.representantesCidades[r.cidade]) {
+                            window.representantesCidades[r.cidade] = [];
+                        }
+                        if (r.desc_representante && !window.representantesCidades[r.cidade].includes(r.desc_representante)) {
+                            window.representantesCidades[r.cidade].push(r.desc_representante);
+                        }
+                    });
+                }
+
+                const rotasFiltradas = rotas.rows
+                    .map(r => r.rota)
+                    .filter(v => v !== null && v !== undefined && v !== '');
+
+                preencherSelect('filtroRota', rotasFiltradas);
+                registrarEventListeners();
+
+                // Inicializar mapa
+                inicializarMapa();
+
+            } catch (error) {
+                console.error('Erro ao carregar filtros:', error);
+                alert('Erro ao carregar filtros: ' + error.message);
+            }
+        }
+
+        function preencherSelect(id, opcoes) {
+            const select = document.getElementById(id);
+            if (!select) return;
+
+            select.innerHTML = '';
+            if (opcoes.length === 0) {
+                select.innerHTML = '<option value="">Nenhuma opcao disponivel</option>';
+                select.disabled = true;
+            } else {
+                select.disabled = false;
+                opcoes.forEach(opcao => {
+                    const option = document.createElement('option');
+                    option.value = opcao;
+                    option.textContent = opcao;
+                    select.appendChild(option);
+                });
+            }
+
+            const searchIdMap = {
+                'filtroRota': 'rota',
+                'filtroSubRota': 'subrota',
+                'filtroCidade': 'cidade'
+            };
+            const searchId = searchIdMap[id];
+
+            if (window.filterSearches && window.filterSearches[searchId]) {
+                window.filterSearches[searchId].updateOptions(opcoes);
+            }
+        }
+
+        // Cascata de filtros
+        const handleFiltroRotaChange = function() {
+            const rotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
+
+            if (!window.todasSubRotas || !window.todasCidades) return;
+
+            if (rotasSelecionadas.length === 0) {
+                preencherSelect('filtroSubRota', window.todasSubRotas
+                    .map(s => s.sub_rota)
+                    .filter(v => v !== null && v !== undefined && v !== '')
+                    .filter((v, i, s) => s.indexOf(v) === i));
+                preencherSelect('filtroCidade', window.todasCidades
+                    .map(c => c.cidade)
+                    .filter(v => v !== null && v !== undefined && v !== '')
+                    .filter((v, i, s) => s.indexOf(v) === i));
+            } else {
+                const subRotasFiltradas = window.todasSubRotas
+                    .filter(s => rotasSelecionadas.includes(s.rota))
+                    .map(s => s.sub_rota)
+                    .filter(v => v !== null && v !== undefined && v !== '')
+                    .filter((v, i, s) => s.indexOf(v) === i);
+                preencherSelect('filtroSubRota', subRotasFiltradas);
+
+                const cidadesFiltradas = window.todasCidades
+                    .filter(c => rotasSelecionadas.includes(c.rota))
+                    .map(c => c.cidade)
+                    .filter(v => v !== null && v !== undefined && v !== '')
+                    .filter((v, i, s) => s.indexOf(v) === i);
+                preencherSelect('filtroCidade', cidadesFiltradas);
+            }
+        };
+
+        const handleFiltroSubRotaChange = function() {
+            const subRotasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
+
+            if (!window.todasCidades || !window.todasSubRotas) return;
+
+            const elemFiltroRota = getElemFiltroRota();
+            if (!elemFiltroRota) return;
+            const rotasSelecionadas = Array.from(elemFiltroRota.selectedOptions).map(o => o.value);
+
+            if (subRotasSelecionadas.length === 0) {
+                if (rotasSelecionadas.length > 0) {
+                    const cidadesFiltradas = window.todasCidades
+                        .filter(c => rotasSelecionadas.includes(c.rota))
+                        .map(c => c.cidade)
+                        .filter(v => v !== null && v !== undefined && v !== '')
+                        .filter((v, i, s) => s.indexOf(v) === i);
+                    preencherSelect('filtroCidade', cidadesFiltradas);
+                } else {
+                    preencherSelect('filtroCidade', window.todasCidades
+                        .map(c => c.cidade)
+                        .filter(v => v !== null && v !== undefined && v !== '')
+                        .filter((v, i, s) => s.indexOf(v) === i));
+                }
+            } else {
+                let cidadesFiltradas = window.todasCidades.filter(c => subRotasSelecionadas.includes(c.sub_rota));
+
+                if (rotasSelecionadas.length > 0) {
+                    cidadesFiltradas = cidadesFiltradas.filter(c => rotasSelecionadas.includes(c.rota));
+                }
+
+                cidadesFiltradas = cidadesFiltradas
+                    .map(c => c.cidade)
+                    .filter(v => v !== null && v !== undefined && v !== '')
+                    .filter((v, i, s) => s.indexOf(v) === i);
+                preencherSelect('filtroCidade', cidadesFiltradas);
+            }
+        };
+
+        function registrarEventListeners() {
+            if (!listenersRegistrados) {
+                listenersRegistrados = true;
+
+                const elemFiltroRota = getElemFiltroRota();
+                const elemFiltroSubRota = getElemFiltroSubRota();
+
+                if (elemFiltroRota) {
+                    elemFiltroRota.addEventListener('change', handleFiltroRotaChange);
+                }
+                if (elemFiltroSubRota) {
+                    elemFiltroSubRota.addEventListener('change', handleFiltroSubRotaChange);
+                }
+            }
+        }
+
+        window.setQuickDate = function(period) {
+            const hoje = new Date();
+            let inicio, fim = hoje;
+
+            switch (period) {
+                case '30dias':
+                    inicio = new Date(hoje);
+                    inicio.setDate(hoje.getDate() - 30);
+                    break;
+                case '60dias':
+                    inicio = new Date(hoje);
+                    inicio.setDate(hoje.getDate() - 60);
+                    break;
+                case '90dias':
+                    inicio = new Date(hoje);
+                    inicio.setDate(hoje.getDate() - 90);
+                    break;
+            }
+
+            const elemDataInicio = getElemDataInicio();
+            const elemDataFim = getElemDataFim();
+            if (elemDataInicio) elemDataInicio.value = inicio.toISOString().split('T')[0];
+            if (elemDataFim) elemDataFim.value = fim.toISOString().split('T')[0];
+        };
+
+        window.limparFiltros = function() {
+            const elemDataInicio = getElemDataInicio();
+            const elemDataFim = getElemDataFim();
+            const elemFiltroRota = getElemFiltroRota();
+            const elemFiltroSubRota = getElemFiltroSubRota();
+            const elemFiltroCidade = getElemFiltroCidade();
+
+            if (elemDataInicio) elemDataInicio.value = '';
+            if (elemDataFim) elemDataFim.value = '';
+            if (elemFiltroRota) elemFiltroRota.selectedIndex = -1;
+            if (elemFiltroSubRota) elemFiltroSubRota.selectedIndex = -1;
+            if (elemFiltroCidade) elemFiltroCidade.selectedIndex = -1;
+            if (window.filterSearches) {
+                Object.values(window.filterSearches).forEach(fs => fs?.clear());
+            }
+            preencherSelect('filtroSubRota', []);
+            preencherSelect('filtroCidade', []);
+        };
+
+        // Classificar risco baseado em dias sem compra
+        function classificarRisco(dias) {
+            if (dias === null || dias === undefined) return { nivel: 'EXTREMO', badge: 'badge-extremo', cor: '#343a40' };
+            if (dias <= 30) return { nivel: 'MINIMO', badge: 'badge-minimo', cor: '#28a745' };
+            if (dias <= 60) return { nivel: 'MEDIO', badge: 'badge-medio', cor: '#ffc107' };
+            return { nivel: 'MAXIMO', badge: 'badge-maximo', cor: '#dc3545' };
+        }
+
+        // Buscar clientes sem compras
+        window.buscarClientes = async function() {
+            const elemDataInicio = getElemDataInicio();
+            const elemDataFim = getElemDataFim();
+            const elemFiltroRota = getElemFiltroRota();
+            const elemFiltroSubRota = getElemFiltroSubRota();
+            const elemFiltroCidade = getElemFiltroCidade();
+
+            if (!elemDataInicio || !elemDataFim) {
+                alert('Erro: Elementos do formulario nao encontrados');
+                return;
+            }
+
+            const dataInicio = elemDataInicio.value;
+            const dataFim = elemDataFim.value;
+            const rotas = Array.from(elemFiltroRota?.selectedOptions || []).map(o => o.value);
+            const subRotas = Array.from(elemFiltroSubRota?.selectedOptions || []).map(o => o.value);
+            const cidades = Array.from(elemFiltroCidade?.selectedOptions || []).map(o => o.value);
+
+            if (!dataInicio || !dataFim) {
+                alert('Por favor, selecione o periodo (data inicio e fim)');
+                return;
+            }
+
+            try {
+                document.getElementById('loading').classList.add('active');
+                document.getElementById('btnAtualizar').disabled = true;
+                if (!db.isConnected()) await db.connect();
+
+                // Query principal: buscar clientes ativos e sua ultima compra
+                let sql = `
+                    WITH ultima_compra AS (
+                        SELECT
+                            cliente,
+                            MAX(emissao) as ultima_venda
+                        FROM vendas
+                        WHERE emissao <= ?
+                        GROUP BY cliente
+                    ),
+                    data_ref AS (
+                        SELECT MAX(emissao) as data_maxima FROM vendas WHERE emissao <= ?
+                    )
+                    SELECT
+                        c.cliente as cod_cliente,
+                        c.nome,
+                        c.cidade,
+                        c.rota,
+                        c.sub_rota,
+                        uc.ultima_venda,
+                        CASE
+                            WHEN uc.ultima_venda IS NULL THEN NULL
+                            ELSE CAST(julianday(dr.data_maxima) - julianday(uc.ultima_venda) AS INTEGER)
+                        END as dias_sem_compra
+                    FROM tab_cliente c
+                    CROSS JOIN data_ref dr
+                    LEFT JOIN ultima_compra uc ON c.cliente = uc.cliente
+                    WHERE c.sit_cliente = 'ATIVO'
+                    AND (
+                        uc.ultima_venda IS NULL
+                        OR uc.ultima_venda < ?
+                    )
+                `;
+
+                const params = [dataFim, dataFim, dataInicio];
+
+                // Adicionar filtros
+                if (rotas.length > 0) {
+                    sql += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
+                    params.push(...rotas);
+                }
+                if (subRotas.length > 0) {
+                    sql += ` AND c.sub_rota IN (${subRotas.map(() => '?').join(',')})`;
+                    params.push(...subRotas);
+                }
+                if (cidades.length > 0) {
+                    sql += ` AND c.cidade IN (${cidades.map(() => '?').join(',')})`;
+                    params.push(...cidades);
+                }
+
+                sql += ' ORDER BY dias_sem_compra DESC NULLS FIRST, c.nome ASC';
+
+                const result = await db.execute(sql, params);
+
+                // Processar dados
+                const dados = result.rows.map(row => {
+                    const risco = classificarRisco(row.dias_sem_compra);
+                    const representantes = window.representantesCidades[row.cidade] || [];
+
+                    return {
+                        ...row,
+                        risco: risco.nivel,
+                        badgeClass: risco.badge,
+                        cor: risco.cor,
+                        representantes: representantes.join(', ') || '-',
+                        dias_sem_compra: row.dias_sem_compra === null ? 'Nunca' : row.dias_sem_compra
+                    };
+                });
+
+                window.dadosCompletos = dados;
+                mostrarResultados(dados);
+
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao buscar dados: ' + error.message);
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('btnAtualizar').disabled = false;
+            }
+        };
+
+        function mostrarResultados(dados) {
+            document.getElementById('mainContent').style.display = dados.length > 0 ? 'grid' : 'grid';
+
+            if (dados.length === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('tableContainer').style.display = 'none';
+            } else {
+                document.getElementById('emptyState').style.display = 'none';
+                document.getElementById('tableContainer').style.display = 'block';
+            }
+
+            // KPIs
+            const totalClientes = dados.length;
+            const rotasUnicas = [...new Set(dados.map(d => d.rota).filter(r => r))].length;
+            const cidadesUnicas = [...new Set(dados.map(d => d.cidade).filter(c => c))].length;
+            const extremos = dados.filter(d => d.risco === 'EXTREMO').length;
+
+            document.getElementById('kpiTotal').textContent = totalClientes.toLocaleString('pt-BR');
+            document.getElementById('kpiRotas').textContent = rotasUnicas;
+            document.getElementById('kpiCidades').textContent = cidadesUnicas;
+            document.getElementById('kpiExtremo').textContent = extremos;
+
+            // Contagem por tempo
+            const minimos = dados.filter(d => d.risco === 'MINIMO').length;
+            const medios = dados.filter(d => d.risco === 'MEDIO').length;
+            const maximos = dados.filter(d => d.risco === 'MAXIMO').length;
+
+            document.getElementById('countMinimo').textContent = minimos;
+            document.getElementById('countMedio').textContent = medios;
+            document.getElementById('countMaximo').textContent = maximos;
+            document.getElementById('countExtremo').textContent = extremos;
+
+            // Resumo por Rota/SubRota
+            atualizarResumoRotas(dados);
+
+            // Tabela
+            window.pagination.setData(dados);
+            document.getElementById('tableStats').textContent = `${dados.length} cliente(s)`;
+            document.getElementById('totalValue').textContent = `Total: ${dados.length} clientes`;
+            document.getElementById('summaryTotalCount').textContent = dados.length;
+
+            // Mapa
+            atualizarMapa(dados);
+        }
+
+        function atualizarResumoRotas(dados) {
+            const resumo = {};
+
+            dados.forEach(d => {
+                const rota = d.rota || 'Sem Rota';
+                const subrota = d.sub_rota || 'Sem SubRota';
+
+                if (!resumo[rota]) {
+                    resumo[rota] = { total: 0, subrotas: {} };
+                }
+                resumo[rota].total++;
+
+                if (!resumo[rota].subrotas[subrota]) {
+                    resumo[rota].subrotas[subrota] = 0;
+                }
+                resumo[rota].subrotas[subrota]++;
+            });
+
+            const container = document.getElementById('summaryContent');
+            container.innerHTML = '';
+
+            Object.keys(resumo).sort().forEach(rota => {
+                const rotaDiv = document.createElement('div');
+                rotaDiv.className = 'summary-item';
+
+                let html = `
+                    <div class="summary-rota">
+                        <span>🛣️ ${rota}</span>
+                        <span class="summary-count">${resumo[rota].total}</span>
+                    </div>
+                `;
+
+                Object.keys(resumo[rota].subrotas).sort().forEach(subrota => {
+                    html += `
+                        <div class="summary-subrota">
+                            <span>↳ ${subrota}</span>
+                            <span class="summary-count summary-count-subrota">${resumo[rota].subrotas[subrota]}</span>
+                        </div>
+                    `;
+                });
+
+                rotaDiv.innerHTML = html;
+                container.appendChild(rotaDiv);
+            });
+        }
+
+        function atualizarMapa(dados) {
+            if (!window.map || !window.markersLayer) return;
+
+            window.markersLayer.clearLayers();
+
+            const bounds = [];
+
+            dados.forEach(d => {
+                const coord = window.coordenadasCidades[d.cidade];
+                if (!coord || !coord.lat || !coord.lng) return;
+
+                // Adicionar pequeno offset para evitar sobreposicao
+                const lat = coord.lat + (Math.random() - 0.5) * 0.01;
+                const lng = coord.lng + (Math.random() - 0.5) * 0.01;
+
+                const marker = L.circleMarker([lat, lng], {
+                    radius: 8,
+                    fillColor: d.cor,
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+
+                marker.bindPopup(`
+                    <strong>${d.nome}</strong><br>
+                    <b>Cod:</b> ${d.cod_cliente}<br>
+                    <b>Cidade:</b> ${d.cidade}<br>
+                    <b>Rota:</b> ${d.rota || '-'} / ${d.sub_rota || '-'}<br>
+                    <b>Risco:</b> <span style="color: ${d.cor}; font-weight: bold;">${d.risco}</span><br>
+                    <b>Dias sem compra:</b> ${d.dias_sem_compra}<br>
+                    <b>Representante(s):</b> ${d.representantes}
+                `);
+
+                window.markersLayer.addLayer(marker);
+                bounds.push([lat, lng]);
+            });
+
+            if (bounds.length > 0) {
+                window.map.fitBounds(bounds, { padding: [50, 50] });
+            }
+        }
+
+        function renderizarTabela(pageData) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            pageData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="text-center"><span class="time-badge ${row.badgeClass}">${row.risco}</span></td>
+                    <td>${row.cod_cliente}</td>
+                    <td>${row.nome || '-'}</td>
+                    <td>${row.cidade || '-'}</td>
+                    <td>${row.rota || '-'}</td>
+                    <td>${row.sub_rota || '-'}</td>
+                    <td>${row.representantes}</td>
+                    <td class="text-center">${row.dias_sem_compra}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Exportar Excel
+        window.exportarExcel = async function() {
+            if (window.dadosCompletos.length === 0) {
+                alert('Nao ha dados para exportar');
+                return;
+            }
+
+            try {
+                const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
+
+                const dados = window.dadosCompletos.map(row => ({
+                    'Risco': row.risco,
+                    'Codigo': row.cod_cliente,
+                    'Cliente': row.nome,
+                    'Cidade': row.cidade,
+                    'Rota': row.rota,
+                    'SubRota': row.sub_rota,
+                    'Representante(s)': row.representantes,
+                    'Dias Sem Compra': row.dias_sem_compra
+                }));
+
+                const ws = XLSX.utils.json_to_sheet(dados);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Clientes Sem Compras');
+
+                const dataInicio = document.getElementById('dataInicio').value;
+                const dataFim = document.getElementById('dataFim').value;
+                XLSX.writeFile(wb, `clientes_sem_compras_${dataInicio}_${dataFim}.xlsx`);
+            } catch (error) {
+                console.error('Erro ao exportar:', error);
+                alert('Erro ao exportar: ' + error.message);
+            }
+        };
+
+        // Exportar PDF
+        window.exportarPDF = async function() {
+            if (window.dadosCompletos.length === 0) {
+                alert('Nao ha dados para exportar');
+                return;
+            }
+
+            try {
+                const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                const doc = new jsPDF('landscape');
+
+                doc.setFontSize(18);
+                doc.setTextColor(252, 3, 3);
+                doc.text('Clientes Sem Compras - Germani Alimentos', 14, 20);
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+                doc.text(`Total: ${window.dadosCompletos.length} clientes`, 14, 34);
+
+                const tableData = window.dadosCompletos.map(row => [
+                    row.risco,
+                    row.cod_cliente,
+                    (row.nome || '-').substring(0, 30),
+                    row.cidade || '-',
+                    row.rota || '-',
+                    row.sub_rota || '-',
+                    (row.representantes || '-').substring(0, 25),
+                    row.dias_sem_compra
+                ]);
+
+                doc.autoTable({
+                    head: [['Risco', 'Cod', 'Cliente', 'Cidade', 'Rota', 'SubRota', 'Representante(s)', 'Dias']],
+                    body: tableData,
+                    startY: 40,
+                    theme: 'striped',
+                    headStyles: { fillColor: [252, 3, 3], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+                    bodyStyles: { fontSize: 7 },
+                    alternateRowStyles: { fillColor: [248, 249, 250] }
+                });
+
+                const dataInicio = document.getElementById('dataInicio').value;
+                const dataFim = document.getElementById('dataFim').value;
+                doc.save(`clientes_sem_compras_${dataInicio}_${dataFim}.pdf`);
+            } catch (error) {
+                console.error('Erro ao exportar:', error);
+                alert('Erro ao exportar: ' + error.message);
+            }
+        };
+
+        // Enviar WhatsApp
+        window.enviarWhatsApp = function() {
+            if (window.dadosCompletos.length === 0) {
+                alert('Nao ha dados para enviar');
+                return;
+            }
+
+            const dataInicio = document.getElementById('dataInicio').value;
+            const dataFim = document.getElementById('dataFim').value;
+            const agora = new Date();
+
+            // Contagens
+            const total = window.dadosCompletos.length;
+            const minimos = window.dadosCompletos.filter(d => d.risco === 'MINIMO').length;
+            const medios = window.dadosCompletos.filter(d => d.risco === 'MEDIO').length;
+            const maximos = window.dadosCompletos.filter(d => d.risco === 'MAXIMO').length;
+            const extremos = window.dadosCompletos.filter(d => d.risco === 'EXTREMO').length;
+
+            // Top 10 clientes criticos
+            const top10 = window.dadosCompletos
+                .filter(d => d.risco === 'EXTREMO' || d.risco === 'MAXIMO')
+                .slice(0, 10);
+
+            let mensagem = `CLIENTES SEM COMPRAS - Germani Alimentos\n\n`;
+            mensagem += `Data: ${agora.toLocaleDateString('pt-BR')}\n`;
+            mensagem += `Hora: ${agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}\n`;
+            mensagem += `Periodo: ${dataInicio} a ${dataFim}\n\n`;
+            mensagem += `RESUMO GERAL\n`;
+            mensagem += `Total de clientes: ${total}\n\n`;
+            mensagem += `DISTRIBUICAO POR RISCO\n`;
+            mensagem += `EXTREMO (nunca comprou): ${extremos}\n`;
+            mensagem += `MAXIMO (60+ dias): ${maximos}\n`;
+            mensagem += `MEDIO (30-60 dias): ${medios}\n`;
+            mensagem += `MINIMO (ate 30 dias): ${minimos}\n\n`;
+
+            if (top10.length > 0) {
+                mensagem += `TOP ${top10.length} CLIENTES CRITICOS\n`;
+                top10.forEach((c, i) => {
+                    mensagem += `${i+1}. ${c.nome || c.cod_cliente}\n`;
+                    mensagem += `   Cidade: ${c.cidade || '-'}\n`;
+                    mensagem += `   Dias: ${c.dias_sem_compra}\n`;
+                });
+            }
+
+            const url = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
+            window.open(url, '_blank');
+        };
+
+        // Cache de estado dos filtros
+        const CACHE_KEY_ESTADO = 'estado_filtros_clientes_semcompras';
+        const ESTADO_VALIDO_MS = 6 * 60 * 60 * 1000;
+
+        function salvarEstadoFiltros() {
+            try {
+                const elemDataInicio = getElemDataInicio();
+                const elemDataFim = getElemDataFim();
+                const elemFiltroRota = getElemFiltroRota();
+                const elemFiltroSubRota = getElemFiltroSubRota();
+                const elemFiltroCidade = getElemFiltroCidade();
+
+                const estado = {
+                    dataInicio: elemDataInicio?.value || '',
+                    dataFim: elemDataFim?.value || '',
+                    rotas: Array.from(elemFiltroRota?.selectedOptions || []).map(o => o.value),
+                    subRotas: Array.from(elemFiltroSubRota?.selectedOptions || []).map(o => o.value),
+                    cidades: Array.from(elemFiltroCidade?.selectedOptions || []).map(o => o.value),
+                    timestamp: Date.now()
+                };
+                sessionStorage.setItem(CACHE_KEY_ESTADO, JSON.stringify(estado));
+            } catch (error) {}
+        }
+
+        function restaurarEstadoFiltros() {
+            try {
+                const estadoStr = sessionStorage.getItem(CACHE_KEY_ESTADO);
+                if (!estadoStr) return false;
+
+                const estado = JSON.parse(estadoStr);
+
+                if (Date.now() - estado.timestamp > ESTADO_VALIDO_MS) {
+                    sessionStorage.removeItem(CACHE_KEY_ESTADO);
+                    return false;
+                }
+
+                const elemDataInicio = getElemDataInicio();
+                const elemDataFim = getElemDataFim();
+                const elemFiltroRota = getElemFiltroRota();
+                const elemFiltroSubRota = getElemFiltroSubRota();
+                const elemFiltroCidade = getElemFiltroCidade();
+
+                if (!elemDataInicio || !elemDataFim || !elemFiltroRota || !elemFiltroSubRota || !elemFiltroCidade) {
+                    return false;
+                }
+
+                if (estado.dataInicio) elemDataInicio.value = estado.dataInicio;
+                if (estado.dataFim) elemDataFim.value = estado.dataFim;
+
+                Promise.resolve().then(() => {
+                    const rotasSet = new Set(estado.rotas || []);
+                    if (elemFiltroRota && rotasSet.size > 0) {
+                        Array.from(elemFiltroRota.options).forEach(opt => {
+                            opt.selected = rotasSet.has(opt.value);
+                        });
+                        elemFiltroRota.dispatchEvent(new Event('change'));
+                    }
+                    return Promise.resolve();
+                }).then(() => {
+                    const subRotasSet = new Set(estado.subRotas || []);
+                    if (elemFiltroSubRota && subRotasSet.size > 0) {
+                        Array.from(elemFiltroSubRota.options).forEach(opt => {
+                            opt.selected = subRotasSet.has(opt.value);
+                        });
+                        elemFiltroSubRota.dispatchEvent(new Event('change'));
+                    }
+                    return Promise.resolve();
+                }).then(() => {
+                    const cidadesSet = new Set(estado.cidades || []);
+                    if (elemFiltroCidade && cidadesSet.size > 0) {
+                        Array.from(elemFiltroCidade.options).forEach(opt => {
+                            opt.selected = cidadesSet.has(opt.value);
+                        });
+                    }
+                }).catch(error => {});
+
+                return true;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        window.addEventListener('pagehide', salvarEstadoFiltros);
+        window.addEventListener('beforeunload', salvarEstadoFiltros);
+
+        const initFiltros = async (event) => {
+            if (event && event.type === 'pageshow' && event.persisted) {
+                const restaurou = restaurarEstadoFiltros();
+                if (!restaurou) {
+                    await carregarFiltros();
+                }
+                return;
+            }
+
+            await carregarFiltros();
+            restaurarEstadoFiltros();
+        };
+
+        window.addEventListener('pageshow', initFiltros);
+
+        // PWA Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/Ger_Comercial/sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker registrado');
+                    })
+                    .catch((error) => {
+                        console.error('Erro ao registrar Service Worker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
