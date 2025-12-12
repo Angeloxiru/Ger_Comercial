@@ -1275,6 +1275,15 @@
                     <strong>Colunas:</strong> ${table.columns.join(', ')}
                 `;
 
+                // Atualizar texto do botão para tab_cliente
+                if (tableName === 'tab_cliente') {
+                    btnDownload.innerHTML = '📥 Baixar Template Excel com Macro';
+                    btnDownload.title = 'Baixar arquivo Excel (.xlsm) com macro VBA para facilitar a importação';
+                } else {
+                    btnDownload.innerHTML = '📥 Baixar Template CSV';
+                    btnDownload.title = 'Baixar arquivo CSV de exemplo';
+                }
+
                 tableInfo.classList.add('show');
                 btnDownload.classList.add('show');
                 uploadArea.classList.add('show');
@@ -1286,6 +1295,30 @@
 
                 const table = this.tables[this.selectedTable];
 
+                // Para tab_cliente, baixar o template Excel com macro VBA
+                if (this.selectedTable === 'tab_cliente') {
+                    const link = document.createElement('a');
+                    link.href = '../templates/template_importacao_clientes.xlsm';
+                    link.download = 'template_importacao_clientes.xlsm';
+                    link.click();
+
+                    // Mostrar instruções sobre o template Excel
+                    setTimeout(() => {
+                        alert(
+                            '📥 Template Excel baixado com sucesso!\n\n' +
+                            '📖 COMO USAR:\n\n' +
+                            '1️⃣ Abra o arquivo e HABILITE AS MACROS quando solicitado\n' +
+                            '2️⃣ Leia as instruções na primeira aba\n' +
+                            '3️⃣ Pressione ALT + F8 para executar a macro "Importar_Clientes"\n' +
+                            '4️⃣ Selecione seu arquivo Excel com os dados de origem\n' +
+                            '5️⃣ A macro irá gerar o arquivo .TXT pronto para importação\n\n' +
+                            '💡 O template converte automaticamente colunas com nomes diferentes!'
+                        );
+                    }, 500);
+                    return;
+                }
+
+                // Para outras tabelas, continuar com CSV
                 // Criar CSV com ponto-e-vírgula
                 const header = table.columns.join(this.CSV_SEPARATOR);
                 const example = table.example.join(this.CSV_SEPARATOR);
