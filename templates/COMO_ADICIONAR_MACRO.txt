@@ -1,0 +1,77 @@
+
+╔══════════════════════════════════════════════════════════════╗
+║  INSTRUÇÕES PARA ADICIONAR A MACRO AO TEMPLATE EXCEL        ║
+╚══════════════════════════════════════════════════════════════╝
+
+🎯 OBJETIVO:
+   Adicionar a macro VBA "Importar_Clientes" ao arquivo Excel
+   para automatizar a conversão de planilhas de clientes.
+
+📋 PASSOS:
+
+1️⃣  ABRIR O ARQUIVO
+   • Abra o arquivo: template_importacao_clientes.xlsm
+   • Se aparecer aviso de segurança, clique em "Habilitar Conteúdo"
+
+2️⃣  ABRIR O EDITOR VBA
+   • Pressione: ALT + F11
+   • Ou vá em: Desenvolvedor > Visual Basic
+
+   ⚠️  Se não vir a aba "Desenvolvedor":
+       • Arquivo > Opções > Personalizar Faixa de Opções
+       • Marque a caixa "Desenvolvedor"
+       • Clique OK
+
+3️⃣  IMPORTAR A MACRO
+   • No VBA Editor, vá em: File > Import File
+   • Selecione o arquivo: Importar_Clientes.bas
+   • Clique "Abrir"
+
+4️⃣  VERIFICAR
+   • Na janela "Project Explorer" (Ctrl+R se não estiver visível)
+   • Você verá: VBAProject (template_importacao_clientes.xlsm)
+   • Expandindo, verá: Modules > Module1
+   • Dê duplo clique em Module1 para ver o código
+
+5️⃣  SALVAR
+   • Pressione Ctrl+S ou vá em File > Save
+   • Feche o VBA Editor (ALT + Q)
+
+6️⃣  TESTAR A MACRO
+   • De volta ao Excel, pressione: ALT + F8
+   • Selecione: Importar_Clientes
+   • Clique "Executar" para testar (você precisará de um arquivo Excel de teste)
+
+✅ PRONTO!
+   Agora o arquivo template_importacao_clientes.xlsm está completo
+   com as instruções E a macro incorporada.
+
+   Os usuários só precisarão:
+   1. Baixar o arquivo template
+   2. Habilitar macros quando solicitado
+   3. Pressionar ALT + F8 e executar "Importar_Clientes"
+
+═══════════════════════════════════════════════════════════════
+
+💡 DICAS:
+
+• Configurações de Segurança:
+  Se o Excel bloquear a macro:
+  - Arquivo > Opções > Central de Confiabilidade
+  - Configurações da Central de Confiabilidade
+  - Configurações de Macro
+  - Selecione "Habilitar todas as macros" (uso em desenvolvimento)
+
+• Distribuição:
+  Quando distribuir o arquivo para os usuários:
+  - Certifique-se de que é um arquivo .xlsm (não .xlsx)
+  - Instrua-os a "Habilitar Conteúdo" quando abrirem
+  - As instruções de uso estão na primeira aba do arquivo
+
+• Troubleshooting:
+  Se a macro não aparecer:
+  - Verifique se o arquivo foi salvo como .xlsm
+  - Confirme que a macro foi importada (ALT+F11 > Modules)
+  - Tente fechar e reabrir o Excel
+
+═══════════════════════════════════════════════════════════════
