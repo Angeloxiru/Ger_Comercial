@@ -152,34 +152,6 @@
             font-weight: 600;
         }
 
-        .date-range {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 8px;
-        }
-
-        .quick-dates {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-
-        .quick-date-btn {
-            background: #e9ecef;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .quick-date-btn:hover {
-            background: #fc0303;
-            color: white;
-        }
-
         .btn-atualizar {
             background: #fc0303;
             color: white;
@@ -673,16 +645,13 @@
     <div class="filters-section">
         <div class="filters-grid">
             <div class="filter-group">
-                <label>📅 Periodo de Analise</label>
-                <div class="date-range">
-                    <input type="date" id="dataInicio">
-                    <input type="date" id="dataFim">
-                </div>
-                <div class="quick-dates">
-                    <button class="quick-date-btn" onclick="setQuickDate('30dias')">30 Dias</button>
-                    <button class="quick-date-btn" onclick="setQuickDate('60dias')">60 Dias</button>
-                    <button class="quick-date-btn" onclick="setQuickDate('90dias')">90 Dias</button>
-                </div>
+                <label>⚠️ Grau de Risco</label>
+                <select id="filtroRisco" multiple size="4">
+                    <option value="MINIMO">🟢 Mínimo (até 30 dias)</option>
+                    <option value="MEDIO">🟡 Médio (30-60 dias)</option>
+                    <option value="MAXIMO">🔴 Máximo (60+ dias)</option>
+                    <option value="EXTREMO">⚫ Extremo (nunca comprou)</option>
+                </select>
             </div>
 
             <div class="filter-group">
@@ -726,7 +695,7 @@
             <!-- Tabela -->
             <div class="table-section">
                 <div class="table-header">
-                    <div class="table-title">👥 Clientes Ativos Sem Compras no Periodo</div>
+                    <div class="table-title">👥 Clientes Ativos Sem Compras Recentes</div>
                     <div class="table-stats" id="tableStats">0 clientes</div>
                 </div>
 
@@ -891,10 +860,9 @@
         });
 
         // Cache de elementos DOM
-        let _elemDataInicio, _elemDataFim, _elemFiltroRota, _elemFiltroSubRota, _elemFiltroCidade;
+        let _elemFiltroRisco, _elemFiltroRota, _elemFiltroSubRota, _elemFiltroCidade;
 
-        const getElemDataInicio = () => _elemDataInicio || (_elemDataInicio = document.getElementById('dataInicio'));
-        const getElemDataFim = () => _elemDataFim || (_elemDataFim = document.getElementById('dataFim'));
+        const getElemFiltroRisco = () => _elemFiltroRisco || (_elemFiltroRisco = document.getElementById('filtroRisco'));
         const getElemFiltroRota = () => _elemFiltroRota || (_elemFiltroRota = document.getElementById('filtroRota'));
         const getElemFiltroSubRota = () => _elemFiltroSubRota || (_elemFiltroSubRota = document.getElementById('filtroSubRota'));
         const getElemFiltroCidade = () => _elemFiltroCidade || (_elemFiltroCidade = document.getElementById('filtroCidade'));
@@ -1149,40 +1117,13 @@
             }
         }
 
-        window.setQuickDate = function(period) {
-            const hoje = new Date();
-            let inicio, fim = hoje;
-
-            switch (period) {
-                case '30dias':
-                    inicio = new Date(hoje);
-                    inicio.setDate(hoje.getDate() - 30);
-                    break;
-                case '60dias':
-                    inicio = new Date(hoje);
-                    inicio.setDate(hoje.getDate() - 60);
-                    break;
-                case '90dias':
-                    inicio = new Date(hoje);
-                    inicio.setDate(hoje.getDate() - 90);
-                    break;
-            }
-
-            const elemDataInicio = getElemDataInicio();
-            const elemDataFim = getElemDataFim();
-            if (elemDataInicio) elemDataInicio.value = inicio.toISOString().split('T')[0];
-            if (elemDataFim) elemDataFim.value = fim.toISOString().split('T')[0];
-        };
-
         window.limparFiltros = function() {
-            const elemDataInicio = getElemDataInicio();
-            const elemDataFim = getElemDataFim();
+            const elemFiltroRisco = getElemFiltroRisco();
             const elemFiltroRota = getElemFiltroRota();
             const elemFiltroSubRota = getElemFiltroSubRota();
             const elemFiltroCidade = getElemFiltroCidade();
 
-            if (elemDataInicio) elemDataInicio.value = '';
-            if (elemDataFim) elemDataFim.value = '';
+            if (elemFiltroRisco) elemFiltroRisco.selectedIndex = -1;
             if (elemFiltroRota) elemFiltroRota.selectedIndex = -1;
             if (elemFiltroSubRota) elemFiltroSubRota.selectedIndex = -1;
             if (elemFiltroCidade) elemFiltroCidade.selectedIndex = -1;
@@ -1203,45 +1144,40 @@
 
         // Buscar clientes sem compras
         window.buscarClientes = async function() {
-            const elemDataInicio = getElemDataInicio();
-            const elemDataFim = getElemDataFim();
+            const elemFiltroRisco = getElemFiltroRisco();
             const elemFiltroRota = getElemFiltroRota();
             const elemFiltroSubRota = getElemFiltroSubRota();
             const elemFiltroCidade = getElemFiltroCidade();
 
-            if (!elemDataInicio || !elemDataFim) {
-                alert('Erro: Elementos do formulario nao encontrados');
-                return;
-            }
-
-            const dataInicio = elemDataInicio.value;
-            const dataFim = elemDataFim.value;
+            const riscosSelec = Array.from(elemFiltroRisco?.selectedOptions || []).map(o => o.value);
             const rotas = Array.from(elemFiltroRota?.selectedOptions || []).map(o => o.value);
             const subRotas = Array.from(elemFiltroSubRota?.selectedOptions || []).map(o => o.value);
             const cidades = Array.from(elemFiltroCidade?.selectedOptions || []).map(o => o.value);
 
-            if (!dataInicio || !dataFim) {
-                alert('Por favor, selecione o periodo (data inicio e fim)');
-                return;
-            }
+            // Salvar filtros aplicados para uso no WhatsApp
+            window.filtrosAplicados = {
+                riscos: riscosSelec,
+                rotas: rotas,
+                subRotas: subRotas,
+                cidades: cidades
+            };
 
             try {
                 document.getElementById('loading').classList.add('active');
                 document.getElementById('btnAtualizar').disabled = true;
                 if (!db.isConnected()) await db.connect();
 
-                // Query principal: buscar clientes ativos e sua ultima compra
+                // Query principal: buscar clientes ativos e sua ultima compra (usa data maxima do banco)
                 let sql = `
                     WITH ultima_compra AS (
                         SELECT
                             cliente,
                             MAX(emissao) as ultima_venda
                         FROM vendas
-                        WHERE emissao <= ?
                         GROUP BY cliente
                     ),
                     data_ref AS (
-                        SELECT MAX(emissao) as data_maxima FROM vendas WHERE emissao <= ?
+                        SELECT MAX(emissao) as data_maxima FROM vendas
                     )
                     SELECT
                         c.cliente as cod_cliente,
@@ -1258,15 +1194,11 @@
                     CROSS JOIN data_ref dr
                     LEFT JOIN ultima_compra uc ON c.cliente = uc.cliente
                     WHERE c.sit_cliente = 'Ativo'
-                    AND (
-                        uc.ultima_venda IS NULL
-                        OR uc.ultima_venda < ?
-                    )
                 `;
 
-                const params = [dataFim, dataFim, dataInicio];
+                const params = [];
 
-                // Adicionar filtros
+                // Adicionar filtros de localização
                 if (rotas.length > 0) {
                     sql += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
                     params.push(...rotas);
@@ -1284,8 +1216,8 @@
 
                 const result = await db.execute(sql, params);
 
-                // Processar dados
-                const dados = result.rows.map(row => {
+                // Processar dados e aplicar filtro de risco
+                let dados = result.rows.map(row => {
                     const risco = classificarRisco(row.dias_sem_compra);
                     const representantes = window.representantesCidades[row.cidade] || [];
 
@@ -1298,6 +1230,11 @@
                         dias_sem_compra: row.dias_sem_compra === null ? 'Nunca' : row.dias_sem_compra
                     };
                 });
+
+                // Filtrar por níveis de risco se selecionados
+                if (riscosSelec.length > 0) {
+                    dados = dados.filter(d => riscosSelec.includes(d.risco));
+                }
 
                 window.dadosCompletos = dados;
                 mostrarResultados(dados);
@@ -1493,9 +1430,8 @@
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, 'Clientes Sem Compras');
 
-                const dataInicio = document.getElementById('dataInicio').value;
-                const dataFim = document.getElementById('dataFim').value;
-                XLSX.writeFile(wb, `clientes_sem_compras_${dataInicio}_${dataFim}.xlsx`);
+                const dataHoje = new Date().toISOString().split('T')[0];
+                XLSX.writeFile(wb, `clientes_sem_compras_${dataHoje}.xlsx`);
             } catch (error) {
                 console.error('Erro ao exportar:', error);
                 alert('Erro ao exportar: ' + error.message);
@@ -1543,9 +1479,8 @@
                     alternateRowStyles: { fillColor: [248, 249, 250] }
                 });
 
-                const dataInicio = document.getElementById('dataInicio').value;
-                const dataFim = document.getElementById('dataFim').value;
-                doc.save(`clientes_sem_compras_${dataInicio}_${dataFim}.pdf`);
+                const dataHoje = new Date().toISOString().split('T')[0];
+                doc.save(`clientes_sem_compras_${dataHoje}.pdf`);
             } catch (error) {
                 console.error('Erro ao exportar:', error);
                 alert('Erro ao exportar: ' + error.message);
@@ -1559,9 +1494,8 @@
                 return;
             }
 
-            const dataInicio = document.getElementById('dataInicio').value;
-            const dataFim = document.getElementById('dataFim').value;
             const agora = new Date();
+            const filtros = window.filtrosAplicados || {};
 
             // Contagens
             const total = window.dadosCompletos.length;
@@ -1573,8 +1507,25 @@
             let mensagem = `*CLIENTES SEM COMPRAS*\n`;
             mensagem += `Germani Alimentos\n\n`;
             mensagem += `Data: ${agora.toLocaleDateString('pt-BR')}\n`;
-            mensagem += `Periodo: ${dataInicio} a ${dataFim}\n`;
-            mensagem += `Total: ${total} clientes\n\n`;
+
+            // Mostrar filtros aplicados
+            mensagem += `*FILTROS APLICADOS*\n`;
+            if (filtros.riscos && filtros.riscos.length > 0) {
+                mensagem += `Risco: ${filtros.riscos.join(', ')}\n`;
+            } else {
+                mensagem += `Risco: Todos\n`;
+            }
+            if (filtros.rotas && filtros.rotas.length > 0) {
+                mensagem += `Rota: ${filtros.rotas.join(', ')}\n`;
+            }
+            if (filtros.subRotas && filtros.subRotas.length > 0) {
+                mensagem += `SubRota: ${filtros.subRotas.join(', ')}\n`;
+            }
+            if (filtros.cidades && filtros.cidades.length > 0) {
+                mensagem += `Cidade: ${filtros.cidades.join(', ')}\n`;
+            }
+
+            mensagem += `\nTotal: ${total} clientes\n\n`;
             mensagem += `*RESUMO*\n`;
             mensagem += `EXTREMO: ${extremos} | MAXIMO: ${maximos}\n`;
             mensagem += `MEDIO: ${medios} | MINIMO: ${minimos}\n\n`;
@@ -1600,15 +1551,13 @@
 
         function salvarEstadoFiltros() {
             try {
-                const elemDataInicio = getElemDataInicio();
-                const elemDataFim = getElemDataFim();
+                const elemFiltroRisco = getElemFiltroRisco();
                 const elemFiltroRota = getElemFiltroRota();
                 const elemFiltroSubRota = getElemFiltroSubRota();
                 const elemFiltroCidade = getElemFiltroCidade();
 
                 const estado = {
-                    dataInicio: elemDataInicio?.value || '',
-                    dataFim: elemDataFim?.value || '',
+                    riscos: Array.from(elemFiltroRisco?.selectedOptions || []).map(o => o.value),
                     rotas: Array.from(elemFiltroRota?.selectedOptions || []).map(o => o.value),
                     subRotas: Array.from(elemFiltroSubRota?.selectedOptions || []).map(o => o.value),
                     cidades: Array.from(elemFiltroCidade?.selectedOptions || []).map(o => o.value),
@@ -1630,18 +1579,22 @@
                     return false;
                 }
 
-                const elemDataInicio = getElemDataInicio();
-                const elemDataFim = getElemDataFim();
+                const elemFiltroRisco = getElemFiltroRisco();
                 const elemFiltroRota = getElemFiltroRota();
                 const elemFiltroSubRota = getElemFiltroSubRota();
                 const elemFiltroCidade = getElemFiltroCidade();
 
-                if (!elemDataInicio || !elemDataFim || !elemFiltroRota || !elemFiltroSubRota || !elemFiltroCidade) {
+                if (!elemFiltroRisco || !elemFiltroRota || !elemFiltroSubRota || !elemFiltroCidade) {
                     return false;
                 }
 
-                if (estado.dataInicio) elemDataInicio.value = estado.dataInicio;
-                if (estado.dataFim) elemDataFim.value = estado.dataFim;
+                // Restaurar seleção de riscos
+                const riscosSet = new Set(estado.riscos || []);
+                if (riscosSet.size > 0) {
+                    Array.from(elemFiltroRisco.options).forEach(opt => {
+                        opt.selected = riscosSet.has(opt.value);
+                    });
+                }
 
                 Promise.resolve().then(() => {
                     const rotasSet = new Set(estado.rotas || []);
