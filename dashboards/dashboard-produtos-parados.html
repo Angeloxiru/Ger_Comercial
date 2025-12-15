@@ -1013,8 +1013,22 @@
                 });
 
                 mensagem += `\n*TOP 10 PRODUTOS CRITICOS*\n`;
+
+                // Ordenar por nível de risco (EXTREMO primeiro) e depois por valor médio
+                const ordemRisco = ['EXTREMO', 'MUITO ALTO', 'ALTO', 'MODERADO', 'BAIXO', 'MÍNIMO'];
                 const top10 = dadosFiltrados
-                    .sort((a, b) => (b.valor_medio_perdido || 0) - (a.valor_medio_perdido || 0))
+                    .sort((a, b) => {
+                        const riscoA = ordemRisco.indexOf(a.nivel_risco);
+                        const riscoB = ordemRisco.indexOf(b.nivel_risco);
+
+                        // Se os riscos são diferentes, ordena por risco (menor índice = maior risco)
+                        if (riscoA !== riscoB) {
+                            return riscoA - riscoB;
+                        }
+
+                        // Se os riscos são iguais, ordena por valor médio (maior primeiro)
+                        return (b.valor_medio_perdido || 0) - (a.valor_medio_perdido || 0);
+                    })
                     .slice(0, 10);
 
                 top10.forEach((item, index) => {
