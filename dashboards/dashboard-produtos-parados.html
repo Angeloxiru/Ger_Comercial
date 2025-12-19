@@ -432,7 +432,7 @@
         <div class="filters-grid">
             <div class="filter-group">
                 <label for="filterSupervisor">Supervisor</label>
-                <select id="filterSupervisor" onchange="aplicarFiltros()">
+                <select id="filterSupervisor">
                     <option value="">Todos os Supervisores</option>
                 </select>
             </div>
@@ -627,13 +627,17 @@
 
             // Criar novas instâncias do FilterSearch DEPOIS de popular as opções
             filterSearchInstances.filterSupervisor = new FilterSearch('filterSupervisor', {
-                placeholder: 'Digite para buscar supervisor...',
-                onChange: atualizarFiltroRepresentantes // Atualizar representantes quando supervisor mudar
+                placeholder: 'Digite para buscar supervisor...'
             });
 
             filterSearchInstances.filterRepresentante = new FilterSearch('filterRepresentante', {
                 placeholder: 'Digite para buscar representante...'
             });
+
+            // IMPORTANTE: Remover event listener antigo (se existir) e adicionar novo
+            // Isso garante que não temos múltiplos listeners duplicados
+            selectSupervisor.removeEventListener('change', atualizarFiltroRepresentantes);
+            selectSupervisor.addEventListener('change', atualizarFiltroRepresentantes);
         }
 
         // Atualizar filtro de representantes baseado no supervisor selecionado
