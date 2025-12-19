@@ -596,9 +596,6 @@
             // Supervisores únicos
             const supervisores = [...new Set(dadosCompletos.map(d => d.rep_supervisor).filter(s => s))].sort();
             const selectSupervisor = document.getElementById('filterSupervisor');
-
-            // Representantes únicos
-            const representantes = [...new Set(dadosCompletos.map(d => d.desc_representante).filter(r => r))].sort();
             const selectRepresentante = document.getElementById('filterRepresentante');
 
             // Destruir instâncias anteriores do FilterSearch para recriar com dados novos
@@ -625,11 +622,53 @@
                 selectSupervisor.appendChild(opt);
             });
 
+            // Popular representantes (inicialmente todos)
+            atualizarFiltroRepresentantes();
+
+            // Criar novas instâncias do FilterSearch DEPOIS de popular as opções
+            filterSearchInstances.filterSupervisor = new FilterSearch('filterSupervisor', {
+                placeholder: 'Digite para buscar supervisor...',
+                onChange: atualizarFiltroRepresentantes // Atualizar representantes quando supervisor mudar
+            });
+
+            filterSearchInstances.filterRepresentante = new FilterSearch('filterRepresentante', {
+                placeholder: 'Digite para buscar representante...'
+            });
+        }
+
+        // Atualizar filtro de representantes baseado no supervisor selecionado
+        function atualizarFiltroRepresentantes() {
+            const supervisorSelecionado = document.getElementById('filterSupervisor').value;
+            const selectRepresentante = document.getElementById('filterRepresentante');
+
+            // Filtrar representantes do supervisor selecionado
+            let representantes;
+            if (supervisorSelecionado) {
+                // Se há supervisor selecionado, mostrar apenas seus representantes
+                representantes = [...new Set(
+                    dadosCompletos
+                        .filter(d => d.rep_supervisor === supervisorSelecionado)
+                        .map(d => d.desc_representante)
+                        .filter(r => r)
+                )].sort();
+            } else {
+                // Se não há supervisor, mostrar todos os representantes
+                representantes = [...new Set(dadosCompletos.map(d => d.desc_representante).filter(r => r))].sort();
+            }
+
+            // Destruir instância anterior do FilterSearch de representante
+            if (filterSearchInstances.filterRepresentante) {
+                filterSearchInstances.filterRepresentante.destroy();
+                filterSearchInstances.filterRepresentante = null;
+            }
+
             // Limpar e popular representantes
             selectRepresentante.innerHTML = '';
             const optRepresentanteDefault = document.createElement('option');
             optRepresentanteDefault.value = '';
-            optRepresentanteDefault.textContent = 'Todos os Representantes';
+            optRepresentanteDefault.textContent = supervisorSelecionado
+                ? 'Todos os Representantes deste Supervisor'
+                : 'Todos os Representantes';
             selectRepresentante.appendChild(optRepresentanteDefault);
 
             representantes.forEach(r => {
@@ -639,14 +678,13 @@
                 selectRepresentante.appendChild(opt);
             });
 
-            // Criar novas instâncias do FilterSearch DEPOIS de popular as opções
-            filterSearchInstances.filterSupervisor = new FilterSearch('filterSupervisor', {
-                placeholder: 'Digite para buscar supervisor...'
-            });
-
+            // Recriar instância do FilterSearch de representante
             filterSearchInstances.filterRepresentante = new FilterSearch('filterRepresentante', {
                 placeholder: 'Digite para buscar representante...'
             });
+
+            // Aplicar filtros automaticamente após atualizar representantes
+            aplicarFiltros();
         }
 
         // Aplicar filtros
@@ -743,9 +781,12 @@
 
         // Gráfico Top 10 Produtos
         function atualizarGraficoTopProdutos() {
-            // Agrupar por produto
+            // Agrupar por produto (filtrar produtos sem nome)
             const produtosAgrupados = {};
             dadosFiltrados.forEach(item => {
+                // Ignorar produtos sem descrição
+                if (!item.desc_produto) return;
+
                 if (!produtosAgrupados[item.desc_produto]) {
                     produtosAgrupados[item.desc_produto] = {
                         produto: item.desc_produto,
@@ -770,7 +811,10 @@
             chartTopProdutos = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: top10.map(p => p.produto.length > 50 ? p.produto.substring(0, 50) + '...' : p.produto),
+                    labels: top10.map(p => {
+                        const nome = p.produto || 'Produto sem nome';
+                        return nome.length > 50 ? nome.substring(0, 50) + '...' : nome;
+                    }),
                     datasets: [{
                         label: 'Representantes Afetados',
                         data: top10.map(p => p.qtdReps),
@@ -856,7 +900,8 @@
                 filterSearchInstances.filterRepresentante.clear();
             }
 
-            aplicarFiltros();
+            // Atualizar lista de representantes (mostrar todos novamente)
+            atualizarFiltroRepresentantes();
         }
 
         // Mostrar/ocultar loading
