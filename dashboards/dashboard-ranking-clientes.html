@@ -767,12 +767,18 @@
             carregarFiltros();
         });
 
+        // Variáveis globais para armazenar dados completos (necessário para hierarquia de filtros)
+        let dadosCompletosClientes = [];
+        let dadosCompletosRepresentantes = [];
+
         // Carregar filtros
         async function carregarFiltros() {
             const cacheKey = 'ranking_clientes_filtros';
             const cached = cache.get(cacheKey);
 
             if (cached?.rotas?.rows?.length > 0) {
+                dadosCompletosClientes = cached.clientes || [];
+                dadosCompletosRepresentantes = cached.representantesCompletos || [];
                 popularFiltros(cached);
                 return;
             }
@@ -780,20 +786,30 @@
             try {
                 if (!db.isConnected()) await db.connect();
 
-                const [rotas, subRotas, cidades, supervisores, representantes] = await Promise.all([
-                    db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL ORDER BY rota'),
-                    db.execute('SELECT DISTINCT sub_rota FROM tab_cliente WHERE sub_rota IS NOT NULL ORDER BY sub_rota'),
-                    db.execute('SELECT DISTINCT cidade FROM tab_cliente WHERE cidade IS NOT NULL ORDER BY cidade'),
-                    db.execute('SELECT DISTINCT rep_supervisor FROM tab_representante WHERE rep_supervisor IS NOT NULL ORDER BY rep_supervisor'),
-                    db.execute('SELECT DISTINCT desc_representante FROM tab_representante WHERE desc_representante IS NOT NULL ORDER BY desc_representante')
+                // Carregar dados completos para ter as relações
+                const [clientes, representantes] = await Promise.all([
+                    db.execute('SELECT rota, sub_rota, cidade FROM tab_cliente WHERE rota IS NOT NULL'),
+                    db.execute('SELECT rep_supervisor, desc_representante FROM tab_representante WHERE rep_supervisor IS NOT NULL AND desc_representante IS NOT NULL')
                 ]);
 
+                dadosCompletosClientes = serializeDbResult(clientes).rows;
+                dadosCompletosRepresentantes = serializeDbResult(representantes).rows;
+
+                // Extrair valores únicos
+                const rotas = [...new Set(dadosCompletosClientes.map(c => c.rota).filter(r => r))].sort().map(r => ({rota: r}));
+                const subRotas = [...new Set(dadosCompletosClientes.map(c => c.sub_rota).filter(s => s))].sort().map(s => ({sub_rota: s}));
+                const cidades = [...new Set(dadosCompletosClientes.map(c => c.cidade).filter(c => c))].sort().map(c => ({cidade: c}));
+                const supervisores = [...new Set(dadosCompletosRepresentantes.map(r => r.rep_supervisor).filter(s => s))].sort().map(s => ({rep_supervisor: s}));
+                const representantesUnicos = [...new Set(dadosCompletosRepresentantes.map(r => r.desc_representante).filter(r => r))].sort().map(r => ({desc_representante: r}));
+
                 const dados = {
-                    rotas: serializeDbResult(rotas),
-                    subRotas: serializeDbResult(subRotas),
-                    cidades: serializeDbResult(cidades),
-                    supervisores: serializeDbResult(supervisores),
-                    representantes: serializeDbResult(representantes)
+                    rotas: { rows: rotas },
+                    subRotas: { rows: subRotas },
+                    cidades: { rows: cidades },
+                    supervisores: { rows: supervisores },
+                    representantes: { rows: representantesUnicos },
+                    clientes: dadosCompletosClientes,
+                    representantesCompletos: dadosCompletosRepresentantes
                 };
 
                 cache.set(cacheKey, dados, CACHE_TTL.FILTERS);
@@ -810,6 +826,75 @@
             popularSelect('filtroCidade', dados.cidades.rows, 'cidade', 'Cidade');
             popularSelect('filtroSupervisor', dados.supervisores.rows, 'rep_supervisor', 'Supervisor');
             popularSelect('filtroRepresentante', dados.representantes.rows, 'desc_representante', 'Representante');
+
+            // Adicionar event listeners para hierarquia de filtros
+            const selectRota = document.getElementById('filtroRota');
+            const selectSupervisor = document.getElementById('filtroSupervisor');
+
+            // Remover listeners antigos para evitar duplicação
+            selectRota.removeEventListener('change', atualizarFiltrosFilhosRota);
+            selectSupervisor.removeEventListener('change', atualizarFiltrosFilhosSupervisor);
+
+            // Adicionar novos listeners
+            selectRota.addEventListener('change', atualizarFiltrosFilhosRota);
+            selectSupervisor.addEventListener('change', atualizarFiltrosFilhosSupervisor);
+        }
+
+        // Atualizar Sub-Rota e Cidade baseado na Rota selecionada
+        function atualizarFiltrosFilhosRota() {
+            const rotasSelecionadas = Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value);
+
+            let subRotasFiltradas, cidadesFiltradas;
+
+            if (rotasSelecionadas.length > 0) {
+                // Filtrar sub-rotas e cidades das rotas selecionadas
+                const clientesFiltrados = dadosCompletosClientes.filter(c => rotasSelecionadas.includes(c.rota));
+                subRotasFiltradas = [...new Set(clientesFiltrados.map(c => c.sub_rota).filter(s => s))].sort().map(s => ({sub_rota: s}));
+                cidadesFiltradas = [...new Set(clientesFiltrados.map(c => c.cidade).filter(c => c))].sort().map(c => ({cidade: c}));
+            } else {
+                // Sem rota selecionada, mostrar todos
+                subRotasFiltradas = [...new Set(dadosCompletosClientes.map(c => c.sub_rota).filter(s => s))].sort().map(s => ({sub_rota: s}));
+                cidadesFiltradas = [...new Set(dadosCompletosClientes.map(c => c.cidade).filter(c => c))].sort().map(c => ({cidade: c}));
+            }
+
+            // Destruir e recriar FilterSearch
+            if (window.filterSearches['filtroSubRota']) {
+                window.filterSearches['filtroSubRota'].destroy();
+                delete window.filterSearches['filtroSubRota'];
+            }
+            if (window.filterSearches['filtroCidade']) {
+                window.filterSearches['filtroCidade'].destroy();
+                delete window.filterSearches['filtroCidade'];
+            }
+
+            // Popular com novos dados
+            popularSelect('filtroSubRota', subRotasFiltradas, 'sub_rota', 'Sub-Rota');
+            popularSelect('filtroCidade', cidadesFiltradas, 'cidade', 'Cidade');
+        }
+
+        // Atualizar Representante baseado no Supervisor selecionado
+        function atualizarFiltrosFilhosSupervisor() {
+            const supervisoresSelecionados = Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value);
+
+            let representantesFiltrados;
+
+            if (supervisoresSelecionados.length > 0) {
+                // Filtrar representantes dos supervisores selecionados
+                const repsFiltrados = dadosCompletosRepresentantes.filter(r => supervisoresSelecionados.includes(r.rep_supervisor));
+                representantesFiltrados = [...new Set(repsFiltrados.map(r => r.desc_representante).filter(r => r))].sort().map(r => ({desc_representante: r}));
+            } else {
+                // Sem supervisor selecionado, mostrar todos
+                representantesFiltrados = [...new Set(dadosCompletosRepresentantes.map(r => r.desc_representante).filter(r => r))].sort().map(r => ({desc_representante: r}));
+            }
+
+            // Destruir e recriar FilterSearch
+            if (window.filterSearches['filtroRepresentante']) {
+                window.filterSearches['filtroRepresentante'].destroy();
+                delete window.filterSearches['filtroRepresentante'];
+            }
+
+            // Popular com novos dados
+            popularSelect('filtroRepresentante', representantesFiltrados, 'desc_representante', 'Representante');
         }
 
         function popularSelect(elemId, dados, campo, placeholder) {
@@ -838,6 +923,10 @@
             document.getElementById('filtroRepresentante').selectedIndex = -1;
 
             Object.values(window.filterSearches).forEach(fs => fs.clearSearch());
+
+            // Atualizar filtros filhos para mostrar todos novamente
+            atualizarFiltrosFilhosRota();
+            atualizarFiltrosFilhosSupervisor();
         };
 
         // Atualizar dados
