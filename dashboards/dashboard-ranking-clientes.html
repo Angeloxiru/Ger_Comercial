@@ -771,6 +771,13 @@
         let dadosCompletosClientes = [];
         let dadosCompletosRepresentantes = [];
 
+        // Função auxiliar para extrair valores únicos, filtrar nulos e mapear para objetos
+        function getUniqueSortedValues(data, key) {
+            return [...new Set(data.map(item => item[key]).filter(Boolean))]
+                .sort()
+                .map(value => ({ [key]: value }));
+        }
+
         // Carregar filtros
         async function carregarFiltros() {
             const cacheKey = 'ranking_clientes_filtros';
@@ -795,12 +802,12 @@
                 dadosCompletosClientes = serializeDbResult(clientes).rows;
                 dadosCompletosRepresentantes = serializeDbResult(representantes).rows;
 
-                // Extrair valores únicos
-                const rotas = [...new Set(dadosCompletosClientes.map(c => c.rota).filter(r => r))].sort().map(r => ({rota: r}));
-                const subRotas = [...new Set(dadosCompletosClientes.map(c => c.sub_rota).filter(s => s))].sort().map(s => ({sub_rota: s}));
-                const cidades = [...new Set(dadosCompletosClientes.map(c => c.cidade).filter(c => c))].sort().map(c => ({cidade: c}));
-                const supervisores = [...new Set(dadosCompletosRepresentantes.map(r => r.rep_supervisor).filter(s => s))].sort().map(s => ({rep_supervisor: s}));
-                const representantesUnicos = [...new Set(dadosCompletosRepresentantes.map(r => r.desc_representante).filter(r => r))].sort().map(r => ({desc_representante: r}));
+                // Extrair valores únicos usando função auxiliar
+                const rotas = getUniqueSortedValues(dadosCompletosClientes, 'rota');
+                const subRotas = getUniqueSortedValues(dadosCompletosClientes, 'sub_rota');
+                const cidades = getUniqueSortedValues(dadosCompletosClientes, 'cidade');
+                const supervisores = getUniqueSortedValues(dadosCompletosRepresentantes, 'rep_supervisor');
+                const representantesUnicos = getUniqueSortedValues(dadosCompletosRepresentantes, 'desc_representante');
 
                 const dados = {
                     rotas: { rows: rotas },
@@ -838,24 +845,73 @@
             // Adicionar novos listeners
             selectRota.addEventListener('change', atualizarFiltrosFilhosRota);
             selectSupervisor.addEventListener('change', atualizarFiltrosFilhosSupervisor);
+
+            // Adicionar funcionalidade de seleção automática com Enter nos filtros PAI
+            adicionarSelecaoAutomaticaComEnter('filtroRota', atualizarFiltrosFilhosRota);
+            adicionarSelecaoAutomaticaComEnter('filtroSupervisor', atualizarFiltrosFilhosSupervisor);
+        }
+
+        // Função auxiliar para selecionar opções visíveis ao pressionar Enter
+        function adicionarSelecaoAutomaticaComEnter(selectId, callbackAtualizacao) {
+            // Encontrar o input de busca do FilterSearch
+            const select = document.getElementById(selectId);
+            const searchInput = select.parentNode.querySelector('.filter-search-input');
+
+            if (!searchInput) return;
+
+            // Remover listener antigo se existir
+            const oldListener = searchInput._enterListener;
+            if (oldListener) {
+                searchInput.removeEventListener('keydown', oldListener);
+            }
+
+            // Criar novo listener
+            const newListener = function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+
+                    // Selecionar todas as opções VISÍVEIS no select
+                    const opcoesVisiveis = Array.from(select.options).filter(opt =>
+                        opt.style.display !== 'none' && opt.value !== ''
+                    );
+
+                    if (opcoesVisiveis.length > 0) {
+                        // Selecionar as opções visíveis
+                        opcoesVisiveis.forEach(opt => opt.selected = true);
+
+                        // Disparar evento change manualmente
+                        select.dispatchEvent(new Event('change'));
+
+                        // Limpar o campo de busca
+                        searchInput.value = '';
+
+                        // Mostrar todas as opções novamente
+                        if (window.filterSearches[selectId]) {
+                            window.filterSearches[selectId].clearSearch();
+                        }
+
+                        console.log(`✅ ${opcoesVisiveis.length} opção(ões) selecionada(s) em ${selectId}`);
+                    }
+                }
+            };
+
+            // Adicionar listener
+            searchInput.addEventListener('keydown', newListener);
+            searchInput._enterListener = newListener; // Guardar referência para remoção futura
         }
 
         // Atualizar Sub-Rota e Cidade baseado na Rota selecionada
         function atualizarFiltrosFilhosRota() {
             const rotasSelecionadas = Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value);
 
-            let subRotasFiltradas, cidadesFiltradas;
+            // Determinar fonte de dados: filtrado por rotas ou todos os clientes
+            const sourceData = rotasSelecionadas.length > 0
+                ? dadosCompletosClientes.filter(c => rotasSelecionadas.includes(c.rota))
+                : dadosCompletosClientes;
 
-            if (rotasSelecionadas.length > 0) {
-                // Filtrar sub-rotas e cidades das rotas selecionadas
-                const clientesFiltrados = dadosCompletosClientes.filter(c => rotasSelecionadas.includes(c.rota));
-                subRotasFiltradas = [...new Set(clientesFiltrados.map(c => c.sub_rota).filter(s => s))].sort().map(s => ({sub_rota: s}));
-                cidadesFiltradas = [...new Set(clientesFiltrados.map(c => c.cidade).filter(c => c))].sort().map(c => ({cidade: c}));
-            } else {
-                // Sem rota selecionada, mostrar todos
-                subRotasFiltradas = [...new Set(dadosCompletosClientes.map(c => c.sub_rota).filter(s => s))].sort().map(s => ({sub_rota: s}));
-                cidadesFiltradas = [...new Set(dadosCompletosClientes.map(c => c.cidade).filter(c => c))].sort().map(c => ({cidade: c}));
-            }
+            // Extrair valores únicos usando função auxiliar
+            const subRotasFiltradas = getUniqueSortedValues(sourceData, 'sub_rota');
+            const cidadesFiltradas = getUniqueSortedValues(sourceData, 'cidade');
 
             // Destruir e recriar FilterSearch
             if (window.filterSearches['filtroSubRota']) {
@@ -876,16 +932,13 @@
         function atualizarFiltrosFilhosSupervisor() {
             const supervisoresSelecionados = Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value);
 
-            let representantesFiltrados;
+            // Determinar fonte de dados: filtrado por supervisores ou todos os representantes
+            const sourceData = supervisoresSelecionados.length > 0
+                ? dadosCompletosRepresentantes.filter(r => supervisoresSelecionados.includes(r.rep_supervisor))
+                : dadosCompletosRepresentantes;
 
-            if (supervisoresSelecionados.length > 0) {
-                // Filtrar representantes dos supervisores selecionados
-                const repsFiltrados = dadosCompletosRepresentantes.filter(r => supervisoresSelecionados.includes(r.rep_supervisor));
-                representantesFiltrados = [...new Set(repsFiltrados.map(r => r.desc_representante).filter(r => r))].sort().map(r => ({desc_representante: r}));
-            } else {
-                // Sem supervisor selecionado, mostrar todos
-                representantesFiltrados = [...new Set(dadosCompletosRepresentantes.map(r => r.desc_representante).filter(r => r))].sort().map(r => ({desc_representante: r}));
-            }
+            // Extrair valores únicos usando função auxiliar
+            const representantesFiltrados = getUniqueSortedValues(sourceData, 'desc_representante');
 
             // Destruir e recriar FilterSearch
             if (window.filterSearches['filtroRepresentante']) {
