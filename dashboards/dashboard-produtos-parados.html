@@ -743,9 +743,12 @@
 
         // Gráfico Top 10 Produtos
         function atualizarGraficoTopProdutos() {
-            // Agrupar por produto
+            // Agrupar por produto (filtrar produtos sem nome)
             const produtosAgrupados = {};
             dadosFiltrados.forEach(item => {
+                // Ignorar produtos sem descrição
+                if (!item.desc_produto) return;
+
                 if (!produtosAgrupados[item.desc_produto]) {
                     produtosAgrupados[item.desc_produto] = {
                         produto: item.desc_produto,
@@ -770,7 +773,10 @@
             chartTopProdutos = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: top10.map(p => p.produto.length > 50 ? p.produto.substring(0, 50) + '...' : p.produto),
+                    labels: top10.map(p => {
+                        const nome = p.produto || 'Produto sem nome';
+                        return nome.length > 50 ? nome.substring(0, 50) + '...' : nome;
+                    }),
                     datasets: [{
                         label: 'Representantes Afetados',
                         data: top10.map(p => p.qtdReps),
