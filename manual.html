@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#fc0303">
+    <title>Manual de Utilização - Ger Comercial</title>
+    <link rel="manifest" href="/Ger_Comercial/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/Ger_Comercial/icon-192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: #f8f9fa;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
+            color: white;
+            padding: 40px 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            font-weight: 600;
+        }
+
+        .btn-voltar {
+            background: white;
+            color: #fc0303;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-voltar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .toc {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .toc h2 {
+            color: #fc0303;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .toc ul {
+            list-style: none;
+        }
+
+        .toc li {
+            margin: 12px 0;
+            padding-left: 20px;
+        }
+
+        .toc a {
+            color: #495057;
+            text-decoration: none;
+            transition: color 0.2s;
+            font-size: 1.1em;
+        }
+
+        .toc a:hover {
+            color: #fc0303;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            color: #fc0303;
+            font-size: 2em;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #fc0303;
+        }
+
+        .section h3 {
+            color: #212529;
+            font-size: 1.5em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .section h4 {
+            color: #495057;
+            font-size: 1.2em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .section p {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.05em;
+        }
+
+        .section ul, .section ol {
+            margin-left: 30px;
+            margin-bottom: 20px;
+        }
+
+        .section li {
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 1.05em;
+        }
+
+        .screenshot {
+            width: 100%;
+            max-width: 800px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            margin: 20px 0;
+            border: 1px solid #dee2e6;
+        }
+
+        .tip-box {
+            background: #e7f3ff;
+            border-left: 4px solid #0066cc;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .tip-box strong {
+            color: #0066cc;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .warning-box strong {
+            color: #856404;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .success-box strong {
+            color: #155724;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .code-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            overflow-x: auto;
+        }
+
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #fc0303;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+
+        .step-number {
+            background: #fc0303;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        table th {
+            background: #fc0303;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .emoji {
+            font-size: 1.3em;
+            margin-right: 8px;
+        }
+
+        @media print {
+            .header {
+                position: relative;
+            }
+            .btn-voltar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 10px;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>📚 Manual de Utilização - Ger Comercial</h1>
+            <a href="/Ger_Comercial/" class="btn-voltar">← Voltar ao Sistema</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Índice -->
+        <div class="toc">
+            <h2>📋 Índice</h2>
+            <ul>
+                <li><a href="#introducao">1. Introdução</a></li>
+                <li><a href="#login">2. Login e Autenticação</a></li>
+                <li><a href="#navegacao">3. Navegação Geral</a></li>
+                <li><a href="#vendas-regiao">4. Dashboard: Vendas por Região</a></li>
+                <li><a href="#vendas-equipe">5. Dashboard: Vendas por Equipe</a></li>
+                <li><a href="#analise-produtos">6. Dashboard: Análise de Produtos</a></li>
+                <li><a href="#performance-clientes">7. Dashboard: Performance de Clientes</a></li>
+                <li><a href="#ranking-clientes">8. Dashboard: Ranking de Clientes</a></li>
+                <li><a href="#cobranca-semanal">9. Dashboard: Cobrança Semanal</a></li>
+                <li><a href="#produtos-parados">10. Dashboard: Produtos Parados</a></li>
+                <li><a href="#clientes-semcompras">11. Dashboard: Clientes Sem Compras</a></li>
+                <li><a href="#configuracoes">12. Dashboard: Configurações (Admin)</a></li>
+                <li><a href="#recursos-comuns">13. Recursos Comuns</a></li>
+                <li><a href="#casos-uso">14. Casos de Uso Práticos</a></li>
+            </ul>
+        </div>
+
+        <!-- 1. Introdução -->
+        <div class="section" id="introducao">
+            <h2><span class="emoji">🎯</span>1. Introdução</h2>
+
+            <p>O <strong>Ger Comercial</strong> é um sistema completo de análise de dados comerciais desenvolvido especialmente para a <strong>Germani Alimentos</strong>. Este sistema oferece dashboards interativos que permitem à equipe estratégica comercial tomar decisões baseadas em dados reais.</p>
+
+            <h3>Objetivo deste Manual</h3>
+            <p>Este manual foi criado para ajudar gestores, diretores e supervisores a:</p>
+            <ul>
+                <li>Compreender todas as funcionalidades disponíveis no sistema</li>
+                <li>Utilizar os dashboards de forma eficiente</li>
+                <li>Extrair insights valiosos dos dados</li>
+                <li>Aplicar os resultados na gestão do dia a dia</li>
+            </ul>
+
+            <h3>Principais Benefícios</h3>
+            <div class="success-box">
+                <strong>✅ Benefícios do Sistema:</strong>
+                <ul>
+                    <li><strong>Decisões Baseadas em Dados:</strong> Elimine achismos e tome decisões fundamentadas</li>
+                    <li><strong>Identificação Rápida de Oportunidades:</strong> Detecte clientes inativos e produtos parados antes de perder vendas</li>
+                    <li><strong>Análise de Performance:</strong> Acompanhe o desempenho individual e coletivo da equipe</li>
+                    <li><strong>Visualização Geográfica:</strong> Entenda padrões regionais de vendas</li>
+                    <li><strong>Exportação de Relatórios:</strong> Gere relatórios em Excel, PDF ou envie via WhatsApp</li>
+                    <li><strong>Acesso em Qualquer Lugar:</strong> Sistema web acessível de qualquer dispositivo</li>
+                </ul>
+            </div>
+
+            <h3>Tecnologia Utilizada</h3>
+            <p>O sistema foi desenvolvido com tecnologias modernas:</p>
+            <ul>
+                <li><strong>Frontend:</strong> HTML5, CSS3, JavaScript (ES Modules)</li>
+                <li><strong>Banco de Dados:</strong> Turso (LibSQL na nuvem)</li>
+                <li><strong>Gráficos:</strong> Chart.js para visualizações interativas</li>
+                <li><strong>Mapas:</strong> Leaflet.js para geolocalização</li>
+                <li><strong>PWA:</strong> Pode ser instalado como aplicativo nativo</li>
+            </ul>
+        </div>
+
+        <!-- 2. Login e Autenticação -->
+        <div class="section" id="login">
+            <h2><span class="emoji">🔐</span>2. Login e Autenticação</h2>
+
+            <h3>Acessando o Sistema</h3>
+            <div class="step">
+                <p><span class="step-number">1</span> Abra o navegador (Chrome, Edge, Firefox ou Safari)</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">2</span> Digite o endereço: <strong>https://angeloxiru.github.io/Ger_Comercial/</strong></p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">3</span> O sistema irá redirecionar automaticamente para a tela de login se você não estiver autenticado</p>
+            </div>
+
+            <h3>Realizando o Login</h3>
+            <p>A tela de login é simples e intuitiva:</p>
+
+            <div class="step">
+                <p><span class="step-number">1</span> Digite seu <strong>usuário</strong> no campo "Usuário"</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">2</span> Digite sua <strong>senha</strong> no campo "Senha"</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">3</span> Clique no botão <strong>"Entrar"</strong> ou pressione <strong>Enter</strong></p>
+            </div>
+
+            <div class="tip-box">
+                <strong>💡 Dica:</strong>
+                Você pode pressionar a tecla <strong>Enter</strong> em qualquer campo para fazer login rapidamente.
+            </div>
+
+            <h3>Sistema de Permissões</h3>
+            <p>O sistema possui controle de acesso baseado em permissões. Cada usuário tem acesso apenas aos dashboards autorizados pelo administrador.</p>
+
+            <table>
+                <tr>
+                    <th>Tipo de Usuário</th>
+                    <th>Dashboards Disponíveis</th>
+                </tr>
+                <tr>
+                    <td><strong>Admin</strong></td>
+                    <td>Todos os dashboards + Configurações</td>
+                </tr>
+                <tr>
+                    <td><strong>Gerente</strong></td>
+                    <td>Vendas, Performance, Ranking, Produtos Parados</td>
+                </tr>
+                <tr>
+                    <td><strong>Supervisor</strong></td>
+                    <td>Vendas por Região, Vendas por Equipe, Cobrança Semanal</td>
+                </tr>
+            </table>
+
+            <div class="warning-box">
+                <strong>⚠️ Atenção:</strong>
+                Se você não conseguir acessar um dashboard específico, entre em contato com o administrador do sistema para solicitar a permissão necessária.
+            </div>
+
+            <h3>Problemas Comuns no Login</h3>
+
+            <h4>Erro: "Usuário ou senha inválidos"</h4>
+            <ul>
+                <li>Verifique se digitou o usuário e senha corretamente</li>
+                <li>Certifique-se de que a tecla Caps Lock não está ativada</li>
+                <li>Tente copiar e colar suas credenciais</li>
+            </ul>
+
+            <h4>Erro: "Erro ao conectar com o servidor"</h4>
+            <ul>
+                <li>Verifique sua conexão com a internet</li>
+                <li>Tente recarregar a página (F5)</li>
+                <li>Se o erro persistir, entre em contato com o TI</li>
+            </ul>
+
+            <h3>Logout (Sair do Sistema)</h3>
+            <p>Para sair do sistema com segurança:</p>
+            <div class="step">
+                <p><span class="step-number">1</span> Clique no botão <strong>"🚪 Sair"</strong> no canto superior direito</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">2</span> Confirme que deseja sair</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">3</span> Você será redirecionado para a tela de login</p>
+            </div>
+        </div>
+
+        <!-- 3. Navegação Geral -->
+        <div class="section" id="navegacao">
+            <h2><span class="emoji">🧭</span>3. Navegação Geral</h2>
+
+            <h3>Tela Inicial (Home)</h3>
+            <p>Após fazer login, você verá a tela inicial com cards representando cada dashboard disponível.</p>
+
+            <h4>Elementos da Tela Inicial:</h4>
+            <ul>
+                <li><strong>Cabeçalho:</strong> Logo da Germani + Nome do sistema + Informações do usuário</li>
+                <li><strong>Cards de Dashboards:</strong> Grade com todos os dashboards disponíveis</li>
+                <li><strong>Botão Sair:</strong> No canto superior direito para fazer logout</li>
+            </ul>
+
+            <h3>Acessando um Dashboard</h3>
+            <div class="step">
+                <p><span class="step-number">1</span> Na tela inicial, clique no <strong>card do dashboard</strong> desejado</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">2</span> O sistema carregará o dashboard selecionado</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">3</span> Para voltar à tela inicial, clique no botão <strong>"← Voltar"</strong></p>
+            </div>
+
+            <div class="tip-box">
+                <strong>💡 Dica de Navegação:</strong>
+                Dashboards que você não tem permissão aparecerão desabilitados (acinzentados) e não poderão ser clicados.
+            </div>
+
+            <h3>Estrutura Comum dos Dashboards</h3>
+            <p>Todos os dashboards seguem uma estrutura similar:</p>
+
+            <ol>
+                <li><strong>Cabeçalho:</strong> Título do dashboard + Botão "Voltar"</li>
+                <li><strong>Seção de Filtros:</strong> Campos para filtrar os dados</li>
+                <li><strong>KPIs (Indicadores):</strong> Resumo dos principais números</li>
+                <li><strong>Gráficos:</strong> Visualizações interativas dos dados</li>
+                <li><strong>Tabela de Dados:</strong> Detalhamento completo com paginação</li>
+                <li><strong>Botões de Exportação:</strong> Excel, PDF, WhatsApp</li>
+            </ol>
+
+            <h3>Dicas de Usabilidade</h3>
+            <div class="success-box">
+                <strong>✅ Boas Práticas:</strong>
+                <ul>
+                    <li>Sempre aplique os filtros antes de analisar os dados</li>
+                    <li>Utilize os botões de exportação para compartilhar relatórios</li>
+                    <li>Observe os KPIs para ter uma visão rápida dos números</li>
+                    <li>Passe o mouse sobre gráficos para ver detalhes</li>
+                    <li>Use a paginação para navegar por grandes volumes de dados</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 4. Dashboard: Vendas por Região -->
+        <div class="section" id="vendas-regiao">
+            <h2><span class="emoji">📍</span>4. Dashboard: Vendas por Região</h2>
+
+            <h3>Objetivo</h3>
+            <p>Analisar vendas segmentadas por <strong>localização geográfica</strong>, permitindo identificar regiões de alto desempenho e oportunidades de crescimento.</p>
+
+            <h3>Como Utilizar</h3>
+
+            <h4>Passo 1: Aplicar Filtros</h4>
+            <p>O dashboard oferece filtros em cascata que se relacionam entre si:</p>
+
+            <div class="step">
+                <p><span class="step-number">1</span> <strong>Período:</strong> Selecione a data de início e fim</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">2</span> <strong>Rota:</strong> Escolha a rota (atualiza automaticamente Sub-Rota e Cidade)</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">3</span> <strong>Sub-Rota:</strong> Refine por sub-rota específica</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">4</span> <strong>Cidade:</strong> Escolha uma cidade específica</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">5</span> <strong>Supervisor e Representante:</strong> Filtros opcionais adicionais</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">6</span> Clique em <strong>"Aplicar Filtros"</strong></p>
+            </div>
+
+            <div class="tip-box">
+                <strong>💡 Filtros Inteligentes:</strong>
+                Todos os campos de seleção possuem <strong>busca digitável</strong>. Comece a digitar e o sistema filtrará as opções automaticamente!
+            </div>
+
+            <h4>Passo 2: Escolher Modo de Visualização</h4>
+            <p>O dashboard oferece dois modos:</p>
+
+            <table>
+                <tr>
+                    <th>Modo</th>
+                    <th>O que mostra</th>
+                    <th>Quando usar</th>
+                </tr>
+                <tr>
+                    <td><strong>📦 Modo Itens</strong></td>
+                    <td>Análise por produtos (SKU)</td>
+                    <td>Para entender quais produtos mais vendem na região</td>
+                </tr>
+                <tr>
+                    <td><strong>👥 Modo Clientes</strong></td>
+                    <td>Análise consolidada por cliente</td>
+                    <td>Para identificar os maiores clientes da região</td>
+                </tr>
+            </table>
+
+            <h4>Passo 3: Analisar KPIs</h4>
+            <p>Os indicadores principais aparecem no topo:</p>
+            <ul>
+                <li><strong>Valor Total (R$):</strong> Faturamento total do período filtrado</li>
+                <li><strong>Quantidade Total:</strong> Número de unidades vendidas</li>
+                <li><strong>Peso Total (kg):</strong> Volume em peso</li>
+                <li><strong>Registros:</strong> Quantidade de vendas registradas</li>
+            </ul>
+
+            <h4>Passo 4: Interpretar os Gráficos</h4>
+            <p>O dashboard apresenta dois gráficos principais:</p>
+
+            <ol>
+                <li><strong>Top 10 Produtos/Clientes:</strong> Gráfico de barras mostrando os 10 maiores por valor</li>
+                <li><strong>Distribuição por Cidades:</strong> Gráfico de pizza mostrando a proporção de vendas por cidade</li>
+            </ol>
+
+            <div class="tip-box">
+                <strong>💡 Interação com Gráficos:</strong>
+                Passe o mouse sobre as barras ou fatias para ver os valores exatos e percentuais.
+            </div>
+
+            <h4>Passo 5: Explorar a Tabela Detalhada</h4>
+            <p>A tabela mostra todos os dados filtrados com:</p>
+            <ul>
+                <li>Código do produto ou cliente</li>
+                <li>Descrição/Nome</li>
+                <li>Quantidade</li>
+                <li>Valor (R$)</li>
+                <li>Peso (kg)</li>
+            </ul>
+
+            <p>Use a <strong>paginação</strong> na parte inferior para navegar pelos resultados (25 registros por página).</p>
+
+            <h3>Casos de Uso Práticos</h3>
+
+            <div class="success-box">
+                <strong>✅ Caso 1: Identificar Produtos Mais Vendidos por Região</strong>
+                <p><strong>Situação:</strong> Preciso saber quais produtos têm melhor aceitação na Região Sul.</p>
+                <p><strong>Ação:</strong></p>
+                <ol>
+                    <li>Filtre por Rota (ex: "Sul")</li>
+                    <li>Selecione "Modo Itens"</li>
+                    <li>Aplique os filtros</li>
+                    <li>Analise o gráfico "Top 10 Produtos"</li>
+                </ol>
+                <p><strong>Resultado:</strong> Você verá os produtos campeões de venda na região e poderá replicar essa estratégia em outras áreas.</p>
+            </div>
+
+            <div class="success-box">
+                <strong>✅ Caso 2: Comparar Desempenho entre Cidades</strong>
+                <p><strong>Situação:</strong> Quero comparar as vendas de duas cidades específicas.</p>
+                <p><strong>Ação:</strong></p>
+                <ol>
+                    <li>Aplique filtro sem escolher cidade específica</li>
+                    <li>Observe o gráfico "Distribuição por Cidades"</li>
+                    <li>Identifique as cidades com menor participação</li>
+                    <li>Crie ações comerciais direcionadas</li>
+                </ol>
+                <p><strong>Resultado:</strong> Detecta cidades com baixo desempenho que precisam de atenção da equipe comercial.</p>
+            </div>
+
+            <h3>Exportação de Dados</h3>
+            <p>Você pode exportar os resultados em três formatos:</p>
+
+            <ul>
+                <li><strong>📊 Excel:</strong> Arquivo .xlsx com todos os dados filtrados (ideal para análises mais profundas)</li>
+                <li><strong>📄 PDF:</strong> Relatório formatado pronto para impressão</li>
+                <li><strong>📱 WhatsApp:</strong> Compartilha resumo com Top 5 via WhatsApp Web</li>
+            </ul>
+
+            <div class="warning-box">
+                <strong>⚠️ Importante:</strong>
+                Os nomes dos arquivos exportados incluem automaticamente o modo selecionado (itens ou clientes) e o período filtrado. Exemplo: <code>vendas_regiao_itens_2025-01-01_2025-01-31.xlsx</code>
+            </div>
+        </div>
+
+        <!-- 5. Dashboard: Vendas por Equipe -->
+        <div class="section" id="vendas-equipe">
+            <h2><span class="emoji">👥</span>5. Dashboard: Vendas por Equipe</h2>
+
+            <h3>Objetivo</h3>
+            <p>Analisar a <strong>performance individual e coletiva</strong> dos vendedores, permitindo identificar top performers e oportunidades de melhoria.</p>
+
+            <h3>Como Utilizar</h3>
+
+            <h4>Aplicar Filtros</h4>
+            <div class="step">
+                <p><span class="step-number">1</span> <strong>Período:</strong> Defina o intervalo de datas</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">2</span> <strong>Supervisor:</strong> Escolha um supervisor (opcional)</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">3</span> <strong>Representante:</strong> Filtre por vendedor específico (cascata - depende do supervisor)</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">4</span> <strong>Cidade:</strong> Refine por localização (opcional)</p>
+            </div>
+
+            <h4>Modos de Visualização</h4>
+            <ul>
+                <li><strong>Modo Itens:</strong> Mostra produtos vendidos por cada representante</li>
+                <li><strong>Modo Clientes:</strong> Mostra clientes atendidos por cada representante</li>
+            </ul>
+
+            <h3>Indicadores Principais (KPIs)</h3>
+            <table>
+                <tr>
+                    <th>KPI</th>
+                    <th>Significado</th>
+                </tr>
+                <tr>
+                    <td>Valor Total da Equipe</td>
+                    <td>Faturamento total de todos os vendedores no período</td>
+                </tr>
+                <tr>
+                    <td>Quantidade Total</td>
+                    <td>Soma de unidades vendidas pela equipe</td>
+                </tr>
+                <tr>
+                    <td>Peso Total</td>
+                    <td>Volume total em kg vendido</td>
+                </tr>
+            </table>
+
+            <h3>Casos de Uso Práticos</h3>
+
+            <div class="success-box">
+                <strong>✅ Caso 1: Identificar Melhor Vendedor do Mês</strong>
+                <p><strong>Ação:</strong></p>
+                <ol>
+                    <li>Filtre pelo período do mês desejado</li>
+                    <li>Não selecione representante específico (deixe "Todos")</li>
+                    <li>Observe o gráfico "Top 10 Representantes"</li>
+                    <li>A barra mais alta indica o melhor vendedor</li>
+                </ol>
+                <p><strong>Aplicação Gerencial:</strong> Use para premiações, reconhecimento público e definição de metas baseadas no melhor desempenho.</p>
+            </div>
+
+            <div class="success-box">
+                <strong>✅ Caso 2: Comparar Performance de uma Equipe Específica</strong>
+                <p><strong>Ação:</strong></p>
+                <ol>
+                    <li>Selecione o Supervisor da equipe</li>
+                    <li>Deixe Representante como "Todos"</li>
+                    <li>Analise a distribuição entre os membros</li>
+                </ol>
+                <p><strong>Aplicação Gerencial:</strong> Identifique vendedores que precisam de treinamento ou coaching, comparando com a média da equipe.</p>
+            </div>
+
+            <div class="tip-box">
+                <strong>💡 Dica para Supervisores:</strong>
+                Faça análises semanais para acompanhar a evolução individual de cada representante e dar feedbacks construtivos.
+            </div>
+        </div>
+
+        <!-- 6. Dashboard: Análise de Produtos -->
+        <div class="section" id="analise-produtos">
+            <h2><span class="emoji">📈</span>6. Dashboard: Análise de Produtos</h2>
+
+            <h3>Objetivo</h3>
+            <p>Entender o <strong>mix de produtos</strong>, performance por família e origem (fabricado vs revenda).</p>
+
+            <h3>Filtros Disponíveis</h3>
+            <ul>
+                <li><strong>Período:</strong> Com atalhos rápidos (Este mês, Mês passado, Último trimestre, Últimos 12 meses)</li>
+                <li><strong>Origem:</strong> Produto Fabricado vs Revenda</li>
+                <li><strong>Família:</strong> Categoria de produtos</li>
+                <li><strong>Produto:</strong> SKU específico com busca digitável</li>
+            </ul>
+
+            <h3>Visualizações Oferecidas</h3>
+            <table>
+                <tr>
+                    <th>Análise</th>
+                    <th>O que mostra</th>
+                </tr>
+                <tr>
+                    <td>Por Origem</td>
+                    <td>Volume e margem de produtos fabricados vs revendidos</td>
+                </tr>
+                <tr>
+                    <td>Por Família</td>
+                    <td>Ranking de categorias de produtos</td>
+                </tr>
+                <tr>
+                    <td>Por SKU</td>
+                    <td>Detalhes de produtos individuais</td>
+                </tr>
+            </table>
+
+            <h3>Casos de Uso Práticos</h3>
+
+            <div class="success-box">
+                <strong>✅ Caso: Avaliar Mix de Produtos</strong>
+                <p><strong>Situação:</strong> Preciso saber se estamos vendendo mais produtos fabricados ou de revenda.</p>
+                <p><strong>Ação:</strong></p>
+                <ol>
+                    <li>Não selecione filtros de Origem e Família (deixe "Todos")</li>
+                    <li>Aplique apenas filtro de período</li>
+                    <li>Observe o gráfico "Distribuição Fabricado vs Revenda"</li>
+                </ol>
+                <p><strong>Aplicação Gerencial:</strong> Se produtos de revenda estão dominando, pode ser necessário incentivar mais a linha própria. Se produtos fabricados estão parados, investigue qualidade ou precificação.</p>
+            </div>
+
+            <div class="success-box">
+                <strong>✅ Caso: Identificar Famílias de Alto Desempenho</strong>
+                <p><strong>Ação:</strong></p>
+                <ol>
+                    <li>Filtre por período desejado</li>
+                    <li>Observe o gráfico "Top 10 Famílias"</li>
+                    <li>Identifique quais categorias vendem mais</li>
+                </ol>
+                <p><strong>Aplicação Gerencial:</strong> Direcione esforços de marketing e estoque para as famílias de maior giro. Famílias com baixo desempenho podem precisar de promoções ou descontinuação.</p>
+            </div>
+        </div>
+
+        <!-- 7. Dashboard: Performance de Clientes -->
+        <div class="section" id="performance-clientes">
+            <h2><span class="emoji">💰</span>7. Dashboard: Performance de Clientes</h2>
+
+            <h3>Objetivo</h3>
+            <p>Analisar a <strong>saúde da carteira de clientes</strong> com rankings e métricas estratégicas.</p>
+
+            <h3>Filtros</h3>
+            <ul>
+                <li><strong>Período:</strong> Data início e fim</li>
+                <li><strong>Grupo de Clientes:</strong> Segmentação por categoria</li>
+                <li><strong>Cliente Específico:</strong> Busca digitável</li>
+                <li><strong>Cidade:</strong> Filtro geográfico</li>
+            </ul>
+
+            <h3>KPIs Principais</h3>
+            <table>
+                <tr>
+                    <th>Indicador</th>
+                    <th>Cálculo</th>
+                    <th>Uso Gerencial</th>
+                </tr>
+                <tr>
+                    <td>Total de Clientes Ativos</td>
+                    <td>Contagem de clientes únicos no período</td>
+                    <td>Acompanhar crescimento da base</td>
+                </tr>
+                <tr>
+                    <td>Valor Total</td>
+                    <td>Soma do faturamento</td>
+                    <td>Meta de faturamento</td>
+                </tr>
+                <tr>
+                    <td>Ticket Médio</td>
+                    <td>Valor Total ÷ Clientes</td>
+                    <td>Avaliar poder de compra médio</td>
+                </tr>
+                <tr>
+                    <td>Top 3 Clientes</td>
+                    <td>Medalhas 🥇🥈🥉</td>
+                    <td>Clientes VIP que merecem atenção especial</td>
+                </tr>
+            </table>
+
+            <h3>Visualizações</h3>
+            <ol>
+                <li><strong>Tabela Paginada:</strong> 25 clientes por página com ordenação por valor</li>
+                <li><strong>Top 10 Clientes:</strong> Gráfico de barras horizontais</li>
+                <li><strong>Distribuição por Cidade:</strong> Pizza com Top 5 cidades</li>
+                <li><strong>Curva ABC:</strong> Análise de concentração 80/20</li>
+            </ol>
+
+            <h3>Casos de Uso Práticos</h3>
+
+            <div class="success-box">
+                <strong>✅ Caso: Identificar Clientes VIP</strong>
+                <p><strong>Ação:</strong></p>
+                <ol>
+                    <li>Filtre pelo período desejado</li>
+                    <li>Observe os Top 3 com medalhas</li>
+                    <li>Analise o gráfico "Top 10 Clientes"</li>
+                </ol>
+                <p><strong>Aplicação Gerencial:</strong> Esses clientes merecem atendimento diferenciado, visitas presenciais, negociações especiais e descontos estratégicos. Criar programa de fidelidade para VIPs.</p>
+            </div>
+
+            <div class="success-box">
+                <strong>✅ Caso: Análise de Concentração (Curva ABC)</strong>
+                <p><strong>Conceito:</strong> O Princípio de Pareto diz que 80% das vendas vêm de 20% dos clientes.</p>
+                <p><strong>Ação:</strong></p>
+                <ol>
+                    <li>Observe o gráfico "Curva ABC"</li>
+                    <li>Identifique quantos % dos clientes respondem por 80% do faturamento</li>
+                </ol>
+                <p><strong>Aplicação Gerencial:</strong></p>
+                <ul>
+                    <li>Se concentração é MUITO alta (poucos clientes = muito faturamento): <strong>RISCO!</strong> Perder um cliente VIP pode ser catastrófico. Ação: diversificar base de clientes.</li>
+                    <li>Se concentração é baixa (vendas distribuídas): <strong>ESTÁVEL!</strong> Mas ticket médio pode ser baixo. Ação: aumentar volume com clientes existentes.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 8. Dashboard: Ranking de Clientes -->
+        <div class="section" id="ranking-clientes">
+            <h2><span class="emoji">🏆</span>8. Dashboard: Ranking de Clientes</h2>
+
+            <h3>Objetivo</h3>
+            <p>Análise de <strong>concentração de vendas</strong> e identificação de clientes estratégicos com filtros granulares.</p>
+
+            <h3>Diferença vs Performance de Clientes</h3>
+            <table>
+                <tr>
+                    <th>Característica</th>
+                    <th>Performance de Clientes</th>
+                    <th>Ranking de Clientes</th>
+                </tr>
+                <tr>
+                    <td>Foco</td>
+                    <td>Análise geral da carteira</td>
+                    <td>Posição ordenada (ranking)</td>
+                </tr>
+                <tr>
+                    <td>Filtros</td>
+                    <td>Grupo, Cliente, Cidade</td>
+                    <td>Rota → Sub-Rota → Cidade (hierárquico)</td>
+                </tr>
+                <tr>
+                    <td>Métrica Destaque</td>
+                    <td>Ticket Médio</td>
+                    <td>Concentração Top 10</td>
+                </tr>
+            </table>
+
+            <h3>KPIs Exclusivos</h3>
+            <ul>
+                <li><strong>Concentração Top 10:</strong> % de vendas dos 10 maiores clientes</li>
+                <li><strong>Posição no Ranking:</strong> Medalhas 🥇🥈🥉 para os 3 primeiros</li>
+            </ul>
+
+            <h3>Casos de Uso Práticos</h3>
+
+            <div class="success-box">
+                <strong>✅ Caso: Avaliar Dependência de Grandes Clientes</strong>
+                <p><strong>Ação:</strong></p>
+                <ol>
+                    <li>Aplique filtros de Rota/Sub-Rota desejada</li>
+                    <li>Observe o KPI "Concentração Top 10"</li>
+                </ol>
+                <p><strong>Interpretação:</strong></p>
+                <ul>
+                    <li><strong>Concentração > 70%:</strong> ALTO RISCO! Perder 1 ou 2 clientes afeta drasticamente o faturamento</li>
+                    <li><strong>Concentração 50-70%:</strong> MÉDIO RISCO! Equilibrado, mas monitorar clientes VIP</li>
+                    <li><strong>Concentração < 50%:</strong> BAIXO RISCO! Base bem distribuída</li>
+                </ul>
+                <p><strong>Aplicação Gerencial:</strong> Se risco é alto, crie plano de retenção para Top 10 e simultaneamente desenvolva novos clientes médios.</p>
+            </div>
+        </div>
+
+        <!-- 9. Dashboard: Cobrança Semanal -->
+        <div class="section" id="cobranca-semanal">
+            <h2><span class="emoji">🎯</span>9. Dashboard: Cobrança Semanal</h2>
+
+            <h3>Objetivo</h3>
+            <p>Acompanhamento de <strong>performance semanal vs metas</strong>, penetração de mercado e eficiência por rota.</p>
+
+            <h3>Filtros</h3>
+            <ul>
+                <li><strong>Semana:</strong> Dropdown com semanas disponíveis</li>
+                <li><strong>Representante:</strong> Opcional para análise individual</li>
+            </ul>
+
+            <h3>KPIs Semanais</h3>
+            <table>
+                <tr>
+                    <th>KPI</th>
+                    <th>Fórmula</th>
+                    <th>Meta Ideal</th>
+                </tr>
+                <tr>
+                    <td>Faturamento Real vs Meta</td>
+                    <td>(Real ÷ Meta) × 100</td>
+                    <td>≥ 100%</td>
+                </tr>
+                <tr>
+                    <td>% Penetração</td>
+                    <td>(Clientes Ativos ÷ Potencial) × 100</td>
+                    <td>≥ 70%</td>
+                </tr>
+                <tr>
+                    <td>Eficiência por Rota</td>
+                    <td>(Faturamento Real ÷ Meta da Rota) × 100</td>
+                    <td>≥ 95%</td>
+                </tr>
+            </table>
+
+            <h3>Alertas Automáticos</h3>
+            <div class="warning-box">
+                <strong>⚠️ Sistema de Alertas:</strong>
+                Representantes abaixo de <strong>70% da meta</strong> aparecem destacados em <strong style="color: red;">vermelho</strong> na tabela.
+            </div>
+
+            <h3>Casos de Uso Práticos</h3>
+
+            <div class="success-box">
+                <strong>✅ Caso: Identificar Representantes Abaixo da Meta</strong>
+                <p><strong>Ação:</strong></p>
+                <ol>
+                    <li>Selecione a semana atual</li>
+                    <li>Procure linhas destacadas em vermelho</li>
+                    <li>Analise o percentual de cumprimento</li>
+                </ol>
+                <p><strong>Aplicação Gerencial:</strong> Agendar reunião individual imediatamente. Investigar causas: problema pessoal? Rota difícil? Falta de treinamento? Cliente grande inadimplente?</p>
+            </div>
+
+            <div class="success-box">
+                <strong>✅ Caso: Monitorar Penetração de Mercado</strong>
+                <p><strong>Conceito:</strong> Penetração indica quantos % dos clientes potenciais estão comprando.</p>
+                <p><strong>Ação:</strong></p>
+                <ol>
+                    <li>Observe o KPI "% Penetração"</li>
+                    <li>Compare com semanas anteriores</li>
+                </ol>
+                <p><strong>Interpretação:</strong></p>
+                <ul>
+                    <li><strong>Penetração > 80%:</strong> EXCELENTE! Rota saturada, considerar expansão</li>
+                    <li><strong>Penetração 60-80%:</strong> BOM! Manter estratégia atual</li>
+                    <li><strong>Penetração < 60%:</strong> OPORTUNIDADE! Muitos clientes ainda não ativos</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 10. Dashboard: Produtos Parados -->
+        <div class="section" id="produtos-parados">
+            <h2><span class="emoji">🛑</span>10. Dashboard: Produtos Parados</h2>
+
+            <h3>Objetivo</h3>
+            <p>Identificar produtos que <strong>PARARAM de ser vendidos</strong> por representantes, detectando perda de clientes antes que seja tarde.</p>
+
+            <div class="warning-box">
+                <strong>⚠️ Dashboard Crítico:</strong>
+                Este é um dos dashboards mais importantes para <strong>prevenção de perdas</strong>. Use semanalmente!
+            </div>
+
+            <h3>Lógica de Detecção</h3>
+            <p>O sistema identifica produtos parados através de:</p>
+            <ol>
+                <li>Calcula a <strong>última venda</strong> de cada representante + produto</li>
+                <li>Conta quantas <strong>semanas</strong> se passaram desde então</li>
+                <li>Se passou <strong>1+ semana</strong> = PRODUTO PARADO</li>
+                <li>Classifica em 6 níveis de risco</li>
+            </ol>
+
+            <h3>Classificação de Risco</h3>
+            <table>
+                <tr>
+                    <th>Nível</th>
+                    <th>Semanas Parado</th>
+                    <th>Cor</th>
+                    <th>Ação Recomendada</th>
+                </tr>
+                <tr style="background: #4a0000; color: white;">
+                    <td>⚫ EXTREMO</td>
+                    <td>6+</td>
+                    <td>Bordô</td>
+                    <td><strong>EMERGENCIAL!</strong> Cliente pode estar perdido</td>
+                </tr>
+                <tr style="background: #dc3545; color: white;">
+                    <td>🔴 MUITO ALTO</td>
+                    <td>5</td>
+                    <td>Vermelho</td>
+                    <td><strong>URGENTE!</strong> Contato imediato</td>
+                </tr>
+                <tr style="background: #fd7e14; color: white;">
+                    <td>🟠 ALTO</td>
+                    <td>4</td>
+                    <td>Laranja</td>
+                    <td><strong>IMPORTANTE!</strong> Agendar visita</td>
+                </tr>
+                <tr style="background: #ffc107;">
+                    <td>🟡 MODERADO</td>
+                    <td>3</td>
+                    <td>Amarelo</td>
+                    <td><strong>ATENÇÃO!</strong> Incluir na próxima rota</td>
+                </tr>
+                <tr style="background: #28a745; color: white;">
+                    <td>🟢 BAIXO</td>
+                    <td>2</td>
+                    <td>Verde</td>
+                    <td><strong>OBSERVAR!</strong> Monitorar na semana</td>
+                </tr>
+                <tr style="background: #007bff; color: white;">
+                    <td>🔵 MÍNIMO</td>
+                    <td>1</td>
+                    <td>Azul</td>
+                    <td><strong>NORMAL!</strong> Acompanhamento padrão</td>
+                </tr>
+            </table>
+
+            <h3>Informações da Tabela</h3>
+            <p>Para cada produto parado, o sistema mostra:</p>
+            <ul>
+                <li><strong>Nível de Risco:</strong> Código de cores</li>
+                <li><strong>Supervisor e Representante:</strong> Responsáveis</li>
+                <li><strong>Produto:</strong> Código e descrição</li>
+                <li><strong>Último Cliente:</strong> NOVO! Quem comprou pela última vez</li>
+                <li><strong>Última Venda:</strong> Data da última transação</li>
+                <li><strong>Semanas Parado:</strong> Tempo sem vender</li>
+                <li><strong>Valor Médio:</strong> Quanto faturava com esse produto</li>
+            </ul>
+
+            <h3>Recursos Especiais</h3>
+
+            <h4>📱 Botão WhatsApp</h4>
+            <p>Funcionalidade exclusiva deste dashboard:</p>
+            <div class="step">
+                <p><span class="step-number">1</span> Clique no botão "📱 WhatsApp"</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">2</span> Sistema busca automaticamente o telefone do representante</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">3</span> Abre WhatsApp Web com mensagem formatada contendo:</p>
+                <ul>
+                    <li>Data do relatório</li>
+                    <li>Resumo geral (total de produtos parados, valor em risco)</li>
+                    <li>TOP 5 produtos críticos com nome do último cliente</li>
+                </ul>
+            </div>
+
+            <div class="tip-box">
+                <strong>💡 Novidade Versão 3.4:</strong>
+                Agora o WhatsApp envia o <strong>nome do cliente</strong> que comprou pela última vez, facilitando a abordagem comercial!
+            </div>
+
+            <h3>Casos de Uso Práticos</h3>
+
+            <div class="success-box">
+                <strong>✅ Caso: Recuperar Cliente Antes de Perdê-lo</strong>
+                <p><strong>Situação:</strong> Representante João sempre vendia Produto X para Cliente ABC, mas parou há 4 semanas.</p>
+                <p><strong>Ação Imediata:</strong></p>
+                <ol>
+                    <li>Filtrar por Representante "João"</li>
+                    <li>Identificar Produto X na lista (risco 🟠 ALTO)</li>
+                    <li>Ver que último cliente foi "ABC Comércio"</li>
+                    <li>Clicar em WhatsApp e enviar mensagem</li>
+                </ol>
+                <p><strong>Script Sugerido para o Representante:</strong></p>
+                <div class="code-box">
+"Olá João! Notei que o cliente ABC Comércio não compra Produto X há 4 semanas.
+Eles costumavam comprar regularmente. Houve algum problema?
+Podemos agendar uma visita para entender o que aconteceu?"
+                </div>
+                <p><strong>Resultado Esperado:</strong></p>
+                <ul>
+                    <li>Descobre que concorrente ofereceu preço melhor → Ação: criar promoção</li>
+                    <li>Descobre que produto teve problema de qualidade → Ação: trocar lote</li>
+                    <li>Descobre que cliente simplesmente esqueceu → Ação: reativar pedido</li>
+                </ul>
+            </div>
+
+            <div class="success-box">
+                <strong>✅ Caso: Gestão Preventiva Semanal</strong>
+                <p><strong>Rotina Recomendada:</strong> Toda segunda-feira de manhã:</p>
+                <ol>
+                    <li>Acessar dashboard Produtos Parados</li>
+                    <li>Filtrar por nível de risco "EXTREMO" e "MUITO ALTO"</li>
+                    <li>Exportar PDF com a lista completa</li>
+                    <li>Reunir supervisores e distribuir ações</li>
+                    <li>Enviar WhatsApp para cada representante com seus produtos críticos</li>
+                    <li>Acompanhar na sexta-feira quantos foram recuperados</li>
+                </ol>
+                <p><strong>Impacto Esperado:</strong> Redução de 50-70% na perda de clientes por "esquecimento" ou falta de acompanhamento.</p>
+            </div>
+        </div>
+
+        <!-- 11. Dashboard: Clientes Sem Compras -->
+        <div class="section" id="clientes-semcompras">
+            <h2><span class="emoji">🗺️</span>11. Dashboard: Clientes Sem Compras</h2>
+
+            <h3>Objetivo</h3>
+            <p>Identificar clientes <strong>ativos que NÃO compraram</strong> no período, visualizando oportunidades em um <strong>mapa interativo</strong>.</p>
+
+            <h3>Filtros</h3>
+
+            <h4>Período de Análise</h4>
+            <ul>
+                <li>Últimos 30 dias</li>
+                <li>Últimos 60 dias</li>
+                <li>Últimos 90 dias</li>
+                <li>Customizado (data início/fim)</li>
+            </ul>
+
+            <h4>Filtros Geográficos (Cascata)</h4>
+            <ul>
+                <li>Rota → Sub-Rota → Cidade (com busca digitável)</li>
+            </ul>
+
+            <h3>Classificação de Risco</h3>
+            <table>
+                <tr>
+                    <th>Nível</th>
+                    <th>Critério</th>
+                    <th>Cor no Mapa</th>
+                    <th>Significado</th>
+                </tr>
+                <tr>
+                    <td>🟢 MÍNIMO</td>
+                    <td>Até 30 dias</td>
+                    <td>Verde</td>
+                    <td>Vendedor pode não ter visitado ainda</td>
+                </tr>
+                <tr>
+                    <td>🟡 MÉDIO</td>
+                    <td>30-60 dias</td>
+                    <td>Amarelo</td>
+                    <td>Cliente pode estar migrando para concorrente</td>
+                </tr>
+                <tr>
+                    <td>🔴 MÁXIMO</td>
+                    <td>60+ dias</td>
+                    <td>Vermelho</td>
+                    <td>Alto risco de perda definitiva</td>
+                </tr>
+                <tr>
+                    <td>⚫ EXTREMO</td>
+                    <td>Nunca comprou</td>
+                    <td>Preto</td>
+                    <td>Cliente novo sem histórico</td>
+                </tr>
+            </table>
+
+            <h3>Layout do Dashboard (60/40)</h3>
+
+            <h4>Lado Esquerdo (60%)</h4>
+            <ul>
+                <li><strong>Tabela de Clientes:</strong> Lista completa com 8 colunas</li>
+                <li><strong>Mapa Interativo:</strong> Visualização geográfica com marcadores coloridos</li>
+            </ul>
+
+            <h4>Lado Direito (40%)</h4>
+            <ul>
+                <li><strong>KPIs:</strong> Total de clientes, rotas afetadas, cidades, risco extremo</li>
+                <li><strong>Resumo por Tempo:</strong> Quantos clientes em cada faixa de dias</li>
+                <li><strong>Resumo Hierárquico:</strong> Distribuição por Rota → Sub-Rota</li>
+            </ul>
+
+            <h3>Mapa Interativo</h3>
+
+            <h4>Recursos do Mapa</h4>
+            <ul>
+                <li><strong>Marcadores Coloridos:</strong> Cada cor representa um nível de risco</li>
+                <li><strong>Clusterização:</strong> Agrupa marcadores próximos automaticamente</li>
+                <li><strong>Popup de Informações:</strong> Clique no marcador para ver dados do cliente</li>
+                <li><strong>Zoom e Navegação:</strong> Arraste e dê zoom para explorar regiões</li>
+            </ul>
+
+            <div class="tip-box">
+                <strong>💡 Como Usar o Mapa:</strong>
+                <ol>
+                    <li>Aproxime o zoom em uma região específica</li>
+                    <li>Os clusters se expandirão mostrando clientes individuais</li>
+                    <li>Clique em um marcador para ver: Nome, Cidade, Dias sem compra</li>
+                    <li>Use para planejar rotas de visita otimizadas geograficamente</li>
+                </ol>
+            </div>
+
+            <h3>Casos de Uso Práticos</h3>
+
+            <div class="success-box">
+                <strong>✅ Caso: Planejar Rota de Recuperação</strong>
+                <p><strong>Situação:</strong> Preciso visitar clientes inativos na Região Sul de forma eficiente.</p>
+                <p><strong>Ação:</strong></p>
+                <ol>
+                    <li>Filtrar por Rota "Sul"</li>
+                    <li>Período: Últimos 60 dias</li>
+                    <li>Observar o mapa interativo</li>
+                    <li>Identificar clusters (agrupamentos) de clientes inativos</li>
+                    <li>Exportar PDF com a lista</li>
+                    <li>Agendar dia de visitas seguindo a ordem geográfica do mapa</li>
+                </ol>
+                <p><strong>Benefício:</strong> Otimiza combustível, tempo e aumenta produtividade do representante ao visitar múltiplos clientes na mesma região.</p>
+            </div>
+
+            <div class="success-box">
+                <strong>✅ Caso: Identificar Padrão de Inatividade</strong>
+                <p><strong>Ação:</strong></p>
+                <ol>
+                    <li>Observar o "Resumo Hierárquico" no lado direito</li>
+                    <li>Identificar qual Rota/Sub-Rota tem mais clientes inativos</li>
+                </ol>
+                <p><strong>Exemplo de Análise:</strong></p>
+                <div class="code-box">
+Rota Norte = 80 clientes sem compra
+  ↳ Sub-Rota A = 60 clientes
+  ↳ Sub-Rota B = 20 clientes
+                </div>
+                <p><strong>Interpretação:</strong> Sub-Rota A tem problema sério! Pode ser:</p>
+                <ul>
+                    <li>Representante não está visitando adequadamente</li>
+                    <li>Região com problemas econômicos</li>
+                    <li>Concorrente forte na região</li>
+                </ul>
+                <p><strong>Ação Gerencial:</strong> Investigar causa raiz e criar plano de ação específico para Sub-Rota A.</p>
+            </div>
+        </div>
+
+        <!-- 12. Dashboard: Configurações -->
+        <div class="section" id="configuracoes">
+            <h2><span class="emoji">⚙️</span>12. Dashboard: Configurações (Admin Only)</h2>
+
+            <div class="warning-box">
+                <strong>🔐 Acesso Restrito:</strong>
+                Este dashboard é exclusivo para usuários com permissão de <strong>administrador</strong>.
+            </div>
+
+            <h3>Seção 1: Gerenciamento de Usuários</h3>
+
+            <h4>Criar Novo Usuário</h4>
+            <div class="step">
+                <p><span class="step-number">1</span> Clique em "➕ Novo Usuário"</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">2</span> Preencha os campos:</p>
+                <ul>
+                    <li>Username (nome de login)</li>
+                    <li>Senha</li>
+                    <li>Nome Completo</li>
+                    <li>Permissões (selecione os dashboards que o usuário poderá acessar)</li>
+                    <li>Status (Ativo/Inativo)</li>
+                </ul>
+            </div>
+            <div class="step">
+                <p><span class="step-number">3</span> Clique em "Salvar"</p>
+            </div>
+
+            <h4>Editar Usuário Existente</h4>
+            <div class="step">
+                <p><span class="step-number">1</span> Localize o usuário na tabela</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">2</span> Clique em "✏️ Editar"</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">3</span> Modifique as informações desejadas</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">4</span> Clique em "Salvar Alterações"</p>
+            </div>
+
+            <h4>Desativar/Ativar Usuário</h4>
+            <p>Em vez de excluir, você pode desativar temporariamente um usuário:</p>
+            <ul>
+                <li>Usuário desativado não consegue fazer login</li>
+                <li>Mantém histórico e configurações</li>
+                <li>Pode ser reativado a qualquer momento</li>
+            </ul>
+
+            <h3>Seção 2: Importação de Dados (CSV para Turso)</h3>
+
+            <h4>Tabelas Suportadas</h4>
+            <table>
+                <tr>
+                    <th>Tabela</th>
+                    <th>Colunas</th>
+                    <th>Uso</th>
+                </tr>
+                <tr>
+                    <td>tab_cliente</td>
+                    <td>16</td>
+                    <td>Cadastro de clientes</td>
+                </tr>
+                <tr>
+                    <td>tab_produto</td>
+                    <td>6</td>
+                    <td>Catálogo de produtos</td>
+                </tr>
+                <tr>
+                    <td>tab_representante</td>
+                    <td>13</td>
+                    <td>Dados dos vendedores</td>
+                </tr>
+            </table>
+
+            <h4>Processo de Importação Passo a Passo</h4>
+
+            <div class="step">
+                <p><span class="step-number">1</span> <strong>Selecione a Tabela:</strong> Escolha qual tabela deseja importar dados</p>
+            </div>
+
+            <div class="step">
+                <p><span class="step-number">2</span> <strong>Baixe o Template CSV:</strong></p>
+                <ul>
+                    <li>Clique em "📥 Download Template"</li>
+                    <li>O sistema gera um arquivo CSV com todas as colunas corretas</li>
+                    <li>Inclui linha de exemplo com dados fictícios</li>
+                </ul>
+            </div>
+
+            <div class="warning-box">
+                <strong>⚠️ IMPORTANTE - Formato CSV:</strong>
+                <ul>
+                    <li>Use <strong>ponto-e-vírgula (;)</strong> como separador (NÃO vírgula)</li>
+                    <li>Coluna de chave primária é <strong>obrigatória</strong> em todas as linhas</li>
+                    <li>Dados existentes serão <strong>substituídos</strong> (INSERT OR REPLACE)</li>
+                    <li>Tamanho máximo: 50MB por arquivo</li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <p><span class="step-number">3</span> <strong>Preencha o CSV:</strong></p>
+                <ul>
+                    <li>Abra o template no Excel ou LibreOffice</li>
+                    <li>Preencha os dados seguindo o exemplo</li>
+                    <li>Salve como CSV (separado por ponto-e-vírgula)</li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <p><span class="step-number">4</span> <strong>Faça Upload:</strong></p>
+                <ul>
+                    <li>Arraste o arquivo para a área de upload OU</li>
+                    <li>Clique para selecionar o arquivo</li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <p><span class="step-number">5</span> <strong>Validação Automática:</strong></p>
+                <p>O sistema verifica:</p>
+                <ul>
+                    <li>✅ Se todas as colunas obrigatórias existem</li>
+                    <li>✅ Se chave primária está preenchida em todas as linhas</li>
+                    <li>⚠️ Avisa sobre colunas vazias (mas permite importar)</li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <p><span class="step-number">6</span> <strong>Importação:</strong></p>
+                <ul>
+                    <li>Barra de progresso mostra andamento</li>
+                    <li>Log detalhado exibe cada operação</li>
+                    <li>Ao final: mensagem de sucesso ou erro</li>
+                </ul>
+            </div>
+
+            <h4>Exemplo de CSV (tab_cliente)</h4>
+            <div class="code-box">
+cliente;nome;fantasia;insc_est;cnpj_cpf;grupo;endereco;cep;bairro;cidade;estado;grupo_desc;rota;sit_cliente;sub_rota;num_endereco
+001;EXEMPLO COM LTDA;Exemplo;123456789;12.345.678/0001-90;GRP01;Rua Exemplo;12345-678;Centro;São Paulo;SP;Grupo Exemplo;R01;ATIVO;SR01;100
+002;OUTRO CLIENTE SA;Outro;987654321;98.765.432/0001-10;GRP02;Av Principal;98765-432;Jardim;Rio de Janeiro;RJ;Grupo Outro;R02;ATIVO;SR02;200
+            </div>
+
+            <div class="tip-box">
+                <strong>💡 Dica:</strong>
+                Sempre faça backup dos dados antes de importar! Use o botão "Exportar" de cada dashboard para salvar os dados atuais.
+            </div>
+        </div>
+
+        <!-- 13. Recursos Comuns -->
+        <div class="section" id="recursos-comuns">
+            <h2><span class="emoji">🔧</span>13. Recursos Comuns a Todos os Dashboards</h2>
+
+            <h3>Busca Digitável em Filtros</h3>
+            <p>Todos os campos de seleção (select) possuem busca em tempo real:</p>
+
+            <div class="step">
+                <p><span class="step-number">1</span> Clique no campo de filtro (ex: Representante)</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">2</span> Um campo de busca aparece acima das opções</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">3</span> Comece a digitar (ex: "joa")</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">4</span> Lista filtra automaticamente mostrando apenas opções que contêm "joa"</p>
+            </div>
+            <div class="step">
+                <p><span class="step-number">5</span> Clique na opção desejada OU pressione Enter para selecionar a primeira</p>
+            </div>
+
+            <div class="tip-box">
+                <strong>💡 Atalhos de Teclado:</strong>
+                <ul>
+                    <li><strong>ESC:</strong> Fecha a busca e limpa o campo</li>
+                    <li><strong>Enter:</strong> Seleciona automaticamente a primeira opção filtrada</li>
+                    <li><strong>✕ (botão):</strong> Limpa o campo de busca</li>
+                </ul>
+            </div>
+
+            <h3>Filtros em Cascata</h3>
+            <p>Muitos dashboards usam filtros hierárquicos que se atualizam automaticamente:</p>
+
+            <p><strong>Exemplo:</strong> Rota → Sub-Rota → Cidade</p>
+            <ol>
+                <li>Ao selecionar uma <strong>Rota</strong>, o filtro <strong>Sub-Rota</strong> mostra apenas sub-rotas daquela rota</li>
+                <li>Ao selecionar uma <strong>Sub-Rota</strong>, o filtro <strong>Cidade</strong> mostra apenas cidades daquela sub-rota</li>
+            </ol>
+
+            <h3>Paginação de Tabelas</h3>
+            <p>Todas as tabelas exibem <strong>25 registros por página</strong>:</p>
+            <ul>
+                <li><strong>◀ Anterior:</strong> Volta para página anterior</li>
+                <li><strong>Próxima ▶:</strong> Avança para próxima página</li>
+                <li><strong>Contador:</strong> "Mostrando 1-25 de 150 registros"</li>
+            </ul>
+
+            <h3>Exportação de Dados</h3>
+
+            <h4>📊 Exportar para Excel</h4>
+            <ul>
+                <li><strong>Formato:</strong> .xlsx (compatível com Excel, Google Sheets, LibreOffice)</li>
+                <li><strong>Conteúdo:</strong> Todos os dados filtrados (não apenas a página atual)</li>
+                <li><strong>Nome do arquivo:</strong> Inclui dashboard, modo e período automaticamente</li>
+            </ul>
+
+            <h4>📄 Exportar para PDF</h4>
+            <ul>
+                <li><strong>Formato:</strong> Landscape (paisagem) para caber mais colunas</li>
+                <li><strong>Conteúdo:</strong> KPIs + Tabela completa formatada profissionalmente</li>
+                <li><strong>Cabeçalho:</strong> Inclui logo Germani + título do dashboard + filtros aplicados</li>
+            </ul>
+
+            <h4>📱 Compartilhar via WhatsApp</h4>
+            <ul>
+                <li><strong>Funcionamento:</strong> Abre WhatsApp Web com mensagem pré-formatada</li>
+                <li><strong>Conteúdo:</strong> Resumo executivo + Top 5 ou Top 10</li>
+                <li><strong>Destinatário:</strong> Você escolhe para quem enviar</li>
+            </ul>
+
+            <div class="tip-box">
+                <strong>💡 WhatsApp Inteligente (Dashboard Produtos Parados):</strong>
+                No dashboard Produtos Parados, o sistema busca automaticamente o telefone do representante e já preenche o destinatário!
+            </div>
+
+            <h3>Botão "Limpar Filtros"</h3>
+            <p>Todos os dashboards possuem botão para resetar filtros:</p>
+            <ul>
+                <li>Remove todas as seleções</li>
+                <li>Volta aos valores padrão</li>
+                <li>Limpa cache de filtros</li>
+                <li>Útil para começar uma nova análise do zero</li>
+            </ul>
+
+            <h3>Sistema de Cache</h3>
+            <p>O sistema armazena dados em <strong>3 camadas</strong> para melhorar performance:</p>
+
+            <table>
+                <tr>
+                    <th>Camada</th>
+                    <th>Tempo de Vida</th>
+                    <th>Uso</th>
+                </tr>
+                <tr>
+                    <td>LocalStorage</td>
+                    <td>Permanente</td>
+                    <td>Persistência entre sessões</td>
+                </tr>
+                <tr>
+                    <td>SessionStorage</td>
+                    <td>Até fechar aba</td>
+                    <td>Confiabilidade na sessão atual</td>
+                </tr>
+                <tr>
+                    <td>Cookie</td>
+                    <td>30 dias</td>
+                    <td>Funciona em todos os paths</td>
+                </tr>
+            </table>
+
+            <div class="tip-box">
+                <strong>💡 Cache de Filtros:</strong>
+                Os filtros que você selecionou são salvos por <strong>30 minutos</strong>. Se voltar ao mesmo dashboard nesse período, os filtros estarão pré-selecionados!
+            </div>
+
+            <h3>PWA - Instalação como Aplicativo</h3>
+            <p>O sistema pode ser instalado como aplicativo nativo:</p>
+
+            <h4>No Desktop (Chrome/Edge/Brave):</h4>
+            <ol>
+                <li>Acesse o sistema</li>
+                <li>Clique no ícone ➕ na barra de endereço</li>
+                <li>Selecione "Instalar"</li>
+                <li>O sistema aparecerá como aplicativo no menu Iniciar/Dock</li>
+            </ol>
+
+            <h4>No Mobile (Android/iOS):</h4>
+            <ol>
+                <li>Abra no navegador</li>
+                <li>Menu ⋮ (Chrome) ou Compartilhar 📤 (Safari)</li>
+                <li>"Adicionar à tela inicial"</li>
+                <li>Ícone aparece na home do celular</li>
+            </ol>
+
+            <div class="success-box">
+                <strong>✅ Benefícios do PWA:</strong>
+                <ul>
+                    <li>Funciona offline com dados cacheados</li>
+                    <li>Abre mais rápido que pelo navegador</li>
+                    <li>Fica na barra de tarefas/tela inicial</li>
+                    <li>Experiência nativa sem precisar baixar da loja</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 14. Casos de Uso Práticos -->
+        <div class="section" id="casos-uso">
+            <h2><span class="emoji">💼</span>14. Casos de Uso Práticos para Gestão</h2>
+
+            <h3>Rotina Semanal Recomendada</h3>
+
+            <h4>Segunda-feira (Manhã)</h4>
+            <div class="success-box">
+                <strong>🎯 Planejamento da Semana</strong>
+                <ol>
+                    <li><strong>Cobrança Semanal:</strong> Verificar representantes abaixo da meta</li>
+                    <li><strong>Produtos Parados:</strong> Gerar lista de produtos críticos (risco EXTREMO e MUITO ALTO)</li>
+                    <li><strong>Clientes Sem Compras:</strong> Identificar oportunidades de reativação</li>
+                    <li><strong>Ação:</strong> Distribuir tarefas para supervisores via WhatsApp</li>
+                </ol>
+            </div>
+
+            <h4>Quarta-feira (Meio da Semana)</h4>
+            <div class="success-box">
+                <strong>📊 Acompanhamento de Progresso</strong>
+                <ol>
+                    <li><strong>Cobrança Semanal:</strong> Verificar se representantes críticos melhoraram</li>
+                    <li><strong>Vendas por Equipe:</strong> Comparar performance entre membros</li>
+                    <li><strong>Ação:</strong> Ajustar rotas ou oferecer suporte adicional</li>
+                </ol>
+            </div>
+
+            <h4>Sexta-feira (Fechamento)</h4>
+            <div class="success-box">
+                <strong>📈 Análise de Resultados</strong>
+                <ol>
+                    <li><strong>Ranking de Clientes:</strong> Verificar Top 10 da semana</li>
+                    <li><strong>Vendas por Região:</strong> Comparar desempenho regional</li>
+                    <li><strong>Ação:</strong> Exportar relatórios e enviar para diretoria</li>
+                </ol>
+            </div>
+
+            <h3>Rotina Mensal Recomendada</h3>
+
+            <h4>Primeira semana do mês</h4>
+            <div class="success-box">
+                <strong>🏆 Fechamento do Mês Anterior</strong>
+                <ol>
+                    <li><strong>Performance de Clientes:</strong> Análise ABC do mês fechado</li>
+                    <li><strong>Análise de Produtos:</strong> Mix de produtos vendidos</li>
+                    <li><strong>Vendas por Equipe:</strong> Ranking mensal de vendedores</li>
+                    <li><strong>Ação:</strong> Premiações, reconhecimentos, ajustes de meta</li>
+                </ol>
+            </div>
+
+            <h3>Cenários de Tomada de Decisão</h3>
+
+            <div class="success-box">
+                <strong>Cenário 1: Queda de Vendas em Região Específica</strong>
+                <p><strong>Sintoma:</strong> Faturamento da Região Sul caiu 30% vs mês anterior.</p>
+                <p><strong>Diagnóstico usando o sistema:</strong></p>
+                <ol>
+                    <li><strong>Vendas por Região:</strong> Confirmar queda e identificar cidades mais afetadas</li>
+                    <li><strong>Vendas por Equipe:</strong> Verificar se é problema de um representante específico ou geral</li>
+                    <li><strong>Clientes Sem Compras:</strong> Ver quantos clientes pararam de comprar na região</li>
+                    <li><strong>Produtos Parados:</strong> Identificar se há produtos específicos afetados</li>
+                </ol>
+                <p><strong>Possíveis Causas:</strong></p>
+                <ul>
+                    <li>Representante doente/afastado → Redistribuir rota</li>
+                    <li>Cliente grande inadimplente → Negociar pagamento</li>
+                    <li>Concorrente agressivo → Criar promoção</li>
+                    <li>Problema de qualidade em produto → Investigar produção</li>
+                </ul>
+            </div>
+
+            <div class="success-box">
+                <strong>Cenário 2: Concentração Excessiva em Poucos Clientes</strong>
+                <p><strong>Sintoma:</strong> Ranking de Clientes mostra que Top 5 = 85% do faturamento.</p>
+                <p><strong>Risco:</strong> Perder 1 cliente VIP pode quebrar a empresa!</p>
+                <p><strong>Estratégia de Mitigação:</strong></p>
+                <ol>
+                    <li><strong>Curto Prazo:</strong>
+                        <ul>
+                            <li>Criar programa de fidelidade para Top 5</li>
+                            <li>Visitas semanais da diretoria aos clientes VIP</li>
+                            <li>Condições comerciais especiais</li>
+                        </ul>
+                    </li>
+                    <li><strong>Médio Prazo:</strong>
+                        <ul>
+                            <li>Usar "Clientes Sem Compras" para reativar inativos</li>
+                            <li>Usar "Performance de Clientes" para identificar clientes médios com potencial de crescimento</li>
+                            <li>Investir em prospecção de novos clientes</li>
+                        </ul>
+                    </li>
+                    <li><strong>Meta:</strong> Reduzir concentração Top 5 para 60% em 6 meses</li>
+                </ol>
+            </div>
+
+            <div class="success-box">
+                <strong>Cenário 3: Produto com Alta Margem Parando de Vender</strong>
+                <p><strong>Sintoma:</strong> Dashboard Produtos Parados mostra Produto Premium (alta margem) há 6 semanas parado.</p>
+                <p><strong>Impacto:</strong> Margem de lucro está caindo mesmo com volume constante.</p>
+                <p><strong>Ação Imediata:</strong></p>
+                <ol>
+                    <li>Identificar qual cliente comprava esse produto (coluna "Último Cliente")</li>
+                    <li>Ligar HOJE para o cliente e entender motivo</li>
+                    <li>Oferecer amostra grátis ou condição especial</li>
+                    <li>Agendar visita presencial urgente</li>
+                    <li>Monitorar semanalmente até recuperar</li>
+                </ol>
+            </div>
+
+            <h3>KPIs Recomendados para Acompanhamento</h3>
+
+            <table>
+                <tr>
+                    <th>KPI</th>
+                    <th>Dashboard</th>
+                    <th>Frequência</th>
+                    <th>Meta Ideal</th>
+                </tr>
+                <tr>
+                    <td>% Cumprimento Meta Semanal</td>
+                    <td>Cobrança Semanal</td>
+                    <td>Semanal</td>
+                    <td>≥ 100%</td>
+                </tr>
+                <tr>
+                    <td>Ticket Médio</td>
+                    <td>Performance de Clientes</td>
+                    <td>Mensal</td>
+                    <td>Crescente</td>
+                </tr>
+                <tr>
+                    <td>Concentração Top 10</td>
+                    <td>Ranking de Clientes</td>
+                    <td>Mensal</td>
+                    <td>< 70%</td>
+                </tr>
+                <tr>
+                    <td>Produtos em Risco Extremo</td>
+                    <td>Produtos Parados</td>
+                    <td>Semanal</td>
+                    <td>< 10</td>
+                </tr>
+                <tr>
+                    <td>Clientes Inativos 60+ dias</td>
+                    <td>Clientes Sem Compras</td>
+                    <td>Quinzenal</td>
+                    <td>< 5%</td>
+                </tr>
+                <tr>
+                    <td>Mix Fabricado/Revenda</td>
+                    <td>Análise de Produtos</td>
+                    <td>Mensal</td>
+                    <td>60/40</td>
+                </tr>
+            </table>
+
+            <h3>Conclusão</h3>
+            <p>O <strong>Ger Comercial</strong> é uma ferramenta poderosa para transformar dados em decisões estratégicas. O sucesso do sistema depende de:</p>
+
+            <div class="success-box">
+                <strong>✅ Fatores Críticos de Sucesso:</strong>
+                <ul>
+                    <li><strong>Uso Consistente:</strong> Acesse diariamente/semanalmente, não esporadicamente</li>
+                    <li><strong>Ação Baseada em Dados:</strong> Não basta ver os números, é preciso agir</li>
+                    <li><strong>Compartilhamento:</strong> Exporte relatórios e compartilhe com a equipe</li>
+                    <li><strong>Feedback:</strong> Reporte bugs e sugestões para melhoria contínua</li>
+                    <li><strong>Treinamento:</strong> Certifique-se que todos sabem usar o sistema</li>
+                </ul>
+            </div>
+
+            <p style="text-align: center; margin-top: 40px;">
+                <strong style="font-size: 1.2em; color: #fc0303;">
+                    Use os dados a seu favor. Tome decisões inteligentes. Cresça com inteligência comercial!
+                </strong>
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="section" style="background: linear-gradient(135deg, #fc0303 0%, #b50909 100%); color: white; text-align: center;">
+            <h3>📧 Suporte e Contato</h3>
+            <p>Em caso de dúvidas ou problemas técnicos, entre em contato com o setor de TI da Germani Alimentos.</p>
+            <p style="margin-top: 20px;">
+                <strong>© 2025 Germani Alimentos - Sistema Ger Comercial</strong><br>
+                Versão 3.4 | Manual atualizado em Janeiro/2025
+            </p>
+        </div>
+    </div>
+</body>
+</html>

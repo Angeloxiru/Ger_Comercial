@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apresentação - Ger Comercial | Germani Alimentos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/white.min.css">
+    <style>
+        :root {
+            --germani-red: #fc0303;
+            --germani-dark-red: #b50909;
+        }
+
+        .reveal {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        .reveal h1, .reveal h2, .reveal h3 {
+            color: var(--germani-red);
+            text-transform: none;
+        }
+
+        .reveal h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 30px;
+        }
+
+        .reveal h2 {
+            font-size: 2em;
+            font-weight: 600;
+        }
+
+        .reveal h3 {
+            font-size: 1.5em;
+            font-weight: 500;
+        }
+
+        .reveal section {
+            text-align: left;
+        }
+
+        .reveal .title-slide {
+            text-align: center;
+        }
+
+        .reveal .gradient-bg {
+            background: linear-gradient(135deg, var(--germani-red) 0%, var(--germani-dark-red) 100%);
+            color: white;
+            padding: 60px 40px;
+            border-radius: 20px;
+        }
+
+        .reveal .gradient-bg h1,
+        .reveal .gradient-bg h2,
+        .reveal .gradient-bg h3 {
+            color: white;
+        }
+
+        .benefit-box {
+            background: #e7f3ff;
+            border-left: 5px solid #0066cc;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+
+        .benefit-box strong {
+            color: #0066cc;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .alert-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+
+        .alert-box strong {
+            color: #856404;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+
+        .success-box strong {
+            color: #155724;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .emoji-large {
+            font-size: 3em;
+            display: block;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .highlight-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: var(--germani-red);
+            display: block;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .dashboard-icon {
+            font-size: 2em;
+            margin-right: 15px;
+        }
+
+        table {
+            width: 100%;
+            font-size: 0.8em;
+            margin: 20px 0;
+        }
+
+        table th {
+            background: var(--germani-red);
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+
+        table td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        ul {
+            margin-left: 30px;
+        }
+
+        li {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .reveal .progress {
+            background: rgba(252, 3, 3, 0.2);
+        }
+
+        .reveal .progress span {
+            background: var(--germani-red);
+        }
+
+        .reveal .controls {
+            color: var(--germani-red);
+        }
+
+        .footer-info {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            font-size: 0.6em;
+            color: #999;
+        }
+
+        .center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- Slide 1: Título -->
+            <section class="title-slide">
+                <div class="gradient-bg">
+                    <h1>📊 Ger Comercial</h1>
+                    <h2>Sistema de Análise Comercial</h2>
+                    <p style="font-size: 1.3em; margin-top: 30px;">Germani Alimentos</p>
+                    <p style="font-size: 0.9em; opacity: 0.9; margin-top: 20px;">Tome decisões inteligentes baseadas em dados reais</p>
+                </div>
+            </section>
+
+            <!-- Slide 2: O Problema -->
+            <section>
+                <h2>❓ O Problema</h2>
+                <div class="alert-box">
+                    <strong>Gestão às Cegas</strong>
+                    <ul>
+                        <li>Clientes importantes parando de comprar <strong>sem você saber</strong></li>
+                        <li>Produtos de alta margem sendo <strong>esquecidos</strong> pelos vendedores</li>
+                        <li>Impossível saber <strong>quem está performando</strong> e quem precisa de ajuda</li>
+                        <li>Dados dispersos em planilhas e relatórios desatualizados</li>
+                    </ul>
+                </div>
+                <p class="center" style="font-size: 1.3em; margin-top: 30px; color: var(--germani-red);">
+                    <strong>Como tomar decisões certas sem dados confiáveis?</strong>
+                </p>
+            </section>
+
+            <!-- Slide 3: A Solução -->
+            <section>
+                <h2>✅ A Solução: Ger Comercial</h2>
+                <div class="success-box">
+                    <strong>Sistema Completo de Inteligência Comercial</strong>
+                    <div class="two-columns">
+                        <div>
+                            <ul>
+                                <li>🎯 9 Dashboards especializados</li>
+                                <li>📊 Dados em tempo real</li>
+                                <li>🗺️ Mapas interativos</li>
+                                <li>📱 Exportação WhatsApp/Excel/PDF</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <ul>
+                                <li>🔔 Alertas automáticos de risco</li>
+                                <li>🏆 Rankings e comparações</li>
+                                <li>📈 Gráficos interativos</li>
+                                <li>💻 Acesso de qualquer lugar</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 4: Visão Geral -->
+            <section>
+                <h2>🗂️ 9 Dashboards Disponíveis</h2>
+                <table>
+                    <tr>
+                        <th>Dashboard</th>
+                        <th>Para que serve</th>
+                    </tr>
+                    <tr>
+                        <td><span class="dashboard-icon">📍</span>Vendas por Região</td>
+                        <td>Análise geográfica de vendas</td>
+                    </tr>
+                    <tr>
+                        <td><span class="dashboard-icon">👥</span>Vendas por Equipe</td>
+                        <td>Performance individual e coletiva</td>
+                    </tr>
+                    <tr>
+                        <td><span class="dashboard-icon">📈</span>Análise de Produtos</td>
+                        <td>Mix de produtos e famílias</td>
+                    </tr>
+                    <tr>
+                        <td><span class="dashboard-icon">💰</span>Performance de Clientes</td>
+                        <td>Saúde da carteira de clientes</td>
+                    </tr>
+                    <tr>
+                        <td><span class="dashboard-icon">🏆</span>Ranking de Clientes</td>
+                        <td>Concentração e dependência</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Slide 5: Visão Geral (Continuação) -->
+            <section>
+                <h2>🗂️ 9 Dashboards Disponíveis (cont.)</h2>
+                <table>
+                    <tr>
+                        <th>Dashboard</th>
+                        <th>Para que serve</th>
+                    </tr>
+                    <tr>
+                        <td><span class="dashboard-icon">🎯</span>Cobrança Semanal</td>
+                        <td>Metas vs realizado semanalmente</td>
+                    </tr>
+                    <tr>
+                        <td><span class="dashboard-icon">🛑</span>Produtos Parados</td>
+                        <td><strong>CRÍTICO!</strong> Detecta perdas antes que aconteçam</td>
+                    </tr>
+                    <tr>
+                        <td><span class="dashboard-icon">🗺️</span>Clientes Sem Compras</td>
+                        <td>Oportunidades de reativação + mapa</td>
+                    </tr>
+                    <tr>
+                        <td><span class="dashboard-icon">⚙️</span>Configurações</td>
+                        <td>Gestão de usuários e importação de dados</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Dashboard 1: Vendas por Região -->
+            <section>
+                <h2><span class="dashboard-icon">📍</span>Vendas por Região</h2>
+                <div class="benefit-box">
+                    <strong>Benefício:</strong>
+                    <p>Identifique <strong>regiões de alto desempenho</strong> e oportunidades de crescimento geográfico.</p>
+                </div>
+                <h3>Como usar na prática:</h3>
+                <div class="success-box">
+                    <strong>Exemplo Real:</strong>
+                    <p><strong>Situação:</strong> Rota Sul vendeu 30% menos que a Norte no último mês.</p>
+                    <p><strong>Ação:</strong></p>
+                    <ol>
+                        <li>Filtrar por Rota "Sul"</li>
+                        <li>Ver quais cidades estão puxando desempenho para baixo</li>
+                        <li>Comparar produtos vendidos em cada região</li>
+                        <li><strong>Decisão:</strong> Replicar estratégia da Região Norte no Sul</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Dashboard 2: Vendas por Equipe -->
+            <section>
+                <h2><span class="dashboard-icon">👥</span>Vendas por Equipe</h2>
+                <div class="benefit-box">
+                    <strong>Benefício:</strong>
+                    <p>Identifique <strong>top performers</strong> e vendedores que precisam de suporte ou treinamento.</p>
+                </div>
+                <h3>Como usar na prática:</h3>
+                <div class="success-box">
+                    <strong>Exemplo Real:</strong>
+                    <p><strong>Situação:</strong> Supervisor tem 5 representantes, mas não sabe quem está vendendo mais.</p>
+                    <p><strong>Ação:</strong></p>
+                    <ol>
+                        <li>Filtrar por Supervisor "João Silva"</li>
+                        <li>Ver gráfico "Top 10 Representantes"</li>
+                        <li>Identificar: Representante A vendeu R$ 150k, Representante E vendeu R$ 30k</li>
+                        <li><strong>Decisão:</strong> Representante A vira mentor, E recebe treinamento intensivo</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Dashboard 3: Análise de Produtos -->
+            <section>
+                <h2><span class="dashboard-icon">📈</span>Análise de Produtos</h2>
+                <div class="benefit-box">
+                    <strong>Benefício:</strong>
+                    <p>Entenda seu <strong>mix de produtos</strong> e otimize margem vs volume.</p>
+                </div>
+                <h3>Como usar na prática:</h3>
+                <div class="success-box">
+                    <strong>Exemplo Real:</strong>
+                    <p><strong>Situação:</strong> Preciso saber se estamos vendendo mais produtos próprios ou de revenda.</p>
+                    <p><strong>Ação:</strong></p>
+                    <ol>
+                        <li>Observar gráfico "Fabricado vs Revenda"</li>
+                        <li>Descobrir: 70% revenda, 30% fabricado</li>
+                        <li>Produtos fabricados têm margem 3x maior!</li>
+                        <li><strong>Decisão:</strong> Campanha para incentivar vendas de produtos próprios</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Dashboard 4: Performance de Clientes -->
+            <section>
+                <h2><span class="dashboard-icon">💰</span>Performance de Clientes</h2>
+                <div class="benefit-box">
+                    <strong>Benefício:</strong>
+                    <p>Identifique <strong>clientes VIP</strong> que merecem atenção especial e proteja sua base.</p>
+                </div>
+                <h3>Como usar na prática:</h3>
+                <div class="success-box">
+                    <strong>Exemplo Real:</strong>
+                    <p><strong>Situação:</strong> Preciso saber quem são meus clientes mais importantes.</p>
+                    <p><strong>Ação:</strong></p>
+                    <ol>
+                        <li>Ver Top 3 com medalhas 🥇🥈🥉</li>
+                        <li>Descobrir: Cliente ABC fatura R$ 500k/mês</li>
+                        <li>Analisar Ticket Médio: R$ 125k por pedido</li>
+                        <li><strong>Decisão:</strong> Visita mensal da diretoria, condições especiais, gestor de conta dedicado</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Dashboard 5: Ranking de Clientes -->
+            <section>
+                <h2><span class="dashboard-icon">🏆</span>Ranking de Clientes</h2>
+                <div class="benefit-box">
+                    <strong>Benefício:</strong>
+                    <p>Analise <strong>concentração de vendas</strong> e reduza riscos de dependência.</p>
+                </div>
+                <h3>Como usar na prática:</h3>
+                <div class="success-box">
+                    <strong>Exemplo Real:</strong>
+                    <p><strong>Situação:</strong> Dashboard mostra: Top 10 clientes = <span style="color: red; font-weight: bold;">85% do faturamento</span></p>
+                    <p><strong>Risco:</strong> Perder 1 ou 2 clientes pode quebrar a empresa!</p>
+                    <p><strong>Decisão Imediata:</strong></p>
+                    <ol>
+                        <li><strong>Proteção VIP:</strong> Programa de fidelidade para Top 10</li>
+                        <li><strong>Diversificação:</strong> Usar "Clientes Sem Compras" para reativar inativos</li>
+                        <li><strong>Meta:</strong> Reduzir concentração Top 10 para 65% em 6 meses</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Dashboard 6: Cobrança Semanal -->
+            <section>
+                <h2><span class="dashboard-icon">🎯</span>Cobrança Semanal</h2>
+                <div class="benefit-box">
+                    <strong>Benefício:</strong>
+                    <p>Acompanhe <strong>metas semanais</strong> e identifique problemas antes do final do mês.</p>
+                </div>
+                <h3>Como usar na prática:</h3>
+                <div class="success-box">
+                    <strong>Exemplo Real:</strong>
+                    <p><strong>Situação:</strong> Na segunda-feira, verificar performance da semana anterior.</p>
+                    <p><strong>Ação:</strong></p>
+                    <ol>
+                        <li>Selecionar última semana fechada</li>
+                        <li>Linhas vermelhas = representantes < 70% da meta</li>
+                        <li>Representante Carlos: 45% da meta (VERMELHO!)</li>
+                        <li><strong>Decisão HOJE:</strong> Reunião urgente com Carlos para entender o problema</li>
+                    </ol>
+                    <p style="margin-top: 15px;"><strong>Resultado:</strong> Descobrir problema antes de virar crise no final do mês!</p>
+                </div>
+            </section>
+
+            <!-- Dashboard 7: Produtos Parados (CRÍTICO!) -->
+            <section>
+                <h2><span class="dashboard-icon">🛑</span>Produtos Parados</h2>
+                <div class="alert-box">
+                    <strong>⚠️ DASHBOARD MAIS CRÍTICO!</strong>
+                    <p>Detecta <strong>perda de clientes ANTES de acontecer</strong>. Use semanalmente!</p>
+                </div>
+                <h3>O que faz:</h3>
+                <ul>
+                    <li>Identifica produtos que representantes <strong>pararam de vender</strong></li>
+                    <li>Mostra <strong>último cliente</strong> que comprou</li>
+                    <li>Classifica em 6 níveis de risco (Extremo a Mínimo)</li>
+                    <li>Envia alertas via WhatsApp automaticamente</li>
+                </ul>
+            </section>
+
+            <!-- Dashboard 7: Produtos Parados - Exemplo -->
+            <section>
+                <h2><span class="dashboard-icon">🛑</span>Produtos Parados - Caso Real</h2>
+                <div class="success-box">
+                    <strong>Exemplo que Salva Faturamento:</strong>
+                    <p><strong>Situação:</strong> Representante João sempre vendia "Produto Premium X" (margem 40%) para "Cliente ABC Ltda".</p>
+                    <p><strong>Dashboard detecta:</strong></p>
+                    <ul>
+                        <li>🔴 Produto X parado há <strong>4 semanas</strong></li>
+                        <li>Último cliente: ABC Ltda</li>
+                        <li>Valor médio perdido: R$ 12.000/mês</li>
+                        <li>Risco: <strong>ALTO</strong></li>
+                    </ul>
+                    <p><strong>Ação Imediata:</strong></p>
+                    <ol>
+                        <li>Clicar botão WhatsApp (envia mensagem automática para João)</li>
+                        <li>João liga HOJE para Cliente ABC</li>
+                        <li>Descobre: Concorrente ofereceu preço 10% menor</li>
+                        <li><strong>Solução:</strong> Igualar preço + oferecer prazo estendido</li>
+                        <li><strong>Resultado:</strong> Cliente volta a comprar! R$ 144k/ano recuperados!</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Dashboard 8: Clientes Sem Compras -->
+            <section>
+                <h2><span class="dashboard-icon">🗺️</span>Clientes Sem Compras</h2>
+                <div class="benefit-box">
+                    <strong>Benefício:</strong>
+                    <p>Visualize em <strong>mapa interativo</strong> clientes ativos que não compraram. Planeje rotas de recuperação.</p>
+                </div>
+                <h3>Diferenciais:</h3>
+                <ul>
+                    <li>🗺️ <strong>Mapa interativo</strong> com cores por nível de risco</li>
+                    <li>🟢 Verde (até 30 dias) / 🟡 Amarelo (30-60) / 🔴 Vermelho (60+)</li>
+                    <li>📊 Resumo hierárquico por Rota → Sub-Rota</li>
+                    <li>📱 Exportação para Excel, PDF e WhatsApp</li>
+                </ul>
+            </section>
+
+            <!-- Dashboard 8: Clientes Sem Compras - Exemplo -->
+            <section>
+                <h2><span class="dashboard-icon">🗺️</span>Clientes Sem Compras - Caso Real</h2>
+                <div class="success-box">
+                    <strong>Exemplo de Planejamento Eficiente:</strong>
+                    <p><strong>Situação:</strong> 80 clientes ativos na Região Sul não compraram nos últimos 60 dias.</p>
+                    <p><strong>Ação:</strong></p>
+                    <ol>
+                        <li>Filtrar por Rota "Sul" + 60 dias</li>
+                        <li>Observar mapa: 60 clientes concentrados em <strong>3 cidades vizinhas</strong></li>
+                        <li>Exportar lista em PDF</li>
+                        <li>Agendar <strong>1 dia de visitas</strong> seguindo ordem geográfica do mapa</li>
+                    </ol>
+                    <p><strong>Resultado:</strong></p>
+                    <ul>
+                        <li>✅ Otimiza combustível e tempo</li>
+                        <li>✅ 45 clientes reativados em 1 dia</li>
+                        <li>✅ R$ 80k em pedidos na primeira semana</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Dashboard 9: Configurações -->
+            <section>
+                <h2><span class="dashboard-icon">⚙️</span>Configurações (Admin)</h2>
+                <div class="benefit-box">
+                    <strong>Controle Total do Sistema:</strong>
+                </div>
+                <div class="two-columns">
+                    <div>
+                        <h3>Gerenciar Usuários</h3>
+                        <ul>
+                            <li>Criar/editar usuários</li>
+                            <li>Controle de permissões granular</li>
+                            <li>Ativar/desativar acessos</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Importar Dados</h3>
+                        <ul>
+                            <li>Upload CSV em massa</li>
+                            <li>Templates prontos</li>
+                            <li>Validação automática</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recursos Comuns -->
+            <section>
+                <h2>🔧 Recursos Disponíveis em Todos os Dashboards</h2>
+                <table>
+                    <tr>
+                        <th>Recurso</th>
+                        <th>Para que serve</th>
+                    </tr>
+                    <tr>
+                        <td>🔍 Busca Digitável</td>
+                        <td>Digite em qualquer filtro para encontrar rapidamente</td>
+                    </tr>
+                    <tr>
+                        <td>🔗 Filtros em Cascata</td>
+                        <td>Seleções hierárquicas (Rota → Sub-Rota → Cidade)</td>
+                    </tr>
+                    <tr>
+                        <td>📊 Exportar Excel</td>
+                        <td>Análises profundas no Excel/Google Sheets</td>
+                    </tr>
+                    <tr>
+                        <td>📄 Exportar PDF</td>
+                        <td>Relatórios formatados para impressão</td>
+                    </tr>
+                    <tr>
+                        <td>📱 WhatsApp</td>
+                        <td>Compartilhe resumos executivos instantaneamente</td>
+                    </tr>
+                    <tr>
+                        <td>📄 Paginação</td>
+                        <td>25 registros por página (navegação fácil)</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ROI e Impacto -->
+            <section>
+                <h2>💰 Retorno sobre Investimento (ROI)</h2>
+                <div class="success-box">
+                    <strong>Casos Reais de Impacto:</strong>
+                    <div class="two-columns">
+                        <div>
+                            <p><strong>Produtos Parados:</strong></p>
+                            <ul>
+                                <li>Média: 15 produtos em risco/semana</li>
+                                <li>Valor médio: R$ 8k cada</li>
+                                <li>Recuperação: 70% com ação rápida</li>
+                            </ul>
+                            <p class="highlight-number">R$ 84k/semana recuperados!</p>
+                        </div>
+                        <div>
+                            <p><strong>Clientes Sem Compras:</strong></p>
+                            <ul>
+                                <li>Média: 50 clientes inativos 60+ dias</li>
+                                <li>Ticket médio: R$ 15k</li>
+                                <li>Reativação: 40% com visita</li>
+                            </ul>
+                            <p class="highlight-number">R$ 300k/mês recuperados!</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Rotina Recomendada -->
+            <section>
+                <h2>📅 Rotina Recomendada</h2>
+                <table>
+                    <tr>
+                        <th>Frequência</th>
+                        <th>Dashboard</th>
+                        <th>Ação</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Segunda-feira</strong></td>
+                        <td>Produtos Parados + Cobrança Semanal</td>
+                        <td>Planejar semana e distribuir alertas</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Quarta-feira</strong></td>
+                        <td>Vendas por Equipe</td>
+                        <td>Acompanhar progresso</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sexta-feira</strong></td>
+                        <td>Ranking de Clientes + Vendas por Região</td>
+                        <td>Análise de resultados semanais</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Quinzenal</strong></td>
+                        <td>Clientes Sem Compras</td>
+                        <td>Planejar rotas de reativação</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mensal</strong></td>
+                        <td>Performance de Clientes + Análise de Produtos</td>
+                        <td>Fechamento e planejamento</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Como Começar -->
+            <section>
+                <h2>🚀 Como Começar a Usar HOJE</h2>
+                <div class="success-box">
+                    <strong>Passo a Passo:</strong>
+                    <ol style="font-size: 1.1em;">
+                        <li>Acesse: <strong>https://angeloxiru.github.io/Ger_Comercial/</strong></li>
+                        <li>Faça login com suas credenciais (fornecidas pelo TI)</li>
+                        <li>Explore os dashboards disponíveis para seu perfil</li>
+                        <li>Comece pela <strong>Cobrança Semanal</strong> ou <strong>Produtos Parados</strong></li>
+                        <li>Aplique filtros e analise os dados</li>
+                        <li>Exporte relatórios e compartilhe com a equipe</li>
+                    </ol>
+                </div>
+                <div class="benefit-box" style="margin-top: 30px;">
+                    <strong>💡 Dica:</strong>
+                    <p>Instale como aplicativo no seu celular ou computador! Funciona offline e fica na tela inicial.</p>
+                </div>
+            </section>
+
+            <!-- Suporte -->
+            <section>
+                <h2>📚 Recursos Disponíveis</h2>
+                <div class="two-columns">
+                    <div>
+                        <h3>📖 Manual Completo</h3>
+                        <p>Acesse: <strong>manual.html</strong></p>
+                        <ul>
+                            <li>Passo a passo detalhado</li>
+                            <li>Todos os dashboards documentados</li>
+                            <li>Casos de uso práticos</li>
+                            <li>Resolução de problemas</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>🆘 Suporte</h3>
+                        <p>Entre em contato com o <strong>TI</strong>:</p>
+                        <ul>
+                            <li>Problemas técnicos</li>
+                            <li>Solicitar permissões</li>
+                            <li>Sugestões de melhoria</li>
+                            <li>Dúvidas de uso</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Chamada para Ação -->
+            <section class="title-slide">
+                <div class="gradient-bg">
+                    <h1>🎯 É Hora de Agir!</h1>
+                    <div class="success-box" style="background: rgba(255,255,255,0.2); border-left: 5px solid white;">
+                        <strong style="color: white;">Não basta ter dados. É preciso USAR os dados!</strong>
+                        <ul style="color: white; font-size: 1.2em; margin-top: 20px;">
+                            <li>✅ Acesse o sistema hoje ainda</li>
+                            <li>✅ Identifique 3 ações que pode tomar esta semana</li>
+                            <li>✅ Compartilhe insights com sua equipe</li>
+                            <li>✅ Acompanhe resultados semanalmente</li>
+                        </ul>
+                    </div>
+                    <p style="font-size: 1.5em; margin-top: 40px;">
+                        <strong>Transforme dados em resultados!</strong>
+                    </p>
+                </div>
+            </section>
+
+            <!-- Slide Final -->
+            <section class="title-slide">
+                <div class="gradient-bg">
+                    <h1>Obrigado!</h1>
+                    <p style="font-size: 1.3em; margin-top: 30px;">Sistema Ger Comercial</p>
+                    <p style="font-size: 1em; opacity: 0.9; margin-top: 20px;">Germani Alimentos</p>
+                    <p style="font-size: 0.9em; opacity: 0.8; margin-top: 40px;">
+                        Acesse: <strong>https://angeloxiru.github.io/Ger_Comercial/</strong>
+                    </p>
+                    <p style="font-size: 0.8em; opacity: 0.7; margin-top: 20px;">
+                        © 2025 - Versão 3.4
+                    </p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="footer-info">
+        Use as setas ← → para navegar | ESC para visão geral
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            transition: 'slide',
+            backgroundTransition: 'fade',
+            center: false,
+            width: 1280,
+            height: 720,
+            margin: 0.04,
+            progress: true,
+            controls: true,
+            overview: true,
+            touch: true,
+            keyboard: true,
+            help: true,
+            mouseWheel: false
+        });
+    </script>
+</body>
+</html>
