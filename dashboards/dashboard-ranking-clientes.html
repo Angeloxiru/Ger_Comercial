@@ -571,9 +571,6 @@
         </div>
     </div>
 
-    <!-- Comparação de Períodos -->
-    <div id="comparacao-periodos-container" style="max-width: 1400px; margin: 20px auto; padding: 0 20px;"></div>
-
     <!-- Loading -->
     <div class="loading" id="loading">
         <div class="spinner"></div>
@@ -696,7 +693,6 @@
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
         import { serializeDbResult, validateCacheStructure } from '../js/db-utils.js';
-        import { ComparacaoPeriodos } from '../js/comparacao-periodos.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Ranking de Clientes');
@@ -825,16 +821,6 @@
 
                 cache.set(cacheKey, dados, CACHE_TTL.FILTERS);
                 popularFiltros(dados);
-
-                // Inicializar UI de comparação de períodos
-                if (!window.comparacao) {
-                    const comparacao = new ComparacaoPeriodos();
-                    const container = document.getElementById('comparacao-periodos-container');
-                    if (container) {
-                        comparacao.renderUI(container);
-                    }
-                    window.comparacao = comparacao;
-                }
 
             } catch (error) {
                 console.error('Erro ao carregar filtros:', error);
@@ -1025,107 +1011,6 @@
 
                 if (!db.isConnected()) await db.connect();
 
-                // Atualizar período principal na UI de comparação
-                if (window.comparacao) {
-                    window.comparacao.atualizarPeriodoPrincipal(dataInicio, dataFim);
-                }
-
-                // Verificar se comparação está ativa
-                const comparacaoAtiva = window.comparacao && window.comparacao.isAtiva();
-                let dadosPeriodo2 = null;
-
-                if (comparacaoAtiva) {
-                    try {
-                        const periodo2 = window.comparacao.calcularPeriodoComparacao();
-                        let sql2, params2;
-
-                        if (window.modoAtual === 'clientes') {
-                            sql2 = `
-                                SELECT
-                                    v.cliente as cod_cliente,
-                                    c.nome as razao_social,
-                                    c.cidade,
-                                    SUM(v.qtde_faturada) as qtde_total,
-                                    SUM(v.valor_liquido) as valor_total,
-                                    SUM(v.peso_liq) as peso_total
-                                FROM vendas v
-                                LEFT JOIN tab_cliente c ON v.cliente = c.cliente
-                                LEFT JOIN tab_representante r ON v.representante = r.representante
-                                WHERE v.emissao >= ? AND v.emissao <= ?
-                            `;
-                            params2 = [periodo2.inicio, periodo2.fim];
-
-                            if (rotas.length > 0) {
-                                sql2 += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
-                                params2.push(...rotas);
-                            }
-                            if (subRotas.length > 0) {
-                                sql2 += ` AND c.sub_rota IN (${subRotas.map(() => '?').join(',')})`;
-                                params2.push(...subRotas);
-                            }
-                            if (cidades.length > 0) {
-                                sql2 += ` AND c.cidade IN (${cidades.map(() => '?').join(',')})`;
-                                params2.push(...cidades);
-                            }
-                            if (supervisores.length > 0) {
-                                sql2 += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`;
-                                params2.push(...supervisores);
-                            }
-                            if (representantes.length > 0) {
-                                sql2 += ` AND r.desc_representante IN (${representantes.map(() => '?').join(',')})`;
-                                params2.push(...representantes);
-                            }
-                            sql2 += ' GROUP BY v.cliente, c.nome, c.cidade ORDER BY valor_total DESC';
-
-                        } else {
-                            sql2 = `
-                                SELECT
-                                    c.grupo as cod_grupo,
-                                    c.grupo_desc,
-                                    COUNT(DISTINCT v.cliente) as num_clientes,
-                                    SUM(v.qtde_faturada) as qtde_total,
-                                    SUM(v.valor_liquido) as valor_total,
-                                    SUM(v.peso_liq) as peso_total
-                                FROM vendas v
-                                LEFT JOIN tab_cliente c ON v.cliente = c.cliente
-                                LEFT JOIN tab_representante r ON v.representante = r.representante
-                                WHERE v.emissao >= ? AND v.emissao <= ?
-                                  AND c.grupo IS NOT NULL
-                                  AND c.grupo_desc IS NOT NULL
-                            `;
-                            params2 = [periodo2.inicio, periodo2.fim];
-
-                            if (rotas.length > 0) {
-                                sql2 += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
-                                params2.push(...rotas);
-                            }
-                            if (subRotas.length > 0) {
-                                sql2 += ` AND c.sub_rota IN (${subRotas.map(() => '?').join(',')})`;
-                                params2.push(...subRotas);
-                            }
-                            if (cidades.length > 0) {
-                                sql2 += ` AND c.cidade IN (${cidades.map(() => '?').join(',')})`;
-                                params2.push(...cidades);
-                            }
-                            if (supervisores.length > 0) {
-                                sql2 += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`;
-                                params2.push(...supervisores);
-                            }
-                            if (representantes.length > 0) {
-                                sql2 += ` AND r.desc_representante IN (${representantes.map(() => '?').join(',')})`;
-                                params2.push(...representantes);
-                            }
-                            sql2 += ' GROUP BY c.grupo, c.grupo_desc ORDER BY valor_total DESC';
-                        }
-
-                        const result2 = await db.execute(sql2, params2);
-                        dadosPeriodo2 = result2.rows;
-                    } catch (error) {
-                        console.error('Erro ao buscar dados do período de comparação:', error);
-                        alert('Erro na comparação: ' + error.message);
-                    }
-                }
-
                 let sql, params;
 
                 if (window.modoAtual === 'clientes') {
@@ -1221,7 +1106,7 @@
 
                 // Renderizar
                 renderizarTabela();
-                atualizarKPIs(result.rows, dadosPeriodo2);
+                atualizarKPIs(result.rows);
                 atualizarGraficos(result.rows);
 
                 document.getElementById('mainContent').style.display = 'grid';
@@ -1291,7 +1176,7 @@
             document.getElementById('totalValue').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
         }
 
-        function atualizarKPIs(dados, dadosPeriodo2 = null) {
+        function atualizarKPIs(dados) {
             const totalClientes = dados.length;
             const totalValor = dados.reduce((sum, row) => sum + parseFloat(row.valor_total || 0), 0);
             const ticketMedio = totalClientes > 0 ? totalValor / totalClientes : 0;
@@ -1304,42 +1189,6 @@
             document.getElementById('kpiValor').textContent = `R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('kpiTicket').textContent = `R$ ${ticketMedio.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('kpiTop10').textContent = `${concentracao.toFixed(1)}%`;
-
-            // Remover indicadores de variação existentes
-            document.querySelectorAll('.variacao-indicador').forEach(el => el.remove());
-
-            // Adicionar indicadores de variação se houver comparação
-            if (dadosPeriodo2 && dadosPeriodo2.length > 0 && window.comparacao) {
-                const totalValor2 = dadosPeriodo2.reduce((sum, row) => sum + parseFloat(row.valor_total || 0), 0);
-                const totalClientes2 = dadosPeriodo2.length;
-                const ticketMedio2 = totalClientes2 > 0 ? totalValor2 / totalClientes2 : 0;
-
-                const variacaoValor = window.comparacao.renderIndicador(
-                    window.comparacao.calcularVariacao(totalValor, totalValor2),
-                    'valor'
-                );
-                const variacaoTicket = window.comparacao.renderIndicador(
-                    window.comparacao.calcularVariacao(ticketMedio, ticketMedio2),
-                    'valor'
-                );
-
-                // Inserir indicadores nos KPI cards
-                const kpiValorCard = document.getElementById('kpiValor').closest('.kpi-card');
-                const kpiTicketCard = document.getElementById('kpiTicket').closest('.kpi-card');
-
-                if (kpiValorCard) {
-                    const div = document.createElement('div');
-                    div.className = 'variacao-indicador';
-                    div.innerHTML = variacaoValor;
-                    kpiValorCard.appendChild(div);
-                }
-                if (kpiTicketCard) {
-                    const div = document.createElement('div');
-                    div.className = 'variacao-indicador';
-                    div.innerHTML = variacaoTicket;
-                    kpiTicketCard.appendChild(div);
-                }
-            }
         }
 
         function atualizarGraficos(dados) {
