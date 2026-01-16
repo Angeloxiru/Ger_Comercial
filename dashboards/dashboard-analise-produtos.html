@@ -515,6 +515,9 @@
         </div>
     </div>
 
+    <!-- Comparação de Períodos -->
+    <div id="comparacao-periodos-container" style="max-width: 1400px; margin: 20px auto; padding: 0 20px;"></div>
+
     <!-- Loading -->
     <div class="loading" id="loading">
         <div class="spinner"></div>
@@ -618,6 +621,7 @@
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
         import { serializeDbResult, validateCacheStructure } from '../js/db-utils.js';
+        import { ComparacaoPeriodos } from '../js/comparacao-periodos.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Análise de Produtos');
@@ -720,6 +724,16 @@
                 preencherSelect('filtroOrigem', origens.rows
                     .map(o => o.desc_origem)
                     .filter(v => v !== null && v !== undefined && v !== ''));
+
+                // Inicializar UI de comparação de períodos
+                if (!window.comparacao) {
+                    const comparacao = new ComparacaoPeriodos();
+                    const container = document.getElementById('comparacao-periodos-container');
+                    if (container) {
+                        comparacao.renderUI(container);
+                    }
+                    window.comparacao = comparacao;
+                }
 
             } catch (error) {
                 console.error('Erro ao carregar filtros:', error);
@@ -908,7 +922,59 @@
 
                 if (!db.isConnected()) await db.connect();
 
-                // Construir query SQL
+                // Atualizar período principal na UI de comparação
+                if (window.comparacao) {
+                    window.comparacao.atualizarPeriodoPrincipal(dataInicio, dataFim);
+                }
+
+                // Verificar se comparação está ativa
+                const comparacaoAtiva = window.comparacao && window.comparacao.isAtiva();
+                let dadosPeriodo2 = null;
+
+                if (comparacaoAtiva) {
+                    try {
+                        const periodo2 = window.comparacao.calcularPeriodoComparacao();
+
+                        // Construir query para período 2
+                        let sql2 = `
+                            SELECT
+                                v.cliente,
+                                v.nome as razao_social,
+                                v.cidade,
+                                SUM(v.qtde_faturada) as qtde,
+                                SUM(v.valor_liquido) as valor,
+                                SUM(v.peso_liq) as peso
+                            FROM vendas v
+                            INNER JOIN tab_produto p ON v.produto = p.produto
+                            WHERE v.emissao >= ? AND v.emissao <= ?
+                        `;
+
+                        const params2 = [periodo2.inicio, periodo2.fim];
+
+                        if (origens.length > 0) {
+                            sql2 += ` AND p.desc_origem IN (${origens.map(() => '?').join(',')})`;
+                            params2.push(...origens);
+                        }
+                        if (familias.length > 0) {
+                            sql2 += ` AND p.desc_familia IN (${familias.map(() => '?').join(',')})`;
+                            params2.push(...familias);
+                        }
+                        if (produtos.length > 0) {
+                            sql2 += ` AND p.desc_produto IN (${produtos.map(() => '?').join(',')})`;
+                            params2.push(...produtos);
+                        }
+
+                        sql2 += ' GROUP BY v.cliente, v.nome, v.cidade ORDER BY qtde DESC';
+
+                        const result2 = await db.execute(sql2, params2);
+                        dadosPeriodo2 = result2.rows;
+                    } catch (error) {
+                        console.error('Erro ao buscar dados do período de comparação:', error);
+                        alert('Erro na comparação: ' + error.message);
+                    }
+                }
+
+                // Construir query SQL (período principal)
                 let sql = `
                     SELECT
                         v.cliente,
@@ -947,7 +1013,7 @@
 
                 // Renderizar
                 renderizarTabela();
-                atualizarKPIs(result.rows);
+                atualizarKPIs(result.rows, dadosPeriodo2);
                 atualizarGraficos(result.rows);
 
                 document.getElementById('mainContent').style.display = 'grid';
@@ -992,7 +1058,7 @@
             document.getElementById('totalValue').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
         }
 
-        function atualizarKPIs(dados) {
+        function atualizarKPIs(dados, dadosPeriodo2 = null) {
             const totalValor = dados.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
             const totalQtde = dados.reduce((sum, row) => sum + parseFloat(row.qtde || 0), 0);
             const totalPeso = dados.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
@@ -1001,6 +1067,53 @@
             document.getElementById('kpiQtde').textContent = totalQtde.toLocaleString('pt-BR');
             document.getElementById('kpiPeso').textContent = totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg';
             document.getElementById('kpiRegistros').textContent = dados.length.toLocaleString('pt-BR');
+
+            // Remover indicadores de variação existentes
+            document.querySelectorAll('.variacao-indicador').forEach(el => el.remove());
+
+            // Adicionar indicadores de variação se houver comparação
+            if (dadosPeriodo2 && dadosPeriodo2.length > 0 && window.comparacao) {
+                const totalValor2 = dadosPeriodo2.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
+                const totalQtde2 = dadosPeriodo2.reduce((sum, row) => sum + parseFloat(row.qtde || 0), 0);
+                const totalPeso2 = dadosPeriodo2.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
+
+                const variacaoValor = window.comparacao.renderIndicador(
+                    window.comparacao.calcularVariacao(totalValor, totalValor2),
+                    'valor'
+                );
+                const variacaoQtde = window.comparacao.renderIndicador(
+                    window.comparacao.calcularVariacao(totalQtde, totalQtde2),
+                    'quantidade'
+                );
+                const variacaoPeso = window.comparacao.renderIndicador(
+                    window.comparacao.calcularVariacao(totalPeso, totalPeso2),
+                    'peso'
+                );
+
+                // Inserir indicadores nos KPI cards
+                const kpiValorCard = document.getElementById('kpiValor').closest('.kpi-card');
+                const kpiQtdeCard = document.getElementById('kpiQtde').closest('.kpi-card');
+                const kpiPesoCard = document.getElementById('kpiPeso').closest('.kpi-card');
+
+                if (kpiValorCard) {
+                    const div = document.createElement('div');
+                    div.className = 'variacao-indicador';
+                    div.innerHTML = variacaoValor;
+                    kpiValorCard.appendChild(div);
+                }
+                if (kpiQtdeCard) {
+                    const div = document.createElement('div');
+                    div.className = 'variacao-indicador';
+                    div.innerHTML = variacaoQtde;
+                    kpiQtdeCard.appendChild(div);
+                }
+                if (kpiPesoCard) {
+                    const div = document.createElement('div');
+                    div.className = 'variacao-indicador';
+                    div.innerHTML = variacaoPeso;
+                    kpiPesoCard.appendChild(div);
+                }
+            }
         }
 
         function atualizarGraficos(dados) {
