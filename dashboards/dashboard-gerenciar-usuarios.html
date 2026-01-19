@@ -649,6 +649,226 @@
             margin: 30px 0;
             border-top: 2px solid #e9ecef;
         }
+
+        /* Agendamentos de Relatórios Styles */
+        .schedules-section {
+            margin-top: 30px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 25px;
+        }
+
+        .schedules-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .schedules-header h2 {
+            color: #212529;
+            font-size: 1.4em;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .schedules-header p {
+            color: #495057;
+            font-size: 0.9em;
+            margin: 5px 0 0 0;
+        }
+
+        .btn-add-schedule {
+            background: #fc0303;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-add-schedule:hover {
+            background: #b50909;
+        }
+
+        .schedules-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .schedule-card {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+
+        .schedule-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: #fc0303;
+        }
+
+        .schedule-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .schedule-card-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 5px;
+        }
+
+        .schedule-card-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .schedule-info {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .schedule-info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 0.9em;
+            color: #495057;
+        }
+
+        .schedule-info-label {
+            font-weight: 600;
+            min-width: 100px;
+        }
+
+        .schedule-actions {
+            display: flex;
+            gap: 8px;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn-schedule-edit {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .btn-schedule-edit:hover {
+            background: #e0a800;
+        }
+
+        .btn-schedule-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-schedule-delete:hover {
+            background: #c82333;
+        }
+
+        .btn-schedule-toggle {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-schedule-toggle:hover {
+            background: #5a6268;
+        }
+
+        .btn-schedule-toggle.active {
+            background: #28a745;
+        }
+
+        .btn-schedule-toggle.active:hover {
+            background: #218838;
+        }
+
+        .schedules-empty {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .schedules-empty-icon {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+
+        /* Modal específico para agendamentos */
+        .schedule-form-group {
+            margin-bottom: 20px;
+        }
+
+        .schedule-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #212529;
+            font-size: 0.9em;
+        }
+
+        .schedule-form-group input,
+        .schedule-form-group select,
+        .schedule-form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 0.9em;
+            transition: border-color 0.2s;
+        }
+
+        .schedule-form-group input:focus,
+        .schedule-form-group select:focus,
+        .schedule-form-group textarea:focus {
+            outline: none;
+            border-color: #fc0303;
+            box-shadow: 0 0 0 3px rgba(252, 3, 3, 0.1);
+        }
+
+        .schedule-form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .schedule-form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #6c757d;
+            font-size: 0.85em;
+        }
+
+        .schedule-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .filters-dynamic {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .filters-dynamic-empty {
+            color: #6c757d;
+            font-size: 0.85em;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -809,6 +1029,128 @@
                     </button>
                     <button type="submit" class="btn-primary" id="submitButton">
                         Salvar Usuário
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Divisor entre seções -->
+    <div class="section-divider"></div>
+
+    <!-- Seção de Agendamentos de Relatórios -->
+    <div class="schedules-section">
+        <div class="schedules-header">
+            <div>
+                <h2>📧 Agendamentos de Relatórios</h2>
+                <p>Configure envios automáticos de relatórios por e-mail</p>
+            </div>
+            <button class="btn-add-schedule" onclick="schedulesManager.openModal()">
+                ➕ Novo Agendamento
+            </button>
+        </div>
+
+        <div id="schedulesListContainer">
+            <div id="schedulesLoading" class="loading" style="display: none;">
+                <p>Carregando agendamentos...</p>
+            </div>
+            <div id="schedulesList" class="schedules-list">
+                <!-- Agendamentos serão carregados aqui -->
+            </div>
+            <div id="schedulesEmpty" class="schedules-empty" style="display: none;">
+                <div class="schedules-empty-icon">📧</div>
+                <h3>Nenhum agendamento configurado</h3>
+                <p>Clique em "Novo Agendamento" para criar o primeiro</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Agendamento -->
+    <div id="scheduleModal" class="modal">
+        <div class="modal-content">
+            <h2 id="scheduleModalTitle">📧 Novo Agendamento</h2>
+            <form id="scheduleForm">
+                <div class="schedule-form-group">
+                    <label for="scheduleName">Nome do Agendamento *</label>
+                    <input
+                        type="text"
+                        id="scheduleName"
+                        name="nome_agendamento"
+                        required
+                        placeholder="Ex: Produtos Parados - Supervisor João"
+                    >
+                    <small>Nome descritivo para identificar o agendamento</small>
+                </div>
+
+                <div class="schedule-form-group">
+                    <label for="scheduleDashboard">Dashboard *</label>
+                    <select id="scheduleDashboard" name="dashboard" required>
+                        <option value="">-- Selecione um dashboard --</option>
+                        <option value="produtos-parados">📦 Produtos Parados</option>
+                        <option value="vendas-regiao">🗺️ Vendas por Região</option>
+                        <option value="vendas-equipe">👥 Vendas por Equipe</option>
+                        <option value="performance-clientes">📊 Performance de Clientes</option>
+                        <option value="ranking-clientes">🏆 Ranking de Clientes</option>
+                        <option value="analise-produtos">📈 Análise de Produtos</option>
+                        <option value="clientes-semcompras">⚠️ Clientes sem Compras</option>
+                    </select>
+                    <small>Qual relatório será enviado</small>
+                </div>
+
+                <div class="schedule-form-group">
+                    <label>Filtros (Opcional)</label>
+                    <div id="filtersDynamic" class="filters-dynamic">
+                        <p class="filters-dynamic-empty">Selecione um dashboard para configurar filtros</p>
+                    </div>
+                    <small>Filtros que serão aplicados ao relatório</small>
+                </div>
+
+                <div class="schedule-form-group">
+                    <label for="scheduleEmails">E-mails dos Destinatários *</label>
+                    <textarea
+                        id="scheduleEmails"
+                        name="emails_destinatarios"
+                        required
+                        placeholder="email1@germani.com, email2@germani.com"
+                    ></textarea>
+                    <small>Separe múltiplos e-mails por vírgula</small>
+                </div>
+
+                <div class="schedule-form-row">
+                    <div class="schedule-form-group">
+                        <label for="scheduleDayOfWeek">Dia da Semana *</label>
+                        <select id="scheduleDayOfWeek" name="dia_semana" required>
+                            <option value="">-- Selecione --</option>
+                            <option value="todos-dias">Todos os dias</option>
+                            <option value="dia-util">Dias úteis (Seg-Sex)</option>
+                            <option value="segunda">Segunda-feira</option>
+                            <option value="terca">Terça-feira</option>
+                            <option value="quarta">Quarta-feira</option>
+                            <option value="quinta">Quinta-feira</option>
+                            <option value="sexta">Sexta-feira</option>
+                            <option value="sabado">Sábado</option>
+                            <option value="domingo">Domingo</option>
+                        </select>
+                    </div>
+
+                    <div class="schedule-form-group">
+                        <label for="scheduleTime">Hora *</label>
+                        <input
+                            type="time"
+                            id="scheduleTime"
+                            name="hora"
+                            required
+                            value="08:00"
+                        >
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="schedulesManager.closeModal()">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-primary" id="scheduleSubmitButton">
+                        💾 Salvar Agendamento
                     </button>
                 </div>
             </form>
@@ -1727,6 +2069,499 @@
 
         // Initialize Import Manager
         window.importManager = new ImportManager();
+
+        // =====================================================
+        // SCHEDULES MANAGER - Gerenciador de Agendamentos
+        // =====================================================
+        class SchedulesManager {
+            constructor() {
+                this.schedules = [];
+                this.editingScheduleId = null;
+                this.dashboardsConfig = {
+                    'produtos-parados': {
+                        name: 'Produtos Parados',
+                        filters: ['supervisor', 'nivel_risco', 'familia']
+                    },
+                    'vendas-regiao': {
+                        name: 'Vendas por Região',
+                        filters: ['rota', 'estado']
+                    },
+                    'vendas-equipe': {
+                        name: 'Vendas por Equipe',
+                        filters: ['supervisor', 'representante']
+                    },
+                    'performance-clientes': {
+                        name: 'Performance de Clientes',
+                        filters: ['rota', 'grupo']
+                    },
+                    'ranking-clientes': {
+                        name: 'Ranking de Clientes',
+                        filters: ['rota']
+                    },
+                    'analise-produtos': {
+                        name: 'Análise de Produtos',
+                        filters: ['familia', 'origem']
+                    },
+                    'clientes-semcompras': {
+                        name: 'Clientes sem Compras',
+                        filters: ['rota', 'dias_sem_compra']
+                    }
+                };
+
+                this.initializeEventListeners();
+                this.loadSchedules();
+            }
+
+            initializeEventListeners() {
+                // Form submit
+                const form = document.getElementById('scheduleForm');
+                if (form) {
+                    form.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.saveSchedule();
+                    });
+                }
+
+                // Dashboard change
+                const dashboardSelect = document.getElementById('scheduleDashboard');
+                if (dashboardSelect) {
+                    dashboardSelect.addEventListener('change', (e) => {
+                        this.updateFiltersSection(e.target.value);
+                    });
+                }
+
+                // Modal close on background click
+                const modal = document.getElementById('scheduleModal');
+                if (modal) {
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            this.closeModal();
+                        }
+                    });
+                }
+            }
+
+            async loadSchedules() {
+                try {
+                    const schedulesLoading = document.getElementById('schedulesLoading');
+                    const schedulesList = document.getElementById('schedulesList');
+                    const schedulesEmpty = document.getElementById('schedulesEmpty');
+
+                    if (schedulesLoading) schedulesLoading.style.display = 'block';
+                    if (schedulesList) schedulesList.innerHTML = '';
+                    if (schedulesEmpty) schedulesEmpty.style.display = 'none';
+
+                    // Conectar ao banco se necessário
+                    if (!db.isConnected()) {
+                        await db.connect();
+                    }
+
+                    // Buscar agendamentos
+                    const result = await db.execute(`
+                        SELECT * FROM agendamentos_relatorios
+                        ORDER BY ativo DESC, proxima_execucao ASC
+                    `);
+
+                    this.schedules = result.rows || [];
+
+                    if (schedulesLoading) schedulesLoading.style.display = 'none';
+
+                    if (this.schedules.length === 0) {
+                        if (schedulesEmpty) schedulesEmpty.style.display = 'block';
+                    } else {
+                        this.renderSchedules();
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar agendamentos:', error);
+                    alert('Erro ao carregar agendamentos: ' + error.message);
+                    if (document.getElementById('schedulesLoading')) {
+                        document.getElementById('schedulesLoading').style.display = 'none';
+                    }
+                }
+            }
+
+            renderSchedules() {
+                const schedulesList = document.getElementById('schedulesList');
+                if (!schedulesList) return;
+
+                schedulesList.innerHTML = '';
+
+                this.schedules.forEach(schedule => {
+                    const card = this.createScheduleCard(schedule);
+                    schedulesList.appendChild(card);
+                });
+            }
+
+            createScheduleCard(schedule) {
+                const card = document.createElement('div');
+                card.className = 'schedule-card';
+                card.innerHTML = `
+                    <div class="schedule-card-header">
+                        <div>
+                            <div class="schedule-card-title">${this.escapeHtml(schedule.nome_agendamento)}</div>
+                        </div>
+                        <div class="schedule-card-status">
+                            <span class="badge ${schedule.ativo ? 'badge-active' : 'badge-inactive'}">
+                                ${schedule.ativo ? '✅ Ativo' : '⏸️ Inativo'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="schedule-info">
+                        <div class="schedule-info-item">
+                            <span class="schedule-info-label">Dashboard:</span>
+                            <span>${this.getDashboardName(schedule.dashboard)}</span>
+                        </div>
+                        ${schedule.filtros_json ? `
+                        <div class="schedule-info-item">
+                            <span class="schedule-info-label">Filtros:</span>
+                            <span>${this.formatFilters(schedule.filtros_json)}</span>
+                        </div>
+                        ` : ''}
+                        <div class="schedule-info-item">
+                            <span class="schedule-info-label">Destinatários:</span>
+                            <span>${this.formatEmails(schedule.emails_destinatarios)}</span>
+                        </div>
+                        <div class="schedule-info-item">
+                            <span class="schedule-info-label">Quando:</span>
+                            <span>${this.formatSchedule(schedule.dia_semana, schedule.hora)}</span>
+                        </div>
+                        ${schedule.ultima_execucao ? `
+                        <div class="schedule-info-item">
+                            <span class="schedule-info-label">Última execução:</span>
+                            <span>${this.formatDateTime(schedule.ultima_execucao)}
+                                ${schedule.ultima_execucao_sucesso ? '✅' : '❌'}
+                            </span>
+                        </div>
+                        ` : ''}
+                        ${schedule.total_execucoes ? `
+                        <div class="schedule-info-item">
+                            <span class="schedule-info-label">Total enviado:</span>
+                            <span>${schedule.total_execucoes} vezes</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="schedule-actions">
+                        <button class="btn-action btn-schedule-edit" onclick="schedulesManager.editSchedule(${schedule.id})">
+                            ✏️ Editar
+                        </button>
+                        <button class="btn-action btn-schedule-toggle ${schedule.ativo ? 'active' : ''}" onclick="schedulesManager.toggleSchedule(${schedule.id}, ${schedule.ativo})">
+                            ${schedule.ativo ? '⏸️ Desativar' : '▶️ Ativar'}
+                        </button>
+                        <button class="btn-action btn-schedule-delete" onclick="schedulesManager.deleteSchedule(${schedule.id})">
+                            🗑️ Excluir
+                        </button>
+                    </div>
+                `;
+
+                return card;
+            }
+
+            getDashboardName(dashboardKey) {
+                const config = this.dashboardsConfig[dashboardKey];
+                return config ? config.name : dashboardKey;
+            }
+
+            formatFilters(filtersJson) {
+                try {
+                    const filters = JSON.parse(filtersJson);
+                    const filterStrings = [];
+                    for (const [key, value] of Object.entries(filters)) {
+                        filterStrings.push(`${key}=${value}`);
+                    }
+                    return filterStrings.join(', ') || 'Nenhum';
+                } catch (e) {
+                    return 'N/A';
+                }
+            }
+
+            formatEmails(emailsJson) {
+                try {
+                    const emails = JSON.parse(emailsJson);
+                    return Array.isArray(emails) ? emails.join(', ') : emailsJson;
+                } catch (e) {
+                    return emailsJson;
+                }
+            }
+
+            formatSchedule(diaSemana, hora) {
+                const daysMap = {
+                    'todos-dias': 'Todos os dias',
+                    'dia-util': 'Dias úteis',
+                    'segunda': 'Segundas',
+                    'terca': 'Terças',
+                    'quarta': 'Quartas',
+                    'quinta': 'Quintas',
+                    'sexta': 'Sextas',
+                    'sabado': 'Sábados',
+                    'domingo': 'Domingos'
+                };
+                return `${daysMap[diaSemana] || diaSemana} às ${hora}`;
+            }
+
+            formatDateTime(datetime) {
+                if (!datetime) return 'N/A';
+                try {
+                    const date = new Date(datetime);
+                    return date.toLocaleString('pt-BR');
+                } catch (e) {
+                    return datetime;
+                }
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            updateFiltersSection(dashboardKey) {
+                const filtersDiv = document.getElementById('filtersDynamic');
+                if (!filtersDiv) return;
+
+                if (!dashboardKey) {
+                    filtersDiv.innerHTML = '<p class="filters-dynamic-empty">Selecione um dashboard para configurar filtros</p>';
+                    return;
+                }
+
+                const config = this.dashboardsConfig[dashboardKey];
+                if (!config || !config.filters || config.filters.length === 0) {
+                    filtersDiv.innerHTML = '<p class="filters-dynamic-empty">Este dashboard não possui filtros configuráveis</p>';
+                    return;
+                }
+
+                // Criar inputs dinâmicos para filtros
+                let html = '';
+                config.filters.forEach(filter => {
+                    html += `
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.85em;">
+                                ${this.capitalizeFirstLetter(filter)}:
+                            </label>
+                            <input
+                                type="text"
+                                id="filter_${filter}"
+                                name="filter_${filter}"
+                                placeholder="Digite o valor para ${filter}"
+                                style="width: 100%; padding: 8px; border: 1px solid #dee2e6; border-radius: 4px; font-size: 0.85em;"
+                            >
+                        </div>
+                    `;
+                });
+
+                filtersDiv.innerHTML = html;
+            }
+
+            capitalizeFirstLetter(string) {
+                return string.charAt(0).toUpperCase() + string.slice(1).replace('_', ' ');
+            }
+
+            openModal() {
+                this.editingScheduleId = null;
+                const modal = document.getElementById('scheduleModal');
+                const modalTitle = document.getElementById('scheduleModalTitle');
+                const form = document.getElementById('scheduleForm');
+
+                if (modalTitle) modalTitle.textContent = '📧 Novo Agendamento';
+                if (form) form.reset();
+
+                // Limpar filtros dinâmicos
+                const filtersDiv = document.getElementById('filtersDynamic');
+                if (filtersDiv) {
+                    filtersDiv.innerHTML = '<p class="filters-dynamic-empty">Selecione um dashboard para configurar filtros</p>';
+                }
+
+                if (modal) modal.style.display = 'block';
+            }
+
+            closeModal() {
+                const modal = document.getElementById('scheduleModal');
+                if (modal) modal.style.display = 'none';
+                this.editingScheduleId = null;
+            }
+
+            async editSchedule(scheduleId) {
+                this.editingScheduleId = scheduleId;
+                const schedule = this.schedules.find(s => s.id === scheduleId);
+
+                if (!schedule) {
+                    alert('Agendamento não encontrado');
+                    return;
+                }
+
+                const modal = document.getElementById('scheduleModal');
+                const modalTitle = document.getElementById('scheduleModalTitle');
+
+                if (modalTitle) modalTitle.textContent = '✏️ Editar Agendamento';
+
+                // Preencher formulário
+                document.getElementById('scheduleName').value = schedule.nome_agendamento;
+                document.getElementById('scheduleDashboard').value = schedule.dashboard;
+
+                // Trigger change to load filters
+                this.updateFiltersSection(schedule.dashboard);
+
+                // Wait a bit for filters to load, then fill them
+                setTimeout(() => {
+                    if (schedule.filtros_json) {
+                        try {
+                            const filters = JSON.parse(schedule.filtros_json);
+                            for (const [key, value] of Object.entries(filters)) {
+                                const input = document.getElementById(`filter_${key}`);
+                                if (input) input.value = value;
+                            }
+                        } catch (e) {
+                            console.error('Erro ao parsear filtros:', e);
+                        }
+                    }
+                }, 100);
+
+                // Emails
+                try {
+                    const emails = JSON.parse(schedule.emails_destinatarios);
+                    document.getElementById('scheduleEmails').value = Array.isArray(emails) ? emails.join(', ') : schedule.emails_destinatarios;
+                } catch (e) {
+                    document.getElementById('scheduleEmails').value = schedule.emails_destinatarios;
+                }
+
+                document.getElementById('scheduleDayOfWeek').value = schedule.dia_semana;
+                document.getElementById('scheduleTime').value = schedule.hora;
+
+                if (modal) modal.style.display = 'block';
+            }
+
+            async saveSchedule() {
+                try {
+                    const submitBtn = document.getElementById('scheduleSubmitButton');
+                    if (submitBtn) submitBtn.disabled = true;
+
+                    // Coletar dados do formulário
+                    const nome = document.getElementById('scheduleName').value.trim();
+                    const dashboard = document.getElementById('scheduleDashboard').value;
+                    const emailsText = document.getElementById('scheduleEmails').value.trim();
+                    const diaSemana = document.getElementById('scheduleDayOfWeek').value;
+                    const hora = document.getElementById('scheduleTime').value;
+
+                    // Validações
+                    if (!nome || !dashboard || !emailsText || !diaSemana || !hora) {
+                        alert('Por favor, preencha todos os campos obrigatórios');
+                        if (submitBtn) submitBtn.disabled = false;
+                        return;
+                    }
+
+                    // Processar emails
+                    const emailsArray = emailsText.split(',').map(e => e.trim()).filter(e => e);
+                    const emailsJson = JSON.stringify(emailsArray);
+
+                    // Coletar filtros dinâmicos
+                    const filtros = {};
+                    const config = this.dashboardsConfig[dashboard];
+                    if (config && config.filters) {
+                        config.filters.forEach(filter => {
+                            const input = document.getElementById(`filter_${filter}`);
+                            if (input && input.value.trim()) {
+                                filtros[filter] = input.value.trim();
+                            }
+                        });
+                    }
+                    const filtrosJson = Object.keys(filtros).length > 0 ? JSON.stringify(filtros) : null;
+
+                    // Conectar ao banco se necessário
+                    if (!db.isConnected()) {
+                        await db.connect();
+                    }
+
+                    if (this.editingScheduleId) {
+                        // Atualizar
+                        await db.execute(`
+                            UPDATE agendamentos_relatorios
+                            SET nome_agendamento = ?,
+                                dashboard = ?,
+                                filtros_json = ?,
+                                emails_destinatarios = ?,
+                                dia_semana = ?,
+                                hora = ?
+                            WHERE id = ?
+                        `, [nome, dashboard, filtrosJson, emailsJson, diaSemana, hora, this.editingScheduleId]);
+
+                        alert('✅ Agendamento atualizado com sucesso!');
+                    } else {
+                        // Criar
+                        await db.execute(`
+                            INSERT INTO agendamentos_relatorios (
+                                nome_agendamento, dashboard, filtros_json,
+                                emails_destinatarios, dia_semana, hora, criado_por
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                        `, [nome, dashboard, filtrosJson, emailsJson, diaSemana, hora, currentUser.username]);
+
+                        alert('✅ Agendamento criado com sucesso!');
+                    }
+
+                    this.closeModal();
+                    await this.loadSchedules();
+
+                } catch (error) {
+                    console.error('Erro ao salvar agendamento:', error);
+                    alert('Erro ao salvar agendamento: ' + error.message);
+                } finally {
+                    const submitBtn = document.getElementById('scheduleSubmitButton');
+                    if (submitBtn) submitBtn.disabled = false;
+                }
+            }
+
+            async toggleSchedule(scheduleId, currentStatus) {
+                if (!confirm(`Deseja ${currentStatus ? 'desativar' : 'ativar'} este agendamento?`)) {
+                    return;
+                }
+
+                try {
+                    const newStatus = currentStatus ? 0 : 1;
+
+                    if (!db.isConnected()) {
+                        await db.connect();
+                    }
+
+                    await db.execute(`
+                        UPDATE agendamentos_relatorios
+                        SET ativo = ?
+                        WHERE id = ?
+                    `, [newStatus, scheduleId]);
+
+                    alert(`✅ Agendamento ${newStatus ? 'ativado' : 'desativado'} com sucesso!`);
+                    await this.loadSchedules();
+
+                } catch (error) {
+                    console.error('Erro ao alterar status:', error);
+                    alert('Erro ao alterar status: ' + error.message);
+                }
+            }
+
+            async deleteSchedule(scheduleId) {
+                if (!confirm('⚠️ Tem certeza que deseja excluir este agendamento?\n\nEsta ação não pode ser desfeita.')) {
+                    return;
+                }
+
+                try {
+                    if (!db.isConnected()) {
+                        await db.connect();
+                    }
+
+                    await db.execute(`
+                        DELETE FROM agendamentos_relatorios
+                        WHERE id = ?
+                    `, [scheduleId]);
+
+                    alert('✅ Agendamento excluído com sucesso!');
+                    await this.loadSchedules();
+
+                } catch (error) {
+                    console.error('Erro ao excluir agendamento:', error);
+                    alert('Erro ao excluir agendamento: ' + error.message);
+                }
+            }
+        }
+
+        // Initialize Schedules Manager
+        window.schedulesManager = new SchedulesManager();
     </script>
 </body>
 </html>
