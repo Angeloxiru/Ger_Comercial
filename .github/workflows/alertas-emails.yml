@@ -1,0 +1,45 @@
+name: Enviar Relatórios Agendados
+
+on:
+  schedule:
+    # Executa a cada hora, de hora em hora
+    - cron: '0 * * * *'
+
+  # Permite execução manual via interface do GitHub
+  workflow_dispatch:
+
+jobs:
+  processar-agendamentos:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'scripts/package.json'
+
+      - name: 📦 Instalar dependências
+        run: |
+          cd scripts
+          npm install
+
+      - name: 📧 Executar processador de agendamentos
+        env:
+          TURSO_URL: ${{ secrets.TURSO_URL }}
+          TURSO_TOKEN: ${{ secrets.TURSO_TOKEN }}
+          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+        run: |
+          cd scripts
+          node processar-agendamentos.js
+
+      - name: 📊 Status da execução
+        if: always()
+        run: |
+          echo "🎉 Workflow concluído!"
+          echo "Data/Hora: $(date)"
