@@ -16,6 +16,28 @@ Sistema completo para agendamento automático de envio de relatórios por e-mail
 
 ## 🚀 Como Configurar
 
+> **💡 ATENÇÃO**: Se você tem apenas uma conta **Gmail** (não tem domínio próprio), siga o guia específico:
+>
+> 📧 **[CONFIGURAR-GMAIL.md](CONFIGURAR-GMAIL.md)** ← Mais simples, 100% gratuito!
+>
+> O guia abaixo é para quem quer usar SendGrid (alternativa).
+
+---
+
+### OPÇÃO 1: Gmail (Recomendado - Gratuito e Simples)
+
+✅ **Vantagens:**
+- 100% Gratuito
+- 500 e-mails por dia
+- Configuração em 5 minutos
+- Não precisa de domínio
+
+👉 **Guia completo**: [CONFIGURAR-GMAIL.md](CONFIGURAR-GMAIL.md)
+
+---
+
+### OPÇÃO 2: SendGrid (Alternativa)
+
 ### PASSO 1: Configurar SendGrid (Serviço de E-mail)
 
 1. Acesse: https://sendgrid.com/
