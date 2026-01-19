@@ -2463,7 +2463,8 @@
                             }
                         });
                     }
-                    const filtrosJson = Object.keys(filtros).length > 0 ? JSON.stringify(filtros) : null;
+                    // Converter para string JSON ou string vazia (nunca null)
+                    const filtrosJson = Object.keys(filtros).length > 0 ? JSON.stringify(filtros) : '';
 
                     // Conectar ao banco se necessário
                     if (!db.isConnected()) {
@@ -2486,12 +2487,13 @@
                         alert('✅ Agendamento atualizado com sucesso!');
                     } else {
                         // Criar
+                        const criadoPor = currentUser && currentUser.username ? currentUser.username : 'admin';
                         await db.execute(`
                             INSERT INTO agendamentos_relatorios (
                                 nome_agendamento, dashboard, filtros_json,
                                 emails_destinatarios, dia_semana, hora, criado_por
                             ) VALUES (?, ?, ?, ?, ?, ?, ?)
-                        `, [nome, dashboard, filtrosJson, emailsJson, diaSemana, hora, currentUser.username]);
+                        `, [nome, dashboard, filtrosJson, emailsJson, diaSemana, hora, criadoPor]);
 
                         alert('✅ Agendamento criado com sucesso!');
                     }
