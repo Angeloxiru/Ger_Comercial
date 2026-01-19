@@ -2314,7 +2314,7 @@
                 return div.innerHTML;
             }
 
-            updateFiltersSection(dashboardKey) {
+            async updateFiltersSection(dashboardKey) {
                 const filtersDiv = document.getElementById('filtersDynamic');
                 if (!filtersDiv) return;
 
@@ -2329,26 +2329,95 @@
                     return;
                 }
 
-                // Criar inputs dinâmicos para filtros
-                let html = '';
-                config.filters.forEach(filter => {
-                    html += `
-                        <div style="margin-bottom: 10px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.85em;">
-                                ${this.capitalizeFirstLetter(filter)}:
-                            </label>
-                            <input
-                                type="text"
-                                id="filter_${filter}"
-                                name="filter_${filter}"
-                                placeholder="Digite o valor para ${filter}"
-                                style="width: 100%; padding: 8px; border: 1px solid #dee2e6; border-radius: 4px; font-size: 0.85em;"
-                            >
-                        </div>
-                    `;
-                });
+                // Mostrar loading
+                filtersDiv.innerHTML = '<p class="filters-dynamic-empty">⏳ Carregando opções de filtros...</p>';
 
-                filtersDiv.innerHTML = html;
+                try {
+                    // Conectar ao banco se necessário
+                    if (!db.isConnected()) {
+                        await db.connect();
+                    }
+
+                    // Buscar opções para cada filtro
+                    let html = '';
+                    for (const filter of config.filters) {
+                        const options = await this.fetchFilterOptions(filter);
+
+                        html += `
+                            <div style="margin-bottom: 10px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.85em;">
+                                    ${this.capitalizeFirstLetter(filter)}:
+                                </label>
+                                <select
+                                    id="filter_${filter}"
+                                    name="filter_${filter}"
+                                    style="width: 100%; padding: 8px; border: 1px solid #dee2e6; border-radius: 4px; font-size: 0.85em;"
+                                >
+                                    <option value="">-- Todos (sem filtro) --</option>
+                                    ${options.map(opt => `<option value="${this.escapeHtml(opt)}">${this.escapeHtml(opt)}</option>`).join('')}
+                                </select>
+                            </div>
+                        `;
+                    }
+
+                    filtersDiv.innerHTML = html;
+                } catch (error) {
+                    console.error('Erro ao carregar filtros:', error);
+                    filtersDiv.innerHTML = '<p style="color: #dc3545; font-size: 0.85em;">⚠️ Erro ao carregar filtros. Os filtros estarão disponíveis, mas sem sugestões.</p>';
+                }
+            }
+
+            async fetchFilterOptions(filterName) {
+                try {
+                    let query = '';
+                    let column = '';
+
+                    // Mapear nome do filtro para coluna do banco
+                    switch(filterName) {
+                        case 'supervisor':
+                            query = 'SELECT DISTINCT rep_supervisor FROM tab_representante WHERE rep_supervisor IS NOT NULL AND rep_supervisor != "" ORDER BY rep_supervisor';
+                            column = 'rep_supervisor';
+                            break;
+                        case 'nivel_risco':
+                            return ['BAIXO', 'MÉDIO', 'ALTO', 'EXTREMO']; // Valores fixos
+                        case 'familia':
+                            query = 'SELECT DISTINCT desc_familia FROM tab_produto WHERE desc_familia IS NOT NULL AND desc_familia != "" ORDER BY desc_familia';
+                            column = 'desc_familia';
+                            break;
+                        case 'rota':
+                            query = 'SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL AND rota != "" ORDER BY rota';
+                            column = 'rota';
+                            break;
+                        case 'estado':
+                            query = 'SELECT DISTINCT estado FROM tab_cliente WHERE estado IS NOT NULL AND estado != "" ORDER BY estado';
+                            column = 'estado';
+                            break;
+                        case 'representante':
+                            query = 'SELECT DISTINCT representante FROM tab_representante WHERE representante IS NOT NULL AND representante != "" ORDER BY representante';
+                            column = 'representante';
+                            break;
+                        case 'grupo':
+                            query = 'SELECT DISTINCT grupo_desc FROM tab_cliente WHERE grupo_desc IS NOT NULL AND grupo_desc != "" ORDER BY grupo_desc';
+                            column = 'grupo_desc';
+                            break;
+                        case 'origem':
+                            query = 'SELECT DISTINCT desc_origem FROM tab_produto WHERE desc_origem IS NOT NULL AND desc_origem != "" ORDER BY desc_origem';
+                            column = 'desc_origem';
+                            break;
+                        case 'dias_sem_compra':
+                            return ['30', '60', '90', '120', '180']; // Valores sugeridos
+                        default:
+                            return [];
+                    }
+
+                    if (!query) return [];
+
+                    const result = await db.execute(query);
+                    return result.rows.map(row => row[column]).filter(v => v);
+                } catch (error) {
+                    console.error(`Erro ao buscar opções para ${filterName}:`, error);
+                    return [];
+                }
             }
 
             capitalizeFirstLetter(string) {
@@ -2397,23 +2466,21 @@
                 document.getElementById('scheduleName').value = schedule.nome_agendamento;
                 document.getElementById('scheduleDashboard').value = schedule.dashboard;
 
-                // Trigger change to load filters
-                this.updateFiltersSection(schedule.dashboard);
+                // Carregar filtros e aguardar
+                await this.updateFiltersSection(schedule.dashboard);
 
-                // Wait a bit for filters to load, then fill them
-                setTimeout(() => {
-                    if (schedule.filtros_json) {
-                        try {
-                            const filters = JSON.parse(schedule.filtros_json);
-                            for (const [key, value] of Object.entries(filters)) {
-                                const input = document.getElementById(`filter_${key}`);
-                                if (input) input.value = value;
-                            }
-                        } catch (e) {
-                            console.error('Erro ao parsear filtros:', e);
+                // Preencher valores dos filtros após carregamento
+                if (schedule.filtros_json) {
+                    try {
+                        const filters = JSON.parse(schedule.filtros_json);
+                        for (const [key, value] of Object.entries(filters)) {
+                            const select = document.getElementById(`filter_${key}`);
+                            if (select) select.value = value;
                         }
+                    } catch (e) {
+                        console.error('Erro ao parsear filtros:', e);
                     }
-                }, 100);
+                }
 
                 // Emails
                 try {
@@ -2463,7 +2530,8 @@
                             }
                         });
                     }
-                    const filtrosJson = Object.keys(filtros).length > 0 ? JSON.stringify(filtros) : null;
+                    // Converter para string JSON ou string vazia (nunca null)
+                    const filtrosJson = Object.keys(filtros).length > 0 ? JSON.stringify(filtros) : '';
 
                     // Conectar ao banco se necessário
                     if (!db.isConnected()) {
@@ -2486,12 +2554,13 @@
                         alert('✅ Agendamento atualizado com sucesso!');
                     } else {
                         // Criar
+                        const criadoPor = currentUser && currentUser.username ? currentUser.username : 'admin';
                         await db.execute(`
                             INSERT INTO agendamentos_relatorios (
                                 nome_agendamento, dashboard, filtros_json,
                                 emails_destinatarios, dia_semana, hora, criado_por
                             ) VALUES (?, ?, ?, ?, ?, ?, ?)
-                        `, [nome, dashboard, filtrosJson, emailsJson, diaSemana, hora, currentUser.username]);
+                        `, [nome, dashboard, filtrosJson, emailsJson, diaSemana, hora, criadoPor]);
 
                         alert('✅ Agendamento criado com sucesso!');
                     }
