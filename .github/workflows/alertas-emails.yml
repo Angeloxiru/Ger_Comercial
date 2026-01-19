@@ -32,6 +32,10 @@ jobs:
         env:
           TURSO_URL: ${{ secrets.TURSO_URL }}
           TURSO_TOKEN: ${{ secrets.TURSO_TOKEN }}
+          # Opção 1: Gmail (RECOMENDADO - Gratuito)
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          # Opção 2: SendGrid (alternativa)
           SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
         run: |

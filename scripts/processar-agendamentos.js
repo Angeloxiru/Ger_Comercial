@@ -19,14 +19,38 @@ const db = createClient({
     authToken: process.env.TURSO_TOKEN
 });
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp.sendgrid.net',
-    port: 587,
-    auth: {
-        user: 'apikey',
-        pass: process.env.SENDGRID_API_KEY
-    }
-});
+// Configurar transporter baseado no serviço disponível
+let transporter;
+let emailFrom;
+
+if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+    // Opção 1: Gmail (RECOMENDADO - Gratuito e Simples)
+    console.log('📧 Usando Gmail para envio de e-mails');
+    transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.GMAIL_USER,
+            pass: process.env.GMAIL_APP_PASSWORD
+        }
+    });
+    emailFrom = process.env.GMAIL_USER;
+} else if (process.env.SENDGRID_API_KEY) {
+    // Opção 2: SendGrid
+    console.log('📧 Usando SendGrid para envio de e-mails');
+    transporter = nodemailer.createTransport({
+        host: 'smtp.sendgrid.net',
+        port: 587,
+        auth: {
+            user: 'apikey',
+            pass: process.env.SENDGRID_API_KEY
+        }
+    });
+    emailFrom = process.env.EMAIL_FROM || 'sistema@germani.com';
+} else {
+    console.error('❌ ERRO: Nenhum serviço de e-mail configurado!');
+    console.error('   Configure GMAIL_USER + GMAIL_APP_PASSWORD ou SENDGRID_API_KEY');
+    process.exit(1);
+}
 
 // =====================================================
 // FUNÇÕES AUXILIARES
@@ -562,7 +586,7 @@ async function processarAgendamentos() {
 
                 for (const email of emails) {
                     await transporter.sendMail({
-                        from: process.env.EMAIL_FROM || 'sistema@germani.com',
+                        from: emailFrom,
                         to: email,
                         subject: `📊 ${agend.nome_agendamento} - ${formatarData(agora)}`,
                         html: htmlRelatorio
