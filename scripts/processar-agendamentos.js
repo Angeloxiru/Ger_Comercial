@@ -64,8 +64,8 @@ function getDiaAtual() {
 function getHoraAtual() {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
+    // Sempre retorna hora cheia (:00) porque o workflow roda de hora em hora
+    return `${hours}:00`;
 }
 
 function isDiaUtil() {
