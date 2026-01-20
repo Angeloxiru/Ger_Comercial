@@ -394,6 +394,63 @@
             background: #5a6268;
         }
 
+        .btn-test-filters {
+            width: 100%;
+            background: #0d6efd;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .btn-test-filters:hover:not(:disabled) {
+            background: #0b5ed7;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+        }
+
+        .btn-test-filters:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .test-result-message {
+            display: block;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .test-result-message.success {
+            background: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+
+        .test-result-message.error {
+            background: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+
+        .test-result-message.warning {
+            background: #fff3cd;
+            color: #997404;
+            border: 1px solid #ffecb5;
+        }
+
+        .test-result-message:empty {
+            display: none;
+        }
+
         .loading {
             text-align: center;
             padding: 40px;
@@ -1098,11 +1155,32 @@
                 </div>
 
                 <div class="schedule-form-group">
+                    <label for="schedulePeriod">Período *</label>
+                    <select id="schedulePeriod" name="periodo" required>
+                        <option value="">-- Selecione o período --</option>
+                        <option value="mes-atual">📅 Mês Atual (1º ao último dia)</option>
+                        <option value="mes-anterior">📅 Mês Anterior</option>
+                        <option value="ultimos-30-dias">📆 Últimos 30 dias</option>
+                        <option value="ultimos-7-dias">📆 Últimos 7 dias</option>
+                        <option value="ano-atual">📅 Ano Atual</option>
+                        <option value="trimestre-atual">📅 Trimestre Atual</option>
+                    </select>
+                    <small>Período dos dados que serão incluídos no relatório</small>
+                </div>
+
+                <div class="schedule-form-group">
                     <label>Filtros (Opcional)</label>
                     <div id="filtersDynamic" class="filters-dynamic">
                         <p class="filters-dynamic-empty">Selecione um dashboard para configurar filtros</p>
                     </div>
                     <small>Filtros que serão aplicados ao relatório</small>
+                </div>
+
+                <div class="schedule-form-group">
+                    <button type="button" class="btn-test-filters" id="testFiltersButton" disabled>
+                        🔍 Testar Filtros e Visualizar Dados
+                    </button>
+                    <small id="testResultMessage" class="test-result-message"></small>
                 </div>
 
                 <div class="schedule-form-group">
@@ -2127,6 +2205,23 @@
                 if (dashboardSelect) {
                     dashboardSelect.addEventListener('change', (e) => {
                         this.updateFiltersSection(e.target.value);
+                        this.checkTestButtonState();
+                    });
+                }
+
+                // Period change
+                const periodSelect = document.getElementById('schedulePeriod');
+                if (periodSelect) {
+                    periodSelect.addEventListener('change', () => {
+                        this.checkTestButtonState();
+                    });
+                }
+
+                // Test filters button
+                const testFiltersBtn = document.getElementById('testFiltersButton');
+                if (testFiltersBtn) {
+                    testFiltersBtn.addEventListener('click', () => {
+                        this.testFilters();
                     });
                 }
 
@@ -2420,6 +2515,183 @@
                 }
             }
 
+            checkTestButtonState() {
+                const dashboard = document.getElementById('scheduleDashboard')?.value;
+                const period = document.getElementById('schedulePeriod')?.value;
+                const testBtn = document.getElementById('testFiltersButton');
+
+                if (testBtn) {
+                    testBtn.disabled = !dashboard || !period;
+                }
+            }
+
+            async testFilters() {
+                const testBtn = document.getElementById('testFiltersButton');
+                const resultMsg = document.getElementById('testResultMessage');
+
+                if (!testBtn || !resultMsg) return;
+
+                try {
+                    testBtn.disabled = true;
+                    testBtn.textContent = '🔄 Testando...';
+                    resultMsg.textContent = '';
+                    resultMsg.className = 'test-result-message';
+
+                    const dashboard = document.getElementById('scheduleDashboard').value;
+                    const period = document.getElementById('schedulePeriod').value;
+
+                    // Coletar filtros
+                    const filtros = {};
+                    const filterInputs = document.querySelectorAll('[id^="filter_"]');
+                    filterInputs.forEach(input => {
+                        const filterName = input.id.replace('filter_', '');
+                        if (input.value && input.value !== '') {
+                            filtros[filterName] = input.value;
+                        }
+                    });
+
+                    // Construir query de teste baseado no dashboard
+                    const testQuery = this.buildTestQuery(dashboard, period, filtros);
+
+                    if (!testQuery) {
+                        resultMsg.textContent = '⚠️ Dashboard não suportado para teste';
+                        resultMsg.className = 'test-result-message warning';
+                        return;
+                    }
+
+                    // Executar query
+                    const result = await db.execute(testQuery.sql, testQuery.params || []);
+                    const count = result.rows[0]?.total || 0;
+
+                    if (count > 0) {
+                        resultMsg.textContent = `✅ Sucesso! ${count} registro(s) encontrado(s) com estes filtros.`;
+                        resultMsg.className = 'test-result-message success';
+                    } else {
+                        resultMsg.textContent = '⚠️ Nenhum dado encontrado com estes filtros. Ajuste os filtros ou o período.';
+                        resultMsg.className = 'test-result-message warning';
+                    }
+
+                } catch (error) {
+                    console.error('Erro ao testar filtros:', error);
+                    resultMsg.textContent = `❌ Erro ao testar: ${error.message}`;
+                    resultMsg.className = 'test-result-message error';
+                } finally {
+                    testBtn.disabled = false;
+                    testBtn.textContent = '🔍 Testar Filtros e Visualizar Dados';
+                }
+            }
+
+            buildTestQuery(dashboard, period, filtros) {
+                const periodCondition = this.getPeriodCondition(period);
+                if (!periodCondition) return null;
+
+                let sql = '';
+                const params = [];
+
+                switch(dashboard) {
+                    case 'produtos-parados':
+                        sql = 'SELECT COUNT(*) as total FROM vw_produtos_parados WHERE 1=1';
+                        if (filtros.supervisor) {
+                            sql += ' AND rep_supervisor = ?';
+                            params.push(filtros.supervisor);
+                        }
+                        if (filtros.nivel_risco) {
+                            sql += ' AND nivel_risco = ?';
+                            params.push(filtros.nivel_risco);
+                        }
+                        if (filtros.familia) {
+                            sql += ' AND categoria_produto = ?';
+                            params.push(filtros.familia);
+                        }
+                        break;
+
+                    case 'vendas-regiao':
+                        sql = `SELECT COUNT(DISTINCT rota) as total FROM vendas WHERE ${periodCondition}`;
+                        if (filtros.rota) {
+                            sql += ' AND rota = ?';
+                            params.push(filtros.rota);
+                        }
+                        if (filtros.estado) {
+                            sql += ' AND uf = ?';
+                            params.push(filtros.estado);
+                        }
+                        break;
+
+                    case 'vendas-equipe':
+                        sql = `SELECT COUNT(DISTINCT v.representante) as total FROM vendas v WHERE ${periodCondition}`;
+                        if (filtros.supervisor) {
+                            sql += ' AND v.representante IN (SELECT representante FROM tab_representante WHERE rep_supervisor = ?)';
+                            params.push(filtros.supervisor);
+                        }
+                        if (filtros.representante) {
+                            sql += ' AND v.representante = ?';
+                            params.push(filtros.representante);
+                        }
+                        break;
+
+                    case 'performance-clientes':
+                    case 'ranking-clientes':
+                        sql = `SELECT COUNT(DISTINCT v.cliente) as total FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE ${periodCondition}`;
+                        if (filtros.rota) {
+                            sql += ' AND c.rota = ?';
+                            params.push(filtros.rota);
+                        }
+                        if (filtros.grupo) {
+                            sql += ' AND c.grupo = ?';
+                            params.push(filtros.grupo);
+                        }
+                        break;
+
+                    case 'analise-produtos':
+                        sql = `SELECT COUNT(DISTINCT v.produto) as total FROM vendas v LEFT JOIN tab_produto p ON v.produto = p.produto WHERE ${periodCondition}`;
+                        if (filtros.familia) {
+                            sql += ' AND p.familia = ?';
+                            params.push(filtros.familia);
+                        }
+                        if (filtros.origem) {
+                            sql += ' AND p.origem = ?';
+                            params.push(filtros.origem);
+                        }
+                        break;
+
+                    case 'clientes-semcompras':
+                        const diasSemCompra = filtros.dias_sem_compra || 90;
+                        sql = `SELECT COUNT(DISTINCT c.cliente) as total FROM tab_cliente c LEFT JOIN vendas v ON c.cliente = v.cliente WHERE c.sit_cliente = 'ATIVO'`;
+                        if (filtros.rota) {
+                            sql += ' AND c.rota = ?';
+                            params.push(filtros.rota);
+                        }
+                        sql += ` GROUP BY c.cliente HAVING julianday('now') - julianday(MAX(v.emissao)) > ${diasSemCompra}`;
+                        // Para este caso específico, vamos contar os grupos
+                        sql = `SELECT COUNT(*) as total FROM (${sql})`;
+                        break;
+
+                    default:
+                        return null;
+                }
+
+                return { sql, params };
+            }
+
+            getPeriodCondition(period) {
+                switch(period) {
+                    case 'mes-atual':
+                        return "emissao >= date('now', 'start of month') AND emissao <= date('now', 'start of month', '+1 month', '-1 day')";
+                    case 'mes-anterior':
+                        return "emissao >= date('now', 'start of month', '-1 month') AND emissao < date('now', 'start of month')";
+                    case 'ultimos-30-dias':
+                        return "emissao >= date('now', '-30 days')";
+                    case 'ultimos-7-dias':
+                        return "emissao >= date('now', '-7 days')";
+                    case 'ano-atual':
+                        return "strftime('%Y', emissao) = strftime('%Y', 'now')";
+                    case 'trimestre-atual':
+                        return "emissao >= date('now', 'start of month', '-' || ((CAST(strftime('%m', 'now') AS INTEGER) - 1) % 3) || ' months') AND emissao < date('now', 'start of month', '+' || (3 - ((CAST(strftime('%m', 'now') AS INTEGER) - 1) % 3)) || ' months')";
+                    default:
+                        return null;
+                }
+            }
+
             capitalizeFirstLetter(string) {
                 return string.charAt(0).toUpperCase() + string.slice(1).replace('_', ' ');
             }
@@ -2465,6 +2737,7 @@
                 // Preencher formulário
                 document.getElementById('scheduleName').value = schedule.nome_agendamento;
                 document.getElementById('scheduleDashboard').value = schedule.dashboard;
+                document.getElementById('schedulePeriod').value = schedule.periodo || 'mes-atual';
 
                 // Carregar filtros e aguardar
                 await this.updateFiltersSection(schedule.dashboard);
@@ -2504,12 +2777,13 @@
                     // Coletar dados do formulário
                     const nome = document.getElementById('scheduleName').value.trim();
                     const dashboard = document.getElementById('scheduleDashboard').value;
+                    const periodo = document.getElementById('schedulePeriod').value;
                     const emailsText = document.getElementById('scheduleEmails').value.trim();
                     const diaSemana = document.getElementById('scheduleDayOfWeek').value;
                     const hora = document.getElementById('scheduleTime').value;
 
                     // Validações
-                    if (!nome || !dashboard || !emailsText || !diaSemana || !hora) {
+                    if (!nome || !dashboard || !periodo || !emailsText || !diaSemana || !hora) {
                         alert('Por favor, preencha todos os campos obrigatórios');
                         if (submitBtn) submitBtn.disabled = false;
                         return;
@@ -2544,12 +2818,13 @@
                             UPDATE agendamentos_relatorios
                             SET nome_agendamento = ?,
                                 dashboard = ?,
+                                periodo = ?,
                                 filtros_json = ?,
                                 emails_destinatarios = ?,
                                 dia_semana = ?,
                                 hora = ?
                             WHERE id = ?
-                        `, [nome, dashboard, filtrosJson, emailsJson, diaSemana, hora, this.editingScheduleId]);
+                        `, [nome, dashboard, periodo, filtrosJson, emailsJson, diaSemana, hora, this.editingScheduleId]);
 
                         alert('✅ Agendamento atualizado com sucesso!');
                     } else {
@@ -2557,10 +2832,10 @@
                         const criadoPor = currentUser && currentUser.username ? currentUser.username : 'admin';
                         await db.execute(`
                             INSERT INTO agendamentos_relatorios (
-                                nome_agendamento, dashboard, filtros_json,
+                                nome_agendamento, dashboard, periodo, filtros_json,
                                 emails_destinatarios, dia_semana, hora, criado_por
-                            ) VALUES (?, ?, ?, ?, ?, ?, ?)
-                        `, [nome, dashboard, filtrosJson, emailsJson, diaSemana, hora, criadoPor]);
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        `, [nome, dashboard, periodo, filtrosJson, emailsJson, diaSemana, hora, criadoPor]);
 
                         alert('✅ Agendamento criado com sucesso!');
                     }

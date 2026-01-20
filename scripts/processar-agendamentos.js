@@ -87,22 +87,43 @@ function formatarData(date) {
 // BUSCAR DADOS DOS DASHBOARDS
 // =====================================================
 
-async function buscarDadosDashboard(dashboard, filtros) {
+function getPeriodCondition(period) {
+    switch(period) {
+        case 'mes-atual':
+            return "emissao >= date('now', 'start of month') AND emissao <= date('now', 'start of month', '+1 month', '-1 day')";
+        case 'mes-anterior':
+            return "emissao >= date('now', 'start of month', '-1 month') AND emissao < date('now', 'start of month')";
+        case 'ultimos-30-dias':
+            return "emissao >= date('now', '-30 days')";
+        case 'ultimos-7-dias':
+            return "emissao >= date('now', '-7 days')";
+        case 'ano-atual':
+            return "strftime('%Y', emissao) = strftime('%Y', 'now')";
+        case 'trimestre-atual':
+            return "emissao >= date('now', 'start of month', '-' || ((CAST(strftime('%m', 'now') AS INTEGER) - 1) % 3) || ' months') AND emissao < date('now', 'start of month', '+' || (3 - ((CAST(strftime('%m', 'now') AS INTEGER) - 1) % 3)) || ' months')";
+        default:
+            // Fallback para mês atual
+            return "emissao >= date('now', 'start of month') AND emissao <= date('now', 'start of month', '+1 month', '-1 day')";
+    }
+}
+
+async function buscarDadosDashboard(dashboard, filtros, periodo) {
     console.log(`    📊 Buscando dados do dashboard: ${dashboard}`);
+    console.log(`    📅 Período: ${periodo || 'mes-atual'}`);
 
     switch(dashboard) {
         case 'produtos-parados':
             return await buscarProdutosParados(filtros);
         case 'vendas-regiao':
-            return await buscarVendasRegiao(filtros);
+            return await buscarVendasRegiao(filtros, periodo);
         case 'vendas-equipe':
-            return await buscarVendasEquipe(filtros);
+            return await buscarVendasEquipe(filtros, periodo);
         case 'performance-clientes':
-            return await buscarPerformanceClientes(filtros);
+            return await buscarPerformanceClientes(filtros, periodo);
         case 'ranking-clientes':
-            return await buscarRankingClientes(filtros);
+            return await buscarRankingClientes(filtros, periodo);
         case 'analise-produtos':
-            return await buscarAnaliseProdutos(filtros);
+            return await buscarAnaliseProdutos(filtros, periodo);
         case 'clientes-semcompras':
             return await buscarClientesSemCompras(filtros);
         default:
@@ -159,7 +180,8 @@ async function buscarProdutosParados(filtros) {
     };
 }
 
-async function buscarVendasRegiao(filtros) {
+async function buscarVendasRegiao(filtros, periodo = 'mes-atual') {
+    const periodCondition = getPeriodCondition(periodo);
     let sql = `
         SELECT
             rota,
@@ -167,7 +189,7 @@ async function buscarVendasRegiao(filtros) {
             SUM(valor_liquido) as total_vendas,
             COUNT(DISTINCT representante) as total_reps
         FROM vendas
-        WHERE strftime('%Y-%m', emissao) = strftime('%Y-%m', 'now')
+        WHERE ${periodCondition}
     `;
     const params = [];
 
@@ -195,7 +217,8 @@ async function buscarVendasRegiao(filtros) {
     };
 }
 
-async function buscarVendasEquipe(filtros) {
+async function buscarVendasEquipe(filtros, periodo = 'mes-atual') {
+    const periodCondition = getPeriodCondition(periodo);
     let sql = `
         SELECT
             v.representante,
@@ -205,7 +228,7 @@ async function buscarVendasEquipe(filtros) {
             SUM(v.valor_liquido) as total_vendas
         FROM vendas v
         LEFT JOIN tab_representante r ON v.representante = r.representante
-        WHERE strftime('%Y-%m', v.emissao) = strftime('%Y-%m', 'now')
+        WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
     `;
     const params = [];
 
@@ -234,7 +257,8 @@ async function buscarVendasEquipe(filtros) {
     };
 }
 
-async function buscarPerformanceClientes(filtros) {
+async function buscarPerformanceClientes(filtros, periodo = 'mes-atual') {
+    const periodCondition = getPeriodCondition(periodo);
     let sql = `
         SELECT
             c.cliente,
@@ -244,7 +268,7 @@ async function buscarPerformanceClientes(filtros) {
             SUM(v.valor_liquido) as total_vendas
         FROM vendas v
         LEFT JOIN tab_cliente c ON v.cliente = c.cliente
-        WHERE strftime('%Y-%m', v.emissao) = strftime('%Y-%m', 'now')
+        WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
     `;
     const params = [];
 
@@ -273,7 +297,8 @@ async function buscarPerformanceClientes(filtros) {
     };
 }
 
-async function buscarRankingClientes(filtros) {
+async function buscarRankingClientes(filtros, periodo = 'mes-atual') {
+    const periodCondition = getPeriodCondition(periodo);
     let sql = `
         SELECT
             c.cliente,
@@ -284,7 +309,7 @@ async function buscarRankingClientes(filtros) {
             AVG(v.valor_liquido) as ticket_medio
         FROM vendas v
         LEFT JOIN tab_cliente c ON v.cliente = c.cliente
-        WHERE strftime('%Y', v.emissao) = strftime('%Y', 'now')
+        WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
     `;
     const params = [];
 
@@ -310,7 +335,8 @@ async function buscarRankingClientes(filtros) {
     };
 }
 
-async function buscarAnaliseProdutos(filtros) {
+async function buscarAnaliseProdutos(filtros, periodo = 'mes-atual') {
+    const periodCondition = getPeriodCondition(periodo);
     let sql = `
         SELECT
             p.produto,
@@ -322,7 +348,7 @@ async function buscarAnaliseProdutos(filtros) {
             SUM(v.valor_liquido) as valor_total
         FROM vendas v
         LEFT JOIN tab_produto p ON v.produto = p.produto
-        WHERE strftime('%Y-%m', v.emissao) = strftime('%Y-%m', 'now')
+        WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
     `;
     const params = [];
 
@@ -580,7 +606,8 @@ async function processarAgendamentos() {
 
                 // 1. Buscar dados do dashboard com filtros
                 const filtros = agend.filtros_json ? JSON.parse(agend.filtros_json) : {};
-                const dados = await buscarDadosDashboard(agend.dashboard, filtros);
+                const periodo = agend.periodo || 'mes-atual';
+                const dados = await buscarDadosDashboard(agend.dashboard, filtros, periodo);
                 console.log(`    ✅ Dados carregados: ${dados.dados ? dados.dados.length : 0} registros`);
 
                 // 2. Gerar HTML do relatório
