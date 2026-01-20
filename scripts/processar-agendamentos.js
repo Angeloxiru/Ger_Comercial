@@ -533,32 +533,37 @@ async function processarAgendamentos() {
 
     try {
         // Buscar agendamentos que devem rodar agora
-        // Simplificado: query direta sem construir arrays complexos
-        let sql;
-        let params;
+        // NOVA ABORDAGEM: usar IN ao invés de múltiplos OR
+        let diasBusca;
 
         if (isDiaUtil()) {
             // Dia útil: procura por dia específico, "todos-dias" OU "dia-util"
-            sql = `
-                SELECT * FROM agendamentos_relatorios
-                WHERE ativo = 1
-                AND (dia_semana = ? OR dia_semana = ? OR dia_semana = ?)
-                AND hora = ?
-            `;
-            params = [diaAtual, 'todos-dias', 'dia-util', horaAtual];
+            diasBusca = [diaAtual, 'todos-dias', 'dia-util'];
         } else {
             // Fim de semana: procura por dia específico OU "todos-dias"
-            sql = `
-                SELECT * FROM agendamentos_relatorios
-                WHERE ativo = 1
-                AND (dia_semana = ? OR dia_semana = ?)
-                AND hora = ?
-            `;
-            params = [diaAtual, 'todos-dias', horaAtual];
+            diasBusca = [diaAtual, 'todos-dias'];
         }
 
-        const result = await db.execute(sql, params);
-        const agendamentos = result.rows || [];
+        // Usar UNION para combinar resultados (mais confiável que OR com prepared statements)
+        const queries = diasBusca.map(dia => ({
+            sql: 'SELECT * FROM agendamentos_relatorios WHERE ativo = 1 AND dia_semana = ? AND hora = ?',
+            args: [dia, horaAtual]
+        }));
+
+        // Executar todas as queries e combinar resultados
+        const results = await db.batch(queries);
+
+        // Combinar e remover duplicatas baseado no ID
+        const agendamentosMap = new Map();
+        results.forEach(result => {
+            result.rows.forEach(agend => {
+                if (!agendamentosMap.has(agend.id)) {
+                    agendamentosMap.set(agend.id, agend);
+                }
+            });
+        });
+
+        const agendamentos = Array.from(agendamentosMap.values());
 
         console.log(`📋 Encontrados ${agendamentos.length} agendamento(s) para processar\n`);
 
