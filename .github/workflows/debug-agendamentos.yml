@@ -1,0 +1,39 @@
+name: 🔍 Debug Agendamentos
+
+on:
+  # Apenas execução manual
+  workflow_dispatch:
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'scripts/package.json'
+
+      - name: 📦 Instalar dependências
+        run: |
+          cd scripts
+          npm install
+
+      - name: 🔍 Executar script de debug
+        env:
+          TURSO_URL: ${{ secrets.TURSO_URL }}
+          TURSO_TOKEN: ${{ secrets.TURSO_TOKEN }}
+        run: |
+          cd scripts
+          node debug-agendamentos.js
+
+      - name: 📊 Status
+        if: always()
+        run: |
+          echo "✅ Debug concluído!"
+          echo "Verifique os logs acima para diagnóstico"
