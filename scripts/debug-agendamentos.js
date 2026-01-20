@@ -132,18 +132,18 @@ if (result.rows.length === 0) {
         console.log(`      Valor: "${agend.hora}"`);
         console.log(`      Length: ${agend.hora?.length || 0}`);
         console.log(`      Bytes: [${Array.from(agend.hora || '').map(c => c.charCodeAt(0)).join(', ')}]`);
-        console.log(`      Comparação com "11:00": ${agend.hora === '11:00' ? '✅ MATCH' : '❌ NO MATCH'}`);
+        console.log(`      Comparação com "${horaAtual}": ${agend.hora === horaAtual ? '✅ MATCH' : '❌ NO MATCH'}`);
 
         // Verificar se DEVERIA ser encontrado
-        const matchDia = agend.dia_semana === 'terca' || agend.dia_semana === 'todos-dias' || agend.dia_semana === 'dia-util';
-        const matchHora = agend.hora === '11:00';
+        const matchDia = agend.dia_semana === diaAtual || agend.dia_semana === 'todos-dias' || (isDiaUtil && agend.dia_semana === 'dia-util');
+        const matchHora = agend.hora === horaAtual;
 
         if (matchDia && matchHora) {
             console.log(`   🎯 ESTE AGENDAMENTO DEVERIA SER ENCONTRADO!`);
         } else {
             console.log(`   ⏭️ Este não deveria ser encontrado agora`);
-            if (!matchDia) console.log(`      Motivo: dia_semana não casa`);
-            if (!matchHora) console.log(`      Motivo: hora não casa`);
+            if (!matchDia) console.log(`      Motivo: dia_semana não casa (hoje é "${diaAtual}")`);
+            if (!matchHora) console.log(`      Motivo: hora não casa (agora é "${horaAtual}")`);
         }
     });
 
@@ -158,14 +158,14 @@ if (result.rows.length === 0) {
     const test1 = await db.execute(`SELECT * FROM agendamentos_relatorios WHERE ativo = 1 AND dia_semana = 'todos-dias'`);
     console.log(`Query 1: dia_semana = 'todos-dias' → ${test1.rows.length} resultado(s)`);
 
-    const test2 = await db.execute(`SELECT * FROM agendamentos_relatorios WHERE ativo = 1 AND hora = '11:00'`);
-    console.log(`Query 2: hora = '11:00' → ${test2.rows.length} resultado(s)`);
+    const test2 = await db.execute(`SELECT * FROM agendamentos_relatorios WHERE ativo = 1 AND hora = ?`, [horaAtual]);
+    console.log(`Query 2: hora = '${horaAtual}' → ${test2.rows.length} resultado(s)`);
 
-    const test3 = await db.execute(`SELECT * FROM agendamentos_relatorios WHERE ativo = 1 AND dia_semana = 'todos-dias' AND hora = '11:00'`);
-    console.log(`Query 3: dia_semana = 'todos-dias' AND hora = '11:00' → ${test3.rows.length} resultado(s)`);
+    const test3 = await db.execute(`SELECT * FROM agendamentos_relatorios WHERE ativo = 1 AND dia_semana = 'todos-dias' AND hora = ?`, [horaAtual]);
+    console.log(`Query 3: dia_semana = 'todos-dias' AND hora = '${horaAtual}' → ${test3.rows.length} resultado(s)`);
 
-    const test4 = await db.execute(`SELECT * FROM agendamentos_relatorios WHERE ativo = 1 AND (dia_semana = 'terca' OR dia_semana = 'todos-dias') AND hora = '11:00'`);
-    console.log(`Query 4: (dia_semana = 'terca' OR dia_semana = 'todos-dias') AND hora = '11:00' → ${test4.rows.length} resultado(s)`);
+    const test4 = await db.execute(`SELECT * FROM agendamentos_relatorios WHERE ativo = 1 AND (dia_semana = ? OR dia_semana = 'todos-dias') AND hora = ?`, [diaAtual, horaAtual]);
+    console.log(`Query 4: (dia_semana = '${diaAtual}' OR dia_semana = 'todos-dias') AND hora = '${horaAtual}' → ${test4.rows.length} resultado(s)`);
 
     console.log('');
 
