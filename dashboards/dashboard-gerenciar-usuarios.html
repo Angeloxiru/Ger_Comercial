@@ -2582,14 +2582,12 @@
             }
 
             buildTestQuery(dashboard, period, filtros) {
-                const periodCondition = this.getPeriodCondition(period);
-                if (!periodCondition) return null;
-
                 let sql = '';
                 const params = [];
 
                 switch(dashboard) {
                     case 'produtos-parados':
+                        // Produtos parados não usa período - a view já calcula automaticamente
                         sql = 'SELECT COUNT(*) as total FROM vw_produtos_parados WHERE 1=1';
                         if (filtros.supervisor) {
                             sql += ' AND rep_supervisor = ?';
@@ -2606,53 +2604,57 @@
                         break;
 
                     case 'vendas-regiao':
-                        sql = `SELECT COUNT(DISTINCT c.rota) as total FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}`;
-                        if (filtros.rota) {
-                            sql += ' AND c.rota = ?';
-                            params.push(filtros.rota);
-                        }
-                        if (filtros.estado) {
-                            sql += ' AND c.estado = ?';
-                            params.push(filtros.estado);
-                        }
-                        break;
-
                     case 'vendas-equipe':
-                        sql = `SELECT COUNT(DISTINCT v.representante) as total FROM vendas v WHERE ${periodCondition}`;
-                        if (filtros.supervisor) {
-                            sql += ' AND v.representante IN (SELECT representante FROM tab_representante WHERE rep_supervisor = ?)';
-                            params.push(filtros.supervisor);
-                        }
-                        if (filtros.representante) {
-                            sql += ' AND v.representante = ?';
-                            params.push(filtros.representante);
-                        }
-                        break;
-
                     case 'performance-clientes':
                     case 'ranking-clientes':
-                        sql = `SELECT COUNT(DISTINCT v.cliente) as total FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE ${periodCondition}`;
-                        if (filtros.rota) {
-                            sql += ' AND c.rota = ?';
-                            params.push(filtros.rota);
-                        }
-                        if (filtros.grupo) {
-                            sql += ' AND c.grupo = ?';
-                            params.push(filtros.grupo);
-                        }
-                        break;
+                    case 'analise-produtos': {
+                        // Estes dashboards precisam de período
+                        const periodCondition = this.getPeriodCondition(period);
+                        if (!periodCondition) return null;
 
-                    case 'analise-produtos':
-                        sql = `SELECT COUNT(DISTINCT v.produto) as total FROM vendas v LEFT JOIN tab_produto p ON v.produto = p.produto WHERE ${periodCondition}`;
-                        if (filtros.familia) {
-                            sql += ' AND p.familia = ?';
-                            params.push(filtros.familia);
-                        }
-                        if (filtros.origem) {
-                            sql += ' AND p.origem = ?';
-                            params.push(filtros.origem);
+                        if (dashboard === 'vendas-regiao') {
+                            sql = `SELECT COUNT(DISTINCT c.rota) as total FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}`;
+                            if (filtros.rota) {
+                                sql += ' AND c.rota = ?';
+                                params.push(filtros.rota);
+                            }
+                            if (filtros.estado) {
+                                sql += ' AND c.estado = ?';
+                                params.push(filtros.estado);
+                            }
+                        } else if (dashboard === 'vendas-equipe') {
+                            sql = `SELECT COUNT(DISTINCT v.representante) as total FROM vendas v WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}`;
+                            if (filtros.supervisor) {
+                                sql += ' AND v.representante IN (SELECT representante FROM tab_representante WHERE rep_supervisor = ?)';
+                                params.push(filtros.supervisor);
+                            }
+                            if (filtros.representante) {
+                                sql += ' AND v.representante = ?';
+                                params.push(filtros.representante);
+                            }
+                        } else if (dashboard === 'performance-clientes' || dashboard === 'ranking-clientes') {
+                            sql = `SELECT COUNT(DISTINCT v.cliente) as total FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}`;
+                            if (filtros.rota) {
+                                sql += ' AND c.rota = ?';
+                                params.push(filtros.rota);
+                            }
+                            if (filtros.grupo) {
+                                sql += ' AND c.grupo = ?';
+                                params.push(filtros.grupo);
+                            }
+                        } else if (dashboard === 'analise-produtos') {
+                            sql = `SELECT COUNT(DISTINCT v.produto) as total FROM vendas v LEFT JOIN tab_produto p ON v.produto = p.produto WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}`;
+                            if (filtros.familia) {
+                                sql += ' AND p.familia = ?';
+                                params.push(filtros.familia);
+                            }
+                            if (filtros.origem) {
+                                sql += ' AND p.origem = ?';
+                                params.push(filtros.origem);
+                            }
                         }
                         break;
+                    }
 
                     case 'clientes-semcompras':
                         const diasSemCompra = filtros.dias_sem_compra || 90;
