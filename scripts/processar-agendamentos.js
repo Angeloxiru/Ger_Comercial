@@ -533,27 +533,29 @@ async function processarAgendamentos() {
 
     try {
         // Buscar agendamentos que devem rodar agora
-        const whereConditions = [];
-        const params = [];
+        // Simplificado: query direta sem construir arrays complexos
+        let sql;
+        let params;
 
-        // Dia da semana
-        whereConditions.push('(dia_semana = ? OR dia_semana = ?)');
-        params.push(diaAtual);
-        params.push('todos-dias');
-
-        // Dia útil
         if (isDiaUtil()) {
-            whereConditions.push('dia_semana = ?');
-            params.push('dia-util');
+            // Dia útil: procura por dia específico, "todos-dias" OU "dia-util"
+            sql = `
+                SELECT * FROM agendamentos_relatorios
+                WHERE ativo = 1
+                AND (dia_semana = ? OR dia_semana = ? OR dia_semana = ?)
+                AND hora = ?
+            `;
+            params = [diaAtual, 'todos-dias', 'dia-util', horaAtual];
+        } else {
+            // Fim de semana: procura por dia específico OU "todos-dias"
+            sql = `
+                SELECT * FROM agendamentos_relatorios
+                WHERE ativo = 1
+                AND (dia_semana = ? OR dia_semana = ?)
+                AND hora = ?
+            `;
+            params = [diaAtual, 'todos-dias', horaAtual];
         }
-
-        const sql = `
-            SELECT * FROM agendamentos_relatorios
-            WHERE ativo = 1
-            AND (${whereConditions.join(' OR ')})
-            AND hora = ?
-        `;
-        params.push(horaAtual);
 
         const result = await db.execute(sql, params);
         const agendamentos = result.rows || [];
