@@ -1,0 +1,29 @@
+name: 🔍 Debug Agendamento Completo
+
+on:
+  workflow_dispatch:  # Manual apenas
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências
+        run: |
+          cd scripts
+          npm install
+
+      - name: 🔍 Executar debug completo
+        env:
+          TURSO_URL: ${{ secrets.TURSO_URL }}
+          TURSO_TOKEN: ${{ secrets.TURSO_TOKEN }}
+        run: |
+          cd scripts
+          chmod +x debug-agendamento-completo.js
+          node debug-agendamento-completo.js

@@ -150,21 +150,28 @@ async function buscarProdutosParados(filtros) {
     if (filtros.supervisor) {
         sql += ' AND rep_supervisor = ?';
         params.push(filtros.supervisor);
+        console.log(`       🔍 Filtro aplicado: supervisor = "${filtros.supervisor}"`);
     }
 
     if (filtros.nivel_risco) {
         sql += ' AND nivel_risco = ?';
         params.push(filtros.nivel_risco);
+        console.log(`       🔍 Filtro aplicado: nivel_risco = "${filtros.nivel_risco}"`);
     }
 
     if (filtros.familia) {
         sql += ' AND categoria_produto = ?';
         params.push(filtros.familia);
+        console.log(`       🔍 Filtro aplicado: familia = "${filtros.familia}"`);
     }
 
     sql += ' ORDER BY qtd_semanas_parado DESC LIMIT 100';
 
+    console.log(`       📝 SQL: ${sql.replace(/\s+/g, ' ').substring(0, 150)}...`);
+    console.log(`       📝 Params:`, params);
+
     const result = await db.execute(sql, params);
+    console.log(`       ✅ Query executada: ${result.rows.length} registros`);
     return {
         colunas: ['Produto', 'Descrição', 'Família', 'Supervisor', 'Semanas Parado', 'Nível Risco', 'Última Venda', 'Valor Médio'],
         dados: result.rows.map(row => [
@@ -628,10 +635,22 @@ async function processarAgendamentos() {
                 console.log(`└─────────────────────────────────────────────────────┘`);
 
                 // 1. Buscar dados do dashboard com filtros
+                console.log(`    📋 Dashboard: ${agend.dashboard}`);
+                console.log(`    📅 Período: ${agend.periodo || 'mes-atual'}`);
+                console.log(`    🔍 Filtros JSON: ${agend.filtros_json || '(vazio)'}`);
+
                 const filtros = agend.filtros_json ? JSON.parse(agend.filtros_json) : {};
+                console.log(`    🔍 Filtros parseados:`, JSON.stringify(filtros));
+
                 const periodo = agend.periodo || 'mes-atual';
                 const dados = await buscarDadosDashboard(agend.dashboard, filtros, periodo);
+
                 console.log(`    ✅ Dados carregados: ${dados.dados ? dados.dados.length : 0} registros`);
+                if (dados.dados && dados.dados.length > 0) {
+                    console.log(`    📊 Primeiras 2 linhas:`, dados.dados.slice(0, 2));
+                } else {
+                    console.log(`    ⚠️  ATENÇÃO: Nenhum dado retornado pela query!`);
+                }
 
                 // 2. Gerar HTML do relatório
                 const htmlRelatorio = gerarHTMLRelatorio(agend, dados);
