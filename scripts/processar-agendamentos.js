@@ -184,26 +184,27 @@ async function buscarVendasRegiao(filtros, periodo = 'mes-atual') {
     const periodCondition = getPeriodCondition(periodo);
     let sql = `
         SELECT
-            rota,
-            COUNT(DISTINCT cliente) as total_clientes,
-            SUM(valor_liquido) as total_vendas,
-            COUNT(DISTINCT representante) as total_reps
-        FROM vendas
-        WHERE ${periodCondition}
+            c.rota,
+            COUNT(DISTINCT v.cliente) as total_clientes,
+            SUM(v.valor_liquido) as total_vendas,
+            COUNT(DISTINCT v.representante) as total_reps
+        FROM vendas v
+        LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+        WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
     `;
     const params = [];
 
     if (filtros.rota) {
-        sql += ' AND rota = ?';
+        sql += ' AND c.rota = ?';
         params.push(filtros.rota);
     }
 
     if (filtros.estado) {
-        sql += ' AND estado = ?';
+        sql += ' AND c.estado = ?';
         params.push(filtros.estado);
     }
 
-    sql += ' GROUP BY rota ORDER BY total_vendas DESC';
+    sql += ' GROUP BY c.rota ORDER BY total_vendas DESC';
 
     const result = await db.execute(sql, params);
     return {
