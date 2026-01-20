@@ -113,15 +113,14 @@ async function buscarDadosDashboard(dashboard, filtros) {
 async function buscarProdutosParados(filtros) {
     let sql = `
         SELECT
-            produto,
+            sku_produto as produto,
             desc_produto,
-            familia,
-            desc_familia,
+            categoria_produto as desc_familia,
             rep_supervisor,
             qtd_semanas_parado,
             nivel_risco,
-            ultima_venda_data,
-            ultima_venda_valor
+            ultima_venda,
+            valor_medio_perdido
         FROM vw_produtos_parados
         WHERE 1=1
     `;
@@ -138,7 +137,7 @@ async function buscarProdutosParados(filtros) {
     }
 
     if (filtros.familia) {
-        sql += ' AND familia = ?';
+        sql += ' AND categoria_produto = ?';
         params.push(filtros.familia);
     }
 
@@ -146,7 +145,7 @@ async function buscarProdutosParados(filtros) {
 
     const result = await db.execute(sql, params);
     return {
-        colunas: ['Produto', 'Descrição', 'Família', 'Supervisor', 'Semanas Parado', 'Nível Risco', 'Última Venda'],
+        colunas: ['Produto', 'Descrição', 'Família', 'Supervisor', 'Semanas Parado', 'Nível Risco', 'Última Venda', 'Valor Médio'],
         dados: result.rows.map(row => [
             row.produto,
             row.desc_produto,
@@ -154,7 +153,8 @@ async function buscarProdutosParados(filtros) {
             row.rep_supervisor,
             row.qtd_semanas_parado,
             row.nivel_risco,
-            row.ultima_venda_data ? new Date(row.ultima_venda_data).toLocaleDateString('pt-BR') : 'N/A'
+            row.ultima_venda ? new Date(row.ultima_venda).toLocaleDateString('pt-BR') : 'N/A',
+            `R$ ${Number(row.valor_medio_perdido).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`
         ])
     };
 }
@@ -164,10 +164,10 @@ async function buscarVendasRegiao(filtros) {
         SELECT
             rota,
             COUNT(DISTINCT cliente) as total_clientes,
-            SUM(valor) as total_vendas,
+            SUM(valor_liquido) as total_vendas,
             COUNT(DISTINCT representante) as total_reps
-        FROM tab_venda
-        WHERE strftime('%Y-%m', data_emissao) = strftime('%Y-%m', 'now')
+        FROM vendas
+        WHERE strftime('%Y-%m', emissao) = strftime('%Y-%m', 'now')
     `;
     const params = [];
 
@@ -198,14 +198,14 @@ async function buscarVendasRegiao(filtros) {
 async function buscarVendasEquipe(filtros) {
     let sql = `
         SELECT
-            representante,
-            desc_representante,
-            rep_supervisor,
-            COUNT(DISTINCT cliente) as total_clientes,
-            SUM(valor) as total_vendas
-        FROM tab_venda v
+            v.representante,
+            r.desc_representante,
+            r.rep_supervisor,
+            COUNT(DISTINCT v.cliente) as total_clientes,
+            SUM(v.valor_liquido) as total_vendas
+        FROM vendas v
         LEFT JOIN tab_representante r ON v.representante = r.representante
-        WHERE strftime('%Y-%m', v.data_emissao) = strftime('%Y-%m', 'now')
+        WHERE strftime('%Y-%m', v.emissao) = strftime('%Y-%m', 'now')
     `;
     const params = [];
 
@@ -241,10 +241,10 @@ async function buscarPerformanceClientes(filtros) {
             c.nome,
             c.rota,
             COUNT(*) as total_pedidos,
-            SUM(v.valor) as total_vendas
-        FROM tab_venda v
+            SUM(v.valor_liquido) as total_vendas
+        FROM vendas v
         LEFT JOIN tab_cliente c ON v.cliente = c.cliente
-        WHERE strftime('%Y-%m', v.data_emissao) = strftime('%Y-%m', 'now')
+        WHERE strftime('%Y-%m', v.emissao) = strftime('%Y-%m', 'now')
     `;
     const params = [];
 
@@ -279,12 +279,12 @@ async function buscarRankingClientes(filtros) {
             c.cliente,
             c.nome,
             c.rota,
-            SUM(v.valor) as total_vendas,
+            SUM(v.valor_liquido) as total_vendas,
             COUNT(*) as total_pedidos,
-            AVG(v.valor) as ticket_medio
-        FROM tab_venda v
+            AVG(v.valor_liquido) as ticket_medio
+        FROM vendas v
         LEFT JOIN tab_cliente c ON v.cliente = c.cliente
-        WHERE strftime('%Y', v.data_emissao) = strftime('%Y', 'now')
+        WHERE strftime('%Y', v.emissao) = strftime('%Y', 'now')
     `;
     const params = [];
 
@@ -318,11 +318,11 @@ async function buscarAnaliseProdutos(filtros) {
             p.familia,
             p.desc_familia,
             COUNT(*) as total_vendas,
-            SUM(v.quantidade) as qtd_vendida,
-            SUM(v.valor) as valor_total
-        FROM tab_venda v
+            SUM(v.qtde_faturada) as qtd_vendida,
+            SUM(v.valor_liquido) as valor_total
+        FROM vendas v
         LEFT JOIN tab_produto p ON v.produto = p.produto
-        WHERE strftime('%Y-%m', v.data_emissao) = strftime('%Y-%m', 'now')
+        WHERE strftime('%Y-%m', v.emissao) = strftime('%Y-%m', 'now')
     `;
     const params = [];
 
@@ -358,10 +358,10 @@ async function buscarClientesSemCompras(filtros) {
             c.cliente,
             c.nome,
             c.rota,
-            MAX(v.data_emissao) as ultima_compra,
-            julianday('now') - julianday(MAX(v.data_emissao)) as dias_sem_compra
+            MAX(v.emissao) as ultima_compra,
+            julianday('now') - julianday(MAX(v.emissao)) as dias_sem_compra
         FROM tab_cliente c
-        LEFT JOIN tab_venda v ON c.cliente = v.cliente
+        LEFT JOIN vendas v ON c.cliente = v.cliente
         WHERE c.sit_cliente = 'ATIVO'
     `;
     const params = [];
