@@ -138,6 +138,7 @@ async function buscarProdutosParados(filtros) {
             desc_produto,
             categoria_produto as desc_familia,
             rep_supervisor,
+            desc_representante,
             qtd_semanas_parado,
             nivel_risco,
             ultima_venda,
@@ -153,16 +154,17 @@ async function buscarProdutosParados(filtros) {
         console.log(`       🔍 Filtro aplicado: supervisor = "${filtros.supervisor}"`);
     }
 
+    if (filtros.representante) {
+        // Filtro usa desc_representante (nome), precisamos buscar pelo nome
+        sql += ' AND desc_representante = ?';
+        params.push(filtros.representante);
+        console.log(`       🔍 Filtro aplicado: representante = "${filtros.representante}"`);
+    }
+
     if (filtros.nivel_risco) {
         sql += ' AND nivel_risco = ?';
         params.push(filtros.nivel_risco);
         console.log(`       🔍 Filtro aplicado: nivel_risco = "${filtros.nivel_risco}"`);
-    }
-
-    if (filtros.familia) {
-        sql += ' AND categoria_produto = ?';
-        params.push(filtros.familia);
-        console.log(`       🔍 Filtro aplicado: familia = "${filtros.familia}"`);
     }
 
     sql += ' ORDER BY qtd_semanas_parado DESC LIMIT 100';
@@ -190,33 +192,46 @@ async function buscarProdutosParados(filtros) {
 async function buscarVendasRegiao(filtros, periodo = 'mes-atual') {
     const periodCondition = getPeriodCondition(periodo);
 
-    // Se filtrar por rota, precisa fazer JOIN com tab_cliente
-    // Senão, pode usar os dados direto da tabela vendas
+    // Se tem filtros de cliente (rota, sub_rota, cidade), faz JOIN
+    const temFiltrosCliente = filtros.rota || filtros.sub_rota || filtros.cidade;
     let sql;
     const params = [];
 
-    if (filtros.rota) {
+    if (temFiltrosCliente) {
         sql = `
             SELECT
                 c.rota,
+                c.sub_rota,
+                c.cidade,
                 COUNT(DISTINCT v.cliente) as total_clientes,
                 SUM(v.valor_liquido) as total_vendas,
                 COUNT(DISTINCT v.representante) as total_reps
             FROM vendas v
             LEFT JOIN tab_cliente c ON v.cliente = c.cliente
             WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
-              AND c.rota = ?
         `;
-        params.push(filtros.rota);
 
-        if (filtros.estado) {
-            sql += ' AND c.estado = ?';
-            params.push(filtros.estado);
+        if (filtros.rota) {
+            sql += ' AND c.rota = ?';
+            params.push(filtros.rota);
+            console.log(`       🔍 Filtro aplicado: rota = "${filtros.rota}"`);
         }
 
-        sql += ' GROUP BY c.rota ORDER BY total_vendas DESC';
+        if (filtros.sub_rota) {
+            sql += ' AND c.sub_rota = ?';
+            params.push(filtros.sub_rota);
+            console.log(`       🔍 Filtro aplicado: sub_rota = "${filtros.sub_rota}"`);
+        }
+
+        if (filtros.cidade) {
+            sql += ' AND c.cidade = ?';
+            params.push(filtros.cidade);
+            console.log(`       🔍 Filtro aplicado: cidade = "${filtros.cidade}"`);
+        }
+
+        sql += ' GROUP BY c.rota, c.sub_rota, c.cidade ORDER BY total_vendas DESC';
     } else {
-        // Agrupar por UF quando não tem filtro de rota
+        // Sem filtros, agrupa por UF
         sql = `
             SELECT
                 v.uf as rota,
@@ -225,21 +240,17 @@ async function buscarVendasRegiao(filtros, periodo = 'mes-atual') {
                 COUNT(DISTINCT v.representante) as total_reps
             FROM vendas v
             WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
+            GROUP BY v.uf ORDER BY total_vendas DESC
         `;
-
-        if (filtros.estado) {
-            sql += ' AND v.uf = ?';
-            params.push(filtros.estado);
-        }
-
-        sql += ' GROUP BY v.uf ORDER BY total_vendas DESC';
     }
 
     const result = await db.execute(sql, params);
     return {
-        colunas: ['Região/Rota', 'Total Clientes', 'Total Vendas', 'Representantes'],
+        colunas: ['Região/Rota', 'Sub-Rota', 'Cidade', 'Total Clientes', 'Total Vendas', 'Representantes'],
         dados: result.rows.map(row => [
-            row.rota,
+            row.rota || '-',
+            row.sub_rota || '-',
+            row.cidade || '-',
             row.total_clientes,
             `R$ ${Number(row.total_vendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
             row.total_reps
@@ -249,38 +260,83 @@ async function buscarVendasRegiao(filtros, periodo = 'mes-atual') {
 
 async function buscarVendasEquipe(filtros, periodo = 'mes-atual') {
     const periodCondition = getPeriodCondition(periodo);
-    let sql = `
-        SELECT
-            v.representante,
-            r.desc_representante,
-            r.rep_supervisor,
-            COUNT(DISTINCT v.cliente) as total_clientes,
-            SUM(v.valor_liquido) as total_vendas
-        FROM vendas v
-        LEFT JOIN tab_representante r ON v.representante = r.representante
-        WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
-    `;
+
+    // Se tem filtro de cidade, precisa fazer JOIN com tab_cliente também
+    let sql;
     const params = [];
 
-    if (filtros.supervisor) {
-        sql += ' AND rep_supervisor = ?';
-        params.push(filtros.supervisor);
-    }
+    if (filtros.cidade) {
+        sql = `
+            SELECT
+                v.representante,
+                r.desc_representante,
+                r.rep_supervisor,
+                c.cidade,
+                COUNT(DISTINCT v.cliente) as total_clientes,
+                SUM(v.valor_liquido) as total_vendas
+            FROM vendas v
+            LEFT JOIN tab_representante r ON v.representante = r.representante
+            LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+            WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
+        `;
 
-    if (filtros.representante) {
-        sql += ' AND v.representante = ?';
-        params.push(filtros.representante);
-    }
+        if (filtros.supervisor) {
+            sql += ' AND r.rep_supervisor = ?';
+            params.push(filtros.supervisor);
+            console.log(`       🔍 Filtro aplicado: supervisor = "${filtros.supervisor}"`);
+        }
 
-    sql += ' GROUP BY v.representante ORDER BY total_vendas DESC';
+        if (filtros.representante) {
+            // Filtro usa desc_representante (nome)
+            sql += ' AND r.desc_representante = ?';
+            params.push(filtros.representante);
+            console.log(`       🔍 Filtro aplicado: representante = "${filtros.representante}"`);
+        }
+
+        if (filtros.cidade) {
+            sql += ' AND c.cidade = ?';
+            params.push(filtros.cidade);
+            console.log(`       🔍 Filtro aplicado: cidade = "${filtros.cidade}"`);
+        }
+
+        sql += ' GROUP BY v.representante, c.cidade ORDER BY total_vendas DESC';
+    } else {
+        sql = `
+            SELECT
+                v.representante,
+                r.desc_representante,
+                r.rep_supervisor,
+                COUNT(DISTINCT v.cliente) as total_clientes,
+                SUM(v.valor_liquido) as total_vendas
+            FROM vendas v
+            LEFT JOIN tab_representante r ON v.representante = r.representante
+            WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
+        `;
+
+        if (filtros.supervisor) {
+            sql += ' AND r.rep_supervisor = ?';
+            params.push(filtros.supervisor);
+            console.log(`       🔍 Filtro aplicado: supervisor = "${filtros.supervisor}"`);
+        }
+
+        if (filtros.representante) {
+            // Filtro usa desc_representante (nome)
+            sql += ' AND r.desc_representante = ?';
+            params.push(filtros.representante);
+            console.log(`       🔍 Filtro aplicado: representante = "${filtros.representante}"`);
+        }
+
+        sql += ' GROUP BY v.representante ORDER BY total_vendas DESC';
+    }
 
     const result = await db.execute(sql, params);
     return {
-        colunas: ['Representante', 'Nome', 'Supervisor', 'Clientes', 'Total Vendas'],
+        colunas: ['Código', 'Representante', 'Supervisor', 'Cidade', 'Clientes', 'Total Vendas'],
         dados: result.rows.map(row => [
             row.representante,
             row.desc_representante,
             row.rep_supervisor,
+            row.cidade || '-',
             row.total_clientes,
             `R$ ${Number(row.total_vendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`
         ])
@@ -293,7 +349,8 @@ async function buscarPerformanceClientes(filtros, periodo = 'mes-atual') {
         SELECT
             c.cliente,
             c.nome,
-            c.rota,
+            c.grupo_desc,
+            c.cidade,
             COUNT(*) as total_pedidos,
             SUM(v.valor_liquido) as total_vendas
         FROM vendas v
@@ -302,25 +359,35 @@ async function buscarPerformanceClientes(filtros, periodo = 'mes-atual') {
     `;
     const params = [];
 
-    if (filtros.rota) {
-        sql += ' AND c.rota = ?';
-        params.push(filtros.rota);
+    if (filtros.grupo) {
+        sql += ' AND c.grupo_desc = ?';
+        params.push(filtros.grupo);
+        console.log(`       🔍 Filtro aplicado: grupo = "${filtros.grupo}"`);
     }
 
-    if (filtros.grupo) {
-        sql += ' AND c.grupo = ?';
-        params.push(filtros.grupo);
+    if (filtros.cliente) {
+        // Filtro usa nome do cliente
+        sql += ' AND c.nome = ?';
+        params.push(filtros.cliente);
+        console.log(`       🔍 Filtro aplicado: cliente = "${filtros.cliente}"`);
+    }
+
+    if (filtros.cidade) {
+        sql += ' AND c.cidade = ?';
+        params.push(filtros.cidade);
+        console.log(`       🔍 Filtro aplicado: cidade = "${filtros.cidade}"`);
     }
 
     sql += ' GROUP BY v.cliente ORDER BY total_vendas DESC LIMIT 50';
 
     const result = await db.execute(sql, params);
     return {
-        colunas: ['Cliente', 'Nome', 'Rota', 'Pedidos', 'Total Vendas'],
+        colunas: ['Código', 'Cliente', 'Grupo', 'Cidade', 'Pedidos', 'Total Vendas'],
         dados: result.rows.map(row => [
             row.cliente,
             row.nome,
-            row.rota,
+            row.grupo_desc || '-',
+            row.cidade || '-',
             row.total_pedidos,
             `R$ ${Number(row.total_vendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`
         ])
@@ -334,11 +401,16 @@ async function buscarRankingClientes(filtros, periodo = 'mes-atual') {
             c.cliente,
             c.nome,
             c.rota,
+            c.sub_rota,
+            c.cidade,
+            r.rep_supervisor,
+            r.desc_representante,
             SUM(v.valor_liquido) as total_vendas,
             COUNT(*) as total_pedidos,
             AVG(v.valor_liquido) as ticket_medio
         FROM vendas v
         LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+        LEFT JOIN tab_representante r ON v.representante = r.representante
         WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
     `;
     const params = [];
@@ -346,18 +418,47 @@ async function buscarRankingClientes(filtros, periodo = 'mes-atual') {
     if (filtros.rota) {
         sql += ' AND c.rota = ?';
         params.push(filtros.rota);
+        console.log(`       🔍 Filtro aplicado: rota = "${filtros.rota}"`);
+    }
+
+    if (filtros.sub_rota) {
+        sql += ' AND c.sub_rota = ?';
+        params.push(filtros.sub_rota);
+        console.log(`       🔍 Filtro aplicado: sub_rota = "${filtros.sub_rota}"`);
+    }
+
+    if (filtros.cidade) {
+        sql += ' AND c.cidade = ?';
+        params.push(filtros.cidade);
+        console.log(`       🔍 Filtro aplicado: cidade = "${filtros.cidade}"`);
+    }
+
+    if (filtros.supervisor) {
+        sql += ' AND r.rep_supervisor = ?';
+        params.push(filtros.supervisor);
+        console.log(`       🔍 Filtro aplicado: supervisor = "${filtros.supervisor}"`);
+    }
+
+    if (filtros.representante) {
+        sql += ' AND r.desc_representante = ?';
+        params.push(filtros.representante);
+        console.log(`       🔍 Filtro aplicado: representante = "${filtros.representante}"`);
     }
 
     sql += ' GROUP BY v.cliente ORDER BY total_vendas DESC LIMIT 30';
 
     const result = await db.execute(sql, params);
     return {
-        colunas: ['Ranking', 'Cliente', 'Nome', 'Rota', 'Total Vendas', 'Pedidos', 'Ticket Médio'],
+        colunas: ['#', 'Código', 'Cliente', 'Rota', 'Sub-Rota', 'Cidade', 'Supervisor', 'Representante', 'Total Vendas', 'Pedidos', 'Ticket Médio'],
         dados: result.rows.map((row, index) => [
             index + 1,
             row.cliente,
             row.nome,
-            row.rota,
+            row.rota || '-',
+            row.sub_rota || '-',
+            row.cidade || '-',
+            row.rep_supervisor || '-',
+            row.desc_representante || '-',
             `R$ ${Number(row.total_vendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
             row.total_pedidos,
             `R$ ${Number(row.ticket_medio).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`
@@ -371,7 +472,7 @@ async function buscarAnaliseProdutos(filtros, periodo = 'mes-atual') {
         SELECT
             p.produto,
             p.desc_produto,
-            p.familia,
+            p.desc_origem,
             p.desc_familia,
             COUNT(*) as total_vendas,
             SUM(v.qtde_faturada) as qtd_vendida,
@@ -382,25 +483,35 @@ async function buscarAnaliseProdutos(filtros, periodo = 'mes-atual') {
     `;
     const params = [];
 
-    if (filtros.familia) {
-        sql += ' AND p.familia = ?';
-        params.push(filtros.familia);
+    if (filtros.origem) {
+        sql += ' AND p.desc_origem = ?';
+        params.push(filtros.origem);
+        console.log(`       🔍 Filtro aplicado: origem = "${filtros.origem}"`);
     }
 
-    if (filtros.origem) {
-        sql += ' AND p.origem = ?';
-        params.push(filtros.origem);
+    if (filtros.familia) {
+        sql += ' AND p.desc_familia = ?';
+        params.push(filtros.familia);
+        console.log(`       🔍 Filtro aplicado: familia = "${filtros.familia}"`);
+    }
+
+    if (filtros.produto) {
+        // Filtro usa desc_produto (nome)
+        sql += ' AND p.desc_produto = ?';
+        params.push(filtros.produto);
+        console.log(`       🔍 Filtro aplicado: produto = "${filtros.produto}"`);
     }
 
     sql += ' GROUP BY v.produto ORDER BY valor_total DESC LIMIT 50';
 
     const result = await db.execute(sql, params);
     return {
-        colunas: ['Produto', 'Descrição', 'Família', 'Vendas', 'Qtd Vendida', 'Valor Total'],
+        colunas: ['Código', 'Produto', 'Origem', 'Família', 'Vendas', 'Qtd Vendida', 'Valor Total'],
         dados: result.rows.map(row => [
             row.produto,
             row.desc_produto,
-            row.desc_familia,
+            row.desc_origem || '-',
+            row.desc_familia || '-',
             row.total_vendas,
             row.qtd_vendida,
             `R$ ${Number(row.valor_total).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`
@@ -414,8 +525,16 @@ async function buscarClientesSemCompras(filtros) {
             c.cliente,
             c.nome,
             c.rota,
+            c.sub_rota,
+            c.cidade,
             MAX(v.emissao) as ultima_compra,
-            julianday('now') - julianday(MAX(v.emissao)) as dias_sem_compra
+            julianday('now') - julianday(MAX(v.emissao)) as dias_sem_compra,
+            CASE
+                WHEN MAX(v.emissao) IS NULL THEN 'EXTREMO'
+                WHEN julianday('now') - julianday(MAX(v.emissao)) > 60 THEN 'MAXIMO'
+                WHEN julianday('now') - julianday(MAX(v.emissao)) > 30 THEN 'MEDIO'
+                ELSE 'MINIMO'
+            END as grau_risco_calc
         FROM tab_cliente c
         LEFT JOIN vendas v ON c.cliente = v.cliente
         WHERE c.sit_cliente = 'ATIVO'
@@ -425,24 +544,46 @@ async function buscarClientesSemCompras(filtros) {
     if (filtros.rota) {
         sql += ' AND c.rota = ?';
         params.push(filtros.rota);
+        console.log(`       🔍 Filtro aplicado: rota = "${filtros.rota}"`);
     }
 
-    sql += `
-        GROUP BY c.cliente
-        HAVING dias_sem_compra > ${filtros.dias_sem_compra || 90}
-        ORDER BY dias_sem_compra DESC
-        LIMIT 50
-    `;
+    if (filtros.sub_rota) {
+        sql += ' AND c.sub_rota = ?';
+        params.push(filtros.sub_rota);
+        console.log(`       🔍 Filtro aplicado: sub_rota = "${filtros.sub_rota}"`);
+    }
+
+    if (filtros.cidade) {
+        sql += ' AND c.cidade = ?';
+        params.push(filtros.cidade);
+        console.log(`       🔍 Filtro aplicado: cidade = "${filtros.cidade}"`);
+    }
+
+    sql += ` GROUP BY c.cliente `;
+
+    // Aplicar filtro de grau_risco no HAVING
+    if (filtros.grau_risco) {
+        sql += ` HAVING grau_risco_calc = ?`;
+        params.push(filtros.grau_risco);
+        console.log(`       🔍 Filtro aplicado: grau_risco = "${filtros.grau_risco}"`);
+    } else {
+        sql += ` HAVING dias_sem_compra > 0`;
+    }
+
+    sql += ` ORDER BY dias_sem_compra DESC LIMIT 50`;
 
     const result = await db.execute(sql, params);
     return {
-        colunas: ['Cliente', 'Nome', 'Rota', 'Última Compra', 'Dias sem Compra'],
+        colunas: ['Código', 'Cliente', 'Rota', 'Sub-Rota', 'Cidade', 'Última Compra', 'Dias sem Compra', 'Grau Risco'],
         dados: result.rows.map(row => [
             row.cliente,
             row.nome,
-            row.rota,
+            row.rota || '-',
+            row.sub_rota || '-',
+            row.cidade || '-',
             row.ultima_compra ? new Date(row.ultima_compra).toLocaleDateString('pt-BR') : 'Nunca',
-            Math.round(row.dias_sem_compra)
+            Math.round(row.dias_sem_compra) || 'N/A',
+            row.grau_risco_calc
         ])
     };
 }
