@@ -182,29 +182,51 @@ async function buscarProdutosParados(filtros) {
 
 async function buscarVendasRegiao(filtros, periodo = 'mes-atual') {
     const periodCondition = getPeriodCondition(periodo);
-    let sql = `
-        SELECT
-            c.rota,
-            COUNT(DISTINCT v.cliente) as total_clientes,
-            SUM(v.valor_liquido) as total_vendas,
-            COUNT(DISTINCT v.representante) as total_reps
-        FROM vendas v
-        LEFT JOIN tab_cliente c ON v.cliente = c.cliente
-        WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
-    `;
+
+    // Se filtrar por rota, precisa fazer JOIN com tab_cliente
+    // Senão, pode usar os dados direto da tabela vendas
+    let sql;
     const params = [];
 
     if (filtros.rota) {
-        sql += ' AND c.rota = ?';
+        sql = `
+            SELECT
+                c.rota,
+                COUNT(DISTINCT v.cliente) as total_clientes,
+                SUM(v.valor_liquido) as total_vendas,
+                COUNT(DISTINCT v.representante) as total_reps
+            FROM vendas v
+            LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+            WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
+              AND c.rota = ?
+        `;
         params.push(filtros.rota);
-    }
 
-    if (filtros.estado) {
-        sql += ' AND c.estado = ?';
-        params.push(filtros.estado);
-    }
+        if (filtros.estado) {
+            sql += ' AND c.estado = ?';
+            params.push(filtros.estado);
+        }
 
-    sql += ' GROUP BY c.rota ORDER BY total_vendas DESC';
+        sql += ' GROUP BY c.rota ORDER BY total_vendas DESC';
+    } else {
+        // Agrupar por UF quando não tem filtro de rota
+        sql = `
+            SELECT
+                v.uf as rota,
+                COUNT(DISTINCT v.cliente) as total_clientes,
+                SUM(v.valor_liquido) as total_vendas,
+                COUNT(DISTINCT v.representante) as total_reps
+            FROM vendas v
+            WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
+        `;
+
+        if (filtros.estado) {
+            sql += ' AND v.uf = ?';
+            params.push(filtros.estado);
+        }
+
+        sql += ' GROUP BY v.uf ORDER BY total_vendas DESC';
+    }
 
     const result = await db.execute(sql, params);
     return {
