@@ -2158,31 +2158,31 @@
                 this.dashboardsConfig = {
                     'produtos-parados': {
                         name: 'Produtos Parados',
-                        filters: ['supervisor', 'nivel_risco', 'familia']
+                        filters: ['supervisor', 'representante', 'nivel_risco']
                     },
                     'vendas-regiao': {
                         name: 'Vendas por Região',
-                        filters: ['rota', 'estado']
+                        filters: ['rota', 'sub_rota', 'cidade']
                     },
                     'vendas-equipe': {
                         name: 'Vendas por Equipe',
-                        filters: ['supervisor', 'representante']
+                        filters: ['supervisor', 'representante', 'cidade']
                     },
                     'performance-clientes': {
                         name: 'Performance de Clientes',
-                        filters: ['rota', 'grupo']
+                        filters: ['grupo', 'cliente', 'cidade']
                     },
                     'ranking-clientes': {
                         name: 'Ranking de Clientes',
-                        filters: ['rota']
+                        filters: ['rota', 'sub_rota', 'cidade', 'supervisor', 'representante']
                     },
                     'analise-produtos': {
                         name: 'Análise de Produtos',
-                        filters: ['familia', 'origem']
+                        filters: ['origem', 'familia', 'produto']
                     },
                     'clientes-semcompras': {
                         name: 'Clientes sem Compras',
-                        filters: ['rota', 'dias_sem_compra']
+                        filters: ['grau_risco', 'rota', 'sub_rota', 'cidade']
                     }
                 };
 
@@ -2474,33 +2474,46 @@
                             column = 'rep_supervisor';
                             break;
                         case 'nivel_risco':
-                            return ['BAIXO', 'MÉDIO', 'ALTO', 'EXTREMO']; // Valores fixos
+                            return ['MÍNIMO', 'BAIXO', 'MODERADO', 'ALTO', 'MUITO ALTO', 'EXTREMO'];
+                        case 'grau_risco':
+                            return ['MINIMO', 'MEDIO', 'MAXIMO', 'EXTREMO'];
+                        case 'representante':
+                            // Mostrar nome do representante (desc_representante) ao invés do código
+                            query = 'SELECT DISTINCT desc_representante FROM tab_representante WHERE desc_representante IS NOT NULL AND desc_representante != "" ORDER BY desc_representante';
+                            column = 'desc_representante';
+                            break;
                         case 'familia':
                             query = 'SELECT DISTINCT desc_familia FROM tab_produto WHERE desc_familia IS NOT NULL AND desc_familia != "" ORDER BY desc_familia';
                             column = 'desc_familia';
-                            break;
-                        case 'rota':
-                            query = 'SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL AND rota != "" ORDER BY rota';
-                            column = 'rota';
-                            break;
-                        case 'estado':
-                            query = 'SELECT DISTINCT estado FROM tab_cliente WHERE estado IS NOT NULL AND estado != "" ORDER BY estado';
-                            column = 'estado';
-                            break;
-                        case 'representante':
-                            query = 'SELECT DISTINCT representante FROM tab_representante WHERE representante IS NOT NULL AND representante != "" ORDER BY representante';
-                            column = 'representante';
-                            break;
-                        case 'grupo':
-                            query = 'SELECT DISTINCT grupo_desc FROM tab_cliente WHERE grupo_desc IS NOT NULL AND grupo_desc != "" ORDER BY grupo_desc';
-                            column = 'grupo_desc';
                             break;
                         case 'origem':
                             query = 'SELECT DISTINCT desc_origem FROM tab_produto WHERE desc_origem IS NOT NULL AND desc_origem != "" ORDER BY desc_origem';
                             column = 'desc_origem';
                             break;
-                        case 'dias_sem_compra':
-                            return ['30', '60', '90', '120', '180']; // Valores sugeridos
+                        case 'produto':
+                            query = 'SELECT DISTINCT desc_produto FROM tab_produto WHERE desc_produto IS NOT NULL AND desc_produto != "" ORDER BY desc_produto LIMIT 100';
+                            column = 'desc_produto';
+                            break;
+                        case 'rota':
+                            query = 'SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL AND rota != "" ORDER BY rota';
+                            column = 'rota';
+                            break;
+                        case 'sub_rota':
+                            query = 'SELECT DISTINCT sub_rota FROM tab_cliente WHERE sub_rota IS NOT NULL AND sub_rota != "" ORDER BY sub_rota';
+                            column = 'sub_rota';
+                            break;
+                        case 'cidade':
+                            query = 'SELECT DISTINCT cidade FROM tab_cliente WHERE cidade IS NOT NULL AND cidade != "" ORDER BY cidade';
+                            column = 'cidade';
+                            break;
+                        case 'grupo':
+                            query = 'SELECT DISTINCT grupo_desc FROM tab_cliente WHERE grupo_desc IS NOT NULL AND grupo_desc != "" ORDER BY grupo_desc';
+                            column = 'grupo_desc';
+                            break;
+                        case 'cliente':
+                            query = 'SELECT DISTINCT nome FROM tab_cliente WHERE nome IS NOT NULL AND nome != "" ORDER BY nome LIMIT 100';
+                            column = 'nome';
+                            break;
                         default:
                             return [];
                     }
