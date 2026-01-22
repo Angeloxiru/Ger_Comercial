@@ -1,10 +1,10 @@
-name: 🔧 Investigar e Corrigir Campo Hora
+name: 🧪 Testar Processamento (Manual)
 
 on:
   workflow_dispatch:
 
 jobs:
-  fix-hora:
+  processar:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
@@ -18,8 +18,11 @@ jobs:
       - name: 📦 Install dependencies
         run: npm install
 
-      - name: 🔍 Investigar campo hora
+      - name: 🚀 Processar Agendamentos
         env:
           TURSO_URL: ${{ secrets.TURSO_URL }}
           TURSO_TOKEN: ${{ secrets.TURSO_TOKEN }}
-        run: node scripts/fix-hora-column.js
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+        run: node scripts/processar-agendamentos.js
