@@ -193,11 +193,12 @@ async function buscarVendasRegiao(filtros, periodo = 'mes-atual') {
 
     // Se tem filtros de cliente (rota, sub_rota, cidade), faz JOIN
     const temFiltrosCliente = filtros.rota || filtros.sub_rota || filtros.cidade;
-    let sql;
+    let sqlTotais, sqlDetalhes;
     const params = [];
 
     if (temFiltrosCliente) {
-        sql = `
+        // Query para totais agregados por região/sub-rota/cidade
+        sqlTotais = `
             SELECT
                 c.rota,
                 c.sub_rota,
@@ -210,28 +211,46 @@ async function buscarVendasRegiao(filtros, periodo = 'mes-atual') {
             WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
         `;
 
+        // Query para detalhes por representante dentro de cada região/sub-rota/cidade
+        sqlDetalhes = `
+            SELECT
+                c.rota,
+                c.sub_rota,
+                c.cidade,
+                r.desc_representante,
+                SUM(v.valor_liquido) as valor_rep
+            FROM vendas v
+            LEFT JOIN tab_cliente c ON v.cliente = c.cliente
+            LEFT JOIN tab_representante r ON v.representante = r.representante
+            WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
+        `;
+
         if (filtros.rota) {
-            sql += ' AND c.rota = ?';
+            sqlTotais += ' AND c.rota = ?';
+            sqlDetalhes += ' AND c.rota = ?';
             params.push(filtros.rota);
             console.log(`       🔍 Filtro aplicado: rota = "${filtros.rota}"`);
         }
 
         if (filtros.sub_rota) {
-            sql += ' AND c.sub_rota = ?';
+            sqlTotais += ' AND c.sub_rota = ?';
+            sqlDetalhes += ' AND c.sub_rota = ?';
             params.push(filtros.sub_rota);
             console.log(`       🔍 Filtro aplicado: sub_rota = "${filtros.sub_rota}"`);
         }
 
         if (filtros.cidade) {
-            sql += ' AND c.cidade = ?';
+            sqlTotais += ' AND c.cidade = ?';
+            sqlDetalhes += ' AND c.cidade = ?';
             params.push(filtros.cidade);
             console.log(`       🔍 Filtro aplicado: cidade = "${filtros.cidade}"`);
         }
 
-        sql += ' GROUP BY c.rota, c.sub_rota, c.cidade ORDER BY total_vendas DESC';
+        sqlTotais += ' GROUP BY c.rota, c.sub_rota, c.cidade ORDER BY total_vendas DESC';
+        sqlDetalhes += ' GROUP BY c.rota, c.sub_rota, c.cidade, r.desc_representante ORDER BY c.rota, c.sub_rota, c.cidade, valor_rep DESC';
     } else {
         // Sem filtros, agrupa por UF
-        sql = `
+        sqlTotais = `
             SELECT
                 v.uf as rota,
                 COUNT(DISTINCT v.cliente) as total_clientes,
@@ -241,19 +260,61 @@ async function buscarVendasRegiao(filtros, periodo = 'mes-atual') {
             WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
             GROUP BY v.uf ORDER BY total_vendas DESC
         `;
+
+        sqlDetalhes = `
+            SELECT
+                v.uf as rota,
+                r.desc_representante,
+                SUM(v.valor_liquido) as valor_rep
+            FROM vendas v
+            LEFT JOIN tab_representante r ON v.representante = r.representante
+            WHERE ${periodCondition.replace(/emissao/g, 'v.emissao')}
+            GROUP BY v.uf, r.desc_representante ORDER BY v.uf, valor_rep DESC
+        `;
     }
 
-    const result = await db.execute(sql, params);
+    // Executar ambas as queries
+    const resultTotais = await db.execute(sqlTotais, params);
+    const resultDetalhes = await db.execute(sqlDetalhes, params);
+
+    console.log(`       ✅ Query totais executada: ${resultTotais.rows.length} regiões`);
+    console.log(`       ✅ Query detalhes executada: ${resultDetalhes.rows.length} representantes`);
+
+    // Montar dados hierárquicos: Total + Detalhes por representante
+    const dados = [];
+
+    for (const rowTotal of resultTotais.rows) {
+        // Linha de total
+        dados.push([
+            rowTotal.rota || '-',
+            rowTotal.sub_rota || '-',
+            rowTotal.cidade || '-',
+            rowTotal.total_clientes,
+            `R$ ${Number(rowTotal.total_vendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
+            rowTotal.total_reps
+        ]);
+
+        // Linhas de detalhe por representante
+        const detalhesGrupo = resultDetalhes.rows.filter(det =>
+            det.rota === rowTotal.rota &&
+            (temFiltrosCliente ? (det.sub_rota === rowTotal.sub_rota && det.cidade === rowTotal.cidade) : true)
+        );
+
+        for (const det of detalhesGrupo) {
+            dados.push([
+                '', // Célula vazia para rota
+                '', // Célula vazia para sub-rota
+                '', // Célula vazia para cidade
+                '', // Célula vazia para total clientes
+                `R$ ${Number(det.valor_rep).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
+                det.desc_representante || 'N/A'
+            ]);
+        }
+    }
+
     return {
         colunas: ['Região/Rota', 'Sub-Rota', 'Cidade', 'Total Clientes', 'Total Vendas', 'Representantes'],
-        dados: result.rows.map(row => [
-            row.rota || '-',
-            row.sub_rota || '-',
-            row.cidade || '-',
-            row.total_clientes,
-            `R$ ${Number(row.total_vendas).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
-            row.total_reps
-        ])
+        dados: dados
     };
 }
 
