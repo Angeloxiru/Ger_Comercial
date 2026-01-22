@@ -1,0 +1,35 @@
+name: 🧪 Testar Processamento Agora
+
+on:
+  workflow_dispatch:
+    inputs:
+      hora_teste:
+        description: 'Hora para testar (formato HH:00)'
+        required: false
+        default: '18:00'
+
+jobs:
+  processar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 Install dependencies
+        run: npm install
+
+      - name: 🚀 Processar Agendamentos (Teste)
+        env:
+          TURSO_URL: ${{ secrets.TURSO_URL }}
+          TURSO_TOKEN: ${{ secrets.TURSO_TOKEN }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+        run: |
+          echo "🕐 Testando com hora: ${{ github.event.inputs.hora_teste || '18:00' }}"
+          node scripts/processar-agendamentos.js
