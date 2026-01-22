@@ -19,14 +19,10 @@ jobs:
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: 'scripts/package.json'
+          node-version: '20'
 
       - name: 📦 Instalar dependências
-        run: |
-          cd scripts
-          npm install
+        run: npm install
 
       - name: 📧 Executar processador de agendamentos
         env:
@@ -38,9 +34,7 @@ jobs:
           # Opção 2: SendGrid (alternativa)
           SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-        run: |
-          cd scripts
-          node processar-agendamentos.js
+        run: node scripts/processar-agendamentos.js
 
       - name: 📊 Status da execução
         if: always()

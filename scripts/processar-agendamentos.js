@@ -134,14 +134,13 @@ async function buscarDadosDashboard(dashboard, filtros, periodo) {
 async function buscarProdutosParados(filtros) {
     let sql = `
         SELECT
-            sku_produto as produto,
-            desc_produto,
-            categoria_produto as desc_familia,
+            nivel_risco,
             rep_supervisor,
             desc_representante,
-            qtd_semanas_parado,
-            nivel_risco,
+            sku_produto,
+            ultimo_cliente_nome,
             ultima_venda,
+            qtd_semanas_parado,
             valor_medio_perdido
         FROM vw_produtos_parados
         WHERE 1=1
@@ -175,15 +174,15 @@ async function buscarProdutosParados(filtros) {
     const result = await db.execute(sql, params);
     console.log(`       ✅ Query executada: ${result.rows.length} registros`);
     return {
-        colunas: ['Produto', 'Descrição', 'Família', 'Supervisor', 'Semanas Parado', 'Nível Risco', 'Última Venda', 'Valor Médio'],
+        colunas: ['Risco', 'Supervisor', 'Representante', 'Produto', 'Último Cliente', 'Última Venda', 'Semanas Parado', 'Valor Médio'],
         dados: result.rows.map(row => [
-            row.produto,
-            row.desc_produto,
-            row.desc_familia,
-            row.rep_supervisor,
-            row.qtd_semanas_parado,
             row.nivel_risco,
+            row.rep_supervisor,
+            row.desc_representante,
+            row.sku_produto,
+            row.ultimo_cliente_nome || 'N/A',
             row.ultima_venda ? new Date(row.ultima_venda).toLocaleDateString('pt-BR') : 'N/A',
+            row.qtd_semanas_parado,
             `R$ ${Number(row.valor_medio_perdido).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`
         ])
     };
