@@ -71,24 +71,32 @@
 
         .filters-section {
             background: white;
-            padding: 24px;
+            padding: 16px;
             margin: 20px;
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .filters-title {
-            color: #212529;
-            font-size: 1.2em;
-            margin-bottom: 20px;
-            font-weight: 600;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
         }
 
         .filters-grid {
+            flex: 1;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 16px;
-            margin-bottom: 20px;
+        }
+
+        .filters-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 160px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
         }
 
         .filter-group label {
@@ -96,19 +104,16 @@
             font-weight: 500;
             margin-bottom: 6px;
             font-size: 0.9em;
-            display: block;
         }
 
         .filter-group input,
         .filter-group select {
-            width: 100%;
             padding: 10px 12px;
             border: 1px solid #dee2e6;
             border-radius: 6px;
             font-size: 0.95em;
             transition: all 0.2s;
             background: white;
-            cursor: pointer;
         }
 
         .filter-group input:focus,
@@ -118,32 +123,81 @@
             box-shadow: 0 0 0 3px rgba(252, 3, 3, 0.1);
         }
 
+        .filter-group select {
+            cursor: pointer;
+        }
+
         .filter-group select option:checked {
             background: #03ff1c;
             color: #000;
-            font-weight: 600;
+        }
+
+        .date-range {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .quick-dates {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quick-date-btn {
+            background: #e9ecef;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-date-btn:hover {
+            background: #fc0303;
+            color: white;
         }
 
         .btn-atualizar {
-            background: #fc0303;
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
             color: white;
             border: none;
-            padding: 12px 32px;
+            padding: 10px 16px;
             border-radius: 6px;
-            font-size: 1em;
+            font-size: 0.9em;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
-            width: 100%;
+            white-space: nowrap;
         }
 
         .btn-atualizar:hover {
-            background: #b50909;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(252, 3, 3, 0.3);
         }
 
         .btn-atualizar:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-limpar {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-limpar:hover {
+            background: #5a6268;
         }
 
         /* LAYOUT: 70% Tabela / 30% Dashboard */
@@ -391,21 +445,20 @@
 
     <!-- Seção de Filtros -->
     <div class="filters-section">
-        <div class="filters-title">
-            🔍 Filtros de Pesquisa
-        </div>
-
         <div class="filters-grid">
-            <!-- Período Inicial -->
+            <!-- Período -->
             <div class="filter-group">
-                <label>📅 Data Inicial</label>
-                <input type="date" id="filtroDataInicio">
-            </div>
-
-            <!-- Período Final -->
-            <div class="filter-group">
-                <label>📅 Data Final</label>
-                <input type="date" id="filtroDataFim">
+                <label>📅 Período</label>
+                <div class="date-range">
+                    <input type="date" id="filtroDataInicio">
+                    <input type="date" id="filtroDataFim">
+                </div>
+                <div class="quick-dates">
+                    <button class="quick-date-btn" onclick="setQuickDate('mes')">Mês Atual</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('mesAnterior')">Mês Anterior</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('trimestre')">Trimestre</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('ano')">Ano Atual</button>
+                </div>
             </div>
 
             <!-- Supervisor -->
@@ -425,9 +478,14 @@
             </div>
         </div>
 
-        <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">
-            🔄 Atualizar Dados
-        </button>
+        <div class="filters-buttons">
+            <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">
+                🔄 Atualizar
+            </button>
+            <button class="btn-limpar" onclick="limparFiltros()">
+                ✖️ Limpar
+            </button>
+        </div>
     </div>
 
     <!-- Conteúdo Principal: 70/30 -->
@@ -563,6 +621,82 @@
             document.getElementById('filtroDataInicio').value = primeiroDia.toISOString().split('T')[0];
             document.getElementById('filtroDataFim').value = ultimoDia.toISOString().split('T')[0];
         }
+
+        // Filtros rápidos de data
+        window.setQuickDate = function(periodo) {
+            const hoje = new Date();
+            let dataInicio, dataFim;
+
+            switch(periodo) {
+                case 'mes':
+                    // Mês atual (primeiro ao último dia)
+                    dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+                    dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+                    break;
+
+                case 'mesAnterior':
+                    // Mês anterior completo
+                    dataInicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+                    dataFim = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
+                    break;
+
+                case 'trimestre':
+                    // Trimestre atual
+                    const trimestreAtual = Math.floor(hoje.getMonth() / 3);
+                    dataInicio = new Date(hoje.getFullYear(), trimestreAtual * 3, 1);
+                    dataFim = new Date(hoje.getFullYear(), (trimestreAtual + 1) * 3, 0);
+                    break;
+
+                case 'ano':
+                    // Ano atual (01/Jan até hoje ou até 31/Dez)
+                    dataInicio = new Date(hoje.getFullYear(), 0, 1);
+                    dataFim = hoje;
+                    break;
+
+                default:
+                    return;
+            }
+
+            document.getElementById('filtroDataInicio').value = dataInicio.toISOString().split('T')[0];
+            document.getElementById('filtroDataFim').value = dataFim.toISOString().split('T')[0];
+        };
+
+        // Limpar filtros
+        window.limparFiltros = function() {
+            // Reset datas para mês atual
+            inicializarDatas();
+
+            // Reset supervisor
+            const selectSupervisor = document.getElementById('filtroSupervisor');
+            for (let option of selectSupervisor.options) {
+                option.selected = false;
+            }
+
+            // Reset representante
+            const selectRep = document.getElementById('filtroRepresentante');
+            for (let option of selectRep.options) {
+                option.selected = false;
+            }
+
+            // Recarregar representantes (todos)
+            preencherRepresentantes();
+
+            // Limpar dados da tabela
+            window.dadosCompletos = [];
+            window.pagination.setData([]);
+            document.getElementById('totalRegistros').textContent = '0 registros';
+            document.getElementById('footerTotal').textContent = 'Total: 0 registros';
+
+            // Reset KPIs
+            document.getElementById('kpiFaturamento').textContent = 'R$ 0';
+            document.getElementById('kpiPeso').textContent = '0';
+            document.getElementById('kpiClientes').textContent = '0';
+            document.getElementById('kpiMetaMedia').textContent = '0%';
+
+            // Destruir gráficos se existirem
+            if (chart1) chart1.destroy();
+            if (chart2) chart2.destroy();
+        };
 
         // Carregar filtros
         async function carregarFiltros() {
