@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Dashboard de Performance Semanal - Ger Comercial">
+    <meta name="description" content="Dashboard de Performance Mensal - Ger Comercial">
     <meta name="theme-color" content="#fc0303">
-    <title>Performance Semanal - Ger Comercial</title>
+    <title>Performance Mensal - Ger Comercial</title>
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="/Ger_Comercial/manifest.json">
@@ -99,6 +99,7 @@
             display: block;
         }
 
+        .filter-group input,
         .filter-group select {
             width: 100%;
             padding: 10px 12px;
@@ -110,6 +111,7 @@
             cursor: pointer;
         }
 
+        .filter-group input:focus,
         .filter-group select:focus {
             outline: none;
             border-color: #fc0303;
@@ -194,16 +196,17 @@
             background: #f8f9fa;
             color: #495057;
             font-weight: 600;
-            padding: 12px;
+            padding: 12px 8px;
             text-align: left;
             border-bottom: 2px solid #dee2e6;
-            font-size: 0.9em;
+            font-size: 0.85em;
+            white-space: nowrap;
         }
 
         td {
-            padding: 12px;
+            padding: 12px 8px;
             border-bottom: 1px solid #f1f3f5;
-            font-size: 0.9em;
+            font-size: 0.85em;
         }
 
         tr:hover {
@@ -213,11 +216,11 @@
         .status-badge {
             padding: 4px 8px;
             border-radius: 4px;
-            font-size: 0.8em;
+            font-size: 0.75em;
             font-weight: 600;
             text-align: center;
             display: inline-block;
-            min-width: 70px;
+            min-width: 60px;
         }
 
         .status-acima {
@@ -233,6 +236,16 @@
         .status-medio {
             background: #fff3cd;
             color: #856404;
+        }
+
+        .percent-positive {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .percent-negative {
+            color: #dc3545;
+            font-weight: 600;
         }
 
         .dashboard-section {
@@ -349,6 +362,13 @@
             padding: 12px 20px;
             border-top: 1px solid #dee2e6;
         }
+
+        /* Responsividade */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -358,7 +378,7 @@
             <div class="header-logo">
                 <img src="https://static.wixstatic.com/media/ce3165_c01db19c0ef64e2abb8c894c7ecc6f95~mv2.png/v1/fill/w_161,h_69,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/logomarca-Germani-2023-Branca-borda-dour.png" alt="Logo Germani Alimentos">
             </div>
-            <h1>🎯 Performance Semanal</h1>
+            <h1>📊 Performance Mensal</h1>
         </div>
         <a href=".." class="btn-voltar">← Voltar</a>
     </div>
@@ -376,12 +396,16 @@
         </div>
 
         <div class="filters-grid">
-            <!-- Semana -->
+            <!-- Período Inicial -->
             <div class="filter-group">
-                <label>📅 Semana</label>
-                <select id="filtroSemana">
-                    <option value="">Carregando...</option>
-                </select>
+                <label>📅 Data Inicial</label>
+                <input type="date" id="filtroDataInicio">
+            </div>
+
+            <!-- Período Final -->
+            <div class="filter-group">
+                <label>📅 Data Final</label>
+                <input type="date" id="filtroDataFim">
             </div>
 
             <!-- Supervisor -->
@@ -411,7 +435,7 @@
         <!-- Seção Tabela (70%) -->
         <div class="table-section">
             <div class="table-header">
-                <span>📊 Resultados da Performance</span>
+                <span>📊 Performance Mensal por Representante</span>
                 <span id="totalRegistros">0 registros</span>
             </div>
 
@@ -419,19 +443,24 @@
                 <table id="tabelaDados">
                     <thead>
                         <tr>
-                            <th>Supervisor</th>
                             <th>Representante</th>
-                            <th>Cidade</th>
-                            <th>% Peso</th>
-                            <th>% Clientes</th>
                             <th>Faturamento</th>
-                            <th>Status</th>
+                            <th>Peso (Kg)</th>
+                            <th>Clientes Ativos</th>
+                            <th>Meta Fat.</th>
+                            <th>% Meta Fat.</th>
+                            <th>Meta Peso</th>
+                            <th>% Meta Peso</th>
+                            <th>Ano Ant. Fat.</th>
+                            <th>% vs Ano Ant.</th>
+                            <th>Ano Ant. Peso</th>
+                            <th>% vs Ano Ant. Peso</th>
                         </tr>
                     </thead>
                     <tbody id="tbody">
                         <tr>
-                            <td colspan="7" class="empty-state">
-                                <div class="empty-state-icon">🎯</div>
+                            <td colspan="12" class="empty-state">
+                                <div class="empty-state-icon">📊</div>
                                 <div>Selecione os filtros e clique em "Atualizar Dados"</div>
                             </td>
                         </tr>
@@ -457,39 +486,39 @@
             <!-- KPIs em Grid 2x2 -->
             <div class="kpi-grid">
                 <div class="kpi-card">
-                    <div class="kpi-icon">⚖️</div>
-                    <div class="kpi-label">MÉDIA % PESO</div>
-                    <div class="kpi-value" id="kpiPeso">0%</div>
-                </div>
-
-                <div class="kpi-card">
-                    <div class="kpi-icon">👥</div>
-                    <div class="kpi-label">MÉDIA % CLIENTES</div>
-                    <div class="kpi-value" id="kpiClientes">0%</div>
-                </div>
-
-                <div class="kpi-card">
                     <div class="kpi-icon">💰</div>
                     <div class="kpi-label">FATURAMENTO TOTAL</div>
                     <div class="kpi-value" id="kpiFaturamento">R$ 0</div>
                 </div>
 
                 <div class="kpi-card">
+                    <div class="kpi-icon">⚖️</div>
+                    <div class="kpi-label">PESO TOTAL (Kg)</div>
+                    <div class="kpi-value" id="kpiPeso">0</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">👥</div>
+                    <div class="kpi-label">CLIENTES ATIVOS</div>
+                    <div class="kpi-value" id="kpiClientes">0</div>
+                </div>
+
+                <div class="kpi-card">
                     <div class="kpi-icon">📊</div>
-                    <div class="kpi-label">TOTAL REGISTROS</div>
-                    <div class="kpi-value" id="kpiTotal">0</div>
+                    <div class="kpi-label">% MÉDIA META</div>
+                    <div class="kpi-value" id="kpiMetaMedia">0%</div>
                 </div>
             </div>
 
-            <!-- Gráfico 1: Top 10 Representantes -->
+            <!-- Gráfico 1: Top 10 Faturamento -->
             <div class="chart-container">
-                <div class="chart-title">🏆 Top 10 Representantes (% Peso)</div>
+                <div class="chart-title">🏆 Top 10 Faturamento</div>
                 <canvas id="chart1"></canvas>
             </div>
 
-            <!-- Gráfico 2: Distribuição de Status -->
+            <!-- Gráfico 2: Cumprimento de Metas -->
             <div class="chart-container">
-                <div class="chart-title">📊 Status de Cumprimento de Meta</div>
+                <div class="chart-title">🎯 Cumprimento de Metas</div>
                 <canvas id="chart2"></canvas>
             </div>
         </div>
@@ -503,7 +532,7 @@
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
 
         // Inicializa isolamento do dashboard
-        initDashboard('Performance Semanal');
+        initDashboard('Performance Mensal');
         registerCleanup();
         preventStaleCache();
 
@@ -525,37 +554,26 @@
             renderCallback: renderizarTabela
         });
 
+        // Inicializar datas (mês atual)
+        function inicializarDatas() {
+            const hoje = new Date();
+            const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+            const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+
+            document.getElementById('filtroDataInicio').value = primeiroDia.toISOString().split('T')[0];
+            document.getElementById('filtroDataFim').value = ultimoDia.toISOString().split('T')[0];
+        }
+
         // Carregar filtros
         async function carregarFiltros() {
             try {
                 if (!db.isConnected()) await db.connect();
 
-                // Buscar semanas disponíveis
-                const semanas = await db.execute(`
-                    SELECT DISTINCT ano_semana
-                    FROM vw_performance_cobranca
-                    ORDER BY ano_semana DESC
-                `);
-
-                const selectSemana = document.getElementById('filtroSemana');
-                selectSemana.innerHTML = '';
-
-                if (semanas.rows.length > 0) {
-                    semanas.rows.forEach(s => {
-                        const option = document.createElement('option');
-                        option.value = s.ano_semana;
-                        option.textContent = `Semana ${s.ano_semana}`;
-                        selectSemana.appendChild(option);
-                    });
-                    selectSemana.value = semanas.rows[0].ano_semana;
-                } else {
-                    selectSemana.innerHTML = '<option value="">Nenhuma semana disponível</option>';
-                }
-
                 // Buscar supervisores e representantes
                 const dados = await db.execute(`
-                    SELECT DISTINCT rep_supervisor, desc_representante
-                    FROM vw_performance_cobranca
+                    SELECT DISTINCT rep_supervisor, desc_representante, representante
+                    FROM tab_representante
+                    WHERE rep_supervisor IS NOT NULL AND rep_supervisor != ''
                     ORDER BY rep_supervisor, desc_representante
                 `);
 
@@ -610,12 +628,35 @@
         // Cascata: quando mudar supervisor, filtrar representantes
         document.getElementById('filtroSupervisor').addEventListener('change', preencherRepresentantes);
 
+        // Formatar data para YYYY-MM (para buscar metas)
+        function getMesAno(dataStr) {
+            const data = new Date(dataStr + 'T00:00:00');
+            return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        // Calcular ano anterior
+        function getAnoAnterior(dataStr) {
+            const data = new Date(dataStr + 'T00:00:00');
+            const anoAnterior = data.getFullYear() - 1;
+            return {
+                inicio: `${anoAnterior}-${String(data.getMonth() + 1).padStart(2, '0')}-01`,
+                fim: new Date(anoAnterior, data.getMonth() + 1, 0).toISOString().split('T')[0]
+            };
+        }
+
         // Atualizar dados
         window.atualizarDados = async function() {
             try {
                 if (!db.isConnected()) await db.connect();
 
-                const semana = document.getElementById('filtroSemana').value;
+                const dataInicio = document.getElementById('filtroDataInicio').value;
+                const dataFim = document.getElementById('filtroDataFim').value;
+
+                if (!dataInicio || !dataFim) {
+                    alert('Selecione o período completo (data inicial e final)');
+                    return;
+                }
+
                 const supervisoresSelecionados = Array.from(
                     document.getElementById('filtroSupervisor').selectedOptions
                 ).map(o => o.value).filter(v => v !== '');
@@ -623,32 +664,96 @@
                     document.getElementById('filtroRepresentante').selectedOptions
                 ).map(o => o.value).filter(v => v !== '');
 
-                if (!semana) {
-                    alert('Selecione uma semana');
-                    return;
-                }
-
-                let sql = `
-                    SELECT *
-                    FROM vw_performance_cobranca
-                    WHERE ano_semana = ?
+                // 1. Buscar dados do período atual (faturamento, peso, clientes)
+                let sqlAtual = `
+                    SELECT
+                        r.representante,
+                        r.desc_representante,
+                        r.rep_supervisor,
+                        COALESCE(SUM(v.valor_liquido), 0) as faturamento,
+                        COALESCE(SUM(v.peso_liq), 0) as peso,
+                        COUNT(DISTINCT v.cliente) as clientes_ativos
+                    FROM tab_representante r
+                    LEFT JOIN vendas v ON r.representante = v.representante
+                        AND v.emissao >= ?
+                        AND v.emissao <= ?
+                    WHERE r.rep_supervisor IS NOT NULL AND r.rep_supervisor != ''
                 `;
-                const params = [semana];
+                const paramsAtual = [dataInicio, dataFim];
 
                 if (supervisoresSelecionados.length > 0) {
-                    sql += ` AND rep_supervisor IN (${supervisoresSelecionados.map(() => '?').join(',')})`;
-                    params.push(...supervisoresSelecionados);
+                    sqlAtual += ` AND r.rep_supervisor IN (${supervisoresSelecionados.map(() => '?').join(',')})`;
+                    paramsAtual.push(...supervisoresSelecionados);
                 }
 
                 if (representantesSelecionados.length > 0) {
-                    sql += ` AND desc_representante IN (${representantesSelecionados.map(() => '?').join(',')})`;
-                    params.push(...representantesSelecionados);
+                    sqlAtual += ` AND r.desc_representante IN (${representantesSelecionados.map(() => '?').join(',')})`;
+                    paramsAtual.push(...representantesSelecionados);
                 }
 
-                sql += ' ORDER BY perc_peso DESC';
+                sqlAtual += ' GROUP BY r.representante, r.desc_representante, r.rep_supervisor';
 
-                const result = await db.execute(sql, params);
-                window.dadosCompletos = result.rows;
+                const resultAtual = await db.execute(sqlAtual, paramsAtual);
+
+                // 2. Buscar metas do mês
+                const mesAno = getMesAno(dataInicio);
+                const sqlMetas = `
+                    SELECT
+                        representante,
+                        meta_faturamento,
+                        meta_peso,
+                        meta_clientes
+                    FROM metas_mensais
+                    WHERE ano_mes = ?
+                `;
+                const resultMetas = await db.execute(sqlMetas, [mesAno]);
+                const metas = {};
+                resultMetas.rows.forEach(m => {
+                    metas[m.representante] = m;
+                });
+
+                // 3. Buscar dados do ano anterior
+                const anoAnt = getAnoAnterior(dataInicio);
+                const sqlAnoAnterior = `
+                    SELECT
+                        representante,
+                        COALESCE(SUM(valor_liquido), 0) as faturamento_ano_ant,
+                        COALESCE(SUM(peso_liq), 0) as peso_ano_ant
+                    FROM vendas
+                    WHERE emissao >= ? AND emissao <= ?
+                    GROUP BY representante
+                `;
+                const resultAnoAnt = await db.execute(sqlAnoAnterior, [anoAnt.inicio, anoAnt.fim]);
+                const anoAnterior = {};
+                resultAnoAnt.rows.forEach(a => {
+                    anoAnterior[a.representante] = a;
+                });
+
+                // 4. Combinar todos os dados
+                window.dadosCompletos = resultAtual.rows.map(row => {
+                    const meta = metas[row.representante] || {};
+                    const anoAnt = anoAnterior[row.representante] || {};
+
+                    const faturamento = parseFloat(row.faturamento || 0);
+                    const peso = parseFloat(row.peso || 0);
+                    const metaFat = parseFloat(meta.meta_faturamento || 0);
+                    const metaPeso = parseFloat(meta.meta_peso || 0);
+                    const fatAnoAnt = parseFloat(anoAnt.faturamento_ano_ant || 0);
+                    const pesoAnoAnt = parseFloat(anoAnt.peso_ano_ant || 0);
+
+                    return {
+                        ...row,
+                        meta_faturamento: metaFat,
+                        meta_peso: metaPeso,
+                        meta_clientes: meta.meta_clientes || 0,
+                        perc_meta_fat: metaFat > 0 ? (faturamento / metaFat * 100) : 0,
+                        perc_meta_peso: metaPeso > 0 ? (peso / metaPeso * 100) : 0,
+                        faturamento_ano_ant: fatAnoAnt,
+                        peso_ano_ant: pesoAnoAnt,
+                        perc_vs_ano_ant_fat: fatAnoAnt > 0 ? ((faturamento - fatAnoAnt) / fatAnoAnt * 100) : 0,
+                        perc_vs_ano_ant_peso: pesoAnoAnt > 0 ? ((peso - pesoAnoAnt) / pesoAnoAnt * 100) : 0
+                    };
+                });
 
                 // Atualizar paginação
                 window.pagination.setData(window.dadosCompletos);
@@ -660,8 +765,8 @@
                 atualizarGraficos();
 
                 // Atualizar contador
-                document.getElementById('totalRegistros').textContent = `${result.rows.length} registros`;
-                document.getElementById('footerTotal').textContent = `Total: ${result.rows.length} registros`;
+                document.getElementById('totalRegistros').textContent = `${window.dadosCompletos.length} registros`;
+                document.getElementById('footerTotal').textContent = `Total: ${window.dadosCompletos.length} registros`;
 
             } catch (error) {
                 console.error('Erro ao atualizar dados:', error);
@@ -675,7 +780,7 @@
             if (dados.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="empty-state">
+                        <td colspan="12" class="empty-state">
                             <div class="empty-state-icon">📭</div>
                             <div>Nenhum registro encontrado</div>
                         </td>
@@ -685,32 +790,31 @@
             }
 
             tbody.innerHTML = dados.map(row => {
-                const percPeso = parseFloat(row.perc_peso || 0);
-                const percClientes = parseFloat(row.perc_clientes || 0);
+                const faturamento = parseFloat(row.faturamento || 0);
+                const peso = parseFloat(row.peso || 0);
+                const percMetaFat = parseFloat(row.perc_meta_fat || 0);
+                const percMetaPeso = parseFloat(row.perc_meta_peso || 0);
+                const percVsAnoFat = parseFloat(row.perc_vs_ano_ant_fat || 0);
+                const percVsAnoPeso = parseFloat(row.perc_vs_ano_ant_peso || 0);
 
-                // Define status baseado na média dos 2 indicadores
-                const media = (percPeso + percClientes) / 2;
-                let statusClass, statusText;
-                if (media >= 100) {
-                    statusClass = 'status-acima';
-                    statusText = '✅ Acima';
-                } else if (media >= 80) {
-                    statusClass = 'status-medio';
-                    statusText = '⚠️ Médio';
-                } else {
-                    statusClass = 'status-abaixo';
-                    statusText = '❌ Abaixo';
-                }
+                // Classes de status
+                const statusFatClass = percMetaFat >= 100 ? 'status-acima' : percMetaFat >= 80 ? 'status-medio' : 'status-abaixo';
+                const statusPesoClass = percMetaPeso >= 100 ? 'status-acima' : percMetaPeso >= 80 ? 'status-medio' : 'status-abaixo';
 
                 return `
                     <tr>
-                        <td>${row.rep_supervisor || '-'}</td>
-                        <td>${row.desc_representante || '-'}</td>
-                        <td>${row.cidade || '-'}</td>
-                        <td>${percPeso.toFixed(1)}%</td>
-                        <td>${percClientes.toFixed(1)}%</td>
-                        <td>R$ ${parseFloat(row.faturamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td><strong>${row.desc_representante || '-'}</strong><br><small>${row.rep_supervisor || '-'}</small></td>
+                        <td>R$ ${faturamento.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td>${peso.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td>${row.clientes_ativos || 0}</td>
+                        <td>R$ ${parseFloat(row.meta_faturamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td><span class="status-badge ${statusFatClass}">${percMetaFat.toFixed(1)}%</span></td>
+                        <td>${parseFloat(row.meta_peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})} Kg</td>
+                        <td><span class="status-badge ${statusPesoClass}">${percMetaPeso.toFixed(1)}%</span></td>
+                        <td>R$ ${parseFloat(row.faturamento_ano_ant || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td><span class="${percVsAnoFat >= 0 ? 'percent-positive' : 'percent-negative'}">${percVsAnoFat >= 0 ? '+' : ''}${percVsAnoFat.toFixed(1)}%</span></td>
+                        <td>${parseFloat(row.peso_ano_ant || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})} Kg</td>
+                        <td><span class="${percVsAnoPeso >= 0 ? 'percent-positive' : 'percent-negative'}">${percVsAnoPeso >= 0 ? '+' : ''}${percVsAnoPeso.toFixed(1)}%</span></td>
                     </tr>
                 `;
             }).join('');
@@ -720,29 +824,32 @@
             const dados = window.dadosCompletos;
 
             if (dados.length === 0) {
-                document.getElementById('kpiPeso').textContent = '0%';
-                document.getElementById('kpiClientes').textContent = '0%';
                 document.getElementById('kpiFaturamento').textContent = 'R$ 0';
-                document.getElementById('kpiTotal').textContent = '0';
+                document.getElementById('kpiPeso').textContent = '0';
+                document.getElementById('kpiClientes').textContent = '0';
+                document.getElementById('kpiMetaMedia').textContent = '0%';
                 return;
             }
 
-            const mediaPeso = dados.reduce((sum, r) => sum + parseFloat(r.perc_peso || 0), 0) / dados.length;
-            const mediaClientes = dados.reduce((sum, r) => sum + parseFloat(r.perc_clientes || 0), 0) / dados.length;
             const totalFaturamento = dados.reduce((sum, r) => sum + parseFloat(r.faturamento || 0), 0);
+            const totalPeso = dados.reduce((sum, r) => sum + parseFloat(r.peso || 0), 0);
+            const totalClientes = dados.reduce((sum, r) => sum + parseInt(r.clientes_ativos || 0), 0);
+            const mediaMetaFat = dados.reduce((sum, r) => sum + parseFloat(r.perc_meta_fat || 0), 0) / dados.length;
+            const mediaMetaPeso = dados.reduce((sum, r) => sum + parseFloat(r.perc_meta_peso || 0), 0) / dados.length;
+            const mediaGeral = (mediaMetaFat + mediaMetaPeso) / 2;
 
-            document.getElementById('kpiPeso').textContent = mediaPeso.toFixed(1) + '%';
-            document.getElementById('kpiClientes').textContent = mediaClientes.toFixed(1) + '%';
             document.getElementById('kpiFaturamento').textContent = 'R$ ' + totalFaturamento.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-            document.getElementById('kpiTotal').textContent = dados.length.toLocaleString('pt-BR');
+            document.getElementById('kpiPeso').textContent = totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 0});
+            document.getElementById('kpiClientes').textContent = totalClientes.toLocaleString('pt-BR');
+            document.getElementById('kpiMetaMedia').textContent = mediaGeral.toFixed(1) + '%';
         }
 
         function atualizarGraficos() {
             const dados = window.dadosCompletos;
 
-            // Gráfico 1: Top 10 Representantes por % Peso
+            // Gráfico 1: Top 10 por Faturamento
             const top10 = [...dados]
-                .sort((a, b) => parseFloat(b.perc_peso || 0) - parseFloat(a.perc_peso || 0))
+                .sort((a, b) => parseFloat(b.faturamento || 0) - parseFloat(a.faturamento || 0))
                 .slice(0, 10);
 
             if (chart1) chart1.destroy();
@@ -752,8 +859,8 @@
                 data: {
                     labels: top10.map(r => r.desc_representante),
                     datasets: [{
-                        label: '% Peso',
-                        data: top10.map(r => parseFloat(r.perc_peso || 0)),
+                        label: 'Faturamento',
+                        data: top10.map(r => parseFloat(r.faturamento || 0)),
                         backgroundColor: '#fc0303',
                         borderColor: '#b50909',
                         borderWidth: 1
@@ -771,7 +878,7 @@
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
-                                    return value + '%';
+                                    return 'R$ ' + value.toLocaleString('pt-BR');
                                 }
                             }
                         }
@@ -779,14 +886,14 @@
                 }
             });
 
-            // Gráfico 2: Distribuição de Status
+            // Gráfico 2: Cumprimento de Metas (Acima/Médio/Abaixo)
             const acima = dados.filter(r => {
-                const media = (parseFloat(r.perc_peso || 0) + parseFloat(r.perc_clientes || 0)) / 2;
+                const media = (parseFloat(r.perc_meta_fat || 0) + parseFloat(r.perc_meta_peso || 0)) / 2;
                 return media >= 100;
             }).length;
 
             const medio = dados.filter(r => {
-                const media = (parseFloat(r.perc_peso || 0) + parseFloat(r.perc_clientes || 0)) / 2;
+                const media = (parseFloat(r.perc_meta_fat || 0) + parseFloat(r.perc_meta_peso || 0)) / 2;
                 return media >= 80 && media < 100;
             }).length;
 
@@ -823,20 +930,28 @@
                 const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
 
                 const dadosExport = window.dadosCompletos.map(row => ({
-                    'Supervisor': row.rep_supervisor,
                     'Representante': row.desc_representante,
-                    'Cidade': row.cidade,
-                    '% Peso': parseFloat(row.perc_peso || 0).toFixed(1) + '%',
-                    '% Clientes': parseFloat(row.perc_clientes || 0).toFixed(1) + '%',
-                    'Faturamento': 'R$ ' + parseFloat(row.faturamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})
+                    'Supervisor': row.rep_supervisor,
+                    'Faturamento': parseFloat(row.faturamento || 0).toFixed(2),
+                    'Peso (Kg)': parseFloat(row.peso || 0).toFixed(2),
+                    'Clientes Ativos': row.clientes_ativos,
+                    'Meta Faturamento': parseFloat(row.meta_faturamento || 0).toFixed(2),
+                    '% Meta Faturamento': parseFloat(row.perc_meta_fat || 0).toFixed(1) + '%',
+                    'Meta Peso': parseFloat(row.meta_peso || 0).toFixed(2),
+                    '% Meta Peso': parseFloat(row.perc_meta_peso || 0).toFixed(1) + '%',
+                    'Faturamento Ano Anterior': parseFloat(row.faturamento_ano_ant || 0).toFixed(2),
+                    '% vs Ano Anterior': parseFloat(row.perc_vs_ano_ant_fat || 0).toFixed(1) + '%',
+                    'Peso Ano Anterior': parseFloat(row.peso_ano_ant || 0).toFixed(2),
+                    '% vs Ano Ant. Peso': parseFloat(row.perc_vs_ano_ant_peso || 0).toFixed(1) + '%'
                 }));
 
                 const ws = XLSX.utils.json_to_sheet(dadosExport);
                 const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, 'Performance');
+                XLSX.utils.book_append_sheet(wb, ws, 'Performance Mensal');
 
-                const semana = document.getElementById('filtroSemana').value;
-                XLSX.writeFile(wb, `performance_semanal_${semana}.xlsx`);
+                const dataInicio = document.getElementById('filtroDataInicio').value;
+                const dataFim = document.getElementById('filtroDataFim').value;
+                XLSX.writeFile(wb, `performance_mensal_${dataInicio}_a_${dataFim}.xlsx`);
 
             } catch (error) {
                 console.error('Erro ao exportar Excel:', error);
@@ -849,29 +964,32 @@
             try {
                 const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
 
-                const doc = new jsPDF();
+                const doc = new jsPDF('landscape');
 
                 doc.setFontSize(18);
                 doc.setTextColor(252, 3, 3);
-                doc.text('Performance Semanal', 14, 20);
+                doc.text('Performance Mensal', 14, 20);
 
                 doc.setFontSize(10);
                 doc.setTextColor(100);
-                doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+                const dataInicio = document.getElementById('filtroDataInicio').value;
+                const dataFim = document.getElementById('filtroDataFim').value;
+                doc.text(`Período: ${dataInicio} a ${dataFim}`, 14, 28);
+                doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 34);
 
-                const tableData = window.dadosCompletos.map(row => [
-                    row.rep_supervisor || '-',
+                const tableData = window.dadosCompletos.slice(0, 30).map(row => [
                     row.desc_representante || '-',
-                    row.cidade || '-',
-                    parseFloat(row.perc_peso || 0).toFixed(1) + '%',
-                    parseFloat(row.perc_clientes || 0).toFixed(1) + '%',
-                    'R$ ' + parseFloat(row.faturamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})
+                    'R$ ' + parseFloat(row.faturamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                    parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 0}),
+                    parseFloat(row.perc_meta_fat || 0).toFixed(1) + '%',
+                    parseFloat(row.perc_meta_peso || 0).toFixed(1) + '%',
+                    parseFloat(row.perc_vs_ano_ant_fat || 0).toFixed(1) + '%'
                 ]);
 
                 doc.autoTable({
-                    head: [['Supervisor', 'Representante', 'Cidade', '% Peso', '% Clientes', 'Faturamento']],
+                    head: [['Representante', 'Faturamento', 'Peso', '% Meta Fat.', '% Meta Peso', '% vs Ano Ant.']],
                     body: tableData,
-                    startY: 35,
+                    startY: 40,
                     theme: 'striped',
                     headStyles: {
                         fillColor: [252, 3, 3],
@@ -883,8 +1001,7 @@
                     }
                 });
 
-                const semana = document.getElementById('filtroSemana').value;
-                doc.save(`performance_semanal_${semana}.pdf`);
+                doc.save(`performance_mensal_${dataInicio}_a_${dataFim}.pdf`);
 
             } catch (error) {
                 console.error('Erro ao exportar PDF:', error);
@@ -892,8 +1009,11 @@
             }
         };
 
-        // Usa apenas pageshow para evitar dupla inicialização (load + pageshow disparam juntos)
-        window.addEventListener('pageshow', carregarFiltros);
+        // Usa apenas pageshow para evitar dupla inicialização
+        window.addEventListener('pageshow', () => {
+            inicializarDatas();
+            carregarFiltros();
+        });
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
