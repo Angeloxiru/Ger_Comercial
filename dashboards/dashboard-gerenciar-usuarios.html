@@ -1002,6 +1002,7 @@
                         <option value="tab_cliente">👥 Clientes (tab_cliente)</option>
                         <option value="tab_produto">📦 Produtos (tab_produto)</option>
                         <option value="tab_representante">🤝 Representantes (tab_representante)</option>
+                        <option value="vendas">💰 Vendas (vendas) - Apenas Série EP</option>
                     </select>
                 </div>
 
@@ -1603,6 +1604,45 @@
                         pk: 'representante',
                         columns: ['representante', 'desc_representante', 'rep_supervisor', 'rep_tipo', 'rep_cnpj_cpf', 'rep_endereco', 'rep_bairro', 'rep_cidade', 'rep_estado', 'rep_fone', 'rep_email', 'rep_data_inicio', 'rep_data_fim'],
                         example: ['REP001', 'João José da Conceição', 'SUP001', 'Externo', '123.456.789-00', 'Rua São José', 'Centro', 'São Paulo', 'SP', '(11) 98765-4321', 'joao@email.com', '2024-01-01', '']
+                    },
+                    vendas: {
+                        name: 'vendas',
+                        displayName: 'Vendas (Apenas Série EP)',
+                        pk: 'chave_primaria',
+                        isSpecial: true, // Flag para tratamento especial
+                        serieFilter: 'EP', // Filtro aplicado automaticamente
+                        // Colunas do Excel (cabeçalhos que o usuário deve ter)
+                        excelColumns: ['Série', 'Nota Fiscal', 'Emissão', 'Produto', 'Qtde.Faturada', 'Nat.Oper.', 'Família', 'Complemento', 'Cliente', 'Nome', 'Fantasia', 'Representante', 'UF', 'Cidade', 'Peso Líq.', 'Preço.Unitário', '% Desc.', 'Valor Bruto', 'Valor Desconto', 'Valor Líquido', 'Valor Financeiro', 'Grupo Empresa', 'Preço Unit. Liq.', 'Preço Bruto'],
+                        // Mapeamento: Excel → Banco
+                        columnMapping: {
+                            'Série': 'serie',
+                            'Nota Fiscal': 'nota_fiscal',
+                            'Emissão': 'emissao',
+                            'Produto': 'produto',
+                            'Qtde.Faturada': 'qtde_faturada',
+                            'Nat.Oper.': 'nat_oper',
+                            'Família': 'familia',
+                            'Complemento': 'complemento',
+                            'Cliente': 'cliente',
+                            'Nome': 'nome',
+                            'Fantasia': 'fantasia',
+                            'Representante': 'representante',
+                            'UF': 'uf',
+                            'Cidade': 'cidade',
+                            'Peso Líq.': 'peso_liq',
+                            'Preço.Unitário': 'preco_unitario',
+                            '% Desc.': 'perc_desc',
+                            'Valor Bruto': 'valor_bruto',
+                            'Valor Desconto': 'valor_desconto',
+                            'Valor Líquido': 'valor_liquido',
+                            'Valor Financeiro': 'valor_financeiro',
+                            'Grupo Empresa': 'grupo_empresa',
+                            'Preço Unit. Liq.': 'preco_unit_liq',
+                            'Preço Bruto': 'preco_bruto'
+                        },
+                        // Colunas do banco (para referência)
+                        columns: ['chave_primaria', 'serie', 'nota_fiscal', 'emissao', 'produto', 'qtde_faturada', 'nat_oper', 'familia', 'complemento', 'cliente', 'nome', 'fantasia', 'representante', 'uf', 'cidade', 'peso_liq', 'preco_unitario', 'perc_desc', 'valor_bruto', 'valor_desconto', 'valor_liquido', 'valor_financeiro', 'grupo_empresa', 'preco_unit_liq', 'preco_bruto'],
+                        example: ['123456PROD001', 'EP', '123456', '2024-01-15', 'PROD001', '10', '5.102', 'ALIMENTOS', 'Cx com 12 unidades', 'CLI001', 'João Silva', 'Silva & Cia', 'REP001', 'SP', 'São Paulo', '5.5', '25.00', '10', '250.00', '25.00', '225.00', '225.00', 'GERMANI', '22.50', '250.00']
                     }
                 };
 
@@ -1688,14 +1728,26 @@
                 }
 
                 const table = this.tables[tableName];
-                tableInfoText.innerHTML = `
-                    <strong>Tabela:</strong> ${table.name}<br>
-                    <strong>Chave Primária (obrigatória):</strong> ${table.pk}<br>
-                    <strong>Total de colunas:</strong> ${table.columns.length}<br>
-                    <strong>Colunas:</strong> ${table.columns.join(', ')}
-                `;
 
-                // Atualizar texto do botão para tab_cliente
+                // Informações especiais para vendas
+                if (tableName === 'vendas') {
+                    tableInfoText.innerHTML = `
+                        <strong>Tabela:</strong> ${table.name}<br>
+                        <strong>⚠️ FILTRO:</strong> Apenas registros com Série = "${table.serieFilter}" serão importados<br>
+                        <strong>Chave Primária:</strong> ${table.pk} (gerada automaticamente: Nota Fiscal + Produto)<br>
+                        <strong>Total de colunas:</strong> ${table.excelColumns.length}<br>
+                        <strong>Cabeçalhos do Excel:</strong> ${table.excelColumns.join(', ')}
+                    `;
+                } else {
+                    tableInfoText.innerHTML = `
+                        <strong>Tabela:</strong> ${table.name}<br>
+                        <strong>Chave Primária (obrigatória):</strong> ${table.pk}<br>
+                        <strong>Total de colunas:</strong> ${table.columns.length}<br>
+                        <strong>Colunas:</strong> ${table.columns.join(', ')}
+                    `;
+                }
+
+                // Atualizar texto do botão
                 if (tableName === 'tab_cliente') {
                     btnDownload.innerHTML = '📥 Baixar Template Excel com Macro';
                     btnDownload.title = 'Baixar arquivo Excel (.xlsm) com macro VBA para facilitar a importação';
@@ -1738,7 +1790,29 @@
                     return;
                 }
 
-                // Para outras tabelas, continuar com CSV
+                // Para vendas, usar cabeçalhos do Excel
+                if (this.selectedTable === 'vendas') {
+                    const header = table.excelColumns.join(this.CSV_SEPARATOR);
+                    const example = table.example.join(this.CSV_SEPARATOR);
+
+                    // Adicionar BOM UTF-8 e instruções
+                    const BOM = '\uFEFF';
+                    const instruction1 = `# IMPORTANTE: Apenas registros com Série = "${table.serieFilter}" serão importados!`;
+                    const instruction2 = `# Chave primária será gerada automaticamente: Nota Fiscal + Produto`;
+                    const instruction3 = `# Para preservar acentos (ç, ã, ê, etc) ao salvar:`;
+                    const instruction4 = `# - OPÇÃO 1 (Excel): Use "Texto em Unicode" ou mantenha "CSV (separado por vírgulas)"`;
+                    const instruction5 = `# - OPÇÃO 2 (Editor): Use Notepad++, VSCode ou Bloco de Notas e salve como UTF-8`;
+                    const csv = `${BOM}${instruction1}\n${instruction2}\n${instruction3}\n${instruction4}\n${instruction5}\n${header}\n${example}`;
+
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `template_${table.name}.csv`;
+                    link.click();
+                    return;
+                }
+
+                // Para outras tabelas, continuar com CSV normal
                 // Criar CSV com ponto-e-vírgula
                 const header = table.columns.join(this.CSV_SEPARATOR);
                 const example = table.example.join(this.CSV_SEPARATOR);
@@ -2055,7 +2129,42 @@
             validateData(parsedData) {
                 const table = this.tables[this.selectedTable];
 
-                // Validar se todas as colunas do CSV existem na tabela
+                // Validação especial para vendas
+                if (this.selectedTable === 'vendas') {
+                    // Verificar se tem os cabeçalhos do Excel
+                    const requiredHeaders = ['Série', 'Nota Fiscal', 'Produto'];
+                    const missingHeaders = requiredHeaders.filter(h => !parsedData.headers.includes(h));
+
+                    if (missingHeaders.length > 0) {
+                        throw new Error(`Cabeçalhos obrigatórios ausentes: ${missingHeaders.join(', ')}`);
+                    }
+
+                    // Filtrar e validar cada linha
+                    let filteredCount = 0;
+                    parsedData.rows.forEach((row, index) => {
+                        // Verificar campos obrigatórios
+                        if (!row['Nota Fiscal'] || row['Nota Fiscal'].trim() === '') {
+                            throw new Error(`Linha ${index + 2}: Nota Fiscal não pode estar vazia`);
+                        }
+                        if (!row['Produto'] || row['Produto'].trim() === '') {
+                            throw new Error(`Linha ${index + 2}: Produto não pode estar vazio`);
+                        }
+
+                        // Contar registros filtrados
+                        if (row['Série'] !== table.serieFilter) {
+                            filteredCount++;
+                        }
+                    });
+
+                    // Informar sobre filtros aplicados
+                    if (filteredCount > 0) {
+                        console.log(`⚠️ ${filteredCount} registros serão filtrados (Série != "${table.serieFilter}")`);
+                    }
+
+                    return; // Termina validação para vendas
+                }
+
+                // Validação padrão para outras tabelas
                 const invalidColumns = parsedData.headers.filter(h => !table.columns.includes(h));
                 if (invalidColumns.length > 0) {
                     throw new Error(`Colunas inválidas: ${invalidColumns.join(', ')}`);
@@ -2092,17 +2201,61 @@
                 // Preparar batch de INSERT OR REPLACE
                 const statements = [];
 
-                for (const row of parsedData.rows) {
-                    const columns = Object.keys(row);
-                    const values = Object.values(row);
-                    const placeholders = columns.map(() => '?').join(', ');
+                // Processamento especial para vendas
+                if (this.selectedTable === 'vendas') {
+                    for (const excelRow of parsedData.rows) {
+                        // Aplicar filtro: apenas Série = EP
+                        if (excelRow['Série'] !== table.serieFilter) {
+                            continue; // Pular este registro
+                        }
 
-                    const sql = `INSERT OR REPLACE INTO ${table.name} (${columns.join(', ')}) VALUES (${placeholders})`;
+                        // Gerar chave primária: Nota Fiscal + Produto
+                        const notaFiscal = (excelRow['Nota Fiscal'] || '').toString().trim();
+                        const produto = (excelRow['Produto'] || '').toString().trim();
+                        const chave_primaria = notaFiscal + produto;
 
-                    statements.push({
-                        sql: sql,
-                        args: values
-                    });
+                        // Mapear colunas do Excel para o banco
+                        const dbRow = { chave_primaria };
+
+                        for (const [excelCol, dbCol] of Object.entries(table.columnMapping)) {
+                            let value = excelRow[excelCol];
+
+                            // Converter valores vazios para null
+                            if (value === undefined || value === null || value === '') {
+                                value = null;
+                            } else {
+                                value = value.toString().trim();
+                            }
+
+                            dbRow[dbCol] = value;
+                        }
+
+                        // Preparar statement
+                        const columns = Object.keys(dbRow);
+                        const values = Object.values(dbRow);
+                        const placeholders = columns.map(() => '?').join(', ');
+
+                        const sql = `INSERT OR IGNORE INTO ${table.name} (${columns.join(', ')}) VALUES (${placeholders})`;
+
+                        statements.push({
+                            sql: sql,
+                            args: values
+                        });
+                    }
+                } else {
+                    // Processamento padrão para outras tabelas
+                    for (const row of parsedData.rows) {
+                        const columns = Object.keys(row);
+                        const values = Object.values(row);
+                        const placeholders = columns.map(() => '?').join(', ');
+
+                        const sql = `INSERT OR REPLACE INTO ${table.name} (${columns.join(', ')}) VALUES (${placeholders})`;
+
+                        statements.push({
+                            sql: sql,
+                            args: values
+                        });
+                    }
                 }
 
                 // Executar em batch
