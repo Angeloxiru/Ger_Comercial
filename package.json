@@ -7,11 +7,14 @@
     "processar-agendamentos": "node scripts/processar-agendamentos.js",
     "debug-agendamentos": "node scripts/debug-agendamentos.js",
     "debug-agendamento-completo": "node scripts/debug-agendamento-completo.js",
-    "fix-hora": "node scripts/fix-hora-column.js"
+    "fix-hora": "node scripts/fix-hora-column.js",
+    "importar-vendas": "node scripts/importar-vendas-excel.js",
+    "gerar-template-vendas": "node scripts/gerar-template-vendas.js"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
-    "nodemailer": "^6.9.13"
+    "nodemailer": "^6.9.13",
+    "xlsx": "^0.18.5"
   },
   "engines": {
     "node": ">=18.0.0"
