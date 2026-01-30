@@ -219,7 +219,7 @@
         }
 
         .table-header {
-            background: #FFD700;
+            background: #90EE90;
             color: #212529;
             padding: 16px 20px;
             font-weight: 600;
@@ -493,7 +493,7 @@
         <!-- Seção Tabela (70%) -->
         <div class="table-section">
             <div class="table-header">
-                <span>📊 Performance Mensal por Representante</span>
+                <span>📊 Performance</span>
                 <span id="totalRegistros">0 registros</span>
             </div>
 
@@ -910,7 +910,7 @@
             if (dados.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="11" class="empty-state">
+                        <td colspan="8" class="empty-state">
                             <div class="empty-state-icon">📭</div>
                             <div>Nenhum registro encontrado</div>
                         </td>
@@ -934,39 +934,46 @@
                 const percVsAnoFat = parseFloat(row.perc_vs_ano_ant_fat || 0);
                 const percVsAnoPeso = parseFloat(row.perc_vs_ano_ant_peso || 0);
 
-                // Calcular % meta clientes
-                const percMetaClientes = metaClientes > 0 ? (positivados / metaClientes * 100) : 0;
-
                 // Classes de status
                 const statusFatClass = percMetaFat >= 100 ? 'status-acima' : percMetaFat >= 80 ? 'status-medio' : 'status-abaixo';
                 const statusPesoClass = percMetaPeso >= 100 ? 'status-acima' : percMetaPeso >= 80 ? 'status-medio' : 'status-abaixo';
-                const statusClientesClass = percMetaClientes >= 100 ? 'status-acima' : percMetaClientes >= 80 ? 'status-medio' : 'status-abaixo';
 
                 return `
-                    <tr style="border-bottom: none;">
-                        <td rowspan="2" style="vertical-align: middle; border-right: 2px solid #e0e0e0;">
-                            <strong>${row.desc_representante || '-'}</strong><br>
-                            <small style="color: #666;">${row.rep_supervisor || '-'}</small>
+                    <tr>
+                        <td style="padding: 10px 8px;">
+                            <div style="font-weight: bold; font-size: 0.95em;">${row.desc_representante || '-'}</div>
+                            <div style="color: #888; font-size: 0.8em; margin-top: 2px;">${row.rep_supervisor || '-'}</div>
                         </td>
-                        <td style="text-align: right;"><strong>R$ ${faturamento.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong></td>
-                        <td style="text-align: right;"><strong>${peso.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong></td>
-                        <td style="text-align: center;"><strong>${positivados}</strong></td>
-                        <td style="text-align: center;"><span class="status-badge ${statusFatClass}">${percMetaFat.toFixed(1)}%</span></td>
-                        <td style="text-align: center;"><span class="status-badge ${statusPesoClass}">${percMetaPeso.toFixed(1)}%</span></td>
-                        <td style="text-align: center;"><span class="${percVsAnoFat >= 0 ? 'percent-positive' : 'percent-negative'}">${percVsAnoFat >= 0 ? '+' : ''}${percVsAnoFat.toFixed(1)}%</span></td>
-                        <td style="text-align: center;"><span class="${percVsAnoPeso >= 0 ? 'percent-positive' : 'percent-negative'}">${percVsAnoPeso >= 0 ? '+' : ''}${percVsAnoPeso.toFixed(1)}%</span></td>
-                    </tr>
-                    <tr style="border-bottom: 2px solid #ddd; background-color: #f8f9fa;">
-                        <td style="text-align: right; color: #666; font-size: 0.9em;">Meta: R$ ${metaFat.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td style="text-align: right; color: #666; font-size: 0.9em;">Meta: ${metaPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td style="text-align: center; color: #666; font-size: 0.9em;">
-                            Meta: ${metaClientes}
-                            ${metaClientes > 0 ? `<br><span class="status-badge ${statusClientesClass}" style="font-size: 0.85em;">${percMetaClientes.toFixed(1)}%</span>` : ''}
+                        <td style="text-align: right; padding: 10px 8px;">
+                            <div style="font-weight: bold; font-size: 0.95em;">R$ ${faturamento.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                            <div style="color: #888; font-size: 0.8em; margin-top: 2px;">Meta: R$ ${metaFat.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
                         </td>
-                        <td style="background-color: transparent;"></td>
-                        <td style="background-color: transparent;"></td>
-                        <td style="text-align: right; color: #666; font-size: 0.9em;">AA: R$ ${fatAnoAnt.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td style="text-align: right; color: #666; font-size: 0.9em;">AA: ${pesoAnoAnt.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; padding: 10px 8px;">
+                            <div style="font-weight: bold; font-size: 0.95em;">${peso.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                        </td>
+                        <td style="text-align: center; padding: 10px 8px;">
+                            <div style="font-weight: bold; font-size: 0.95em;">${positivados}</div>
+                        </td>
+                        <td style="text-align: center; padding: 10px 8px;">
+                            <div><span class="status-badge ${statusFatClass}" style="font-size: 0.95em; padding: 4px 8px;">${percMetaFat.toFixed(1)}%</span></div>
+                            <div style="color: #888; font-size: 0.8em; margin-top: 4px;">Meta: R$ ${metaFat.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                        </td>
+                        <td style="text-align: center; padding: 10px 8px;">
+                            <div><span class="status-badge ${statusPesoClass}" style="font-size: 0.95em; padding: 4px 8px;">${percMetaPeso.toFixed(1)}%</span></div>
+                            <div style="color: #888; font-size: 0.8em; margin-top: 4px;">Meta: ${metaPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                        </td>
+                        <td style="text-align: center; padding: 10px 8px;">
+                            <div style="font-weight: bold; font-size: 0.95em;">
+                                <span class="${percVsAnoFat >= 0 ? 'percent-positive' : 'percent-negative'}">${percVsAnoFat >= 0 ? '+' : ''}${percVsAnoFat.toFixed(1)}%</span>
+                            </div>
+                            <div style="color: #888; font-size: 0.8em; margin-top: 2px;">AA: R$ ${fatAnoAnt.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                        </td>
+                        <td style="text-align: center; padding: 10px 8px;">
+                            <div style="font-weight: bold; font-size: 0.95em;">
+                                <span class="${percVsAnoPeso >= 0 ? 'percent-positive' : 'percent-negative'}">${percVsAnoPeso >= 0 ? '+' : ''}${percVsAnoPeso.toFixed(1)}%</span>
+                            </div>
+                            <div style="color: #888; font-size: 0.8em; margin-top: 2px;">AA: ${pesoAnoAnt.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                        </td>
                     </tr>
                 `;
             }).join('');
