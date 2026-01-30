@@ -1647,9 +1647,11 @@
                         name: 'metas_mensais',
                         displayName: 'Metas Mensais',
                         pk: 'id',
+                        skipPkValidation: true, // ID é AUTOINCREMENT, não deve ser fornecido no arquivo
                         columns: ['representante', 'ano_mes', 'meta_faturamento', 'meta_peso', 'meta_clientes', 'observacao'],
                         example: ['001', '2026-01', '150000.00', '50000.00', '120', 'Meta baseada no histórico de 2025'],
-                        info: 'Formato do período: YYYY-MM (ex: 2026-01). Valores numéricos usam ponto como separador decimal.'
+                        info: 'Formato do período: YYYY-MM (ex: 2026-01). Valores numéricos usam ponto como separador decimal.',
+                        isExcel: true
                     }
                 };
 
@@ -1737,7 +1739,7 @@
                 const table = this.tables[tableName];
                 let tableInfoHTML = `
                     <strong>Tabela:</strong> ${table.name}<br>
-                    <strong>Chave Primária (obrigatória):</strong> ${table.pk}<br>
+                    <strong>Chave Primária:</strong> ${table.pk} ${table.skipPkValidation ? '(automática, não incluir no arquivo)' : '(obrigatória)'}<br>
                     <strong>Total de colunas:</strong> ${table.columns.length}<br>
                     <strong>Colunas:</strong> ${table.columns.join(', ')}
                 `;
@@ -2246,15 +2248,15 @@
                     throw new Error(`Colunas inválidas: ${invalidColumns.join(', ')}`);
                 }
 
-                // Validar se a PK está presente
-                if (!parsedData.headers.includes(table.pk)) {
+                // Validar se a PK está presente (exceto se for AUTOINCREMENT)
+                if (!table.skipPkValidation && !parsedData.headers.includes(table.pk)) {
                     throw new Error(`Coluna obrigatória ausente: ${table.pk} (chave primária)`);
                 }
 
                 // Validar cada linha
                 parsedData.rows.forEach((row, index) => {
-                    // PK não pode estar vazia
-                    if (!row[table.pk] || row[table.pk].trim() === '') {
+                    // PK não pode estar vazia (exceto se for AUTOINCREMENT)
+                    if (!table.skipPkValidation && (!row[table.pk] || row[table.pk].trim() === '')) {
                         throw new Error(`Linha ${index + 2}: ${table.pk} não pode estar vazio`);
                     }
 
