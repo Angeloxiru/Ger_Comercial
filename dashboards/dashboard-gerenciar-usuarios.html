@@ -2286,11 +2286,52 @@
 
                 // Tratamento especial para metas_mensais
                 if (this.selectedTable === 'metas_mensais') {
+                    // Validar representantes antes de começar a importação
+                    const uniqueReps = [...new Set(parsedData.rows.map(r => String(r.representante).trim()))];
+
+                    // Buscar representantes existentes no banco (com normalização)
+                    const repsQuery = await db.execute('SELECT DISTINCT TRIM(representante) as representante FROM tab_representante');
+                    const validReps = repsQuery.rows.map(r => String(r.representante).trim());
+
+                    console.log('🔍 DEBUG - Representantes do arquivo:', uniqueReps.slice(0, 10));
+                    console.log('🔍 DEBUG - Representantes válidos no banco:', validReps.slice(0, 10));
+
+                    // Verificar quais representantes não existem (comparação normalizada)
+                    const invalidReps = uniqueReps.filter(rep => !validReps.includes(rep));
+
+                    if (invalidReps.length > 0) {
+                        console.warn('⚠️ Representantes inválidos encontrados:', invalidReps);
+                        const continuar = confirm(
+                            `⚠️ ATENÇÃO: Foram encontrados ${invalidReps.length} representante(s) que NÃO existem na tabela de representantes:\n\n` +
+                            `${invalidReps.join(', ')}\n\n` +
+                            `Representantes válidos (primeiros 20): ${validReps.slice(0, 20).join(', ')}\n\n` +
+                            `Isso causará erro de FOREIGN KEY ao tentar importar essas linhas.\n\n` +
+                            `Opções:\n` +
+                            `• Clique CANCELAR e corrija os códigos no arquivo\n` +
+                            `• Clique OK para continuar (linhas com representantes inválidos serão ignoradas)\n\n` +
+                            `Deseja continuar mesmo assim?`
+                        );
+
+                        if (!continuar) {
+                            throw new Error('Importação cancelada pelo usuário');
+                        }
+                    }
+
                     for (const row of parsedData.rows) {
                         try {
+                            // Converter representante para string e fazer trim
+                            const representante = String(row.representante).trim();
+
+                            // Pular se representante não existe
+                            if (invalidReps.includes(representante)) {
+                                console.warn(`Pulando linha com representante inválido: ${representante}`);
+                                errors++;
+                                continue;
+                            }
+
                             // Verificar se já existe meta para representante+ano_mes
                             const checkSql = `SELECT id FROM metas_mensais WHERE representante = ? AND ano_mes = ?`;
-                            const existing = await db.execute(checkSql, [row.representante, row.ano_mes]);
+                            const existing = await db.execute(checkSql, [representante, row.ano_mes]);
 
                             if (existing.rows.length > 0) {
                                 // Atualizar meta existente
@@ -2309,7 +2350,7 @@
                                     row.meta_peso,
                                     row.meta_clientes,
                                     row.observacao || null,
-                                    row.representante,
+                                    representante,
                                     row.ano_mes
                                 ]);
                             } else {
@@ -2320,7 +2361,7 @@
                                     VALUES (?, ?, ?, ?, ?, ?, 'importacao')
                                 `;
                                 await db.execute(insertSql, [
-                                    row.representante,
+                                    representante,
                                     row.ano_mes,
                                     row.meta_faturamento,
                                     row.meta_peso,

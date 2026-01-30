@@ -504,20 +504,16 @@
                             <th>Representante</th>
                             <th>Faturamento</th>
                             <th>Peso (Kg)</th>
-                            <th>Clientes Ativos</th>
-                            <th>Meta Fat.</th>
+                            <th>Positivados</th>
                             <th>% Meta Fat.</th>
-                            <th>Meta Peso</th>
                             <th>% Meta Peso</th>
-                            <th>Ano Ant. Fat.</th>
-                            <th>% vs Ano Ant.</th>
-                            <th>Ano Ant. Peso</th>
-                            <th>% vs Ano Ant. Peso</th>
+                            <th>% Fat. AA</th>
+                            <th>% Peso AA</th>
                         </tr>
                     </thead>
                     <tbody id="tbody">
                         <tr>
-                            <td colspan="12" class="empty-state">
+                            <td colspan="8" class="empty-state">
                                 <div class="empty-state-icon">📊</div>
                                 <div>Selecione os filtros e clique em "Atualizar Dados"</div>
                             </td>
@@ -557,7 +553,7 @@
 
                 <div class="kpi-card">
                     <div class="kpi-icon">👥</div>
-                    <div class="kpi-label">CLIENTES ATIVOS</div>
+                    <div class="kpi-label">POSITIVADOS</div>
                     <div class="kpi-value" id="kpiClientes">0</div>
                 </div>
 
@@ -914,7 +910,7 @@
             if (dados.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="12" class="empty-state">
+                        <td colspan="11" class="empty-state">
                             <div class="empty-state-icon">📭</div>
                             <div>Nenhum registro encontrado</div>
                         </td>
@@ -926,29 +922,51 @@
             tbody.innerHTML = dados.map(row => {
                 const faturamento = parseFloat(row.faturamento || 0);
                 const peso = parseFloat(row.peso || 0);
+                const positivados = parseInt(row.clientes_ativos || 0);
+                const metaFat = parseFloat(row.meta_faturamento || 0);
+                const metaPeso = parseFloat(row.meta_peso || 0);
+                const metaClientes = parseInt(row.meta_clientes || 0);
+                const fatAnoAnt = parseFloat(row.faturamento_ano_ant || 0);
+                const pesoAnoAnt = parseFloat(row.peso_ano_ant || 0);
+
                 const percMetaFat = parseFloat(row.perc_meta_fat || 0);
                 const percMetaPeso = parseFloat(row.perc_meta_peso || 0);
                 const percVsAnoFat = parseFloat(row.perc_vs_ano_ant_fat || 0);
                 const percVsAnoPeso = parseFloat(row.perc_vs_ano_ant_peso || 0);
 
+                // Calcular % meta clientes
+                const percMetaClientes = metaClientes > 0 ? (positivados / metaClientes * 100) : 0;
+
                 // Classes de status
                 const statusFatClass = percMetaFat >= 100 ? 'status-acima' : percMetaFat >= 80 ? 'status-medio' : 'status-abaixo';
                 const statusPesoClass = percMetaPeso >= 100 ? 'status-acima' : percMetaPeso >= 80 ? 'status-medio' : 'status-abaixo';
+                const statusClientesClass = percMetaClientes >= 100 ? 'status-acima' : percMetaClientes >= 80 ? 'status-medio' : 'status-abaixo';
 
                 return `
-                    <tr>
-                        <td><strong>${row.desc_representante || '-'}</strong><br><small>${row.rep_supervisor || '-'}</small></td>
-                        <td>R$ ${faturamento.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td>${peso.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td>${row.clientes_ativos || 0}</td>
-                        <td>R$ ${parseFloat(row.meta_faturamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td><span class="status-badge ${statusFatClass}">${percMetaFat.toFixed(1)}%</span></td>
-                        <td>${parseFloat(row.meta_peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})} Kg</td>
-                        <td><span class="status-badge ${statusPesoClass}">${percMetaPeso.toFixed(1)}%</span></td>
-                        <td>R$ ${parseFloat(row.faturamento_ano_ant || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td><span class="${percVsAnoFat >= 0 ? 'percent-positive' : 'percent-negative'}">${percVsAnoFat >= 0 ? '+' : ''}${percVsAnoFat.toFixed(1)}%</span></td>
-                        <td>${parseFloat(row.peso_ano_ant || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})} Kg</td>
-                        <td><span class="${percVsAnoPeso >= 0 ? 'percent-positive' : 'percent-negative'}">${percVsAnoPeso >= 0 ? '+' : ''}${percVsAnoPeso.toFixed(1)}%</span></td>
+                    <tr style="border-bottom: none;">
+                        <td rowspan="2" style="vertical-align: middle; border-right: 2px solid #e0e0e0;">
+                            <strong>${row.desc_representante || '-'}</strong><br>
+                            <small style="color: #666;">${row.rep_supervisor || '-'}</small>
+                        </td>
+                        <td style="text-align: right;"><strong>R$ ${faturamento.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong></td>
+                        <td style="text-align: right;"><strong>${peso.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong></td>
+                        <td style="text-align: center;"><strong>${positivados}</strong></td>
+                        <td style="text-align: center;"><span class="status-badge ${statusFatClass}">${percMetaFat.toFixed(1)}%</span></td>
+                        <td style="text-align: center;"><span class="status-badge ${statusPesoClass}">${percMetaPeso.toFixed(1)}%</span></td>
+                        <td style="text-align: center;"><span class="${percVsAnoFat >= 0 ? 'percent-positive' : 'percent-negative'}">${percVsAnoFat >= 0 ? '+' : ''}${percVsAnoFat.toFixed(1)}%</span></td>
+                        <td style="text-align: center;"><span class="${percVsAnoPeso >= 0 ? 'percent-positive' : 'percent-negative'}">${percVsAnoPeso >= 0 ? '+' : ''}${percVsAnoPeso.toFixed(1)}%</span></td>
+                    </tr>
+                    <tr style="border-bottom: 2px solid #ddd; background-color: #f8f9fa;">
+                        <td style="text-align: right; color: #666; font-size: 0.9em;">Meta: R$ ${metaFat.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; color: #666; font-size: 0.9em;">Meta: ${metaPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: center; color: #666; font-size: 0.9em;">
+                            Meta: ${metaClientes}
+                            ${metaClientes > 0 ? `<br><span class="status-badge ${statusClientesClass}" style="font-size: 0.85em;">${percMetaClientes.toFixed(1)}%</span>` : ''}
+                        </td>
+                        <td style="background-color: transparent;"></td>
+                        <td style="background-color: transparent;"></td>
+                        <td style="text-align: right; color: #666; font-size: 0.9em;">AA: R$ ${fatAnoAnt.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; color: #666; font-size: 0.9em;">AA: ${pesoAnoAnt.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                     </tr>
                 `;
             }).join('');
@@ -1063,21 +1081,29 @@
             try {
                 const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
 
-                const dadosExport = window.dadosCompletos.map(row => ({
-                    'Representante': row.desc_representante,
-                    'Supervisor': row.rep_supervisor,
-                    'Faturamento': parseFloat(row.faturamento || 0).toFixed(2),
-                    'Peso (Kg)': parseFloat(row.peso || 0).toFixed(2),
-                    'Clientes Ativos': row.clientes_ativos,
-                    'Meta Faturamento': parseFloat(row.meta_faturamento || 0).toFixed(2),
-                    '% Meta Faturamento': parseFloat(row.perc_meta_fat || 0).toFixed(1) + '%',
-                    'Meta Peso': parseFloat(row.meta_peso || 0).toFixed(2),
-                    '% Meta Peso': parseFloat(row.perc_meta_peso || 0).toFixed(1) + '%',
-                    'Faturamento Ano Anterior': parseFloat(row.faturamento_ano_ant || 0).toFixed(2),
-                    '% vs Ano Anterior': parseFloat(row.perc_vs_ano_ant_fat || 0).toFixed(1) + '%',
-                    'Peso Ano Anterior': parseFloat(row.peso_ano_ant || 0).toFixed(2),
-                    '% vs Ano Ant. Peso': parseFloat(row.perc_vs_ano_ant_peso || 0).toFixed(1) + '%'
-                }));
+                const dadosExport = window.dadosCompletos.map(row => {
+                    const metaClientes = parseInt(row.meta_clientes || 0);
+                    const positivados = parseInt(row.clientes_ativos || 0);
+                    const percMetaClientes = metaClientes > 0 ? (positivados / metaClientes * 100).toFixed(1) : '0.0';
+
+                    return {
+                        'Representante': row.desc_representante,
+                        'Supervisor': row.rep_supervisor,
+                        'Faturamento': parseFloat(row.faturamento || 0).toFixed(2),
+                        'Meta Fat.': parseFloat(row.meta_faturamento || 0).toFixed(2),
+                        '% Meta Fat.': parseFloat(row.perc_meta_fat || 0).toFixed(1) + '%',
+                        'Peso (Kg)': parseFloat(row.peso || 0).toFixed(2),
+                        'Meta Peso': parseFloat(row.meta_peso || 0).toFixed(2),
+                        '% Meta Peso': parseFloat(row.perc_meta_peso || 0).toFixed(1) + '%',
+                        'Positivados': positivados,
+                        'Meta Clientes': metaClientes,
+                        '% Meta Clientes': percMetaClientes + '%',
+                        'Faturado AA': parseFloat(row.faturamento_ano_ant || 0).toFixed(2),
+                        '% Fat. AA': parseFloat(row.perc_vs_ano_ant_fat || 0).toFixed(1) + '%',
+                        'Peso AA': parseFloat(row.peso_ano_ant || 0).toFixed(2),
+                        '% Peso AA': parseFloat(row.perc_vs_ano_ant_peso || 0).toFixed(1) + '%'
+                    };
+                });
 
                 const ws = XLSX.utils.json_to_sheet(dadosExport);
                 const wb = XLSX.utils.book_new();
@@ -1115,13 +1141,15 @@
                     row.desc_representante || '-',
                     'R$ ' + parseFloat(row.faturamento || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
                     parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 0}),
+                    parseInt(row.clientes_ativos || 0),
                     parseFloat(row.perc_meta_fat || 0).toFixed(1) + '%',
                     parseFloat(row.perc_meta_peso || 0).toFixed(1) + '%',
-                    parseFloat(row.perc_vs_ano_ant_fat || 0).toFixed(1) + '%'
+                    parseFloat(row.perc_vs_ano_ant_fat || 0).toFixed(1) + '%',
+                    parseFloat(row.perc_vs_ano_ant_peso || 0).toFixed(1) + '%'
                 ]);
 
                 doc.autoTable({
-                    head: [['Representante', 'Faturamento', 'Peso', '% Meta Fat.', '% Meta Peso', '% vs Ano Ant.']],
+                    head: [['Representante', 'Faturamento', 'Peso', 'Positivados', '% Meta Fat.', '% Meta Peso', '% Fat. AA', '% Peso AA']],
                     body: tableData,
                     startY: 40,
                     theme: 'striped',
