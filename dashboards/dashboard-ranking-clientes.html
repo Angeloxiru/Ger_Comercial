@@ -1048,8 +1048,15 @@
                         params.push(...supervisores);
                     }
                     if (representantes.length > 0) {
-                        sql += ` AND r.desc_representante IN (${representantes.map(() => '?').join(',')})`;
-                        params.push(...representantes);
+                        // Converter descrições para códigos de representantes
+                        const codigosRepresentantes = window.todosRepresentantes
+                            .filter(r => representantes.includes(r.desc_representante))
+                            .map(r => r.representante);
+
+                        if (codigosRepresentantes.length > 0) {
+                            sql += ` AND r.representante IN (${codigosRepresentantes.map(() => '?').join(',')})`;
+                            params.push(...codigosRepresentantes);
+                        }
                     }
 
                     sql += ' GROUP BY v.cliente, c.nome, c.cidade ORDER BY valor_total DESC';
@@ -1091,8 +1098,15 @@
                         params.push(...supervisores);
                     }
                     if (representantes.length > 0) {
-                        sql += ` AND r.desc_representante IN (${representantes.map(() => '?').join(',')})`;
-                        params.push(...representantes);
+                        // Converter descrições para códigos de representantes
+                        const codigosRepresentantes = window.todosRepresentantes
+                            .filter(r => representantes.includes(r.desc_representante))
+                            .map(r => r.representante);
+
+                        if (codigosRepresentantes.length > 0) {
+                            sql += ` AND r.representante IN (${codigosRepresentantes.map(() => '?').join(',')})`;
+                            params.push(...codigosRepresentantes);
+                        }
                     }
 
                     sql += ' GROUP BY c.grupo, c.grupo_desc ORDER BY valor_total DESC';
