@@ -950,17 +950,17 @@
                         </td>
                         <td style="text-align: right; padding: 10px 8px;">
                             <div style="font-weight: bold; font-size: 0.95em;">${peso.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-                            <div style="color: #888; font-size: 0.8em; margin-top: 2px;">Meta: ${metaPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
                         </td>
                         <td style="text-align: center; padding: 10px 8px;">
                             <div style="font-weight: bold; font-size: 0.95em;">${positivados}</div>
-                            <div style="color: #888; font-size: 0.8em; margin-top: 2px;">Meta: ${metaClientes}</div>
                         </td>
                         <td style="text-align: center; padding: 10px 8px;">
-                            <span class="status-badge ${statusFatClass}" style="font-size: 0.95em; padding: 4px 8px;">${percMetaFat.toFixed(1)}%</span>
+                            <div><span class="status-badge ${statusFatClass}" style="font-size: 0.95em; padding: 4px 8px;">${percMetaFat.toFixed(1)}%</span></div>
+                            <div style="color: #888; font-size: 0.8em; margin-top: 4px;">Meta: R$ ${metaFat.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
                         </td>
                         <td style="text-align: center; padding: 10px 8px;">
-                            <span class="status-badge ${statusPesoClass}" style="font-size: 0.95em; padding: 4px 8px;">${percMetaPeso.toFixed(1)}%</span>
+                            <div><span class="status-badge ${statusPesoClass}" style="font-size: 0.95em; padding: 4px 8px;">${percMetaPeso.toFixed(1)}%</span></div>
+                            <div style="color: #888; font-size: 0.8em; margin-top: 4px;">Meta: ${metaPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
                         </td>
                         <td style="text-align: center; padding: 10px 8px;">
                             <div style="font-weight: bold; font-size: 0.95em;">
