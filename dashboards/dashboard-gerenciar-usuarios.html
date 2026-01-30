@@ -1003,6 +1003,7 @@
                         <option value="tab_produto">📦 Produtos (tab_produto)</option>
                         <option value="tab_representante">🤝 Representantes (tab_representante)</option>
                         <option value="vendas">💰 Vendas (vendas) - Apenas Série EP</option>
+                        <option value="metas_mensais">🎯 Metas Mensais (metas_mensais)</option>
                     </select>
                 </div>
 
@@ -1022,11 +1023,11 @@
                     <div class="file-upload-area" id="fileUploadArea">
                         <div class="file-upload-icon">📤</div>
                         <div class="file-upload-text">Clique ou arraste o arquivo aqui</div>
-                        <div class="file-upload-hint">Formatos aceitos: CSV (.csv), Texto em Unicode (.txt), TSV (.tsv, .tab) - Máx: 50MB</div>
-                        <div class="file-upload-hint" style="font-size: 0.85em; color: #666;">Separador detectado automaticamente (tab, ponto-e-vírgula ou vírgula)</div>
+                        <div class="file-upload-hint" id="uploadHint1">Formatos aceitos: CSV (.csv), Texto em Unicode (.txt), TSV (.tsv, .tab) - Máx: 50MB</div>
+                        <div class="file-upload-hint" id="uploadHint2" style="font-size: 0.85em; color: #666;">Separador detectado automaticamente (tab, ponto-e-vírgula ou vírgula)</div>
                     </div>
 
-                    <input type="file" id="fileInput" class="file-input" accept=".csv,.txt,.tab,.tsv">
+                    <input type="file" id="fileInput" class="file-input" accept=".csv,.txt,.tab,.tsv" id="fileInputMain">
 
                     <div id="selectedFile" class="selected-file"></div>
 
@@ -1581,6 +1582,7 @@
                 this.CSV_SEPARATOR = ';'; // Será detectado automaticamente se necessário
                 this.MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
                 this.ALLOWED_EXTENSIONS = ['.csv', '.txt', '.tab', '.tsv']; // Suporta CSV e Texto em Unicode
+                this.EXCEL_EXTENSIONS = ['.xlsx', '.xls']; // Para metas_mensais
 
                 // Definição das tabelas
                 this.tables = {
@@ -1609,11 +1611,9 @@
                         name: 'vendas',
                         displayName: 'Vendas (Apenas Série EP)',
                         pk: 'chave_primaria',
-                        isSpecial: true, // Flag para tratamento especial
-                        serieFilter: 'EP', // Filtro aplicado automaticamente
-                        // Colunas do Excel (cabeçalhos que o usuário deve ter)
+                        isSpecial: true,
+                        serieFilter: 'EP',
                         excelColumns: ['Série', 'Nota Fiscal', 'Emissão', 'Produto', 'Qtde.Faturada', 'Nat.Oper.', 'Família', 'Complemento', 'Cliente', 'Nome', 'Fantasia', 'Representante', 'UF', 'Cidade', 'Peso Líq.', 'Preço.Unitário', '% Desc.', 'Valor Bruto', 'Valor Desconto', 'Valor Líquido', 'Valor Financeiro', 'Grupo Empresa', 'Preço Unit. Liq.', 'Preço Bruto'],
-                        // Mapeamento: Excel → Banco
                         columnMapping: {
                             'Série': 'serie',
                             'Nota Fiscal': 'nota_fiscal',
@@ -1640,9 +1640,16 @@
                             'Preço Unit. Liq.': 'preco_unit_liq',
                             'Preço Bruto': 'preco_bruto'
                         },
-                        // Colunas do banco (para referência)
                         columns: ['chave_primaria', 'serie', 'nota_fiscal', 'emissao', 'produto', 'qtde_faturada', 'nat_oper', 'familia', 'complemento', 'cliente', 'nome', 'fantasia', 'representante', 'uf', 'cidade', 'peso_liq', 'preco_unitario', 'perc_desc', 'valor_bruto', 'valor_desconto', 'valor_liquido', 'valor_financeiro', 'grupo_empresa', 'preco_unit_liq', 'preco_bruto'],
                         example: ['123456PROD001', 'EP', '123456', '2024-01-15', 'PROD001', '10', '5.102', 'ALIMENTOS', 'Cx com 12 unidades', 'CLI001', 'João Silva', 'Silva & Cia', 'REP001', 'SP', 'São Paulo', '5.5', '25.00', '10', '250.00', '25.00', '225.00', '225.00', 'GERMANI', '22.50', '250.00']
+                    },
+                    metas_mensais: {
+                        name: 'metas_mensais',
+                        displayName: 'Metas Mensais',
+                        pk: 'id',
+                        columns: ['representante', 'ano_mes', 'meta_faturamento', 'meta_peso', 'meta_clientes', 'observacao'],
+                        example: ['001', '2026-01', '150000.00', '50000.00', '120', 'Meta baseada no histórico de 2025'],
+                        info: 'Formato do período: YYYY-MM (ex: 2026-01). Valores numéricos usam ponto como separador decimal.'
                     }
                 };
 
@@ -1728,32 +1735,43 @@
                 }
 
                 const table = this.tables[tableName];
+                let tableInfoHTML = `
+                    <strong>Tabela:</strong> ${table.name}<br>
+                    <strong>Chave Primária (obrigatória):</strong> ${table.pk}<br>
+                    <strong>Total de colunas:</strong> ${table.columns.length}<br>
+                    <strong>Colunas:</strong> ${table.columns.join(', ')}
+                `;
 
-                // Informações especiais para vendas
-                if (tableName === 'vendas') {
-                    tableInfoText.innerHTML = `
-                        <strong>Tabela:</strong> ${table.name}<br>
-                        <strong>⚠️ FILTRO:</strong> Apenas registros com Série = "${table.serieFilter}" serão importados<br>
-                        <strong>Chave Primária:</strong> ${table.pk} (gerada automaticamente: Nota Fiscal + Produto)<br>
-                        <strong>Total de colunas:</strong> ${table.excelColumns.length}<br>
-                        <strong>Cabeçalhos do Excel:</strong> ${table.excelColumns.join(', ')}
-                    `;
-                } else {
-                    tableInfoText.innerHTML = `
-                        <strong>Tabela:</strong> ${table.name}<br>
-                        <strong>Chave Primária (obrigatória):</strong> ${table.pk}<br>
-                        <strong>Total de colunas:</strong> ${table.columns.length}<br>
-                        <strong>Colunas:</strong> ${table.columns.join(', ')}
-                    `;
+                // Adicionar informações extras para metas_mensais
+                if (tableName === 'metas_mensais' && table.info) {
+                    tableInfoHTML += `<br><br><strong>ℹ️ Importante:</strong> ${table.info}`;
                 }
 
-                // Atualizar texto do botão
+                tableInfoText.innerHTML = tableInfoHTML;
+
+                // Atualizar texto do botão e hints de upload
+                const uploadHint1 = document.getElementById('uploadHint1');
+                const uploadHint2 = document.getElementById('uploadHint2');
+                const fileInput = document.getElementById('fileInput');
+
                 if (tableName === 'tab_cliente') {
                     btnDownload.innerHTML = '📥 Baixar Template Excel com Macro';
                     btnDownload.title = 'Baixar arquivo Excel (.xlsm) com macro VBA para facilitar a importação';
+                    if (fileInput) fileInput.accept = '.csv,.txt,.tab,.tsv';
+                    if (uploadHint1) uploadHint1.textContent = 'Formatos aceitos: CSV (.csv), Texto em Unicode (.txt), TSV (.tsv, .tab) - Máx: 50MB';
+                    if (uploadHint2) uploadHint2.textContent = 'Separador detectado automaticamente (tab, ponto-e-vírgula ou vírgula)';
+                } else if (tableName === 'metas_mensais') {
+                    btnDownload.innerHTML = '📥 Baixar Template Excel';
+                    btnDownload.title = 'Baixar arquivo Excel (.xlsx) com exemplo';
+                    if (fileInput) fileInput.accept = '.xlsx,.xls,.csv,.txt';
+                    if (uploadHint1) uploadHint1.textContent = 'Formatos aceitos: Excel (.xlsx, .xls) ou CSV (.csv, .txt) - Máx: 50MB';
+                    if (uploadHint2) uploadHint2.textContent = 'Recomendado: use o template Excel';
                 } else {
                     btnDownload.innerHTML = '📥 Baixar Template CSV';
                     btnDownload.title = 'Baixar arquivo CSV de exemplo';
+                    if (fileInput) fileInput.accept = '.csv,.txt,.tab,.tsv';
+                    if (uploadHint1) uploadHint1.textContent = 'Formatos aceitos: CSV (.csv), Texto em Unicode (.txt), TSV (.tsv, .tab) - Máx: 50MB';
+                    if (uploadHint2) uploadHint2.textContent = 'Separador detectado automaticamente (tab, ponto-e-vírgula ou vírgula)';
                 }
 
                 tableInfo.classList.add('show');
@@ -1762,7 +1780,7 @@
                 this.resetImport();
             }
 
-            downloadTemplate() {
+            async downloadTemplate() {
                 if (!this.selectedTable) return;
 
                 const table = this.tables[this.selectedTable];
@@ -1790,29 +1808,61 @@
                     return;
                 }
 
-                // Para vendas, usar cabeçalhos do Excel
-                if (this.selectedTable === 'vendas') {
-                    const header = table.excelColumns.join(this.CSV_SEPARATOR);
-                    const example = table.example.join(this.CSV_SEPARATOR);
+                // Para metas_mensais, baixar template Excel
+                if (this.selectedTable === 'metas_mensais') {
+                    try {
+                        const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
 
-                    // Adicionar BOM UTF-8 e instruções
-                    const BOM = '\uFEFF';
-                    const instruction1 = `# IMPORTANTE: Apenas registros com Série = "${table.serieFilter}" serão importados!`;
-                    const instruction2 = `# Chave primária será gerada automaticamente: Nota Fiscal + Produto`;
-                    const instruction3 = `# Para preservar acentos (ç, ã, ê, etc) ao salvar:`;
-                    const instruction4 = `# - OPÇÃO 1 (Excel): Use "Texto em Unicode" ou mantenha "CSV (separado por vírgulas)"`;
-                    const instruction5 = `# - OPÇÃO 2 (Editor): Use Notepad++, VSCode ou Bloco de Notas e salve como UTF-8`;
-                    const csv = `${BOM}${instruction1}\n${instruction2}\n${instruction3}\n${instruction4}\n${instruction5}\n${header}\n${example}`;
+                        // Criar dados de exemplo (2 linhas)
+                        const data = [
+                            {
+                                'representante': '001',
+                                'ano_mes': '2026-01',
+                                'meta_faturamento': 150000.00,
+                                'meta_peso': 50000.00,
+                                'meta_clientes': 120,
+                                'observacao': 'Meta baseada no histórico de 2025'
+                            },
+                            {
+                                'representante': '002',
+                                'ano_mes': '2026-01',
+                                'meta_faturamento': 180000.00,
+                                'meta_peso': 60000.00,
+                                'meta_clientes': 150,
+                                'observacao': ''
+                            }
+                        ];
 
-                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = `template_${table.name}.csv`;
-                    link.click();
-                    return;
+                        const ws = XLSX.utils.json_to_sheet(data);
+                        const wb = XLSX.utils.book_new();
+                        XLSX.utils.book_append_sheet(wb, ws, 'Metas');
+                        XLSX.writeFile(wb, 'template_metas_mensais.xlsx');
+
+                        // Mostrar instruções
+                        setTimeout(() => {
+                            alert(
+                                '📥 Template Excel baixado com sucesso!\n\n' +
+                                '📖 INSTRUÇÕES:\n\n' +
+                                '1️⃣ Preencha as colunas obrigatórias:\n' +
+                                '   • representante (código do representante)\n' +
+                                '   • ano_mes (formato: YYYY-MM, ex: 2026-01)\n' +
+                                '   • meta_faturamento (número com ponto decimal)\n' +
+                                '   • meta_peso (número com ponto decimal)\n' +
+                                '   • meta_clientes (número inteiro)\n\n' +
+                                '2️⃣ A coluna "observacao" é opcional\n\n' +
+                                '3️⃣ Salve o arquivo e faça o upload\n\n' +
+                                '💡 Você pode importar metas de vários meses de uma vez!'
+                            );
+                        }, 500);
+                        return;
+                    } catch (error) {
+                        console.error('Erro ao gerar template Excel:', error);
+                        alert('Erro ao gerar template Excel. Tente novamente.');
+                        return;
+                    }
                 }
 
-                // Para outras tabelas, continuar com CSV normal
+                // Para outras tabelas, continuar com CSV
                 // Criar CSV com ponto-e-vírgula
                 const header = table.columns.join(this.CSV_SEPARATOR);
                 const example = table.example.join(this.CSV_SEPARATOR);
@@ -1847,10 +1897,19 @@
 
                 // Validate file type
                 const fileName = file.name.toLowerCase();
-                const isValidType = this.ALLOWED_EXTENSIONS.some(ext => fileName.endsWith(ext));
+                let isValidType = this.ALLOWED_EXTENSIONS.some(ext => fileName.endsWith(ext));
+
+                // Para metas_mensais, também aceitar Excel
+                if (this.selectedTable === 'metas_mensais') {
+                    const isExcel = this.EXCEL_EXTENSIONS.some(ext => fileName.endsWith(ext));
+                    isValidType = isValidType || isExcel;
+                }
 
                 if (!isValidType) {
-                    this.showError('selectedFile', `Formato inválido! Use apenas: ${this.ALLOWED_EXTENSIONS.join(', ')}`);
+                    const allowedFormats = this.selectedTable === 'metas_mensais'
+                        ? [...this.ALLOWED_EXTENSIONS, ...this.EXCEL_EXTENSIONS].join(', ')
+                        : this.ALLOWED_EXTENSIONS.join(', ');
+                    this.showError('selectedFile', `Formato inválido! Use apenas: ${allowedFormats}`);
                     input.value = '';
                     return;
                 }
@@ -1911,13 +1970,25 @@
                 try {
                     // Read file
                     progressFill.style.width = '10%';
-                    this.addLogEntry(logDiv, '📖 Lendo arquivo CSV...');
-                    const content = await this.readFile(this.selectedFile);
+                    const fileName = this.selectedFile.name.toLowerCase();
+                    const isExcel = this.EXCEL_EXTENSIONS.some(ext => fileName.endsWith(ext));
 
-                    // Parse CSV
+                    let parsedData;
+                    if (isExcel) {
+                        // Processar Excel
+                        this.addLogEntry(logDiv, '📖 Lendo arquivo Excel...');
+                        parsedData = await this.parseExcel(this.selectedFile);
+                    } else {
+                        // Processar CSV
+                        this.addLogEntry(logDiv, '📖 Lendo arquivo CSV...');
+                        const content = await this.readFile(this.selectedFile);
+                        // Parse CSV
+                        progressFill.style.width = '20%';
+                        this.addLogEntry(logDiv, '🔍 Analisando dados...');
+                        parsedData = this.parseCSV(content);
+                    }
+
                     progressFill.style.width = '20%';
-                    this.addLogEntry(logDiv, '🔍 Analisando dados...');
-                    const parsedData = this.parseCSV(content);
 
                     // Validate
                     progressFill.style.width = '30%';
@@ -2054,6 +2125,46 @@
                 }
             }
 
+            async parseExcel(file) {
+                try {
+                    const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
+
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            try {
+                                const data = new Uint8Array(e.target.result);
+                                const workbook = XLSX.read(data, { type: 'array' });
+                                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                                const rows = XLSX.utils.sheet_to_json(firstSheet);
+
+                                // Converter chaves para snake_case se necessário
+                                const normalizedRows = rows.map(row => {
+                                    const normalized = {};
+                                    for (const [key, value] of Object.entries(row)) {
+                                        // Remover espaços e converter para snake_case
+                                        const normalizedKey = key.toLowerCase().trim().replace(/\s+/g, '_');
+                                        normalized[normalizedKey] = value;
+                                    }
+                                    return normalized;
+                                });
+
+                                resolve({
+                                    headers: normalizedRows.length > 0 ? Object.keys(normalizedRows[0]) : [],
+                                    rows: normalizedRows
+                                });
+                            } catch (error) {
+                                reject(new Error('Erro ao processar arquivo Excel: ' + error.message));
+                            }
+                        };
+                        reader.onerror = () => reject(new Error('Erro ao ler arquivo Excel'));
+                        reader.readAsArrayBuffer(file);
+                    });
+                } catch (error) {
+                    throw new Error('Erro ao carregar biblioteca Excel: ' + error.message);
+                }
+            }
+
             parseCSV(content) {
                 // Detectar separador automaticamente
                 const detectedSeparator = this.detectSeparator(content);
@@ -2129,42 +2240,7 @@
             validateData(parsedData) {
                 const table = this.tables[this.selectedTable];
 
-                // Validação especial para vendas
-                if (this.selectedTable === 'vendas') {
-                    // Verificar se tem os cabeçalhos do Excel
-                    const requiredHeaders = ['Série', 'Nota Fiscal', 'Produto'];
-                    const missingHeaders = requiredHeaders.filter(h => !parsedData.headers.includes(h));
-
-                    if (missingHeaders.length > 0) {
-                        throw new Error(`Cabeçalhos obrigatórios ausentes: ${missingHeaders.join(', ')}`);
-                    }
-
-                    // Filtrar e validar cada linha
-                    let filteredCount = 0;
-                    parsedData.rows.forEach((row, index) => {
-                        // Verificar campos obrigatórios
-                        if (!row['Nota Fiscal'] || row['Nota Fiscal'].trim() === '') {
-                            throw new Error(`Linha ${index + 2}: Nota Fiscal não pode estar vazia`);
-                        }
-                        if (!row['Produto'] || row['Produto'].trim() === '') {
-                            throw new Error(`Linha ${index + 2}: Produto não pode estar vazio`);
-                        }
-
-                        // Contar registros filtrados
-                        if (row['Série'] !== table.serieFilter) {
-                            filteredCount++;
-                        }
-                    });
-
-                    // Informar sobre filtros aplicados
-                    if (filteredCount > 0) {
-                        console.log(`⚠️ ${filteredCount} registros serão filtrados (Série != "${table.serieFilter}")`);
-                    }
-
-                    return; // Termina validação para vendas
-                }
-
-                // Validação padrão para outras tabelas
+                // Validar se todas as colunas do CSV existem na tabela
                 const invalidColumns = parsedData.headers.filter(h => !table.columns.includes(h));
                 if (invalidColumns.length > 0) {
                     throw new Error(`Colunas inválidas: ${invalidColumns.join(', ')}`);
@@ -2198,64 +2274,74 @@
                 let success = 0;
                 let errors = 0;
 
-                // Preparar batch de INSERT OR REPLACE
+                // Tratamento especial para metas_mensais
+                if (this.selectedTable === 'metas_mensais') {
+                    for (const row of parsedData.rows) {
+                        try {
+                            // Verificar se já existe meta para representante+ano_mes
+                            const checkSql = `SELECT id FROM metas_mensais WHERE representante = ? AND ano_mes = ?`;
+                            const existing = await db.execute(checkSql, [row.representante, row.ano_mes]);
+
+                            if (existing.rows.length > 0) {
+                                // Atualizar meta existente
+                                const updateSql = `
+                                    UPDATE metas_mensais
+                                    SET meta_faturamento = ?,
+                                        meta_peso = ?,
+                                        meta_clientes = ?,
+                                        observacao = ?,
+                                        updated_at = CURRENT_TIMESTAMP,
+                                        created_by = 'importacao'
+                                    WHERE representante = ? AND ano_mes = ?
+                                `;
+                                await db.execute(updateSql, [
+                                    row.meta_faturamento,
+                                    row.meta_peso,
+                                    row.meta_clientes,
+                                    row.observacao || null,
+                                    row.representante,
+                                    row.ano_mes
+                                ]);
+                            } else {
+                                // Inserir nova meta
+                                const insertSql = `
+                                    INSERT INTO metas_mensais
+                                    (representante, ano_mes, meta_faturamento, meta_peso, meta_clientes, observacao, created_by)
+                                    VALUES (?, ?, ?, ?, ?, ?, 'importacao')
+                                `;
+                                await db.execute(insertSql, [
+                                    row.representante,
+                                    row.ano_mes,
+                                    row.meta_faturamento,
+                                    row.meta_peso,
+                                    row.meta_clientes,
+                                    row.observacao || null
+                                ]);
+                            }
+                            success++;
+                        } catch (error) {
+                            console.error('Erro ao importar linha:', row, error);
+                            errors++;
+                        }
+                    }
+
+                    return { success, errors };
+                }
+
+                // Preparar batch de INSERT OR REPLACE para outras tabelas
                 const statements = [];
 
-                // Processamento especial para vendas
-                if (this.selectedTable === 'vendas') {
-                    for (const excelRow of parsedData.rows) {
-                        // Aplicar filtro: apenas Série = EP
-                        if (excelRow['Série'] !== table.serieFilter) {
-                            continue; // Pular este registro
-                        }
+                for (const row of parsedData.rows) {
+                    const columns = Object.keys(row);
+                    const values = Object.values(row);
+                    const placeholders = columns.map(() => '?').join(', ');
 
-                        // Gerar chave primária: Nota Fiscal + Produto
-                        const notaFiscal = (excelRow['Nota Fiscal'] || '').toString().trim();
-                        const produto = (excelRow['Produto'] || '').toString().trim();
-                        const chave_primaria = notaFiscal + produto;
+                    const sql = `INSERT OR REPLACE INTO ${table.name} (${columns.join(', ')}) VALUES (${placeholders})`;
 
-                        // Mapear colunas do Excel para o banco
-                        const dbRow = { chave_primaria };
-
-                        for (const [excelCol, dbCol] of Object.entries(table.columnMapping)) {
-                            let value = excelRow[excelCol];
-
-                            // Converter valores vazios para null
-                            if (value === undefined || value === null || value === '') {
-                                value = null;
-                            } else {
-                                value = value.toString().trim();
-                            }
-
-                            dbRow[dbCol] = value;
-                        }
-
-                        // Preparar statement
-                        const columns = Object.keys(dbRow);
-                        const values = Object.values(dbRow);
-                        const placeholders = columns.map(() => '?').join(', ');
-
-                        const sql = `INSERT OR IGNORE INTO ${table.name} (${columns.join(', ')}) VALUES (${placeholders})`;
-
-                        statements.push({
-                            sql: sql,
-                            args: values
-                        });
-                    }
-                } else {
-                    // Processamento padrão para outras tabelas
-                    for (const row of parsedData.rows) {
-                        const columns = Object.keys(row);
-                        const values = Object.values(row);
-                        const placeholders = columns.map(() => '?').join(', ');
-
-                        const sql = `INSERT OR REPLACE INTO ${table.name} (${columns.join(', ')}) VALUES (${placeholders})`;
-
-                        statements.push({
-                            sql: sql,
-                            args: values
-                        });
-                    }
+                    statements.push({
+                        sql: sql,
+                        args: values
+                    });
                 }
 
                 // Executar em batch
