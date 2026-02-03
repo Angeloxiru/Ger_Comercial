@@ -1,0 +1,501 @@
+/* ============================================================
+   GER COMERCIAL - ESTILOS MOBILE
+
+   Este arquivo contém exclusivamente estilos que ativam
+   em telas pequenas via media queries.
+   Nenhum estilo do desktop é afetado.
+
+   Breakpoints:
+     1024px  Tablet
+      768px  Mobile
+      480px  Small Mobile
+
+   Como usar:
+     <link rel="stylesheet" href="css/mobile.css">
+   ============================================================ */
+
+
+/* ============================================================
+   BOTÃO TOGGLE DE FILTROS
+   Injetado pelo js/mobile.js — visível apenas em mobile.
+   No desktop fica display:none por padrão.
+   ============================================================ */
+
+.mobile-filter-toggle {
+    display: none;
+}
+
+@media (max-width: 768px) {
+
+    .mobile-filter-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: calc(100% - 40px);
+        margin: 16px 20px 0;
+        padding: 14px 20px;
+        background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1em;
+        font-weight: 600;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        font-family: inherit;
+    }
+
+    .mobile-filter-toggle:active {
+        opacity: 0.85;
+    }
+
+    .mobile-filter-arrow {
+        transition: transform 0.25s ease;
+        font-size: 0.75em;
+        display: inline-block;
+    }
+
+    .mobile-filter-toggle[aria-expanded="true"] .mobile-filter-arrow {
+        transform: rotate(180deg);
+    }
+
+
+    /* ============================================================
+       SEÇÃO DE FILTROS — collapsible em mobile
+       ============================================================ */
+
+    .filters-section {
+        flex-direction: column !important;
+        margin: 10px 20px !important;
+        padding: 14px !important;
+    }
+
+    .filters-section.mobile-filters-collapsed {
+        display: none !important;
+    }
+
+    .filters-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .filters-buttons {
+        flex-direction: row !important;
+        min-width: unset !important;
+        width: 100% !important;
+        gap: 8px !important;
+    }
+
+    .filters-buttons .btn-atualizar,
+    .filters-buttons .btn-limpar,
+    .filters-buttons .btn-whatsapp,
+    .filters-buttons .btn-export {
+        flex: 1 !important;
+    }
+
+    .filter-group select[multiple] {
+        min-height: 80px !important;
+    }
+
+    .quick-dates {
+        gap: 6px !important;
+    }
+
+    .quick-date-btn {
+        padding: 6px 10px !important;
+        font-size: 0.78em !important;
+    }
+
+
+    /* ============================================================
+       HEADER — páginas de dashboard (flex layout)
+       Contém .header-left com logo + título
+       ============================================================ */
+
+    .header {
+        padding: 10px 16px !important;
+        gap: 8px !important;
+    }
+
+    .header-left {
+        gap: 8px !important;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .header-logo img {
+        height: 36px !important;
+    }
+
+    .header h1 {
+        font-size: 1em !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .btn-voltar,
+    .btn-back {
+        padding: 8px 10px !important;
+        font-size: 0.82em !important;
+        white-space: nowrap;
+    }
+
+    /* header-right usado no gerenciar-usuarios (back + logout) */
+    .header-right {
+        gap: 8px !important;
+    }
+
+    .btn-logout {
+        padding: 6px 10px !important;
+        font-size: 0.78em !important;
+    }
+
+
+    /* ============================================================
+       HEADER — index.html (grid 3 colunas com .header-content)
+       Converte para coluna única centrada
+       ============================================================ */
+
+    .header:has(.header-content) {
+        grid-template-columns: 1fr !important;
+        text-align: center !important;
+        padding: 20px 16px !important;
+        gap: 10px !important;
+    }
+
+    .header:has(.header-content) .header-logo {
+        justify-self: center !important;
+    }
+
+    .header:has(.header-content) .header-logo img {
+        height: 50px !important;
+    }
+
+    .header:has(.header-content) .header h1 {
+        font-size: 1.4em !important;
+        white-space: normal !important;
+        overflow: visible !important;
+    }
+
+    .header:has(.header-content) .header-user {
+        justify-self: center !important;
+        text-align: center !important;
+    }
+
+
+    /* ============================================================
+       CARDS GRID — index.html (home)
+       Desktop: 5 colunas → Mobile: 2 colunas
+       ============================================================ */
+
+    .cards-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    .card {
+        padding: 18px !important;
+    }
+
+    .card-icon {
+        width: 42px !important;
+        height: 42px !important;
+        font-size: 1.5em !important;
+        margin-bottom: 10px !important;
+    }
+
+    .card-title {
+        font-size: 1.05em !important;
+    }
+
+    .card-description {
+        font-size: 0.82em !important;
+        line-height: 1.4 !important;
+    }
+
+
+    /* ============================================================
+       CONTEÚDO PRINCIPAL — grid 70/30 → coluna única
+       Cobre .main-content usado em todos os dashboards
+       ============================================================ */
+
+    .main-content {
+        grid-template-columns: 1fr !important;
+        margin: 12px 16px !important;
+        gap: 16px !important;
+    }
+
+
+    /* ============================================================
+       KPI GRIDS
+       .kpi-grid   — 2×2, usado na maioria dos dashboards
+       .kpis-grid  — 4 colunas, usado em produtos-parados
+       ============================================================ */
+
+    .kpi-grid {
+        gap: 10px !important;
+    }
+
+    .kpis-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    .kpi-card {
+        padding: 12px !important;
+    }
+
+    .kpi-icon {
+        font-size: 1.4em !important;
+        margin-bottom: 4px !important;
+    }
+
+    .kpi-label {
+        font-size: 0.72em !important;
+    }
+
+    .kpi-value {
+        font-size: 1.2em !important;
+    }
+
+
+    /* ============================================================
+       TABELAS — scroll horizontal + tamanhos reduzidos
+       ============================================================ */
+
+    .table-wrapper,
+    .table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Hint de scroll — injetado pelo js/mobile.js */
+    .mobile-scroll-hint {
+        font-size: 0.72em;
+        color: #6c757d;
+        text-align: center;
+        padding: 4px 0 2px;
+        font-style: italic;
+    }
+
+    th,
+    td {
+        padding: 10px 8px !important;
+        font-size: 0.8em !important;
+        white-space: nowrap;
+    }
+
+    /* Primeira coluna (nomes) pode quebrar texto */
+    th:first-child,
+    td:first-child {
+        white-space: normal !important;
+        min-width: 90px;
+    }
+
+
+    /* ============================================================
+       TABLE HEADER (título acima da tabela)
+       ============================================================ */
+
+    .table-header {
+        padding: 12px 14px !important;
+        font-size: 0.9em !important;
+    }
+
+
+    /* ============================================================
+       TABLE FOOTER — empilha os botões de export
+       ============================================================ */
+
+    .table-footer {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+        padding: 10px 14px !important;
+    }
+
+    .table-footer .btn-export {
+        margin-left: 0 !important;
+        text-align: center;
+    }
+
+    .export-buttons {
+        flex-direction: column !important;
+        gap: 6px !important;
+    }
+
+    .export-buttons .btn-export {
+        text-align: center;
+    }
+
+
+    /* ============================================================
+       GRÁFICOS — altura menor em mobile
+       ============================================================ */
+
+    .chart-container {
+        height: 200px !important;
+        padding: 12px !important;
+    }
+
+    .chart-title {
+        font-size: 0.85em !important;
+        margin-bottom: 8px !important;
+    }
+
+
+    /* ============================================================
+       MAPA (Leaflet — clientes-sem-compras)
+       ============================================================ */
+
+    .map-section {
+        width: 100%;
+    }
+
+    #map {
+        height: 300px !important;
+    }
+
+    .map-legend {
+        gap: 10px !important;
+        font-size: 0.78em !important;
+    }
+
+
+    /* ============================================================
+       MODE BUTTONS (ranking-clientes)
+       ============================================================ */
+
+    .mode-buttons {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+
+    .btn-mode {
+        padding: 8px 14px !important;
+        font-size: 0.85em !important;
+    }
+
+
+    /* ============================================================
+       USERS TABLE (gerenciar-usuarios)
+       ============================================================ */
+
+    .users-table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .users-table th,
+    .users-table td {
+        padding: 10px 8px !important;
+        font-size: 0.82em !important;
+        white-space: nowrap;
+    }
+
+    .users-table th:first-child,
+    .users-table td:first-child {
+        white-space: normal !important;
+        min-width: 80px;
+    }
+
+    .action-buttons {
+        gap: 4px !important;
+    }
+
+    .btn-action {
+        padding: 6px 8px !important;
+        font-size: 0.78em !important;
+    }
+
+    .users-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+    }
+
+
+    /* ============================================================
+       MODAL (gerenciar-usuarios) — tela cheia em mobile
+       ============================================================ */
+
+    .modal-content {
+        margin: 20px auto !important;
+        padding: 20px !important;
+        max-width: calc(100vw - 40px) !important;
+    }
+
+
+    /* ============================================================
+       ALERTA GERAL
+       ============================================================ */
+
+    .alert {
+        margin: 10px 16px !important;
+    }
+
+
+    /* ============================================================
+       BODY — remove padding lateral do desktop
+       ============================================================ */
+
+    body {
+        padding: 0 !important;
+    }
+}
+
+
+/* ============================================================
+   SMALL MOBILE (max-width: 480px)
+   ============================================================ */
+
+@media (max-width: 480px) {
+
+    /* Cards: coluna única */
+    .cards-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Header index — logo menor */
+    .header:has(.header-content) .header-logo img {
+        height: 40px !important;
+    }
+
+    .header:has(.header-content) .header h1 {
+        font-size: 1.2em !important;
+    }
+
+    /* KPIs mantém 2×2 mesmo em small */
+    .kpi-grid,
+    .kpis-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .kpi-value {
+        font-size: 1.05em !important;
+    }
+
+    /* Filtros: botões empilham */
+    .filters-buttons {
+        flex-direction: column !important;
+    }
+
+    /* Toggle menor */
+    .mobile-filter-toggle {
+        margin: 12px 14px 0 !important;
+        width: calc(100% - 28px) !important;
+        padding: 12px 16px !important;
+        font-size: 0.92em !important;
+    }
+
+    /* Main content margem menor */
+    .main-content {
+        margin: 10px 12px !important;
+    }
+
+    /* Gráfico menor */
+    .chart-container {
+        height: 180px !important;
+    }
+}
