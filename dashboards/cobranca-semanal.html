@@ -1129,7 +1129,9 @@
         // Exportar PDF
         window.exportarPDF = async function() {
             try {
-                const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                const { default: autoTable } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js');
+                const { jsPDF } = window.jspdf;
 
                 const doc = new jsPDF('landscape');
 
@@ -1155,7 +1157,7 @@
                     parseFloat(row.perc_vs_ano_ant_peso || 0).toFixed(1) + '%'
                 ]);
 
-                doc.autoTable({
+                autoTable(doc, {
                     head: [['Representante', 'Faturamento', 'Peso', 'Positivados', '% Meta Fat.', '% Meta Peso', '% Fat. AA', '% Peso AA']],
                     body: tableData,
                     startY: 40,

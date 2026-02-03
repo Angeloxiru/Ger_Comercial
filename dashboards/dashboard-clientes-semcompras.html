@@ -1446,8 +1446,9 @@
             }
 
             try {
-                const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-                await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js');
+                await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                const { default: autoTable } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js');
+                const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('landscape');
 
                 doc.setFontSize(18);
@@ -1469,7 +1470,7 @@
                     row.dias_sem_compra
                 ]);
 
-                doc.autoTable({
+                autoTable(doc, {
                     head: [['Risco', 'Cod', 'Cliente', 'Cidade', 'Rota', 'SubRota', 'Representante(s)', 'Dias']],
                     body: tableData,
                     startY: 40,
