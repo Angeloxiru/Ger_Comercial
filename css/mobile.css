@@ -76,7 +76,16 @@
 
     .filters-grid {
         grid-template-columns: 1fr !important;
+        flex-wrap: wrap !important;
         gap: 12px !important;
+    }
+
+    /* Ranking de Clientes usa flex no .filters-grid com min-width nos filhos.
+       Sem essa regra os filtros não shrink em mobile. */
+    .filter-group,
+    .filter-group-periodo {
+        min-width: unset !important;
+        width: 100% !important;
     }
 
     .filters-buttons {
@@ -237,9 +246,12 @@
         gap: 10px !important;
     }
 
+    /* Produtos Parados: .kpis-grid tem style="margin: 0 20px;" inline.
+       Sem !important aqui a margem inline come largura no celular. */
     .kpis-grid {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 10px !important;
+        margin: 0 12px !important;
     }
 
     .kpi-card {
@@ -256,7 +268,7 @@
     }
 
     .kpi-value {
-        font-size: 1.2em !important;
+        font-size: 1em !important;
     }
 
 
@@ -360,6 +372,52 @@
     .map-legend {
         gap: 10px !important;
         font-size: 0.78em !important;
+    }
+
+
+    /* ============================================================
+       RIGHT SECTION (clientes-sem-compras)
+       Contém .kpi-grid + .summary-section. Em coluna única fica
+       abaixo da tabela+mapa e precisa caber na largura inteira.
+       ============================================================ */
+
+    .right-section {
+        gap: 14px !important;
+    }
+
+    .summary-header {
+        padding: 10px 14px !important;
+        font-size: 0.9em !important;
+    }
+
+    .summary-total {
+        padding: 10px 14px !important;
+        font-size: 0.95em !important;
+    }
+
+    .summary-content {
+        max-height: 220px !important;
+        padding: 0 !important;
+    }
+
+    .summary-rota,
+    .summary-subrota {
+        padding: 6px 12px !important;
+        font-size: 0.85em !important;
+    }
+
+    .time-summary {
+        padding: 10px !important;
+    }
+
+    .time-item {
+        padding: 8px 10px !important;
+        font-size: 0.85em !important;
+    }
+
+    .time-badge {
+        font-size: 0.82em !important;
+        padding: 3px 10px !important;
     }
 
 
@@ -473,7 +531,11 @@
     }
 
     .kpi-value {
-        font-size: 1.05em !important;
+        font-size: 0.88em !important;
+    }
+
+    .kpis-grid {
+        margin: 0 10px !important;
     }
 
     /* Filtros: botões empilham */
