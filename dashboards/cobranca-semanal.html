@@ -811,6 +811,7 @@
                     LEFT JOIN vendas v ON r.representante = v.representante
                         AND v.emissao >= ?
                         AND v.emissao <= ?
+                        AND v.nat_oper NOT IN ('5910', '6910')
                     WHERE r.rep_supervisor IS NOT NULL AND r.rep_supervisor != ''
                 `;
                 const paramsAtual = [dataInicio, dataFim];
@@ -855,6 +856,7 @@
                         COALESCE(SUM(peso_liq), 0) as peso_ano_ant
                     FROM vendas
                     WHERE emissao >= ? AND emissao <= ?
+                        AND nat_oper NOT IN ('5910', '6910')
                     GROUP BY representante
                 `;
                 const resultAnoAnt = await db.execute(sqlAnoAnterior, [anoAnt.inicio, anoAnt.fim]);
@@ -957,6 +959,7 @@
                         </td>
                         <td style="text-align: center; padding: 10px 8px;">
                             <div style="font-weight: bold; font-size: 0.95em;">${positivados}</div>
+                            <div style="color: #888; font-size: 0.8em; margin-top: 2px;">Meta: ${metaClientes}</div>
                         </td>
                         <td style="text-align: center; padding: 10px 8px;">
                             <div><span class="status-badge ${statusFatClass}" style="font-size: 0.95em; padding: 4px 8px;">${percMetaFat.toFixed(1)}%</span></div>
