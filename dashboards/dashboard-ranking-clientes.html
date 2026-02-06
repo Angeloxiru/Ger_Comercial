@@ -800,7 +800,7 @@
                 // Carregar dados completos para ter as relações
                 const [clientes, representantes] = await Promise.all([
                     db.execute('SELECT rota, sub_rota, cidade FROM tab_cliente WHERE rota IS NOT NULL'),
-                    db.execute('SELECT rep_supervisor, desc_representante FROM tab_representante WHERE rep_supervisor IS NOT NULL AND desc_representante IS NOT NULL')
+                    db.execute('SELECT representante, rep_supervisor, desc_representante FROM tab_representante WHERE rep_supervisor IS NOT NULL AND desc_representante IS NOT NULL')
                 ]);
 
                 dadosCompletosClientes = serializeDbResult(clientes).rows;
@@ -1053,7 +1053,7 @@
                     }
                     if (representantes.length > 0) {
                         // Converter descrições para códigos de representantes
-                        const codigosRepresentantes = window.todosRepresentantes
+                        const codigosRepresentantes = dadosCompletosRepresentantes
                             .filter(r => representantes.includes(r.desc_representante))
                             .map(r => r.representante);
 
@@ -1103,7 +1103,7 @@
                     }
                     if (representantes.length > 0) {
                         // Converter descrições para códigos de representantes
-                        const codigosRepresentantes = window.todosRepresentantes
+                        const codigosRepresentantes = dadosCompletosRepresentantes
                             .filter(r => representantes.includes(r.desc_representante))
                             .map(r => r.representante);
 
