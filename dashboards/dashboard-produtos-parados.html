@@ -504,10 +504,10 @@
                     ⏳ Carregando dados...
                 </div>
 
-                <div class="empty-state" id="emptyTable">
-                    <div class="empty-state-icon">✅</div>
-                    <h3>Nenhum produto parado encontrado</h3>
-                    <p>Ótima notícia! Não há produtos que pararam de ser vendidos no período analisado.</p>
+                <div class="empty-state show" id="emptyTable">
+                    <div class="empty-state-icon">📊</div>
+                    <h3>Selecione os filtros e clique em Atualizar</h3>
+                    <p>Escolha um supervisor e/ou representante e clique em "🔄 Atualizar" para ver os produtos parados.</p>
                 </div>
 
                 <div class="table-container" id="tableContainer" style="display: none;">
@@ -564,27 +564,99 @@
         let chartRisco = null;
         let filterSearchInstances = {};
 
-        // Carregar dados
+        // Carregar apenas filtros (sem dados) ao abrir a página
+        async function carregarFiltros() {
+            try {
+                await db.connect();
+
+                const [supervisoresResult, representantesResult] = await Promise.all([
+                    db.execute('SELECT DISTINCT rep_supervisor FROM tab_representante WHERE rep_supervisor IS NOT NULL ORDER BY rep_supervisor'),
+                    db.execute('SELECT DISTINCT rep_supervisor, desc_representante FROM tab_representante WHERE desc_representante IS NOT NULL ORDER BY desc_representante')
+                ]);
+
+                const selectSupervisor = document.getElementById('filterSupervisor');
+                selectSupervisor.innerHTML = '<option value="">Todos os Supervisores</option>';
+                supervisoresResult.rows.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.rep_supervisor;
+                    opt.textContent = s.rep_supervisor;
+                    selectSupervisor.appendChild(opt);
+                });
+
+                // Guardar dados completos dos representantes para filtro hierárquico
+                window._representantesCompletos = representantesResult.rows || [];
+                atualizarFiltroRepresentantesInicial();
+
+                // Criar instâncias de FilterSearch
+                filterSearchInstances.filterSupervisor = new FilterSearch('filterSupervisor', {
+                    placeholder: 'Digite para buscar supervisor...'
+                });
+                filterSearchInstances.filterRepresentante = new FilterSearch('filterRepresentante', {
+                    placeholder: 'Digite para buscar representante...'
+                });
+
+                selectSupervisor.addEventListener('change', atualizarFiltroRepresentantesInicial);
+
+                console.log('✅ Filtros carregados');
+            } catch (error) {
+                console.error('❌ Erro ao carregar filtros:', error);
+            }
+        }
+
+        // Atualizar representantes baseado no supervisor (antes de carregar dados)
+        function atualizarFiltroRepresentantesInicial() {
+            const supervisorSelecionado = document.getElementById('filterSupervisor').value;
+            const selectRepresentante = document.getElementById('filterRepresentante');
+
+            const reps = supervisorSelecionado
+                ? window._representantesCompletos.filter(r => r.rep_supervisor === supervisorSelecionado)
+                : window._representantesCompletos;
+
+            const representantesUnicos = [...new Set(reps.map(r => r.desc_representante).filter(Boolean))].sort();
+
+            if (filterSearchInstances.filterRepresentante) {
+                filterSearchInstances.filterRepresentante.destroy();
+                filterSearchInstances.filterRepresentante = null;
+            }
+
+            selectRepresentante.innerHTML = '';
+            const optDefault = document.createElement('option');
+            optDefault.value = '';
+            optDefault.textContent = supervisorSelecionado ? 'Todos os Representantes deste Supervisor' : 'Todos os Representantes';
+            selectRepresentante.appendChild(optDefault);
+
+            representantesUnicos.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r;
+                opt.textContent = r;
+                selectRepresentante.appendChild(opt);
+            });
+
+            filterSearchInstances.filterRepresentante = new FilterSearch('filterRepresentante', {
+                placeholder: 'Digite para buscar representante...'
+            });
+        }
+
+        // Carregar dados (chamado ao clicar em Atualizar)
         async function carregarDados() {
             try {
                 mostrarLoading(true);
 
-                // Conectar ao banco
-                await db.connect();
+                if (!db.isConnected()) await db.connect();
 
-                // Buscar dados da view
+                // Limitar a 90 dias (13 semanas) para não pesar
                 const result = await db.execute(`
                     SELECT * FROM vw_produtos_parados
+                    WHERE qtd_semanas_parado <= 13
                     ORDER BY qtd_semanas_parado DESC, valor_medio_perdido DESC
                 `);
 
                 dadosCompletos = result.rows || [];
                 dadosFiltrados = [...dadosCompletos];
 
-                console.log('✅ Dados carregados:', dadosCompletos.length, 'produtos parados');
+                console.log('✅ Dados carregados:', dadosCompletos.length, 'produtos parados (até 90 dias)');
 
                 // Atualizar interface
-                popularFiltros();
                 aplicarFiltros();
                 mostrarLoading(false);
 
@@ -1122,8 +1194,8 @@
         window.exportarPDF = exportarPDF;
         window.enviarWhatsApp = enviarWhatsApp;
 
-        // Carregar dados ao iniciar
-        carregarDados();
+        // Carregar apenas os filtros ao iniciar (sem carregar dados)
+        carregarFiltros();
     </script>
 </body>
 </html>
