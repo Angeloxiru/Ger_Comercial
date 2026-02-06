@@ -787,11 +787,18 @@
             const cacheKey = 'ranking_clientes_filtros';
             const cached = cache.get(cacheKey);
 
-            if (cached?.rotas?.rows?.length > 0) {
+            // Valida cache: representantesCompletos deve ter campo 'representante'
+            const cacheValido = cached?.rotas?.rows?.length > 0 &&
+                cached?.representantesCompletos?.length > 0 &&
+                cached.representantesCompletos[0].representante !== undefined;
+
+            if (cacheValido) {
                 dadosCompletosClientes = cached.clientes || [];
                 dadosCompletosRepresentantes = cached.representantesCompletos || [];
                 popularFiltros(cached);
                 return;
+            } else if (cached) {
+                cache.delete(cacheKey);
             }
 
             try {
@@ -1055,7 +1062,8 @@
                         // Converter descrições para códigos de representantes
                         const codigosRepresentantes = dadosCompletosRepresentantes
                             .filter(r => representantes.includes(r.desc_representante))
-                            .map(r => r.representante);
+                            .map(r => r.representante)
+                            .filter(v => v !== null && v !== undefined);
 
                         if (codigosRepresentantes.length > 0) {
                             sql += ` AND r.representante IN (${codigosRepresentantes.map(() => '?').join(',')})`;
@@ -1105,7 +1113,8 @@
                         // Converter descrições para códigos de representantes
                         const codigosRepresentantes = dadosCompletosRepresentantes
                             .filter(r => representantes.includes(r.desc_representante))
-                            .map(r => r.representante);
+                            .map(r => r.representante)
+                            .filter(v => v !== null && v !== undefined);
 
                         if (codigosRepresentantes.length > 0) {
                             sql += ` AND r.representante IN (${codigosRepresentantes.map(() => '?').join(',')})`;
