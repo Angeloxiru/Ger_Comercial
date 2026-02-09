@@ -642,7 +642,8 @@
             try {
                 mostrarLoading(true);
 
-                if (!db.isConnected()) await db.connect();
+                // Reconectar para garantir conexão fresca
+                await db.connect();
 
                 // Limitar a 90 dias (13 semanas) para não pesar
                 const result = await db.execute(`
