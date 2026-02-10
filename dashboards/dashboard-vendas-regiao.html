@@ -432,6 +432,54 @@
             border: 1px solid #ffc107;
             color: #856404;
         }
+
+        /* ===== ROTEIROS: linhas agrupadas por sub-rota ===== */
+        .row-subrota-header td {
+            background: #f8f9fa;
+            border-top: 2px solid #dee2e6;
+            font-weight: 600;
+            font-size: 0.92em;
+        }
+        .row-subrota-header.compartilhada-2 td {
+            background: #fff8e1;
+            border-left: 4px solid #f39c12;
+        }
+        .row-subrota-header.compartilhada-3 td {
+            background: #fde8e8;
+            border-left: 4px solid #fc0303;
+        }
+        .row-rep-detail td {
+            background: #ffffff;
+            font-size: 0.9em;
+        }
+        .row-rep-detail.shared td {
+            background: #fffdf5;
+        }
+
+        /* Badge circular com contagem de representantes */
+        .badge-rep-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 0.75em;
+            font-weight: 700;
+            margin-left: 6px;
+            padding: 0 4px;
+            vertical-align: middle;
+        }
+        .badge-rep-count.one   { background: #dee2e6; color: #495057; }
+        .badge-rep-count.two   { background: #f39c12; color: white; }
+        .badge-rep-count.three { background: #fc0303; color: white; }
+
+        /* Sub-texto nos KPIs */
+        .kpi-sub {
+            font-size: 0.72em;
+            color: #6c757d;
+            margin-top: 2px;
+        }
     </style>
 
     <!-- Mobile responsive -->
@@ -499,6 +547,7 @@
             <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar Filtros</button>
             <button class="btn-atualizar" id="btnItens" onclick="atualizarDadosItens()">📦 Itens</button>
             <button class="btn-atualizar" id="btnClientes" onclick="atualizarDadosClientes()">👥 Clientes</button>
+            <button class="btn-atualizar" id="btnRoteiros" onclick="atualizarDadosRoteiros()">📍 Roteiros</button>
         </div>
     </div>
 
@@ -910,6 +959,7 @@
                 document.getElementById('loading').classList.add('active');
                 document.getElementById('btnItens').disabled = true;
                 document.getElementById('btnClientes').disabled = true;
+                document.getElementById('btnRoteiros').disabled = true;
                 if (!db.isConnected()) await db.connect();
 
                 // Construir query SQL dinamicamente baseado no modo
@@ -917,6 +967,9 @@
                 if (modo === 'clientes') {
                     sql = `SELECT v.cliente as cod_cliente, c.nome as razao_social, SUM(v.qtde_faturada) as qtde, SUM(v.valor_liquido) as valor, SUM(v.peso_liq) as peso FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.emissao >= ? AND v.emissao <= ?`;
                     groupBy = ' GROUP BY v.cliente, c.nome ORDER BY valor DESC';
+                } else if (modo === 'roteiros') {
+                    sql = `SELECT c.rota, c.sub_rota, v.representante, r.desc_representante, COUNT(DISTINCT v.cliente) AS num_clientes, COUNT(DISTINCT v.nota_fiscal) AS num_pedidos, SUM(v.valor_liquido) AS valor_total, SUM(v.peso_liq) AS peso_total FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente LEFT JOIN tab_representante r ON v.representante = r.representante WHERE v.emissao >= ? AND v.emissao <= ? AND c.sub_rota IS NOT NULL`;
+                    groupBy = ' GROUP BY c.rota, c.sub_rota, v.representante, r.desc_representante ORDER BY c.sub_rota ASC, valor_total DESC';
                 } else {
                     sql = `SELECT v.produto as cod, v.complemento as descricao, SUM(v.qtde_faturada) as qtde, SUM(v.valor_liquido) as valor, SUM(v.peso_liq) as peso FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.emissao >= ? AND v.emissao <= ?`;
                     groupBy = ' GROUP BY v.produto, v.complemento ORDER BY qtde DESC';
@@ -933,7 +986,7 @@
                     sql += ` AND c.sub_rota IN (${subRotas.map(() => '?').join(',')})`;
                     params.push(...subRotas);
                 }
-                if (cidades.length > 0) {
+                if (cidades.length > 0 && modo !== 'roteiros') {
                     sql += ` AND v.cidade IN (${cidades.map(() => '?').join(',')})`;
                     params.push(...cidades);
                 }
@@ -951,12 +1004,79 @@
                 document.getElementById('loading').classList.remove('active');
                 document.getElementById('btnItens').disabled = false;
                 document.getElementById('btnClientes').disabled = false;
+                document.getElementById('btnRoteiros').disabled = false;
             }
         }
 
         // Funções wrapper para os botões
         window.atualizarDadosItens = () => atualizarDados('itens');
         window.atualizarDadosClientes = () => atualizarDados('clientes');
+        window.atualizarDadosRoteiros = () => atualizarDados('roteiros');
+
+        // ===== ROTEIROS: funções auxiliares =====
+
+        function agruparPorSubRota(rows) {
+            const map = new Map();
+            rows.forEach(row => {
+                const key = row.sub_rota;
+                if (!map.has(key)) {
+                    map.set(key, {
+                        rota: row.rota,
+                        sub_rota: row.sub_rota,
+                        representantes: [],
+                        total_clientes: 0,
+                        total_pedidos: 0,
+                        valor_total: 0,
+                        peso_total: 0
+                    });
+                }
+                const g = map.get(key);
+                g.representantes.push({
+                    representante:      row.representante,
+                    desc_representante: row.desc_representante,
+                    num_clientes:  Number(row.num_clientes  || 0),
+                    num_pedidos:   Number(row.num_pedidos   || 0),
+                    valor_total:   Number(row.valor_total   || 0),
+                    peso_total:    Number(row.peso_total    || 0)
+                });
+                g.total_clientes += Number(row.num_clientes  || 0);
+                g.total_pedidos  += Number(row.num_pedidos   || 0);
+                g.valor_total    += Number(row.valor_total   || 0);
+                g.peso_total     += Number(row.peso_total    || 0);
+            });
+            return Array.from(map.values());
+        }
+
+        function aplanarRoteiros(grupos) {
+            const flat = [];
+            grupos.forEach(g => {
+                flat.push({
+                    _rowType: 'group_header',
+                    _repCount: g.representantes.length,
+                    rota: g.rota,
+                    sub_rota: g.sub_rota,
+                    total_clientes: g.total_clientes,
+                    total_pedidos:  g.total_pedidos,
+                    valor_total:    g.valor_total,
+                    peso_total:     g.peso_total
+                });
+                g.representantes.forEach(rep => {
+                    flat.push({
+                        _rowType:  'rep_detail',
+                        _isShared: g.representantes.length >= 2,
+                        sub_rota:  g.sub_rota,
+                        desc_representante: rep.desc_representante,
+                        num_clientes: rep.num_clientes,
+                        num_pedidos:  rep.num_pedidos,
+                        valor_total:  rep.valor_total,
+                        peso_total:   rep.peso_total
+                    });
+                });
+            });
+            return flat;
+        }
+
+        // ===== FIM ROTEIROS auxiliares =====
 
         function mostrarResultados(dados) {
             document.getElementById('mainContent').style.display = dados.length > 0 ? 'grid' : 'none';
@@ -972,39 +1092,82 @@
             document.getElementById('tableContainer').style.display = 'block';
             document.getElementById('tableFooter').style.display = 'flex';
 
-            // KPIs
-            const totalValor = dados.reduce((sum, r) => sum + parseFloat(r.valor || 0), 0);
-            const totalQtde = dados.reduce((sum, r) => sum + parseFloat(r.qtde || 0), 0);
-            const totalPeso = dados.reduce((sum, r) => sum + parseFloat(r.peso || 0), 0);
+            if (window.modoVisualizacao === 'roteiros') {
+                // KPIs específicos para modo Roteiros
+                window.subRotaGrupos = agruparPorSubRota(dados);
+                const grupos = window.subRotaGrupos;
+                const compartilhadas = grupos.filter(g => g.representantes.length >= 2);
+                const repsEnvolvidos = new Set(
+                    compartilhadas.flatMap(g => g.representantes.map(r => r.representante))
+                ).size;
+                const totalValor = grupos.reduce((s, g) => s + g.valor_total, 0);
+                const pct = grupos.length > 0 ? Math.round(compartilhadas.length / grupos.length * 100) : 0;
 
-            document.getElementById('kpiGrid').innerHTML = `
-                <div class="kpi-card">
-                    <div class="kpi-icon">💰</div>
-                    <div class="kpi-label">Valor Total</div>
-                    <div class="kpi-value">R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon">📦</div>
-                    <div class="kpi-label">Quantidade</div>
-                    <div class="kpi-value">${totalQtde.toLocaleString('pt-BR')}</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon">⚖️</div>
-                    <div class="kpi-label">Peso Total</div>
-                    <div class="kpi-value">${totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2})} kg</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon">📊</div>
-                    <div class="kpi-label">Registros</div>
-                    <div class="kpi-value">${dados.length}</div>
-                </div>
-            `;
+                document.getElementById('kpiGrid').innerHTML = `
+                    <div class="kpi-card">
+                        <div class="kpi-icon">⚠️</div>
+                        <div class="kpi-label">Sub-Rotas Compartilhadas</div>
+                        <div class="kpi-value">${compartilhadas.length}</div>
+                        <div class="kpi-sub">${compartilhadas.length} de ${grupos.length} (${pct}%)</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">👥</div>
+                        <div class="kpi-label">Reps Envolvidos</div>
+                        <div class="kpi-value">${repsEnvolvidos}</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">🗺️</div>
+                        <div class="kpi-label">Total Sub-Rotas</div>
+                        <div class="kpi-value">${grupos.length}</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">💰</div>
+                        <div class="kpi-label">Valor Total</div>
+                        <div class="kpi-value">R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                    </div>
+                `;
 
-            window.pagination.setData(dados);
-            renderizarGraficos(dados);
+                const flatRows = aplanarRoteiros(grupos);
+                window.pagination.setData(flatRows);
+                renderizarGraficos(dados);
 
-            document.getElementById('tableStats').textContent = `${dados.length} registro(s)`;
-            document.getElementById('totalValue').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('tableStats').textContent = `${grupos.length} sub-rota(s)`;
+                document.getElementById('totalValue').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            } else {
+                // KPIs padrão (Itens / Clientes)
+                const totalValor = dados.reduce((sum, r) => sum + parseFloat(r.valor || 0), 0);
+                const totalQtde = dados.reduce((sum, r) => sum + parseFloat(r.qtde || 0), 0);
+                const totalPeso = dados.reduce((sum, r) => sum + parseFloat(r.peso || 0), 0);
+
+                document.getElementById('kpiGrid').innerHTML = `
+                    <div class="kpi-card">
+                        <div class="kpi-icon">💰</div>
+                        <div class="kpi-label">Valor Total</div>
+                        <div class="kpi-value">R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">📦</div>
+                        <div class="kpi-label">Quantidade</div>
+                        <div class="kpi-value">${totalQtde.toLocaleString('pt-BR')}</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">⚖️</div>
+                        <div class="kpi-label">Peso Total</div>
+                        <div class="kpi-value">${totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2})} kg</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">📊</div>
+                        <div class="kpi-label">Registros</div>
+                        <div class="kpi-value">${dados.length}</div>
+                    </div>
+                `;
+
+                window.pagination.setData(dados);
+                renderizarGraficos(dados);
+
+                document.getElementById('tableStats').textContent = `${dados.length} registro(s)`;
+                document.getElementById('totalValue').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            }
         }
 
         // Função de renderização de tabela refatorada com objeto de configuração
@@ -1014,7 +1177,47 @@
             const tableTitle = document.querySelector('.table-title');
             tbody.innerHTML = '';
 
-            // Configuração baseada no modo de visualização
+            // Modo Roteiros: renderização especial com linhas agrupadas
+            if (window.modoVisualizacao === 'roteiros') {
+                tableTitle.textContent = '📍 Roteiros de Entrega';
+                theadRow.innerHTML = `
+                    <th>Sub-Rota / Representante</th>
+                    <th>Rota</th>
+                    <th class="text-right">Clientes</th>
+                    <th class="text-right">Pedidos</th>
+                    <th class="text-right">Valor (R$)</th>
+                `;
+
+                pageData.forEach(row => {
+                    const tr = document.createElement('tr');
+                    if (row._rowType === 'group_header') {
+                        const count = row._repCount;
+                        const badgeClass = count >= 3 ? 'three' : count === 2 ? 'two' : 'one';
+                        const rowClass = count >= 3 ? 'compartilhada-3' : count === 2 ? 'compartilhada-2' : '';
+                        tr.className = `row-subrota-header ${rowClass}`;
+                        tr.innerHTML = `
+                            <td><strong>${row.sub_rota || '-'}</strong><span class="badge-rep-count ${badgeClass}">${count}</span></td>
+                            <td>${row.rota || '-'}</td>
+                            <td class="text-right">${row.total_clientes.toLocaleString('pt-BR')}</td>
+                            <td class="text-right">${row.total_pedidos.toLocaleString('pt-BR')}</td>
+                            <td class="text-right">R$ ${row.valor_total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        `;
+                    } else {
+                        tr.className = `row-rep-detail${row._isShared ? ' shared' : ''}`;
+                        tr.innerHTML = `
+                            <td style="padding-left:24px">└ ${row.desc_representante || row.representante || '-'}</td>
+                            <td></td>
+                            <td class="text-right">${row.num_clientes.toLocaleString('pt-BR')}</td>
+                            <td class="text-right">${row.num_pedidos.toLocaleString('pt-BR')}</td>
+                            <td class="text-right">R$ ${row.valor_total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        `;
+                    }
+                    tbody.appendChild(tr);
+                });
+                return;
+            }
+
+            // Configuração baseada no modo de visualização (Itens / Clientes)
             const config = {
                 clientes: {
                     title: '👥 Clientes',
@@ -1073,10 +1276,83 @@
         }
 
         async function renderizarGraficos(dados) {
-            const top10 = dados.slice(0, 10);
             const ctx1 = document.getElementById('chartTopProdutos');
-
             if (window.chartTopProdutos) window.chartTopProdutos.destroy();
+
+            // ===== MODO ROTEIROS =====
+            if (window.modoVisualizacao === 'roteiros') {
+                const grupos = window.subRotaGrupos || agruparPorSubRota(dados);
+
+                // Gráfico 1: Top sub-rotas por nº de representantes (barra horizontal)
+                const top12 = [...grupos]
+                    .sort((a, b) => b.representantes.length - a.representantes.length || b.valor_total - a.valor_total)
+                    .slice(0, 12);
+
+                const coresG1 = top12.map(g => {
+                    if (g.representantes.length >= 3) return 'rgba(252, 3, 3, 0.8)';
+                    if (g.representantes.length === 2) return 'rgba(243, 156, 18, 0.85)';
+                    return 'rgba(108, 117, 125, 0.6)';
+                });
+
+                const chartTitleEl1 = document.querySelector('#chartTopProdutos').closest('.chart-card').querySelector('.chart-title');
+                if (chartTitleEl1) chartTitleEl1.textContent = '📍 Sub-Rotas por Nº de Representantes';
+
+                window.chartTopProdutos = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: top12.map(g => (g.sub_rota || '-').substring(0, 20)),
+                        datasets: [{
+                            label: 'Representantes',
+                            data: top12.map(g => g.representantes.length),
+                            backgroundColor: coresG1,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: ctx => `${ctx.parsed.x} representante(s)` } }
+                        },
+                        scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                    }
+                });
+
+                // Gráfico 2: Rosca — exclusivas vs compartilhadas
+                const ctx2 = document.getElementById('chartCidades');
+                if (window.chartCidades) window.chartCidades.destroy();
+
+                const chartTitleEl2 = document.querySelector('#chartCidades').closest('.chart-card').querySelector('.chart-title');
+                if (chartTitleEl2) chartTitleEl2.textContent = '🗺️ Distribuição de Sub-Rotas';
+
+                const contagens = { 1: 0, 2: 0, '3+': 0 };
+                grupos.forEach(g => {
+                    if (g.representantes.length >= 3) contagens['3+']++;
+                    else if (g.representantes.length === 2) contagens[2]++;
+                    else contagens[1]++;
+                });
+
+                window.chartCidades = new Chart(ctx2, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['1 Representante', '2 Representantes', '3+ Representantes'],
+                        datasets: [{
+                            data: [contagens[1], contagens[2], contagens['3+']],
+                            backgroundColor: ['rgba(108,117,125,0.7)', 'rgba(243,156,18,0.85)', 'rgba(252,3,3,0.8)']
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: true }
+                });
+
+                // Gráfico 3: Top sub-rotas compartilhadas por valor (barra empilhada)
+                await renderizarGraficoRoteirosValor(grupos);
+                return;
+            }
+
+            // ===== MODOS ITENS / CLIENTES (lógica original) =====
+            const top10 = dados.slice(0, 10);
 
             // Adaptar labels conforme modo
             let labels, chartTitle;
@@ -1163,6 +1439,9 @@
                 const ctx2 = document.getElementById('chartCidades');
                 if (window.chartCidades) window.chartCidades.destroy();
 
+                const chartTitleEl2 = document.querySelector('#chartCidades').closest('.chart-card').querySelector('.chart-title');
+                if (chartTitleEl2) chartTitleEl2.textContent = '🗺️ Vendas por Cidade';
+
                 window.chartCidades = new Chart(ctx2, {
                     type: 'pie',
                     data: {
@@ -1208,6 +1487,9 @@
 
                 const ctx = document.getElementById('chartEvolucao');
                 if (window.chartEvolucao) window.chartEvolucao.destroy();
+
+                const chartTitleEl3 = document.querySelector('#chartEvolucao').closest('.chart-card').querySelector('.chart-title');
+                if (chartTitleEl3) chartTitleEl3.textContent = '📈 Evolução Mensal (Últimos 12 Meses)';
 
                 window.chartEvolucao = new Chart(ctx, {
                     type: 'line',
@@ -1261,6 +1543,70 @@
             }
         }
 
+        async function renderizarGraficoRoteirosValor(grupos) {
+            try {
+                const ctx = document.getElementById('chartEvolucao');
+                if (window.chartEvolucao) window.chartEvolucao.destroy();
+
+                const chartTitleEl = document.querySelector('#chartEvolucao').closest('.chart-card').querySelector('.chart-title');
+                if (chartTitleEl) chartTitleEl.textContent = '💰 Valor em Sub-Rotas Compartilhadas';
+
+                const compartilhadas = grupos
+                    .filter(g => g.representantes.length >= 2)
+                    .sort((a, b) => b.valor_total - a.valor_total)
+                    .slice(0, 8);
+
+                if (compartilhadas.length === 0) {
+                    if (chartTitleEl) chartTitleEl.textContent = '💰 Nenhuma sub-rota compartilhada encontrada';
+                    return;
+                }
+
+                const allReps = [...new Set(compartilhadas.flatMap(g => g.representantes.map(r => r.desc_representante || r.representante)))];
+                const palette = [
+                    'rgba(252,3,3,0.75)', 'rgba(13,110,253,0.75)', 'rgba(25,135,84,0.75)',
+                    'rgba(255,193,7,0.85)', 'rgba(111,66,193,0.75)', 'rgba(32,201,151,0.75)'
+                ];
+
+                const datasets = allReps.map((repName, i) => ({
+                    label: (repName || '').substring(0, 18),
+                    backgroundColor: palette[i % palette.length],
+                    data: compartilhadas.map(g => {
+                        const found = g.representantes.find(r => (r.desc_representante || r.representante) === repName);
+                        return found ? found.valor_total : 0;
+                    })
+                }));
+
+                window.chartEvolucao = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: compartilhadas.map(g => (g.sub_rota || '-').substring(0, 14)),
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => `${ctx.dataset.label}: R$ ${ctx.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { stacked: true },
+                            y: {
+                                stacked: true,
+                                ticks: { callback: v => 'R$ ' + (v / 1000).toFixed(0) + 'k' }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Erro ao renderizar gráfico de roteiros:', error);
+            }
+        }
+
         // Função de exportação Excel refatorada com config object e spread operator
         window.exportarExcel = async function() {
             if (window.dadosCompletos.length === 0) {
@@ -1271,7 +1617,33 @@
             try {
                 const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
 
-                // Configuração baseada no modo
+                const dataInicio = document.getElementById('dataInicio').value;
+                const dataFim = document.getElementById('dataFim').value;
+
+                // Exportação específica para modo Roteiros
+                if (window.modoVisualizacao === 'roteiros') {
+                    const grupos = window.subRotaGrupos || agruparPorSubRota(window.dadosCompletos);
+                    const dadosExcel = grupos.flatMap(g =>
+                        g.representantes.map(r => ({
+                            'Rota':          g.rota || '',
+                            'Sub-Rota':      g.sub_rota || '',
+                            'Compartilhada': g.representantes.length >= 2 ? 'Sim' : 'Não',
+                            'Nº Reps':       g.representantes.length,
+                            'Representante': r.desc_representante || r.representante || '',
+                            'Clientes':      r.num_clientes,
+                            'Pedidos':       r.num_pedidos,
+                            'Valor (R$)':    r.valor_total,
+                            'Peso (kg)':     r.peso_total
+                        }))
+                    );
+                    const ws = XLSX.utils.json_to_sheet(dadosExcel);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, 'Roteiros');
+                    XLSX.writeFile(wb, `roteiros_${dataInicio}_${dataFim}.xlsx`);
+                    return;
+                }
+
+                // Configuração baseada no modo (Itens / Clientes)
                 const config = {
                     clientes: {
                         fields: { 'CodCliente': 'cod_cliente', 'Razão Social': 'razao_social', 'Quantidade': 'qtde', 'Valor': 'valor', 'Peso': 'peso' },
@@ -1300,10 +1672,7 @@
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, currentConfig.sheetName);
 
-                const dataInicio = document.getElementById('dataInicio').value;
-                const dataFim = document.getElementById('dataFim').value;
                 const fileName = `${currentConfig.filePrefix}_${dataInicio}_${dataFim}.xlsx`;
-
                 XLSX.writeFile(wb, fileName);
             } catch (error) {
                 console.error('Erro ao exportar:', error);
