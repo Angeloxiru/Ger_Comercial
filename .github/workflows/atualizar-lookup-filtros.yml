@@ -1,0 +1,30 @@
+name: Atualizar Lookup de Filtros
+
+# Toda segunda-feira às 12:00 BRT (= 15:00 UTC, BRT = UTC-3)
+on:
+  schedule:
+    - cron: '0 15 * * 1'
+  # Permite acionamento manual (útil na configuração inicial)
+  workflow_dispatch:
+
+jobs:
+  atualizar-lookup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Atualizar tabelas de lookup de filtros
+        env:
+          TURSO_URL:   ${{ secrets.TURSO_URL }}
+          TURSO_TOKEN: ${{ secrets.TURSO_TOKEN }}
+        run: node scripts/atualizar-filtros-lookup.js

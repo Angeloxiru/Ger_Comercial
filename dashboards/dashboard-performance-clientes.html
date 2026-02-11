@@ -695,9 +695,16 @@
                         cache.delete(cacheKey);
                     }
 
-                    grupos = await db.execute('SELECT DISTINCT grupo_desc FROM tab_cliente WHERE grupo_desc IS NOT NULL ORDER BY grupo_desc');
-                    clientes = await db.execute('SELECT DISTINCT cliente, nome, grupo_desc FROM tab_cliente WHERE nome IS NOT NULL ORDER BY nome');
-                    cidades = await db.execute('SELECT DISTINCT cidade, grupo_desc FROM tab_cliente WHERE cidade IS NOT NULL ORDER BY cidade');
+                    // Lê das tabelas de lookup (pré-computadas semanalmente pelo GitHub Actions).
+                    // Fallback automático para as tabelas originais caso o lookup ainda esteja vazio.
+                    grupos = await db.execute('SELECT DISTINCT grupo_desc FROM lkp_clientes WHERE grupo_desc IS NOT NULL ORDER BY grupo_desc');
+                    if (!grupos?.rows?.length) grupos = await db.execute('SELECT DISTINCT grupo_desc FROM tab_cliente WHERE grupo_desc IS NOT NULL ORDER BY grupo_desc');
+
+                    clientes = await db.execute('SELECT cliente, nome, grupo_desc FROM lkp_clientes WHERE nome IS NOT NULL ORDER BY nome');
+                    if (!clientes?.rows?.length) clientes = await db.execute('SELECT DISTINCT cliente, nome, grupo_desc FROM tab_cliente WHERE nome IS NOT NULL ORDER BY nome');
+
+                    cidades = await db.execute('SELECT DISTINCT cidade, grupo_desc FROM lkp_clientes WHERE cidade IS NOT NULL ORDER BY cidade');
+                    if (!cidades?.rows?.length) cidades = await db.execute('SELECT DISTINCT cidade, grupo_desc FROM tab_cliente WHERE cidade IS NOT NULL ORDER BY cidade');
 
                     // Valida antes de salvar no cache
                     if (grupos?.rows?.length > 0 && clientes?.rows?.length > 0 && cidades?.rows?.length > 0) {

@@ -707,11 +707,16 @@
 
                     if (!db.isConnected()) await db.connect();
 
-                    rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL ORDER BY rota');
+                    // Lê das tabelas de lookup (pré-computadas semanalmente pelo GitHub Actions).
+                    // Fallback automático para as tabelas originais caso o lookup ainda esteja vazio.
+                    rotas = await db.execute('SELECT DISTINCT rota FROM lkp_localidades WHERE rota IS NOT NULL ORDER BY rota');
+                    if (!rotas?.rows?.length) rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL ORDER BY rota');
 
-                    subRotas = await db.execute('SELECT DISTINCT sub_rota, rota FROM tab_cliente WHERE sub_rota IS NOT NULL ORDER BY sub_rota');
+                    subRotas = await db.execute('SELECT DISTINCT sub_rota, rota FROM lkp_localidades WHERE sub_rota IS NOT NULL ORDER BY sub_rota');
+                    if (!subRotas?.rows?.length) subRotas = await db.execute('SELECT DISTINCT sub_rota, rota FROM tab_cliente WHERE sub_rota IS NOT NULL ORDER BY sub_rota');
 
-                    cidades = await db.execute('SELECT DISTINCT v.cidade, c.rota, c.sub_rota FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.cidade IS NOT NULL ORDER BY v.cidade');
+                    cidades = await db.execute('SELECT cidade, rota, sub_rota FROM lkp_cidades_regiao ORDER BY cidade');
+                    if (!cidades?.rows?.length) cidades = await db.execute('SELECT DISTINCT v.cidade, c.rota, c.sub_rota FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.cidade IS NOT NULL ORDER BY v.cidade');
 
                     // VALIDAÇÃO EXTRA: Não salva cache se os dados estiverem vazios
                     if (rotas?.rows?.length > 0 && subRotas?.rows?.length > 0 && cidades?.rows?.length > 0) {
