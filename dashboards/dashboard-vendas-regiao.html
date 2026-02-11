@@ -630,6 +630,7 @@
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
         import { serializeDbResult, validateCacheStructure } from '../js/db-utils.js';
+        import { validarPeriodo } from '../js/periodo-validator.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Vendas por Região');
@@ -954,6 +955,8 @@
                 alert('Por favor, selecione o período (data início e fim)');
                 return;
             }
+
+            if (!validarPeriodo(dataInicio, dataFim)) return;
 
             try {
                 document.getElementById('loading').classList.add('active');

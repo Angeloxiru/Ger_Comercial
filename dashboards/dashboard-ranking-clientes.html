@@ -697,6 +697,7 @@
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
         import { serializeDbResult, validateCacheStructure } from '../js/db-utils.js';
+        import { validarPeriodo } from '../js/periodo-validator.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Ranking de Clientes');
@@ -1007,6 +1008,8 @@
                 alert('Por favor, selecione o período (data início e fim)');
                 return;
             }
+
+            if (!validarPeriodo(dataInicio, dataFim)) return;
 
             try {
                 // Atualizar cabeçalhos baseado no modo selecionado
