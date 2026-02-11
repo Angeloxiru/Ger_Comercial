@@ -703,9 +703,16 @@
                         cache.delete(cacheKey);
                     }
 
-                    origens = await db.execute('SELECT DISTINCT desc_origem FROM tab_produto WHERE desc_origem IS NOT NULL ORDER BY desc_origem');
-                    familias = await db.execute('SELECT DISTINCT desc_familia, desc_origem FROM tab_produto WHERE desc_familia IS NOT NULL ORDER BY desc_familia');
-                    produtos = await db.execute('SELECT produto, desc_produto, desc_familia, desc_origem FROM tab_produto WHERE desc_produto IS NOT NULL ORDER BY desc_produto');
+                    // Lê das tabelas de lookup (pré-computadas semanalmente pelo GitHub Actions).
+                    // Fallback automático para as tabelas originais caso o lookup ainda esteja vazio.
+                    origens = await db.execute('SELECT DISTINCT desc_origem FROM lkp_produtos WHERE desc_origem IS NOT NULL ORDER BY desc_origem');
+                    if (!origens?.rows?.length) origens = await db.execute('SELECT DISTINCT desc_origem FROM tab_produto WHERE desc_origem IS NOT NULL ORDER BY desc_origem');
+
+                    familias = await db.execute('SELECT DISTINCT desc_familia, desc_origem FROM lkp_produtos WHERE desc_familia IS NOT NULL ORDER BY desc_familia');
+                    if (!familias?.rows?.length) familias = await db.execute('SELECT DISTINCT desc_familia, desc_origem FROM tab_produto WHERE desc_familia IS NOT NULL ORDER BY desc_familia');
+
+                    produtos = await db.execute('SELECT produto, desc_produto, desc_familia, desc_origem FROM lkp_produtos WHERE desc_produto IS NOT NULL ORDER BY desc_produto');
+                    if (!produtos?.rows?.length) produtos = await db.execute('SELECT produto, desc_produto, desc_familia, desc_origem FROM tab_produto WHERE desc_produto IS NOT NULL ORDER BY desc_produto');
 
                     // Valida antes de salvar no cache
                     if (origens?.rows?.length > 0 && familias?.rows?.length > 0 && produtos?.rows?.length > 0) {

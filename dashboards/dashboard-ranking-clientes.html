@@ -805,11 +805,14 @@
             try {
                 if (!db.isConnected()) await db.connect();
 
-                // Carregar dados completos para ter as relações
-                const [clientes, representantes] = await Promise.all([
-                    db.execute('SELECT rota, sub_rota, cidade FROM tab_cliente WHERE rota IS NOT NULL'),
-                    db.execute('SELECT representante, rep_supervisor, desc_representante FROM tab_representante WHERE rep_supervisor IS NOT NULL AND desc_representante IS NOT NULL')
+                // Lê das tabelas de lookup (pré-computadas semanalmente pelo GitHub Actions).
+                // Fallback automático para as tabelas originais caso o lookup ainda esteja vazio.
+                let [clientes, representantes] = await Promise.all([
+                    db.execute('SELECT DISTINCT rota, sub_rota, cidade FROM lkp_localidades WHERE rota IS NOT NULL'),
+                    db.execute('SELECT representante, rep_supervisor, desc_representante FROM lkp_representantes WHERE rep_supervisor IS NOT NULL AND desc_representante IS NOT NULL')
                 ]);
+                if (!clientes?.rows?.length) clientes = await db.execute('SELECT rota, sub_rota, cidade FROM tab_cliente WHERE rota IS NOT NULL');
+                if (!representantes?.rows?.length) representantes = await db.execute('SELECT representante, rep_supervisor, desc_representante FROM tab_representante WHERE rep_supervisor IS NOT NULL AND desc_representante IS NOT NULL');
 
                 dadosCompletosClientes = serializeDbResult(clientes).rows;
                 dadosCompletosRepresentantes = serializeDbResult(representantes).rows;

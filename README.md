@@ -72,7 +72,30 @@ turso db tokens create ger-comercial
 
 Execute o arquivo \`/sql/views/create_view_produtos_parados.sql\` no seu banco Turso.
 
-### 3. Adicionar Coluna de Período
+### 3. Criar Tabelas de Lookup de Filtros
+
+Execute o arquivo \`/sql/maintenance/04-create-lookup-tables.sql\` no seu banco Turso.
+Isso cria 6 tabelas pequenas que armazenam os valores pré-computados dos filtros:
+
+| Tabela | Origem | Conteúdo |
+|--------|--------|----------|
+| \`lkp_localidades\` | \`tab_cliente\` | Combinações distintas de rota / sub-rota / cidade |
+| \`lkp_representantes\` | \`tab_representante\` | Representantes, nomes e supervisores |
+| \`lkp_cidades_regiao\` | vendas × tab_cliente | Cidades por região (JOIN eliminado) |
+| \`lkp_cidades_equipe\` | vendas × tab_representante | Cidades por equipe (JOIN eliminado) |
+| \`lkp_clientes\` | \`tab_cliente\` | Clientes com grupo e cidade |
+| \`lkp_produtos\` | \`tab_produto\` | Produtos com família e origem |
+
+Após criar as tabelas, execute o preenchimento inicial:
+\`\`\`bash
+npm run atualizar-lookup
+\`\`\`
+
+> As tabelas são atualizadas automaticamente toda **segunda-feira às 12h (BRT)** pelo
+> GitHub Actions (\`atualizar-lookup-filtros.yml\`). Para acionamento manual, use o
+> botão **"Run workflow"** na aba **Actions** do repositório.
+
+### 4. Adicionar Coluna de Período
 
 \`\`\`sql
 ALTER TABLE agendamentos_relatorios ADD COLUMN periodo TEXT DEFAULT 'mes-atual';

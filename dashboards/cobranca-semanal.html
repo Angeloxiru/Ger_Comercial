@@ -704,8 +704,15 @@
             try {
                 if (!db.isConnected()) await db.connect();
 
-                // Buscar supervisores e representantes
-                const dados = await db.execute(`
+                // Lê da tabela de lookup (pré-computada semanalmente pelo GitHub Actions).
+                // Fallback automático para a tabela original caso o lookup ainda esteja vazio.
+                let dados = await db.execute(`
+                    SELECT rep_supervisor, desc_representante, representante
+                    FROM lkp_representantes
+                    WHERE rep_supervisor IS NOT NULL AND rep_supervisor != ''
+                    ORDER BY rep_supervisor, desc_representante
+                `);
+                if (!dados?.rows?.length) dados = await db.execute(`
                     SELECT DISTINCT rep_supervisor, desc_representante, representante
                     FROM tab_representante
                     WHERE rep_supervisor IS NOT NULL AND rep_supervisor != ''

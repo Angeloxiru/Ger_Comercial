@@ -707,9 +707,16 @@
                         cache.delete(cacheKey);
                     }
 
-                    supervisores = await db.execute('SELECT DISTINCT rep_supervisor FROM tab_representante WHERE rep_supervisor IS NOT NULL ORDER BY rep_supervisor');
-                    representantes = await db.execute('SELECT DISTINCT representante, desc_representante, rep_supervisor FROM tab_representante WHERE desc_representante IS NOT NULL ORDER BY desc_representante');
-                    cidades = await db.execute(`
+                    // Lê das tabelas de lookup (pré-computadas semanalmente pelo GitHub Actions).
+                    // Fallback automático para as tabelas originais caso o lookup ainda esteja vazio.
+                    supervisores = await db.execute('SELECT DISTINCT rep_supervisor FROM lkp_representantes WHERE rep_supervisor IS NOT NULL ORDER BY rep_supervisor');
+                    if (!supervisores?.rows?.length) supervisores = await db.execute('SELECT DISTINCT rep_supervisor FROM tab_representante WHERE rep_supervisor IS NOT NULL ORDER BY rep_supervisor');
+
+                    representantes = await db.execute('SELECT representante, desc_representante, rep_supervisor FROM lkp_representantes WHERE desc_representante IS NOT NULL ORDER BY desc_representante');
+                    if (!representantes?.rows?.length) representantes = await db.execute('SELECT DISTINCT representante, desc_representante, rep_supervisor FROM tab_representante WHERE desc_representante IS NOT NULL ORDER BY desc_representante');
+
+                    cidades = await db.execute('SELECT cidade, representante, rep_supervisor FROM lkp_cidades_equipe ORDER BY cidade');
+                    if (!cidades?.rows?.length) cidades = await db.execute(`
                         SELECT DISTINCT v.cidade, r.representante, r.rep_supervisor
                         FROM vendas v
                         LEFT JOIN tab_representante r ON v.representante = r.representante
