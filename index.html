@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Sistema Integrado de Gerenciamento Comercial - Germani Alimentos">
     <meta name="theme-color" content="#fc0303">
     <title>Dashboard - Ger Comercial</title>
@@ -189,22 +189,8 @@
         }
 
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                text-align: center;
-                padding: 30px 20px;
-            }
-
-            .header-logo img {
-                height: 60px;
-            }
-
-            .header h1 {
-                font-size: 1.8em;
-            }
-
-            .cards-grid {
-                grid-template-columns: 1fr;
+            body {
+                padding: 12px;
             }
         }
     </style>
@@ -232,111 +218,111 @@
             <!-- Card 1: Vendas por Região -->
             <div class="card" onclick="window.location.href='dashboards/dashboard-vendas-regiao.html'">
                 <div class="card-icon">📍</div>
-                <div class="card-title">Vendas por Região</div>
-                <div class="card-description">
-                    Analise vendas por rota, sub-rota e cidade com filtros inteligentes e cascata automática.
+                <div class="card-content">
+                    <div class="card-title">Vendas por Região</div>
+                    <div class="card-description">Analise vendas por rota, sub-rota e cidade com filtros inteligentes e cascata automática.</div>
+                    <span class="badge">Disponível</span>
                 </div>
-                <span class="badge">Disponível</span>
             </div>
 
             <!-- Card 2: Vendas por Equipe Comercial -->
             <div class="card" onclick="window.location.href='dashboards/dashboard-vendas-equipe.html'">
                 <div class="card-icon">👥</div>
-                <div class="card-title">Vendas por Equipe</div>
-                <div class="card-description">
-                    Acompanhe o desempenho por supervisor, representante e cidade com filtros dinâmicos.
+                <div class="card-content">
+                    <div class="card-title">Vendas por Equipe</div>
+                    <div class="card-description">Acompanhe o desempenho por supervisor, representante e cidade com filtros dinâmicos.</div>
+                    <span class="badge">Disponível</span>
                 </div>
-                <span class="badge">Disponível</span>
             </div>
 
             <!-- Card 3: Ranking de Clientes -->
             <div class="card" onclick="window.location.href='dashboards/dashboard-ranking-clientes.html'">
                 <div class="card-icon">🏆</div>
-                <div class="card-title">Ranking de Clientes</div>
-                <div class="card-description">
-                    Rankings por valor, quantidade, ticket médio e frequência com análise Curva ABC e Top 10.
+                <div class="card-content">
+                    <div class="card-title">Ranking de Clientes</div>
+                    <div class="card-description">Rankings por valor, quantidade, ticket médio e frequência com análise Curva ABC e Top 10.</div>
+                    <span class="badge">Disponível</span>
                 </div>
-                <span class="badge">Disponível</span>
             </div>
 
             <!-- Card 4: Performance de Clientes -->
             <div class="card" onclick="window.location.href='dashboards/dashboard-performance-clientes.html'">
                 <div class="card-icon">💰</div>
-                <div class="card-title">Performance de Clientes</div>
-                <div class="card-description">
-                    Analise vendas por grupo de clientes, cliente individual e cidade com filtros inteligentes.
+                <div class="card-content">
+                    <div class="card-title">Performance de Clientes</div>
+                    <div class="card-description">Analise vendas por grupo de clientes, cliente individual e cidade com filtros inteligentes.</div>
+                    <span class="badge">Disponível</span>
                 </div>
-                <span class="badge">Disponível</span>
             </div>
 
             <!-- Card 5: Performance Mensal -->
             <div class="card" onclick="window.location.href='dashboards/cobranca-semanal.html'">
                 <div class="card-icon">🎯</div>
-                <div class="card-title">Performance Mensal</div>
-                <div class="card-description">
-                    Cobrança da equipe por meta e potencial de rota com análise de cumprimento mensal.
+                <div class="card-content">
+                    <div class="card-title">Performance Mensal</div>
+                    <div class="card-description">Cobrança da equipe por meta e potencial de rota com análise de cumprimento mensal.</div>
+                    <span class="badge">Disponível</span>
                 </div>
-                <span class="badge">Disponível</span>
             </div>
 
             <!-- Card 6: Produtos Parados -->
             <div class="card" onclick="window.location.href='dashboards/dashboard-produtos-parados.html'">
                 <div class="card-icon">🛑</div>
-                <div class="card-title">Produtos Parados</div>
-                <div class="card-description">
-                    Identifique produtos que os representantes pararam de vender nas últimas semanas. Detecte perda de clientes.
+                <div class="card-content">
+                    <div class="card-title">Produtos Parados</div>
+                    <div class="card-description">Identifique produtos que os representantes pararam de vender nas últimas semanas.</div>
+                    <span class="badge">Disponível</span>
                 </div>
-                <span class="badge">Disponível</span>
             </div>
 
             <!-- Card 7: Análise de Produtos -->
             <div class="card" onclick="window.location.href='dashboards/dashboard-analise-produtos.html'">
                 <div class="card-icon">📈</div>
-                <div class="card-title">Análise de Produtos</div>
-                <div class="card-description">
-                    Analise vendas por origem, família e produto com filtros em cascata e exportação de dados.
+                <div class="card-content">
+                    <div class="card-title">Análise de Produtos</div>
+                    <div class="card-description">Analise vendas por origem, família e produto com filtros em cascata e exportação de dados.</div>
+                    <span class="badge">Disponível</span>
                 </div>
-                <span class="badge">Disponível</span>
             </div>
 
             <!-- Card 8: Clientes Sem Compras -->
             <div class="card" onclick="window.location.href='dashboards/dashboard-clientes-semcompras.html'">
                 <div class="card-icon">🗺️</div>
-                <div class="card-title">Clientes Sem Compras</div>
-                <div class="card-description">
-                    Mapa interativo de clientes ativos que não compraram no período. Identifique oportunidades por rota e região.
+                <div class="card-content">
+                    <div class="card-title">Clientes Sem Compras</div>
+                    <div class="card-description">Mapa interativo de clientes inativos no período. Identifique oportunidades por rota e região.</div>
+                    <span class="badge">Disponível</span>
                 </div>
-                <span class="badge">Disponível</span>
             </div>
 
             <!-- Card 9: Repositores -->
             <div class="card" onclick="window.open('https://equipegf2.github.io/Germani_Repositores/', '_blank')">
                 <div class="card-icon">🚚</div>
-                <div class="card-title">Repositores</div>
-                <div class="card-description">
-                    Controles de Rotas, e Performances dos Repositores. Sistema de gestão de entregas e logística.
+                <div class="card-content">
+                    <div class="card-title">Repositores</div>
+                    <div class="card-description">Controles de Rotas e Performances dos Repositores. Gestão de entregas e logística.</div>
+                    <span class="badge">Disponível</span>
                 </div>
-                <span class="badge">Disponível</span>
             </div>
 
             <!-- Card 10: Manual de Utilização -->
             <div class="card" onclick="window.location.href='manual.html'" style="border: 2px solid #0066cc;">
                 <div class="card-icon" style="background: linear-gradient(135deg, #0066cc 0%, #004499 100%);">📚</div>
-                <div class="card-title">Manual de Utilização</div>
-                <div class="card-description">
-                    Guia completo com passo a passo detalhado de todos os dashboards e casos de uso práticos.
+                <div class="card-content">
+                    <div class="card-title">Manual de Utilização</div>
+                    <div class="card-description">Guia completo com passo a passo de todos os dashboards e casos de uso práticos.</div>
+                    <span class="badge" style="background: #0066cc; color: white;">Documentação</span>
                 </div>
-                <span class="badge" style="background: #0066cc;">📖 Documentação</span>
             </div>
 
             <!-- Card 11: Configurações (Admin Only) -->
             <div class="card" id="card-gerenciar-usuarios" onclick="window.location.href='dashboards/dashboard-gerenciar-usuarios.html'" style="border: 2px solid #ffc107;">
                 <div class="card-icon" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);">⚙️</div>
-                <div class="card-title">Configurações</div>
-                <div class="card-description">
-                    Gerencie usuários, permissões e importação de dados (incluindo Metas Mensais).
+                <div class="card-content">
+                    <div class="card-title">Configurações</div>
+                    <div class="card-description">Gerencie usuários, permissões e importação de dados (incluindo Metas Mensais).</div>
+                    <span class="badge" style="background: #ffc107;">Admin</span>
                 </div>
-                <span class="badge" style="background: #ffc107;">🔐 Admin</span>
             </div>
         </div>
     </div>
@@ -380,6 +366,9 @@
             }
         };
     </script>
+
+    <!-- Mobile interactions -->
+    <script src="js/mobile.js"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>

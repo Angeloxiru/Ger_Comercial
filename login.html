@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Login - Sistema de Gerenciamento Comercial - Germani Alimentos">
     <meta name="theme-color" content="#fc0303">
     <title>Login - Ger Comercial</title>
@@ -197,12 +197,27 @@
         }
 
         @media (max-width: 480px) {
+            body {
+                padding: 12px;
+                padding-bottom: calc(12px + env(safe-area-inset-bottom));
+            }
+
             .login-container {
-                padding: 32px 24px;
+                padding: 28px 20px;
             }
 
             .logo-container h1 {
                 font-size: 1.5em;
+            }
+
+            .form-group input {
+                padding: 16px;
+                font-size: 16px; /* Prevents iOS zoom */
+            }
+
+            .btn-login {
+                padding: 16px;
+                font-size: 1.05em;
             }
         }
     </style>
@@ -256,7 +271,7 @@
 
         <!-- Footer -->
         <div class="footer-info">
-            <p>© 2025 Germani Alimentos</p>
+            <p>© 2026 Germani Alimentos</p>
         </div>
     </div>
 
