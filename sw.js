@@ -1,21 +1,25 @@
 // Service Worker para Ger Comercial - Germani Alimentos
-// Versão: 1.4.0 - Reorganização de arquivos e estrutura
+// Versao: 1.5.0 - Mobile improvements + file cleanup
 
-const CACHE_NAME = 'ger-comercial-v4';
-const RUNTIME_CACHE = 'ger-comercial-runtime-v4';
+const CACHE_NAME = 'ger-comercial-v5';
+const RUNTIME_CACHE = 'ger-comercial-runtime-v5';
 
 // Arquivos essenciais para funcionar offline
 const ESSENTIAL_FILES = [
   '/Ger_Comercial/',
   '/Ger_Comercial/index.html',
   '/Ger_Comercial/login.html',
+  '/Ger_Comercial/manual.html',
   '/Ger_Comercial/icon-192.png',
   '/Ger_Comercial/icon-512.png',
   '/Ger_Comercial/manifest.json',
+  '/Ger_Comercial/css/mobile.css',
   '/Ger_Comercial/dashboards/dashboard-vendas-regiao.html',
   '/Ger_Comercial/dashboards/dashboard-vendas-equipe.html',
   '/Ger_Comercial/dashboards/dashboard-analise-produtos.html',
   '/Ger_Comercial/dashboards/dashboard-performance-clientes.html',
+  '/Ger_Comercial/dashboards/dashboard-ranking-clientes.html',
+  '/Ger_Comercial/dashboards/dashboard-clientes-semcompras.html',
   '/Ger_Comercial/dashboards/cobranca-semanal.html',
   '/Ger_Comercial/dashboards/dashboard-produtos-parados.html',
   '/Ger_Comercial/js/db.js',
@@ -24,7 +28,9 @@ const ESSENTIAL_FILES = [
   '/Ger_Comercial/js/cache.js',
   '/Ger_Comercial/js/pagination.js',
   '/Ger_Comercial/js/filter-search.js',
-  '/Ger_Comercial/js/dashboard-isolation.js'
+  '/Ger_Comercial/js/dashboard-isolation.js',
+  '/Ger_Comercial/js/mobile.js',
+  '/Ger_Comercial/js/periodo-validator.js'
 ];
 
 // Instala o Service Worker e cacheia arquivos essenciais
