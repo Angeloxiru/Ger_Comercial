@@ -588,6 +588,7 @@
         import { cache, CACHE_TTL } from '../js/cache.js';
         import { Pagination } from '../js/pagination.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
+        import { validarPeriodo } from '../js/periodo-validator.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Performance Mensal');
@@ -790,6 +791,8 @@
                     alert('Selecione o período completo (data inicial e final)');
                     return;
                 }
+
+                if (!validarPeriodo(dataInicio, dataFim)) return;
 
                 const supervisoresSelecionados = Array.from(
                     document.getElementById('filtroSupervisor').selectedOptions

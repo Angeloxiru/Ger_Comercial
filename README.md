@@ -13,6 +13,8 @@ Sistema web PWA (Progressive Web App) para gestão e análise de dados comerciai
 - **Análise de Produtos**: Vendas por produto, família e origem
 - **Clientes sem Compras**: Identificação de clientes inativos por grau de risco
 
+> **Limite de período:** Todos os dashboards com filtro de data aceitam no máximo **100 dias** por consulta. Caso o período informado exceda esse limite, uma mensagem de aviso é exibida e a consulta não é realizada. Isso protege o limite de leituras do banco de dados Turso.
+
 ### 📧 **Agendamento de Relatórios** ⭐ NOVO!
 Sistema completo de agendamento automático de relatórios por email.
 
