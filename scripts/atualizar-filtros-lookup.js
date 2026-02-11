@@ -80,16 +80,14 @@ const TABELAS = [
 ];
 
 // ---------------------------------------------------------------------------
-// Função de atualização de uma tabela (DELETE + INSERT em batch atômico)
+// Função de atualização de uma tabela (DELETE + INSERT sequencial)
 // ---------------------------------------------------------------------------
 async function atualizarTabela(tabela) {
-    await db.batch([
-        { sql: `DELETE FROM ${tabela.nome}` },
-        { sql: `INSERT INTO ${tabela.nome} (${tabela.colunas}) ${tabela.select}` }
-    ]);
+    await db.execute(`DELETE FROM ${tabela.nome}`);
+    await db.execute(`INSERT INTO ${tabela.nome} (${tabela.colunas}) ${tabela.select}`);
 
-    const { rows } = await db.execute(`SELECT COUNT(*) AS total FROM ${tabela.nome}`);
-    return Number(rows[0].total);
+    const result = await db.execute(`SELECT COUNT(*) AS total FROM ${tabela.nome}`);
+    return Number(result.rows[0].total);
 }
 
 // ---------------------------------------------------------------------------
