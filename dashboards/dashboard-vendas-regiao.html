@@ -994,7 +994,7 @@
                     sql += ` AND c.sub_rota IN (${subRotas.map(() => '?').join(',')})`;
                     params.push(...subRotas);
                 }
-                if (cidades.length > 0 && modo !== 'roteiros') {
+                if (cidades.length > 0) {
                     sql += ` AND v.cidade IN (${cidades.map(() => '?').join(',')})`;
                     params.push(...cidades);
                 }
