@@ -327,7 +327,7 @@
 
         .kpi-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 12px;
         }
 
@@ -486,6 +486,13 @@
                 </div>
             </div>
 
+            <!-- Código do Cliente -->
+            <div class="filter-group">
+                <label>🔍 Código do Cliente</label>
+                <input type="text" id="filtroCodigoCliente" placeholder="Ex: 000123, 000456">
+                <small style="color: #6c757d; font-size: 0.75em; margin-top: 4px;">Separe múltiplos códigos por vírgula. Tem prioridade sobre Grupo/Cliente.</small>
+            </div>
+
             <!-- Grupo -->
             <div class="filter-group">
                 <label>👥 Grupo</label>
@@ -502,13 +509,6 @@
                 </select>
             </div>
 
-            <!-- Cidade -->
-            <div class="filter-group">
-                <label>🏙️ Cidade</label>
-                <select id="filtroCidade" multiple size="3">
-                    <option value="">Selecione Grupo ou Cliente primeiro</option>
-                </select>
-            </div>
         </div>
 
         <div class="filters-buttons">
@@ -539,6 +539,7 @@
                         <tr>
                             <th>Produto</th>
                             <th>Descrição</th>
+                            <th>Cliente</th>
                             <th class="text-right">Qtde</th>
                             <th class="text-right">Valor (R$)</th>
                             <th class="text-right">Peso (kg)</th>
@@ -554,9 +555,14 @@
 
             <div class="table-footer">
                 <div class="total-value" id="totalValue">Total: R$ 0,00</div>
-                <button class="btn-export" onclick="exportarDados()">
-                    📊 Exportar Excel
-                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-export" onclick="exportarDados()">
+                        📊 Exportar Excel
+                    </button>
+                    <button class="btn-export" onclick="exportarPDF()" style="background: #dc3545;">
+                        📄 Exportar PDF
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -583,6 +589,16 @@
                     <div class="kpi-icon">📊</div>
                     <div class="kpi-label">Total Registros</div>
                     <div class="kpi-value" id="kpiRegistros">0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">🎯</div>
+                    <div class="kpi-label">Ticket Médio</div>
+                    <div class="kpi-value" id="kpiTicket">R$ 0,00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">👤</div>
+                    <div class="kpi-label">Clientes Ativos</div>
+                    <div class="kpi-value" id="kpiClientes">0</div>
                 </div>
             </div>
 
@@ -645,7 +661,6 @@
         window.dadosCompletos = [];
         window.todosGrupos = [];
         window.todosClientes = [];
-        window.todasCidades = [];
 
         let chart1, chart2;
 
@@ -668,8 +683,7 @@
                 if (!window.filterSearches || Object.keys(window.filterSearches).length === 0) {
                     window.filterSearches = {
                         grupo: new FilterSearch('filtroGrupo', { placeholder: 'Digite para buscar grupo...' }),
-                        cliente: new FilterSearch('filtroCliente', { placeholder: 'Digite para buscar cliente...' }),
-                        cidade: new FilterSearch('filtroCidade', { placeholder: 'Digite para buscar cidade...' })
+                        cliente: new FilterSearch('filtroCliente', { placeholder: 'Digite para buscar cliente...' })
                     };
                 }
 
@@ -678,17 +692,15 @@
                 const cacheKey = 'filtros_clientes';
                 const cached = cache.get(cacheKey);
 
-                let grupos, clientes, cidades;
+                let grupos, clientes;
 
                 // Valida se o cache existe E tem dados não vazios E estrutura correta usando validateCacheStructure
                 const cacheValido = validateCacheStructure(cached?.grupos, 'grupo_desc') &&
-                    validateCacheStructure(cached?.clientes, 'cliente') &&
-                    validateCacheStructure(cached?.cidades, 'cidade');
+                    validateCacheStructure(cached?.clientes, 'cliente');
 
                 if (cacheValido) {
                     grupos = cached.grupos;
                     clientes = cached.clientes;
-                    cidades = cached.cidades;
                 } else {
                     if (cached) {
                         // Remove cache inválido
@@ -703,22 +715,17 @@
                     clientes = await db.execute('SELECT cliente, nome, grupo_desc FROM lkp_clientes WHERE nome IS NOT NULL ORDER BY nome');
                     if (!clientes?.rows?.length) clientes = await db.execute('SELECT DISTINCT cliente, nome, grupo_desc FROM tab_cliente WHERE nome IS NOT NULL ORDER BY nome');
 
-                    cidades = await db.execute('SELECT DISTINCT cidade, grupo_desc FROM lkp_clientes WHERE cidade IS NOT NULL ORDER BY cidade');
-                    if (!cidades?.rows?.length) cidades = await db.execute('SELECT DISTINCT cidade, grupo_desc FROM tab_cliente WHERE cidade IS NOT NULL ORDER BY cidade');
-
                     // Valida antes de salvar no cache
-                    if (grupos?.rows?.length > 0 && clientes?.rows?.length > 0 && cidades?.rows?.length > 0) {
+                    if (grupos?.rows?.length > 0 && clientes?.rows?.length > 0) {
                         cache.set(cacheKey, {
                             grupos: serializeDbResult(grupos),
-                            clientes: serializeDbResult(clientes),
-                            cidades: serializeDbResult(cidades)
+                            clientes: serializeDbResult(clientes)
                         }, CACHE_TTL.FILTERS);
                     }
                 }
 
                 window.todosGrupos = grupos.rows;
                 window.todosClientes = clientes.rows;
-                window.todasCidades = cidades.rows;
 
                 // Filtra valores nulos/undefined antes de preencher
                 preencherSelect('filtroGrupo', grupos.rows
@@ -755,8 +762,7 @@
             // Mapeia o ID do select para a chave do filterSearches
             const searchIdMap = {
                 'filtroGrupo': 'grupo',
-                'filtroCliente': 'cliente',
-                'filtroCidade': 'cidade'
+                'filtroCliente': 'cliente'
             };
             const searchId = searchIdMap[id];
 
@@ -766,17 +772,13 @@
             }
         }
 
-        // CASCATA FLEXÍVEL: Grupo → Cliente → Cidade
+        // CASCATA: Grupo → Cliente
         document.getElementById('filtroGrupo').addEventListener('change', function() {
             const gruposSelecionados = Array.from(this.selectedOptions).map(o => o.value);
 
             if (gruposSelecionados.length === 0) {
                 preencherSelect('filtroCliente', window.todosClientes
                     .map(c => c.nome)
-                    .filter(v => v !== null && v !== undefined && v !== '')
-                    .filter((v, i, s) => s.indexOf(v) === i));
-                preencherSelect('filtroCidade', window.todasCidades
-                    .map(c => c.cidade)
                     .filter(v => v !== null && v !== undefined && v !== '')
                     .filter((v, i, s) => s.indexOf(v) === i));
             } else {
@@ -786,50 +788,7 @@
                     .filter(v => v !== null && v !== undefined && v !== '')
                     .filter((v, i, s) => s.indexOf(v) === i);
 
-                const cidadesFiltradas = window.todasCidades
-                    .filter(c => gruposSelecionados.includes(c.grupo_desc))
-                    .map(c => c.cidade)
-                    .filter(v => v !== null && v !== undefined && v !== '')
-                    .filter((v, i, s) => s.indexOf(v) === i);
-
                 preencherSelect('filtroCliente', clientesFiltrados);
-                preencherSelect('filtroCidade', cidadesFiltradas);
-            }
-        });
-
-        document.getElementById('filtroCliente').addEventListener('change', function() {
-            const clientesSelecionados = Array.from(this.selectedOptions).map(o => o.value);
-            const gruposSelecionados = Array.from(document.getElementById('filtroGrupo').selectedOptions).map(o => o.value);
-
-            if (clientesSelecionados.length === 0) {
-                if (gruposSelecionados.length > 0) {
-                    const cidadesFiltradas = window.todasCidades
-                        .filter(c => gruposSelecionados.includes(c.grupo_desc))
-                        .map(c => c.cidade)
-                        .filter(v => v !== null && v !== undefined && v !== '')
-                        .filter((v, i, s) => s.indexOf(v) === i);
-                    preencherSelect('filtroCidade', cidadesFiltradas);
-                } else {
-                    preencherSelect('filtroCidade', window.todasCidades
-                        .map(c => c.cidade)
-                        .filter(v => v !== null && v !== undefined && v !== '')
-                        .filter((v, i, s) => s.indexOf(v) === i));
-                }
-            } else {
-                const codigosClientes = window.todosClientes
-                    .filter(c => clientesSelecionados.includes(c.nome))
-                    .map(c => c.cliente);
-
-                // Busca cidades baseadas nos clientes selecionados via JOIN com vendas
-                const cidadesUnique = new Set();
-                window.todasCidades.forEach(c => {
-                    if ((gruposSelecionados.length === 0 || gruposSelecionados.includes(c.grupo_desc))
-                        && c.cidade !== null && c.cidade !== undefined && c.cidade !== '') {
-                        cidadesUnique.add(c.cidade);
-                    }
-                });
-
-                preencherSelect('filtroCidade', Array.from(cidadesUnique));
             }
         });
 
@@ -868,21 +827,21 @@
         window.limparFiltros = function() {
             document.getElementById('dataInicio').value = '';
             document.getElementById('dataFim').value = '';
+            document.getElementById('filtroCodigoCliente').value = '';
             document.getElementById('filtroGrupo').selectedIndex = -1;
             document.getElementById('filtroCliente').selectedIndex = -1;
-            document.getElementById('filtroCidade').selectedIndex = -1;
 
             preencherSelect('filtroCliente', []);
-            preencherSelect('filtroCidade', []);
         };
 
         // Atualizar dados
         window.atualizarDados = async function() {
             const dataInicio = document.getElementById('dataInicio').value;
             const dataFim = document.getElementById('dataFim').value;
+            const codigosCliente = document.getElementById('filtroCodigoCliente').value
+                .split(',').map(c => c.trim()).filter(c => c !== '');
             const grupos = Array.from(document.getElementById('filtroGrupo').selectedOptions).map(o => o.value);
             const clientesNomes = Array.from(document.getElementById('filtroCliente').selectedOptions).map(o => o.value);
-            const cidades = Array.from(document.getElementById('filtroCidade').selectedOptions).map(o => o.value);
 
             if (!dataInicio || !dataFim) {
                 alert('Por favor, selecione o período (data início e fim)');
@@ -914,17 +873,19 @@
 
                 const params = [dataInicio, dataFim];
 
-                if (grupos.length > 0) {
-                    sql += ` AND c.grupo_desc IN (${grupos.map(() => '?').join(',')})`;
-                    params.push(...grupos);
-                }
-                if (clientesNomes.length > 0) {
-                    sql += ` AND c.nome IN (${clientesNomes.map(() => '?').join(',')})`;
-                    params.push(...clientesNomes);
-                }
-                if (cidades.length > 0) {
-                    sql += ` AND c.cidade IN (${cidades.map(() => '?').join(',')})`;
-                    params.push(...cidades);
+                // Código do Cliente tem prioridade — busca direta sem depender de outros filtros
+                if (codigosCliente.length > 0) {
+                    sql += ` AND v.cliente IN (${codigosCliente.map(() => '?').join(',')})`;
+                    params.push(...codigosCliente);
+                } else {
+                    if (grupos.length > 0) {
+                        sql += ` AND c.grupo_desc IN (${grupos.map(() => '?').join(',')})`;
+                        params.push(...grupos);
+                    }
+                    if (clientesNomes.length > 0) {
+                        sql += ` AND c.nome IN (${clientesNomes.map(() => '?').join(',')})`;
+                        params.push(...clientesNomes);
+                    }
                 }
 
                 sql += ' GROUP BY v.produto, v.complemento, c.nome ORDER BY qtde DESC';
@@ -957,7 +918,7 @@
             tbody.innerHTML = '';
 
             if (pageData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #6c757d;">Nenhum resultado encontrado</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #6c757d;">Nenhum resultado encontrado</td></tr>';
                 return;
             }
 
@@ -968,6 +929,7 @@
                 tr.innerHTML = `
                     <td>${row.produto || '-'}</td>
                     <td>${row.descricao || '-'}</td>
+                    <td>${row.cliente_nome || '-'}</td>
                     <td class="text-right">${parseFloat(row.qtde || 0).toLocaleString('pt-BR')}</td>
                     <td class="text-right">R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                     <td class="text-right">${parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
@@ -986,10 +948,17 @@
             const totalQtde = dados.reduce((sum, row) => sum + parseFloat(row.qtde || 0), 0);
             const totalPeso = dados.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
 
+            // Clientes únicos
+            const clientesUnicos = new Set(dados.map(d => d.cliente_nome).filter(Boolean));
+            const numClientes = clientesUnicos.size;
+            const ticketMedio = numClientes > 0 ? totalValor / numClientes : 0;
+
             document.getElementById('kpiValor').textContent = 'R$ ' + totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2});
             document.getElementById('kpiQtde').textContent = totalQtde.toLocaleString('pt-BR');
             document.getElementById('kpiPeso').textContent = totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg';
             document.getElementById('kpiRegistros').textContent = dados.length.toLocaleString('pt-BR');
+            document.getElementById('kpiTicket').textContent = 'R$ ' + ticketMedio.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            document.getElementById('kpiClientes').textContent = numClientes.toLocaleString('pt-BR');
         }
 
         function atualizarGraficos(dados) {
@@ -1074,10 +1043,10 @@
                 const dados = window.dadosCompletos.map(row => ({
                     'Produto': row.produto,
                     'Descrição': row.descricao,
-                    'Cliente': row.cliente_nome,
+                    'Cliente': row.cliente_nome || '-',
                     'Quantidade': parseFloat(row.qtde || 0),
-                    'Valor': parseFloat(row.valor || 0),
-                    'Peso': parseFloat(row.peso || 0)
+                    'Valor (R$)': parseFloat(row.valor || 0),
+                    'Peso (kg)': parseFloat(row.peso || 0)
                 }));
 
                 const ws = XLSX.utils.json_to_sheet(dados);
@@ -1093,6 +1062,77 @@
             } catch (error) {
                 console.error('Erro ao exportar:', error);
                 alert('Erro ao exportar: ' + error.message);
+            }
+        };
+
+        // Exportar PDF
+        window.exportarPDF = async function() {
+            if (window.dadosCompletos.length === 0) {
+                alert('Não há dados para exportar');
+                return;
+            }
+
+            try {
+                await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js');
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('landscape');
+
+                // Título
+                doc.setFontSize(18);
+                doc.setTextColor(252, 3, 3);
+                doc.text('Performance de Clientes', 14, 20);
+
+                // Data de geração e período
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                const dataInicio = document.getElementById('dataInicio').value;
+                const dataFim = document.getElementById('dataFim').value;
+                doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')} | Período: ${dataInicio} a ${dataFim}`, 14, 28);
+
+                // KPIs resumidos
+                const totalValor = window.dadosCompletos.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
+                const totalQtde = window.dadosCompletos.reduce((sum, row) => sum + parseFloat(row.qtde || 0), 0);
+                const totalPeso = window.dadosCompletos.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
+                const clientesUnicos = new Set(window.dadosCompletos.map(d => d.cliente_nome).filter(Boolean));
+                const ticketMedio = clientesUnicos.size > 0 ? totalValor / clientesUnicos.size : 0;
+
+                doc.setFontSize(9);
+                doc.setTextColor(40, 167, 69);
+                doc.text(
+                    `Valor Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}  |  ` +
+                    `Qtde: ${totalQtde.toLocaleString('pt-BR')}  |  ` +
+                    `Peso: ${totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2})} kg  |  ` +
+                    `Clientes: ${clientesUnicos.size}  |  ` +
+                    `Ticket Médio: R$ ${ticketMedio.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
+                    14, 35
+                );
+
+                // Tabela
+                const tableData = window.dadosCompletos.map(row => [
+                    row.produto || '-',
+                    (row.descricao || '-').substring(0, 40),
+                    (row.cliente_nome || '-').substring(0, 35),
+                    parseFloat(row.qtde || 0).toLocaleString('pt-BR'),
+                    'R$ ' + parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                    parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})
+                ]);
+
+                doc.autoTable({
+                    head: [['Produto', 'Descrição', 'Cliente', 'Qtde', 'Valor (R$)', 'Peso (kg)']],
+                    body: tableData,
+                    startY: 42,
+                    theme: 'striped',
+                    headStyles: { fillColor: [40, 167, 69], textColor: [255, 255, 255], fontStyle: 'bold' },
+                    alternateRowStyles: { fillColor: [248, 249, 250] },
+                    styles: { fontSize: 8 }
+                });
+
+                doc.save(`performance_clientes_${dataInicio}_${dataFim}.pdf`);
+
+            } catch (error) {
+                console.error('Erro ao exportar PDF:', error);
+                alert('Erro ao exportar PDF: ' + error.message);
             }
         };
 
