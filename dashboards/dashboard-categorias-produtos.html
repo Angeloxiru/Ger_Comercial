@@ -796,6 +796,9 @@
 
         let chartDonut, chartLinhasValor, chartLinhasPeso, chartLinhasValorKg;
 
+        // Ordem fixa de exibicao das categorias
+        const CATEGORIAS_ORDEM = ['Biscoitos', 'Cereais', 'Massas', 'Instantaneo', 'Catterino'];
+
         // Cores por categoria
         const CATEGORIAS_CONFIG = {
             'Biscoitos':    { cor: '#fc0303', corRgba: 'rgba(252, 3, 3, 0.8)',   filtro: "LOWER(p.desc_origem) LIKE '%biscoito%'" },
@@ -1112,7 +1115,7 @@
                     `;
                     const paramsDet = [dataInicio, dataFim];
                     sqlDetalhado = buildFiltrosDinamicos(sqlDetalhado, paramsDet);
-                    sqlDetalhado += ` GROUP BY r.representante, nome_representante, categoria HAVING categoria IS NOT NULL ORDER BY nome_representante, valor DESC`;
+                    sqlDetalhado += ` GROUP BY r.representante, nome_representante, categoria HAVING categoria IS NOT NULL ORDER BY nome_representante, categoria`;
                     queries.push(db.execute(sqlDetalhado, paramsDet));
                 }
 
@@ -1126,7 +1129,7 @@
                 // Renderizar
                 renderizarTabela();
                 atualizarKPIs(results[0].rows);
-                atualizarGraficos(results[0].rows, results[1].rows);
+                atualizarGraficos(results[0].rows, results[1].rows, window.dadosDetalhados);
 
                 document.getElementById('mainContent').style.display = 'grid';
                 document.getElementById('tableFooter').style.display = 'flex';
@@ -1255,6 +1258,13 @@
                 `;
                 tbody.appendChild(trHeader);
 
+                // Ordenar categorias pela ordem fixa
+                linhas.sort((a, b) => {
+                    const idxA = CATEGORIAS_ORDEM.indexOf(a.categoria);
+                    const idxB = CATEGORIAS_ORDEM.indexOf(b.categoria);
+                    return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+                });
+
                 // Linhas de categorias do representante
                 linhas.forEach(row => {
                     const peso = parseFloat(row.peso || 0);
@@ -1326,13 +1336,19 @@
         }
 
         // Atualizar graficos
-        function atualizarGraficos(dadosCat, dadosSem) {
+        function atualizarGraficos(dadosCat, dadosSem, dadosDet) {
             if (typeof Chart === 'undefined') {
-                setTimeout(() => atualizarGraficos(dadosCat, dadosSem), 500);
+                setTimeout(() => atualizarGraficos(dadosCat, dadosSem, dadosDet), 500);
                 return;
             }
 
-            // Grafico 1: Donut - Participacao por Valor
+            // Helper: atualizar titulo de um chart-card
+            function setChartTitle(canvasId, titulo) {
+                const el = document.getElementById(canvasId)?.closest('.chart-card')?.querySelector('.chart-title');
+                if (el) el.textContent = titulo;
+            }
+
+            // Grafico 1: Donut - Participacao por Valor (igual em ambos os modos)
             if (chartDonut) chartDonut.destroy();
             chartDonut = new Chart(document.getElementById('chartDonut'), {
                 type: 'doughnut',
@@ -1357,180 +1373,225 @@
                 }
             });
 
-            // Preparar dados semanais para graficos de linhas
-            const semanasUnicas = [...new Set(dadosSem.map(d => d.semana_key))].sort();
-            const categoriasPresentes = [...new Set(dadosSem.map(d => d.categoria))];
-
-            // Labels das semanas formatados
-            const semanasLabels = semanasUnicas.map(sk => {
-                const row = dadosSem.find(d => d.semana_key === sk);
-                if (row && row.inicio_semana) {
-                    const dt = new Date(row.inicio_semana + 'T00:00:00');
-                    return dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                }
-                return sk;
-            });
-
-            // Grafico 2: Linhas Semanais - Valor
-            const datasetsValor = categoriasPresentes.map(cat => {
-                const dados = semanasUnicas.map(sem => {
-                    const row = dadosSem.find(d => d.semana_key === sem && d.categoria === cat);
-                    return row ? parseFloat(row.valor || 0) : 0;
-                });
-                return {
-                    label: cat,
-                    data: dados,
-                    borderColor: CATEGORIAS_CONFIG[cat]?.cor || '#6c757d',
-                    backgroundColor: CATEGORIAS_CONFIG[cat]?.corRgba || 'rgba(108, 117, 125, 0.2)',
-                    borderWidth: 2,
-                    tension: 0.3,
-                    fill: false,
-                    pointRadius: 3,
-                    pointHoverRadius: 5
-                };
-            });
-
+            // Destruir graficos existentes
             if (chartLinhasValor) chartLinhasValor.destroy();
-            chartLinhasValor = new Chart(document.getElementById('chartLinhasValor'), {
-                type: 'line',
-                data: {
-                    labels: semanasLabels,
-                    datasets: datasetsValor
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { font: { size: 10 }, padding: 8, boxWidth: 12 }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return 'R$ ' + value.toLocaleString('pt-BR');
-                                },
-                                font: { size: 10 }
-                            }
-                        },
-                        x: {
-                            ticks: { font: { size: 10 }, maxRotation: 45 }
-                        }
-                    }
-                }
-            });
-
-            // Grafico 3: Linhas Semanais - Peso
-            const datasetsPeso = categoriasPresentes.map(cat => {
-                const dados = semanasUnicas.map(sem => {
-                    const row = dadosSem.find(d => d.semana_key === sem && d.categoria === cat);
-                    return row ? parseFloat(row.peso || 0) : 0;
-                });
-                return {
-                    label: cat,
-                    data: dados,
-                    borderColor: CATEGORIAS_CONFIG[cat]?.cor || '#6c757d',
-                    backgroundColor: CATEGORIAS_CONFIG[cat]?.corRgba || 'rgba(108, 117, 125, 0.2)',
-                    borderWidth: 2,
-                    tension: 0.3,
-                    fill: false,
-                    pointRadius: 3,
-                    pointHoverRadius: 5
-                };
-            });
-
             if (chartLinhasPeso) chartLinhasPeso.destroy();
-            chartLinhasPeso = new Chart(document.getElementById('chartLinhasPeso'), {
-                type: 'line',
-                data: {
-                    labels: semanasLabels,
-                    datasets: datasetsPeso
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { font: { size: 10 }, padding: 8, boxWidth: 12 }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return value.toLocaleString('pt-BR') + ' kg';
-                                },
-                                font: { size: 10 }
-                            }
-                        },
-                        x: {
-                            ticks: { font: { size: 10 }, maxRotation: 45 }
-                        }
-                    }
-                }
-            });
+            if (chartLinhasValorKg) chartLinhasValorKg.destroy();
 
-            // Grafico 4: Linhas Semanais - R$/KG
-            const datasetsValorKg = categoriasPresentes.map(cat => {
-                const dados = semanasUnicas.map(sem => {
-                    const row = dadosSem.find(d => d.semana_key === sem && d.categoria === cat);
-                    if (row) {
-                        const peso = parseFloat(row.peso || 0);
-                        const valor = parseFloat(row.valor || 0);
-                        return peso > 0 ? parseFloat((valor / peso).toFixed(2)) : 0;
-                    }
-                    return 0;
+            if (window.modoVisualizacao === 'detalhado' && dadosDet && dadosDet.length > 0) {
+                // MODO DETALHADO: Barras por representante
+
+                // Atualizar titulos
+                setChartTitle('chartLinhasValor', '📊 Valor por Representante (R$)');
+                setChartTitle('chartLinhasPeso', '⚖️ Peso por Representante (kg)');
+                setChartTitle('chartLinhasValorKg', '💰 R$/KG por Representante');
+
+                // Agrupar dados por representante
+                const repMap = {};
+                dadosDet.forEach(row => {
+                    const rep = row.nome_representante;
+                    if (!repMap[rep]) repMap[rep] = { totalValor: 0, totalPeso: 0 };
+                    const peso = parseFloat(row.peso || 0);
+                    const valor = parseFloat(row.valor || 0);
+                    repMap[rep][row.categoria] = { peso, valor };
+                    repMap[rep].totalValor += valor;
+                    repMap[rep].totalPeso += peso;
                 });
-                return {
+
+                // Categorias presentes nos dados, na ordem fixa
+                const categoriasPresentes = CATEGORIAS_ORDEM.filter(cat =>
+                    dadosDet.some(d => d.categoria === cat)
+                );
+
+                // --- Grafico Valor: ordenar por valor (menor -> maior) ---
+                const repsOrdenadosValor = Object.keys(repMap).sort((a, b) => repMap[a].totalValor - repMap[b].totalValor);
+
+                const datasetsValorRep = categoriasPresentes.map(cat => ({
                     label: cat,
-                    data: dados,
+                    data: repsOrdenadosValor.map(rep => repMap[rep][cat]?.valor || 0),
+                    backgroundColor: CATEGORIAS_CONFIG[cat]?.corRgba || 'rgba(108, 117, 125, 0.8)',
+                    borderColor: CATEGORIAS_CONFIG[cat]?.cor || '#6c757d',
+                    borderWidth: 1
+                }));
+
+                chartLinhasValor = new Chart(document.getElementById('chartLinhasValor'), {
+                    type: 'bar',
+                    data: { labels: repsOrdenadosValor, datasets: datasetsValorRep },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8, boxWidth: 12 } }
+                        },
+                        scales: {
+                            x: { ticks: { font: { size: 9 }, maxRotation: 45 } },
+                            y: { beginAtZero: true, ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR'), font: { size: 10 } } }
+                        }
+                    }
+                });
+
+                // --- Grafico Peso: ordenar por peso (menor -> maior) ---
+                const repsOrdenadosPeso = Object.keys(repMap).sort((a, b) => repMap[a].totalPeso - repMap[b].totalPeso);
+
+                const datasetsPesoRep = categoriasPresentes.map(cat => ({
+                    label: cat,
+                    data: repsOrdenadosPeso.map(rep => repMap[rep][cat]?.peso || 0),
+                    backgroundColor: CATEGORIAS_CONFIG[cat]?.corRgba || 'rgba(108, 117, 125, 0.8)',
+                    borderColor: CATEGORIAS_CONFIG[cat]?.cor || '#6c757d',
+                    borderWidth: 1
+                }));
+
+                chartLinhasPeso = new Chart(document.getElementById('chartLinhasPeso'), {
+                    type: 'bar',
+                    data: { labels: repsOrdenadosPeso, datasets: datasetsPesoRep },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8, boxWidth: 12 } }
+                        },
+                        scales: {
+                            x: { ticks: { font: { size: 9 }, maxRotation: 45 } },
+                            y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString('pt-BR') + ' kg', font: { size: 10 } } }
+                        }
+                    }
+                });
+
+                // --- Grafico R$/KG: ordenar por valorKg (menor -> maior) ---
+                const repsComVK = Object.keys(repMap).map(rep => {
+                    const vk = repMap[rep].totalPeso > 0 ? repMap[rep].totalValor / repMap[rep].totalPeso : 0;
+                    return { rep, vk };
+                });
+                const repsOrdenadosVK = repsComVK.sort((a, b) => a.vk - b.vk).map(r => r.rep);
+
+                const datasetsVKRep = categoriasPresentes.map(cat => ({
+                    label: cat,
+                    data: repsOrdenadosVK.map(rep => {
+                        const d = repMap[rep][cat];
+                        return d && d.peso > 0 ? parseFloat((d.valor / d.peso).toFixed(2)) : 0;
+                    }),
+                    backgroundColor: CATEGORIAS_CONFIG[cat]?.corRgba || 'rgba(108, 117, 125, 0.8)',
+                    borderColor: CATEGORIAS_CONFIG[cat]?.cor || '#6c757d',
+                    borderWidth: 1
+                }));
+
+                chartLinhasValorKg = new Chart(document.getElementById('chartLinhasValorKg'), {
+                    type: 'bar',
+                    data: { labels: repsOrdenadosVK, datasets: datasetsVKRep },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8, boxWidth: 12 } }
+                        },
+                        scales: {
+                            x: { ticks: { font: { size: 9 }, maxRotation: 45 } },
+                            y: { beginAtZero: true, ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2}), font: { size: 10 } } }
+                        }
+                    }
+                });
+
+            } else {
+                // MODO RESUMIDO: Linhas semanais
+
+                // Atualizar titulos
+                setChartTitle('chartLinhasValor', '📈 Evolucao Semanal - Valor (R$)');
+                setChartTitle('chartLinhasPeso', '⚖️ Evolucao Semanal - Peso (kg)');
+                setChartTitle('chartLinhasValorKg', '📉 Evolucao Semanal - R$/KG');
+
+                // Preparar dados semanais
+                const semanasUnicas = [...new Set(dadosSem.map(d => d.semana_key))].sort();
+                const categoriasPresentes = [...new Set(dadosSem.map(d => d.categoria))];
+
+                const semanasLabels = semanasUnicas.map(sk => {
+                    const row = dadosSem.find(d => d.semana_key === sk);
+                    if (row && row.inicio_semana) {
+                        const dt = new Date(row.inicio_semana + 'T00:00:00');
+                        return dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                    }
+                    return sk;
+                });
+
+                // Grafico Valor
+                const datasetsValor = categoriasPresentes.map(cat => ({
+                    label: cat,
+                    data: semanasUnicas.map(sem => {
+                        const row = dadosSem.find(d => d.semana_key === sem && d.categoria === cat);
+                        return row ? parseFloat(row.valor || 0) : 0;
+                    }),
                     borderColor: CATEGORIAS_CONFIG[cat]?.cor || '#6c757d',
                     backgroundColor: CATEGORIAS_CONFIG[cat]?.corRgba || 'rgba(108, 117, 125, 0.2)',
-                    borderWidth: 2,
-                    tension: 0.3,
-                    fill: false,
-                    pointRadius: 3,
-                    pointHoverRadius: 5
-                };
-            });
+                    borderWidth: 2, tension: 0.3, fill: false, pointRadius: 3, pointHoverRadius: 5
+                }));
 
-            if (chartLinhasValorKg) chartLinhasValorKg.destroy();
-            chartLinhasValorKg = new Chart(document.getElementById('chartLinhasValorKg'), {
-                type: 'line',
-                data: {
-                    labels: semanasLabels,
-                    datasets: datasetsValorKg
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { font: { size: 10 }, padding: 8, boxWidth: 12 }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return 'R$ ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-                                },
-                                font: { size: 10 }
-                            }
-                        },
-                        x: {
-                            ticks: { font: { size: 10 }, maxRotation: 45 }
+                chartLinhasValor = new Chart(document.getElementById('chartLinhasValor'), {
+                    type: 'line',
+                    data: { labels: semanasLabels, datasets: datasetsValor },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8, boxWidth: 12 } } },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR'), font: { size: 10 } } },
+                            x: { ticks: { font: { size: 10 }, maxRotation: 45 } }
                         }
                     }
-                }
-            });
+                });
+
+                // Grafico Peso
+                const datasetsPeso = categoriasPresentes.map(cat => ({
+                    label: cat,
+                    data: semanasUnicas.map(sem => {
+                        const row = dadosSem.find(d => d.semana_key === sem && d.categoria === cat);
+                        return row ? parseFloat(row.peso || 0) : 0;
+                    }),
+                    borderColor: CATEGORIAS_CONFIG[cat]?.cor || '#6c757d',
+                    backgroundColor: CATEGORIAS_CONFIG[cat]?.corRgba || 'rgba(108, 117, 125, 0.2)',
+                    borderWidth: 2, tension: 0.3, fill: false, pointRadius: 3, pointHoverRadius: 5
+                }));
+
+                chartLinhasPeso = new Chart(document.getElementById('chartLinhasPeso'), {
+                    type: 'line',
+                    data: { labels: semanasLabels, datasets: datasetsPeso },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8, boxWidth: 12 } } },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString('pt-BR') + ' kg', font: { size: 10 } } },
+                            x: { ticks: { font: { size: 10 }, maxRotation: 45 } }
+                        }
+                    }
+                });
+
+                // Grafico R$/KG
+                const datasetsValorKg = categoriasPresentes.map(cat => ({
+                    label: cat,
+                    data: semanasUnicas.map(sem => {
+                        const row = dadosSem.find(d => d.semana_key === sem && d.categoria === cat);
+                        if (row) {
+                            const p = parseFloat(row.peso || 0);
+                            const v = parseFloat(row.valor || 0);
+                            return p > 0 ? parseFloat((v / p).toFixed(2)) : 0;
+                        }
+                        return 0;
+                    }),
+                    borderColor: CATEGORIAS_CONFIG[cat]?.cor || '#6c757d',
+                    backgroundColor: CATEGORIAS_CONFIG[cat]?.corRgba || 'rgba(108, 117, 125, 0.2)',
+                    borderWidth: 2, tension: 0.3, fill: false, pointRadius: 3, pointHoverRadius: 5
+                }));
+
+                chartLinhasValorKg = new Chart(document.getElementById('chartLinhasValorKg'), {
+                    type: 'line',
+                    data: { labels: semanasLabels, datasets: datasetsValorKg },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8, boxWidth: 12 } } },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2}), font: { size: 10 } } },
+                            x: { ticks: { font: { size: 10 }, maxRotation: 45 } }
+                        }
+                    }
+                });
+            }
         }
 
         // Exportar Excel

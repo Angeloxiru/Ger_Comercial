@@ -712,7 +712,12 @@
                     grupos = await db.execute('SELECT DISTINCT grupo_desc FROM lkp_clientes WHERE grupo_desc IS NOT NULL ORDER BY grupo_desc');
                     if (!grupos?.rows?.length) grupos = await db.execute('SELECT DISTINCT grupo_desc FROM tab_cliente WHERE grupo_desc IS NOT NULL ORDER BY grupo_desc');
 
-                    clientes = await db.execute('SELECT cliente, nome, fantasia, grupo_desc FROM lkp_clientes WHERE nome IS NOT NULL ORDER BY nome');
+                    // Tenta lkp_clientes (com fantasia). Se coluna nao existir ainda, cai no fallback.
+                    try {
+                        clientes = await db.execute('SELECT cliente, nome, fantasia, grupo_desc FROM lkp_clientes WHERE nome IS NOT NULL ORDER BY nome');
+                    } catch (e) {
+                        clientes = { rows: [] };
+                    }
                     if (!clientes?.rows?.length) clientes = await db.execute('SELECT DISTINCT cliente, nome, fantasia, grupo_desc FROM tab_cliente WHERE nome IS NOT NULL ORDER BY nome');
 
                     // Valida antes de salvar no cache
