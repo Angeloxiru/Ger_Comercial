@@ -640,6 +640,13 @@
                     </label>
                 </div>
             </div>
+
+            <!-- Código do Grupo de Cliente -->
+            <div class="filter-group">
+                <label>🏢 Cód. Grupo de Cliente</label>
+                <input type="text" id="filtroGrupoCliente" placeholder="Ex: 101, 202, 303">
+                <small style="color: #6c757d; font-size: 0.75em; margin-top: 4px;">Separe múltiplos códigos por vírgula. Tem prioridade sobre Supervisor/Representante.</small>
+            </div>
         </div>
 
         <div class="filters-buttons">
@@ -966,6 +973,7 @@
             document.getElementById('dataFim').value = '';
             document.getElementById('filtroSupervisor').selectedIndex = -1;
             document.getElementById('filtroRepresentante').selectedIndex = -1;
+            document.getElementById('filtroGrupoCliente').value = '';
             if (window.filterSearches) {
                 Object.values(window.filterSearches).forEach(fs => fs?.clear());
             }
@@ -1007,22 +1015,36 @@
             document.getElementById('dataFim').value = fim.toISOString().split('T')[0];
         };
 
-        // Construir filtros dinamicos de supervisor/representante
+        // Construir filtros dinamicos de supervisor/representante/grupo
+        // Grupo de cliente tem PRIORIDADE sobre supervisor/representante
         function buildFiltrosDinamicos(sql, params) {
-            const supervisores = Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value);
-            const representantes = Array.from(document.getElementById('filtroRepresentante').selectedOptions).map(o => o.value);
+            // Verificar se há códigos de grupo de cliente informados
+            const grupoInput = (document.getElementById('filtroGrupoCliente').value || '').trim();
+            const gruposCodigos = grupoInput
+                ? grupoInput.split(',').map(g => g.trim()).filter(g => g !== '')
+                : [];
 
-            if (supervisores.length > 0) {
-                sql += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`;
-                params.push(...supervisores);
-            }
-            if (representantes.length > 0) {
-                const codigosRepresentantes = window.todosRepresentantes
-                    .filter(r => representantes.includes(r.desc_representante))
-                    .map(r => r.representante);
-                if (codigosRepresentantes.length > 0) {
-                    sql += ` AND r.representante IN (${codigosRepresentantes.map(() => '?').join(',')})`;
-                    params.push(...codigosRepresentantes);
+            if (gruposCodigos.length > 0) {
+                // Grupo tem prioridade: ignorar supervisor/representante
+                sql += ` AND v.cliente IN (SELECT cliente FROM tab_cliente WHERE grupo IN (${gruposCodigos.map(() => '?').join(',')}))`;
+                params.push(...gruposCodigos);
+            } else {
+                // Sem grupo: usar supervisor/representante normalmente
+                const supervisores = Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value);
+                const representantes = Array.from(document.getElementById('filtroRepresentante').selectedOptions).map(o => o.value);
+
+                if (supervisores.length > 0) {
+                    sql += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`;
+                    params.push(...supervisores);
+                }
+                if (representantes.length > 0) {
+                    const codigosRepresentantes = window.todosRepresentantes
+                        .filter(r => representantes.includes(r.desc_representante))
+                        .map(r => r.representante);
+                    if (codigosRepresentantes.length > 0) {
+                        sql += ` AND r.representante IN (${codigosRepresentantes.map(() => '?').join(',')})`;
+                        params.push(...codigosRepresentantes);
+                    }
                 }
             }
             return sql;
