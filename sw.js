@@ -1,8 +1,8 @@
 // Service Worker para Ger Comercial - Germani Alimentos
 // Versao: 1.5.0 - Mobile improvements + file cleanup
 
-const CACHE_NAME = 'ger-comercial-v5';
-const RUNTIME_CACHE = 'ger-comercial-runtime-v5';
+const CACHE_NAME = 'ger-comercial-v6';
+const RUNTIME_CACHE = 'ger-comercial-runtime-v6';
 
 // Arquivos essenciais para funcionar offline
 const ESSENTIAL_FILES = [
@@ -30,7 +30,11 @@ const ESSENTIAL_FILES = [
   '/Ger_Comercial/js/filter-search.js',
   '/Ger_Comercial/js/dashboard-isolation.js',
   '/Ger_Comercial/js/mobile.js',
-  '/Ger_Comercial/js/periodo-validator.js'
+  '/Ger_Comercial/js/periodo-validator.js',
+  '/Ger_Comercial/ChatBot/chatbot-config.js',
+  '/Ger_Comercial/ChatBot/chatbot-rag.js',
+  '/Ger_Comercial/ChatBot/chatbot-ai.js',
+  '/Ger_Comercial/ChatBot/chatbot-ui.js'
 ];
 
 // Instala o Service Worker e cacheia arquivos essenciais
