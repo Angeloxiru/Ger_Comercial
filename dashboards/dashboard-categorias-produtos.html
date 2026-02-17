@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Dashboard de Categorias de Produtos - Ger Comercial">
+    <meta name="theme-color" content="#fc0303">
+    <title>Categorias de Produtos - Ger Comercial</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/Ger_Comercial/manifest.json">
+    <link rel="apple-touch-icon" href="/Ger_Comercial/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/Ger_Comercial/icon-192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-logo img {
+            height: 60px;
+            width: auto;
+        }
+
+        .header h1 {
+            font-size: 1.6em;
+            font-weight: 600;
+        }
+
+        .btn-voltar {
+            background: white;
+            color: #fc0303;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-voltar:hover {
+            background: #f8f9fa;
+        }
+
+        .filters-section {
+            background: white;
+            padding: 16px;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .filters-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .filters-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 160px;
+        }
+
+        .btn-limpar {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-limpar:hover {
+            background: #5a6268;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            color: #495057;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 0.9em;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.95em;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #fc0303;
+            box-shadow: 0 0 0 3px rgba(252, 3, 3, 0.1);
+        }
+
+        .filter-group select {
+            cursor: pointer;
+        }
+
+        .filter-group select option:checked {
+            background: #03ff1c;
+            color: #000;
+        }
+
+        .date-range {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .quick-dates {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quick-date-btn {
+            background: #e9ecef;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-date-btn:hover {
+            background: #fc0303;
+            color: white;
+        }
+
+        .btn-atualizar {
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-atualizar:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(252, 3, 3, 0.3);
+        }
+
+        .btn-atualizar:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Checkboxes de categorias */
+        .categorias-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .categorias-group label.group-label {
+            color: #495057;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 0.9em;
+        }
+
+        .categorias-checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .categoria-check {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85em;
+            font-weight: 500;
+            user-select: none;
+        }
+
+        .categoria-check:hover {
+            border-color: #fc0303;
+        }
+
+        .categoria-check input[type="checkbox"] {
+            accent-color: #fc0303;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .categoria-check.checked {
+            background: rgba(252, 3, 3, 0.08);
+            border-color: #fc0303;
+        }
+
+        .categoria-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* LAYOUT: 70% Tabela / 30% Dashboard */
+        .main-content {
+            display: grid;
+            grid-template-columns: 70% 30%;
+            gap: 20px;
+            margin: 20px;
+            min-height: calc(100vh - 400px);
+        }
+
+        /* TABELA (70%) */
+        .table-section {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .table-title {
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .table-stats {
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+
+        .table-container {
+            flex: 1;
+            overflow-y: auto;
+            max-height: calc(25 * 44px + 50px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9em;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        th.text-right,
+        td.text-right {
+            text-align: right;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f1f3f5;
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        td {
+            padding: 12px 16px;
+            color: #212529;
+            font-size: 0.9em;
+        }
+
+        .categoria-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+
+        .categoria-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        tbody tr.total-row {
+            background: #f8f9fa;
+            font-weight: 700;
+            border-top: 2px solid #dee2e6;
+        }
+
+        tbody tr.total-row:hover {
+            background: #f1f3f5;
+        }
+
+        .table-footer {
+            padding: 16px 20px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            border-top: 2px solid #dee2e6;
+        }
+
+        .total-value {
+            color: #212529;
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-export {
+            background: #fc0303;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+
+        .btn-export:hover {
+            background: #b50909;
+            transform: translateY(-1px);
+        }
+
+        /* DASHBOARD (30%) */
+        .dashboard-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-color: #fc0303;
+        }
+
+        .kpi-icon {
+            font-size: 2em;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .kpi-label {
+            color: #6c757d;
+            font-size: 0.75em;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .kpi-value {
+            color: #212529;
+            font-size: 1.5em;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            color: #495057;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #fc0303;
+            font-weight: 500;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #fc0303;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 20px;
+            font-size: 0.9em;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+    </style>
+
+    <!-- Mobile responsive -->
+    <link rel="stylesheet" href="../css/mobile.css">
+    <script src="../js/mobile.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="header-logo">
+                <img src="https://static.wixstatic.com/media/ce3165_c01db19c0ef64e2abb8c894c7ecc6f95~mv2.png/v1/fill/w_161,h_69,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/logomarca-Germani-2023-Branca-borda-dour.png" alt="Logo Germani Alimentos">
+            </div>
+            <h1>🏷️ Categorias de Produtos</h1>
+        </div>
+        <a href=".." class="btn-voltar">← Voltar</a>
+    </div>
+
+    <!-- Alerta de Configuracao -->
+    <div id="configAlert" class="alert alert-warning" style="display: none;">
+        <strong>⚠️ Configuracao Necessaria!</strong><br>
+        Configure suas credenciais do Turso no arquivo <code>js/config.js</code>
+    </div>
+
+    <!-- Secao de Filtros -->
+    <div class="filters-section">
+        <div class="filters-grid">
+            <!-- Periodo -->
+            <div class="filter-group">
+                <label>📅 Periodo</label>
+                <div class="date-range">
+                    <input type="date" id="dataInicio">
+                    <input type="date" id="dataFim">
+                </div>
+                <div class="quick-dates">
+                    <button class="quick-date-btn" onclick="setQuickDate('31dias')">Ultimos 31 Dias</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('mes')">Mes Atual</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('trimestre')">Trimestre</button>
+                    <button class="quick-date-btn" onclick="setQuickDate('ano')">Ano Atual</button>
+                </div>
+            </div>
+
+            <!-- Supervisor -->
+            <div class="filter-group">
+                <label>👔 Supervisor</label>
+                <select id="filtroSupervisor" multiple size="3">
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+
+            <!-- Representante -->
+            <div class="filter-group">
+                <label>👤 Representante</label>
+                <select id="filtroRepresentante" multiple size="3">
+                    <option value="">Selecione um Supervisor primeiro</option>
+                </select>
+            </div>
+
+            <!-- Categorias -->
+            <div class="categorias-group">
+                <label class="group-label">🏷️ Categorias</label>
+                <div class="categorias-checkboxes">
+                    <label class="categoria-check checked" data-cat="biscoitos">
+                        <input type="checkbox" value="biscoitos" checked>
+                        <span class="categoria-color" style="background: #fc0303;"></span>
+                        Biscoitos
+                    </label>
+                    <label class="categoria-check checked" data-cat="catterino">
+                        <input type="checkbox" value="catterino" checked>
+                        <span class="categoria-color" style="background: #b50909;"></span>
+                        Catterino
+                    </label>
+                    <label class="categoria-check checked" data-cat="cereais">
+                        <input type="checkbox" value="cereais" checked>
+                        <span class="categoria-color" style="background: #03ff1c;"></span>
+                        Cereais
+                    </label>
+                    <label class="categoria-check checked" data-cat="massas">
+                        <input type="checkbox" value="massas" checked>
+                        <span class="categoria-color" style="background: #ffd700;"></span>
+                        Massas
+                    </label>
+                    <label class="categoria-check checked" data-cat="instantaneo">
+                        <input type="checkbox" value="instantaneo" checked>
+                        <span class="categoria-color" style="background: #0d6efd;"></span>
+                        Instantaneo
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="filters-buttons">
+            <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar Filtros</button>
+            <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">🔄 Atualizar Dados</button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Carregando dados...</div>
+    </div>
+
+    <!-- LAYOUT: 70% Tabela / 30% Dashboard -->
+    <div class="main-content" id="mainContent" style="display: none;">
+        <!-- TABELA (70%) -->
+        <div class="table-section">
+            <div class="table-header">
+                <div class="table-title">📊 Comparativo por Categoria</div>
+                <div class="table-stats" id="tableStats">0 categorias</div>
+            </div>
+
+            <div class="table-container" id="tableContainer">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Categoria</th>
+                            <th class="text-right">Peso (kg)</th>
+                            <th class="text-right">Valor (R$)</th>
+                            <th class="text-right">R$/KG</th>
+                            <th class="text-right">% Peso</th>
+                            <th class="text-right">% Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="table-footer" id="tableFooter" style="display: none;">
+                <div class="total-value" id="totalValue">Total: R$ 0,00</div>
+                <div class="export-buttons">
+                    <button class="btn-export" onclick="exportarExcel()">
+                        📊 Excel
+                    </button>
+                    <button class="btn-export" onclick="exportarPDF()">
+                        📄 PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD (30%) -->
+        <div class="dashboard-section">
+            <!-- KPIs 2x2 -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon">⚖️</div>
+                    <div class="kpi-label">Peso Total</div>
+                    <div class="kpi-value" id="kpiPeso">0 kg</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">💰</div>
+                    <div class="kpi-label">Valor Total</div>
+                    <div class="kpi-value" id="kpiValor">R$ 0,00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">📊</div>
+                    <div class="kpi-label">R$/KG Medio</div>
+                    <div class="kpi-value" id="kpiValorKg">R$ 0,00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon">🏷️</div>
+                    <div class="kpi-label">Categorias Ativas</div>
+                    <div class="kpi-value" id="kpiCategorias">0</div>
+                </div>
+            </div>
+
+            <!-- Grafico 1: Donut - Participacao por Valor -->
+            <div class="chart-card">
+                <div class="chart-title">🍩 Participacao por Valor</div>
+                <div class="chart-container">
+                    <canvas id="chartDonut"></canvas>
+                </div>
+            </div>
+
+            <!-- Grafico 2: Linhas Semanais - Valor -->
+            <div class="chart-card">
+                <div class="chart-title">📈 Evolucao Semanal - Valor (R$)</div>
+                <div class="chart-container">
+                    <canvas id="chartLinhasValor"></canvas>
+                </div>
+            </div>
+
+            <!-- Grafico 3: Linhas Semanais - R$/KG -->
+            <div class="chart-card">
+                <div class="chart-title">📉 Evolucao Semanal - R$/KG</div>
+                <div class="chart-container">
+                    <canvas id="chartLinhasValorKg"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estado vazio inicial -->
+    <div class="empty-state" id="emptyState">
+        <div class="empty-state-icon">🏷️</div>
+        <div style="font-size: 1.1em; margin-bottom: 8px; color: #495057;">Selecione os filtros e clique em Atualizar</div>
+        <p>Configure o periodo, filtros e categorias acima para visualizar os dados</p>
+    </div>
+
+    <script type="module">
+        import { db } from '../js/db.js';
+        import { config } from '../js/config.js';
+        import { cache, CACHE_TTL } from '../js/cache.js';
+        import { FilterSearch } from '../js/filter-search.js';
+        import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
+        import { serializeDbResult, validateCacheStructure } from '../js/db-utils.js';
+        import { validarPeriodo } from '../js/periodo-validator.js';
+
+        // Inicializa isolamento do dashboard
+        initDashboard('Categorias de Produtos');
+        registerCleanup();
+        preventStaleCache();
+
+        // Chart.js
+        const chartScript = document.createElement('script');
+        chartScript.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0';
+        document.head.appendChild(chartScript);
+
+        // DataLabels Plugin
+        const dataLabelsScript = document.createElement('script');
+        dataLabelsScript.src = 'https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js';
+        document.head.appendChild(dataLabelsScript);
+
+        // Variaveis globais
+        window.db = db;
+        window.dadosCategorias = [];
+        window.dadosSemanais = [];
+        window.todosSupervisores = [];
+        window.todosRepresentantes = [];
+
+        let chartDonut, chartLinhasValor, chartLinhasValorKg;
+
+        // Cores por categoria
+        const CATEGORIAS_CONFIG = {
+            'Biscoitos':    { cor: '#fc0303', corRgba: 'rgba(252, 3, 3, 0.8)',   filtro: "LOWER(p.desc_origem) LIKE '%biscoito%'" },
+            'Catterino':    { cor: '#b50909', corRgba: 'rgba(181, 9, 9, 0.8)',   filtro: "(LOWER(p.desc_origem) LIKE '%chocolate%' OR LOWER(p.desc_origem) LIKE '%copa%')" },
+            'Cereais':      { cor: '#03ff1c', corRgba: 'rgba(3, 255, 28, 0.8)',  filtro: "LOWER(p.desc_origem) LIKE '%cereais%'" },
+            'Massas':       { cor: '#ffd700', corRgba: 'rgba(255, 215, 0, 0.8)', filtro: "LOWER(p.desc_origem) LIKE '%massa%'" },
+            'Instantaneo':  { cor: '#0d6efd', corRgba: 'rgba(13, 110, 253, 0.8)', filtro: "LOWER(p.desc_origem) LIKE '%instantaneo%'" }
+        };
+
+        const CATEGORIA_CASE = `
+            CASE
+                WHEN LOWER(p.desc_origem) LIKE '%biscoito%' THEN 'Biscoitos'
+                WHEN LOWER(p.desc_origem) LIKE '%chocolate%' OR LOWER(p.desc_origem) LIKE '%copa%' THEN 'Catterino'
+                WHEN LOWER(p.desc_origem) LIKE '%cereais%' THEN 'Cereais'
+                WHEN LOWER(p.desc_origem) LIKE '%massa%' THEN 'Massas'
+                WHEN LOWER(p.desc_origem) LIKE '%instantaneo%' THEN 'Instantaneo'
+            END
+        `;
+
+        // Verifica configuracao
+        if (!config.authToken || config.authToken === 'SEU_TOKEN_AQUI') {
+            document.getElementById('configAlert').style.display = 'block';
+            document.getElementById('btnAtualizar').disabled = true;
+        }
+
+        // Toggle visual dos checkboxes
+        document.querySelectorAll('.categoria-check input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', function() {
+                this.closest('.categoria-check').classList.toggle('checked', this.checked);
+            });
+        });
+
+        // Obter categorias selecionadas
+        function getCategoriasAtivas() {
+            const checkboxes = document.querySelectorAll('.categorias-checkboxes input[type="checkbox"]:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        function categoriaNomeFromValue(val) {
+            const map = {
+                'biscoitos': 'Biscoitos',
+                'catterino': 'Catterino',
+                'cereais': 'Cereais',
+                'massas': 'Massas',
+                'instantaneo': 'Instantaneo'
+            };
+            return map[val] || val;
+        }
+
+        // Construir filtro WHERE para categorias selecionadas
+        function buildCategoriasWhere(ativas) {
+            const filtros = ativas.map(val => {
+                const nome = categoriaNomeFromValue(val);
+                return CATEGORIAS_CONFIG[nome]?.filtro;
+            }).filter(Boolean);
+            return filtros.length > 0 ? '(' + filtros.join(' OR ') + ')' : '1=0';
+        }
+
+        // Carregar filtros com cache
+        async function carregarFiltros() {
+            try {
+                if (!window.filterSearches || Object.keys(window.filterSearches).length === 0) {
+                    window.filterSearches = {
+                        supervisor: new FilterSearch('filtroSupervisor', { placeholder: 'Digite para buscar supervisor...' }),
+                        representante: new FilterSearch('filtroRepresentante', { placeholder: 'Digite para buscar representante...' })
+                    };
+                }
+
+                if (!db.isConnected()) await db.connect();
+
+                const cacheKey = 'filtros_categorias';
+                const cachedData = cache.get(cacheKey);
+
+                let supervisores, representantes;
+
+                const cacheValido = validateCacheStructure(cachedData?.supervisores, 'rep_supervisor') &&
+                    validateCacheStructure(cachedData?.representantes, 'representante');
+
+                if (cacheValido) {
+                    supervisores = cachedData.supervisores;
+                    representantes = cachedData.representantes;
+                } else {
+                    if (cachedData) cache.delete(cacheKey);
+
+                    supervisores = await db.execute('SELECT DISTINCT rep_supervisor FROM lkp_representantes WHERE rep_supervisor IS NOT NULL ORDER BY rep_supervisor');
+                    if (!supervisores?.rows?.length) supervisores = await db.execute('SELECT DISTINCT rep_supervisor FROM tab_representante WHERE rep_supervisor IS NOT NULL ORDER BY rep_supervisor');
+
+                    representantes = await db.execute('SELECT representante, desc_representante, rep_supervisor FROM lkp_representantes WHERE desc_representante IS NOT NULL ORDER BY desc_representante');
+                    if (!representantes?.rows?.length) representantes = await db.execute('SELECT DISTINCT representante, desc_representante, rep_supervisor FROM tab_representante WHERE desc_representante IS NOT NULL ORDER BY desc_representante');
+
+                    if (supervisores?.rows?.length > 0 && representantes?.rows?.length > 0) {
+                        cache.set(cacheKey, {
+                            supervisores: serializeDbResult(supervisores),
+                            representantes: serializeDbResult(representantes)
+                        }, CACHE_TTL.FILTERS);
+                    }
+                }
+
+                window.todosSupervisores = supervisores.rows;
+                window.todosRepresentantes = representantes.rows;
+
+                preencherSelect('filtroSupervisor', supervisores.rows
+                    .map(s => s.rep_supervisor)
+                    .filter(v => v !== null && v !== undefined && v !== ''));
+
+            } catch (error) {
+                console.error('Erro ao carregar filtros:', error);
+                alert('Erro ao carregar filtros: ' + error.message);
+            }
+        }
+
+        function preencherSelect(id, opcoes) {
+            const select = document.getElementById(id);
+            if (!select) return;
+
+            select.innerHTML = '';
+            if (opcoes.length === 0) {
+                select.innerHTML = '<option value="">Nenhuma opcao disponivel</option>';
+                select.disabled = true;
+            } else {
+                select.disabled = false;
+                opcoes.forEach(opcao => {
+                    const option = document.createElement('option');
+                    option.value = opcao;
+                    option.textContent = opcao;
+                    select.appendChild(option);
+                });
+            }
+
+            const searchIdMap = {
+                'filtroSupervisor': 'supervisor',
+                'filtroRepresentante': 'representante'
+            };
+            const searchId = searchIdMap[id];
+
+            if (window.filterSearches && window.filterSearches[searchId]) {
+                window.filterSearches[searchId].updateOptions(opcoes);
+            }
+        }
+
+        // CASCATA: Supervisor -> Representante
+        document.getElementById('filtroSupervisor').addEventListener('change', function() {
+            const supervisoresSelecionados = Array.from(this.selectedOptions).map(o => o.value);
+
+            if (supervisoresSelecionados.length === 0) {
+                preencherSelect('filtroRepresentante', window.todosRepresentantes
+                    .map(r => r.desc_representante)
+                    .filter(v => v !== null && v !== undefined && v !== '')
+                    .filter((v, i, s) => s.indexOf(v) === i));
+            } else {
+                const representantesFiltrados = window.todosRepresentantes
+                    .filter(r => supervisoresSelecionados.includes(r.rep_supervisor))
+                    .map(r => r.desc_representante)
+                    .filter(v => v !== null && v !== undefined && v !== '')
+                    .filter((value, index, self) => self.indexOf(value) === index);
+
+                preencherSelect('filtroRepresentante', representantesFiltrados);
+            }
+        });
+
+        // Limpar filtros
+        window.limparFiltros = function() {
+            document.getElementById('dataInicio').value = '';
+            document.getElementById('dataFim').value = '';
+            document.getElementById('filtroSupervisor').selectedIndex = -1;
+            document.getElementById('filtroRepresentante').selectedIndex = -1;
+            if (window.filterSearches) {
+                Object.values(window.filterSearches).forEach(fs => fs?.clear());
+            }
+            preencherSelect('filtroRepresentante', []);
+
+            // Marcar todas as categorias
+            document.querySelectorAll('.categorias-checkboxes input[type="checkbox"]').forEach(cb => {
+                cb.checked = true;
+                cb.closest('.categoria-check').classList.add('checked');
+            });
+        };
+
+        // Datas rapidas
+        window.setQuickDate = function(period) {
+            const hoje = new Date();
+            let inicio, fim;
+            switch (period) {
+                case '31dias':
+                    inicio = new Date(hoje);
+                    inicio.setDate(hoje.getDate() - 31);
+                    fim = hoje;
+                    break;
+                case 'mes':
+                    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+                    fim = hoje;
+                    break;
+                case 'trimestre':
+                    const mesAtual = hoje.getMonth();
+                    const inicioTrimestre = Math.floor(mesAtual / 3) * 3;
+                    inicio = new Date(hoje.getFullYear(), inicioTrimestre, 1);
+                    fim = hoje;
+                    break;
+                case 'ano':
+                    inicio = new Date(hoje.getFullYear(), 0, 1);
+                    fim = hoje;
+                    break;
+            }
+            document.getElementById('dataInicio').value = inicio.toISOString().split('T')[0];
+            document.getElementById('dataFim').value = fim.toISOString().split('T')[0];
+        };
+
+        // Atualizar dados
+        window.atualizarDados = async function() {
+            const dataInicio = document.getElementById('dataInicio').value;
+            const dataFim = document.getElementById('dataFim').value;
+            const supervisores = Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value);
+            const representantes = Array.from(document.getElementById('filtroRepresentante').selectedOptions).map(o => o.value);
+            const categoriasAtivas = getCategoriasAtivas();
+
+            if (!dataInicio || !dataFim) {
+                alert('Por favor, selecione o periodo (data inicio e fim)');
+                return;
+            }
+
+            if (categoriasAtivas.length === 0) {
+                alert('Selecione ao menos uma categoria');
+                return;
+            }
+
+            if (!validarPeriodo(dataInicio, dataFim)) return;
+
+            try {
+                document.getElementById('loading').classList.add('active');
+                document.getElementById('btnAtualizar').disabled = true;
+                document.getElementById('emptyState').style.display = 'none';
+
+                if (!db.isConnected()) await db.connect();
+
+                const categoriasWhere = buildCategoriasWhere(categoriasAtivas);
+
+                // Query 1: Dados agregados por categoria
+                let sqlCategorias = `
+                    SELECT
+                        ${CATEGORIA_CASE} as categoria,
+                        SUM(v.peso_liq) as peso,
+                        SUM(v.valor_liquido) as valor
+                    FROM vendas v
+                    INNER JOIN tab_produto p ON v.produto = p.produto
+                    LEFT JOIN tab_representante r ON v.representante = r.representante
+                    WHERE v.emissao >= ? AND v.emissao <= ?
+                    AND ${categoriasWhere}
+                `;
+
+                const paramsCat = [dataInicio, dataFim];
+
+                if (supervisores.length > 0) {
+                    sqlCategorias += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`;
+                    paramsCat.push(...supervisores);
+                }
+                if (representantes.length > 0) {
+                    const codigosRepresentantes = window.todosRepresentantes
+                        .filter(r => representantes.includes(r.desc_representante))
+                        .map(r => r.representante);
+                    if (codigosRepresentantes.length > 0) {
+                        sqlCategorias += ` AND r.representante IN (${codigosRepresentantes.map(() => '?').join(',')})`;
+                        paramsCat.push(...codigosRepresentantes);
+                    }
+                }
+
+                sqlCategorias += ` GROUP BY categoria HAVING categoria IS NOT NULL ORDER BY valor DESC`;
+
+                // Query 2: Dados semanais para graficos
+                let sqlSemanal = `
+                    SELECT
+                        ${CATEGORIA_CASE} as categoria,
+                        strftime('%Y-%W', v.emissao) as semana_key,
+                        MIN(v.emissao) as inicio_semana,
+                        SUM(v.peso_liq) as peso,
+                        SUM(v.valor_liquido) as valor
+                    FROM vendas v
+                    INNER JOIN tab_produto p ON v.produto = p.produto
+                    LEFT JOIN tab_representante r ON v.representante = r.representante
+                    WHERE v.emissao >= ? AND v.emissao <= ?
+                    AND ${categoriasWhere}
+                `;
+
+                const paramsSem = [dataInicio, dataFim];
+
+                if (supervisores.length > 0) {
+                    sqlSemanal += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`;
+                    paramsSem.push(...supervisores);
+                }
+                if (representantes.length > 0) {
+                    const codigosRepresentantes = window.todosRepresentantes
+                        .filter(r => representantes.includes(r.desc_representante))
+                        .map(r => r.representante);
+                    if (codigosRepresentantes.length > 0) {
+                        sqlSemanal += ` AND r.representante IN (${codigosRepresentantes.map(() => '?').join(',')})`;
+                        paramsSem.push(...codigosRepresentantes);
+                    }
+                }
+
+                sqlSemanal += ` GROUP BY categoria, semana_key HAVING categoria IS NOT NULL ORDER BY semana_key, categoria`;
+
+                // Executar ambas as queries
+                const [resultCat, resultSem] = await Promise.all([
+                    db.execute(sqlCategorias, paramsCat),
+                    db.execute(sqlSemanal, paramsSem)
+                ]);
+
+                window.dadosCategorias = resultCat.rows;
+                window.dadosSemanais = resultSem.rows;
+
+                // Renderizar
+                renderizarTabela();
+                atualizarKPIs(resultCat.rows);
+                atualizarGraficos(resultCat.rows, resultSem.rows);
+
+                document.getElementById('mainContent').style.display = 'grid';
+                document.getElementById('tableFooter').style.display = 'flex';
+
+            } catch (error) {
+                console.error('Erro ao buscar dados:', error);
+                alert('Erro ao buscar dados: ' + error.message);
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('btnAtualizar').disabled = false;
+            }
+        };
+
+        // Renderizar tabela comparativa
+        function renderizarTabela() {
+            const dados = window.dadosCategorias;
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            if (dados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #6c757d;">Nenhum resultado encontrado</td></tr>';
+                document.getElementById('tableStats').textContent = '0 categorias';
+                return;
+            }
+
+            const totalPeso = dados.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
+            const totalValor = dados.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
+
+            // Linhas de categorias
+            dados.forEach(row => {
+                const peso = parseFloat(row.peso || 0);
+                const valor = parseFloat(row.valor || 0);
+                const valorKg = peso > 0 ? valor / peso : 0;
+                const percPeso = totalPeso > 0 ? (peso / totalPeso * 100) : 0;
+                const percValor = totalValor > 0 ? (valor / totalValor * 100) : 0;
+                const corCategoria = CATEGORIAS_CONFIG[row.categoria]?.cor || '#6c757d';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <span class="categoria-badge">
+                            <span class="categoria-dot" style="background: ${corCategoria};"></span>
+                            ${row.categoria}
+                        </span>
+                    </td>
+                    <td class="text-right">${peso.toLocaleString('pt-BR', {minimumFractionDigits: 2})} kg</td>
+                    <td class="text-right">R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    <td class="text-right">R$ ${valorKg.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    <td class="text-right">${percPeso.toLocaleString('pt-BR', {minimumFractionDigits: 1})}%</td>
+                    <td class="text-right">${percValor.toLocaleString('pt-BR', {minimumFractionDigits: 1})}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Linha de total
+            const totalValorKg = totalPeso > 0 ? totalValor / totalPeso : 0;
+            const trTotal = document.createElement('tr');
+            trTotal.className = 'total-row';
+            trTotal.innerHTML = `
+                <td><strong>TOTAL</strong></td>
+                <td class="text-right">${totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2})} kg</td>
+                <td class="text-right">R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                <td class="text-right">R$ ${totalValorKg.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                <td class="text-right">100,0%</td>
+                <td class="text-right">100,0%</td>
+            `;
+            tbody.appendChild(trTotal);
+
+            document.getElementById('tableStats').textContent = `${dados.length} categoria(s)`;
+            document.getElementById('totalValue').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        }
+
+        // Atualizar KPIs
+        function atualizarKPIs(dados) {
+            const totalPeso = dados.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
+            const totalValor = dados.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
+            const valorKg = totalPeso > 0 ? totalValor / totalPeso : 0;
+
+            document.getElementById('kpiPeso').textContent = totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg';
+            document.getElementById('kpiValor').textContent = 'R$ ' + totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            document.getElementById('kpiValorKg').textContent = 'R$ ' + valorKg.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            document.getElementById('kpiCategorias').textContent = dados.length;
+        }
+
+        // Atualizar graficos
+        function atualizarGraficos(dadosCat, dadosSem) {
+            if (typeof Chart === 'undefined') {
+                setTimeout(() => atualizarGraficos(dadosCat, dadosSem), 500);
+                return;
+            }
+
+            // Grafico 1: Donut - Participacao por Valor
+            if (chartDonut) chartDonut.destroy();
+            chartDonut = new Chart(document.getElementById('chartDonut'), {
+                type: 'doughnut',
+                data: {
+                    labels: dadosCat.map(d => d.categoria),
+                    datasets: [{
+                        data: dadosCat.map(d => parseFloat(d.valor || 0)),
+                        backgroundColor: dadosCat.map(d => CATEGORIAS_CONFIG[d.categoria]?.corRgba || 'rgba(108, 117, 125, 0.8)'),
+                        borderColor: dadosCat.map(d => CATEGORIAS_CONFIG[d.categoria]?.cor || '#6c757d'),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { size: 11 }, padding: 12 }
+                        }
+                    }
+                }
+            });
+
+            // Preparar dados semanais para graficos de linhas
+            const semanasUnicas = [...new Set(dadosSem.map(d => d.semana_key))].sort();
+            const categoriasPresentes = [...new Set(dadosSem.map(d => d.categoria))];
+
+            // Labels das semanas formatados
+            const semanasLabels = semanasUnicas.map(sk => {
+                const row = dadosSem.find(d => d.semana_key === sk);
+                if (row && row.inicio_semana) {
+                    const dt = new Date(row.inicio_semana + 'T00:00:00');
+                    return dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                }
+                return sk;
+            });
+
+            // Grafico 2: Linhas Semanais - Valor
+            const datasetsValor = categoriasPresentes.map(cat => {
+                const dados = semanasUnicas.map(sem => {
+                    const row = dadosSem.find(d => d.semana_key === sem && d.categoria === cat);
+                    return row ? parseFloat(row.valor || 0) : 0;
+                });
+                return {
+                    label: cat,
+                    data: dados,
+                    borderColor: CATEGORIAS_CONFIG[cat]?.cor || '#6c757d',
+                    backgroundColor: CATEGORIAS_CONFIG[cat]?.corRgba || 'rgba(108, 117, 125, 0.2)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: false,
+                    pointRadius: 3,
+                    pointHoverRadius: 5
+                };
+            });
+
+            if (chartLinhasValor) chartLinhasValor.destroy();
+            chartLinhasValor = new Chart(document.getElementById('chartLinhasValor'), {
+                type: 'line',
+                data: {
+                    labels: semanasLabels,
+                    datasets: datasetsValor
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { size: 10 }, padding: 8, boxWidth: 12 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toLocaleString('pt-BR');
+                                },
+                                font: { size: 10 }
+                            }
+                        },
+                        x: {
+                            ticks: { font: { size: 10 }, maxRotation: 45 }
+                        }
+                    }
+                }
+            });
+
+            // Grafico 3: Linhas Semanais - R$/KG
+            const datasetsValorKg = categoriasPresentes.map(cat => {
+                const dados = semanasUnicas.map(sem => {
+                    const row = dadosSem.find(d => d.semana_key === sem && d.categoria === cat);
+                    if (row) {
+                        const peso = parseFloat(row.peso || 0);
+                        const valor = parseFloat(row.valor || 0);
+                        return peso > 0 ? parseFloat((valor / peso).toFixed(2)) : 0;
+                    }
+                    return 0;
+                });
+                return {
+                    label: cat,
+                    data: dados,
+                    borderColor: CATEGORIAS_CONFIG[cat]?.cor || '#6c757d',
+                    backgroundColor: CATEGORIAS_CONFIG[cat]?.corRgba || 'rgba(108, 117, 125, 0.2)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: false,
+                    pointRadius: 3,
+                    pointHoverRadius: 5
+                };
+            });
+
+            if (chartLinhasValorKg) chartLinhasValorKg.destroy();
+            chartLinhasValorKg = new Chart(document.getElementById('chartLinhasValorKg'), {
+                type: 'line',
+                data: {
+                    labels: semanasLabels,
+                    datasets: datasetsValorKg
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { size: 10 }, padding: 8, boxWidth: 12 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                                },
+                                font: { size: 10 }
+                            }
+                        },
+                        x: {
+                            ticks: { font: { size: 10 }, maxRotation: 45 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Exportar Excel
+        window.exportarExcel = async function() {
+            if (window.dadosCategorias.length === 0) {
+                alert('Nao ha dados para exportar');
+                return;
+            }
+
+            try {
+                const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
+
+                const totalPeso = window.dadosCategorias.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
+                const totalValor = window.dadosCategorias.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
+
+                const dados = window.dadosCategorias.map(row => {
+                    const peso = parseFloat(row.peso || 0);
+                    const valor = parseFloat(row.valor || 0);
+                    return {
+                        'Categoria': row.categoria,
+                        'Peso (kg)': peso,
+                        'Valor (R$)': valor,
+                        'R$/KG': peso > 0 ? parseFloat((valor / peso).toFixed(2)) : 0,
+                        '% Peso': totalPeso > 0 ? parseFloat((peso / totalPeso * 100).toFixed(1)) : 0,
+                        '% Valor': totalValor > 0 ? parseFloat((valor / totalValor * 100).toFixed(1)) : 0
+                    };
+                });
+
+                const ws = XLSX.utils.json_to_sheet(dados);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Categorias');
+
+                // Aba de dados semanais
+                if (window.dadosSemanais.length > 0) {
+                    const dadosSem = window.dadosSemanais.map(row => {
+                        const peso = parseFloat(row.peso || 0);
+                        const valor = parseFloat(row.valor || 0);
+                        return {
+                            'Semana': row.semana_key,
+                            'Inicio Semana': row.inicio_semana,
+                            'Categoria': row.categoria,
+                            'Peso (kg)': peso,
+                            'Valor (R$)': valor,
+                            'R$/KG': peso > 0 ? parseFloat((valor / peso).toFixed(2)) : 0
+                        };
+                    });
+                    const ws2 = XLSX.utils.json_to_sheet(dadosSem);
+                    XLSX.utils.book_append_sheet(wb, ws2, 'Semanal');
+                }
+
+                const dataInicio = document.getElementById('dataInicio').value;
+                const dataFim = document.getElementById('dataFim').value;
+                XLSX.writeFile(wb, `categorias_produtos_${dataInicio}_${dataFim}.xlsx`);
+
+            } catch (error) {
+                console.error('Erro ao exportar Excel:', error);
+                alert('Erro ao exportar Excel: ' + error.message);
+            }
+        };
+
+        // Exportar PDF
+        window.exportarPDF = async function() {
+            if (window.dadosCategorias.length === 0) {
+                alert('Nao ha dados para exportar');
+                return;
+            }
+
+            try {
+                await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js');
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                const totalPeso = window.dadosCategorias.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
+                const totalValor = window.dadosCategorias.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
+
+                doc.setFontSize(18);
+                doc.setTextColor(252, 3, 3);
+                doc.text('Categorias de Produtos', 14, 20);
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+
+                const dataInicio = document.getElementById('dataInicio').value;
+                const dataFim = document.getElementById('dataFim').value;
+                doc.text(`Periodo: ${dataInicio} a ${dataFim}`, 14, 34);
+
+                const tableData = window.dadosCategorias.map(row => {
+                    const peso = parseFloat(row.peso || 0);
+                    const valor = parseFloat(row.valor || 0);
+                    const valorKg = peso > 0 ? valor / peso : 0;
+                    const percPeso = totalPeso > 0 ? (peso / totalPeso * 100) : 0;
+                    const percValor = totalValor > 0 ? (valor / totalValor * 100) : 0;
+                    return [
+                        row.categoria,
+                        peso.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg',
+                        'R$ ' + valor.toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                        'R$ ' + valorKg.toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                        percPeso.toLocaleString('pt-BR', {minimumFractionDigits: 1}) + '%',
+                        percValor.toLocaleString('pt-BR', {minimumFractionDigits: 1}) + '%'
+                    ];
+                });
+
+                doc.autoTable({
+                    head: [['Categoria', 'Peso (kg)', 'Valor (R$)', 'R$/KG', '% Peso', '% Valor']],
+                    body: tableData,
+                    startY: 40,
+                    theme: 'striped',
+                    headStyles: { fillColor: [252, 3, 3], textColor: [255, 255, 255], fontStyle: 'bold' },
+                    alternateRowStyles: { fillColor: [248, 249, 250] }
+                });
+
+                doc.save(`categorias_produtos_${dataInicio}_${dataFim}.pdf`);
+
+            } catch (error) {
+                console.error('Erro ao exportar PDF:', error);
+                alert('Erro ao exportar PDF: ' + error.message);
+            }
+        };
+
+        // Inicializacao
+        const initFiltros = (event) => {
+            if (event && event.type === 'pageshow' && event.persisted) {
+                if (window.filterSearches) {
+                    Object.values(window.filterSearches).forEach(fs => {
+                        if (fs && fs.destroy) fs.destroy();
+                    });
+                    window.filterSearches = null;
+                }
+            }
+            carregarFiltros();
+        };
+
+        window.addEventListener('pageshow', initFiltros);
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/Ger_Comercial/sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker registrado');
+                    })
+                    .catch((error) => {
+                        console.error('Erro ao registrar Service Worker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
