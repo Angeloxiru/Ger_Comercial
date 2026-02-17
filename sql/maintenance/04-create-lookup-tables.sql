@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS lkp_cidades_equipe (
 CREATE TABLE IF NOT EXISTS lkp_clientes (
     cliente    TEXT,
     nome       TEXT,
+    fantasia   TEXT,
     grupo_desc TEXT,
     cidade     TEXT
 );

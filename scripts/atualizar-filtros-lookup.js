@@ -63,9 +63,9 @@ const TABELAS = [
     },
     {
         nome:      'lkp_clientes',
-        descricao: 'Clientes com grupo e cidade (tab_cliente)',
-        colunas:   'cliente, nome, grupo_desc, cidade',
-        select:    `SELECT DISTINCT cliente, nome, grupo_desc, cidade
+        descricao: 'Clientes com grupo, fantasia e cidade (tab_cliente)',
+        colunas:   'cliente, nome, fantasia, grupo_desc, cidade',
+        select:    `SELECT DISTINCT cliente, nome, fantasia, grupo_desc, cidade
                     FROM tab_cliente
                     WHERE cliente IS NOT NULL`
     },
