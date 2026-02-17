@@ -13,6 +13,7 @@
     "atualizar-lookup": "node scripts/atualizar-filtros-lookup.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@libsql/client": "^0.14.0",
     "nodemailer": "^6.9.13",
     "xlsx": "^0.18.5"

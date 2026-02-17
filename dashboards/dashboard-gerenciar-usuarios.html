@@ -3216,5 +3216,12 @@
         // Initialize Schedules Manager
         window.schedulesManager = new SchedulesManager();
     </script>
+
+    <!-- ChatBot Assistente Comercial -->
+    <script type="module">
+        import { ChatbotUI } from '../ChatBot/chatbot-ui.js';
+        const chatbot = new ChatbotUI();
+        chatbot.init();
+    </script>
 </body>
 </html>
