@@ -16,6 +16,7 @@ Sistema web PWA (Progressive Web App) para gestao e analise de dados comerciais,
 | **Produtos Parados** | Produtos sem vendas ha 1+ semanas com classificacao por risco |
 | **Analise de Produtos** | Vendas por produto, familia e origem |
 | **Clientes sem Compras** | Mapa interativo de clientes inativos por grau de risco |
+| **Categorias de Produtos** | Analise por categoria (Biscoitos, Catterino, Cereais, Massas, Instantaneo) com peso, valor e R$/KG |
 
 > **Limite de periodo:** Todos os dashboards com filtro de data aceitam no maximo **100 dias** por consulta para proteger o limite de leituras do Turso.
 
@@ -87,7 +88,7 @@ Ger_Comercial/
 │   ├── mobile.js                       # Interacoes mobile (toggle, scroll-to-top)
 │   └── periodo-validator.js            # Validacao de periodo (max 100 dias)
 │
-├── dashboards/                         # 9 dashboards analiticos
+├── dashboards/                         # 10 dashboards analiticos
 │   ├── dashboard-vendas-regiao.html
 │   ├── dashboard-vendas-equipe.html
 │   ├── dashboard-ranking-clientes.html
@@ -95,6 +96,7 @@ Ger_Comercial/
 │   ├── dashboard-analise-produtos.html
 │   ├── dashboard-produtos-parados.html
 │   ├── dashboard-clientes-semcompras.html
+│   ├── dashboard-categorias-produtos.html
 │   ├── dashboard-gerenciar-usuarios.html
 │   └── cobranca-semanal.html
 │
@@ -261,6 +263,19 @@ Acesse `Settings > Secrets and variables > Actions` e adicione:
 ---
 
 ## Changelog
+
+### v4.1.0 - Dashboard Categorias de Produtos (2026-02-17)
+- Novo dashboard: Categorias de Produtos (Biscoitos, Catterino, Cereais, Massas, Instantaneo)
+- Classificacao automatica por `desc_origem` da tabela `tab_produto`
+- Filtros: periodo, supervisor (pai) e representante (cascata)
+- Checkboxes para selecao de categorias ativas
+- Dois modos de visualizacao: Resumido (por categoria) e Detalhado (por representante)
+- Tabela comparativa com peso, valor, R$/KG e percentuais de participacao
+- KPIs: peso total, valor total, R$/KG medio, categorias ativas
+- 4 graficos: donut de participacao, linhas semanais de valor, peso e R$/KG
+- Exportacao Excel (3 abas: Categorias, Por Representante, Semanal) e PDF
+- Integrado ao sistema de permissoes (id: `categorias-produtos`)
+- Para liberar acesso, adicione `categorias-produtos` nas permissoes do usuario
 
 ### v4.0.0 - Mobile UX + Reorganizacao (2026-02-11)
 - Melhorias visuais e de usabilidade mobile (CSS e JS)
