@@ -264,6 +264,17 @@ Acesse `Settings > Secrets and variables > Actions` e adicione:
 
 ## Changelog
 
+### v4.2.0 - Bonificacao em Vendas por Equipe + Melhorias (2026-02-17)
+- **Vendas por Equipe**: Novo filtro "Bonificacao" (Sim/Nao) para cruzar dados de bonificacao (nat_oper 5910/6910)
+- Quando ativado, exibe colunas extras: Bonif. Qtde, Bonif. Valor, Bonif. % e Bonif. Peso (destaque vermelho)
+- Funciona nos modos Clientes e Itens
+- Novos KPIs: Valor de Bonificacao e % Bonificacao
+- Exportacoes Excel e PDF incluem dados de bonificacao quando ativado
+- Filtros de data com layout mais compacto
+- **Home**: Botao "Alterar Senha" abaixo do nome do usuario com dialogo de confirmacao
+- **Performance de Clientes**: Dropdown de clientes exibe "cod - fantasia" para distinguir clientes com mesma razao social
+- **Categorias de Produtos**: Modo detalhado com ordem fixa (Biscoitos, Cereais, Massas, Instantaneo, Catterino) e graficos de barras por representante
+
 ### v4.1.0 - Dashboard Categorias de Produtos (2026-02-17)
 - Novo dashboard: Categorias de Produtos (Biscoitos, Catterino, Cereais, Massas, Instantaneo)
 - Classificacao automatica por `desc_origem` da tabela `tab_produto`

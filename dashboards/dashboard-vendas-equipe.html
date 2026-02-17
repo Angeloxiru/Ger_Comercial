@@ -82,8 +82,8 @@
         .filters-grid {
             flex: 1;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
         }
 
         .filters-buttons {
@@ -197,6 +197,54 @@
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+        }
+
+        .bonif-toggle {
+            display: flex;
+            gap: 0;
+        }
+
+        .bonif-toggle button {
+            padding: 8px 16px;
+            border: 1px solid #dee2e6;
+            background: #e9ecef;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .bonif-toggle button:first-child {
+            border-radius: 6px 0 0 6px;
+        }
+
+        .bonif-toggle button:last-child {
+            border-radius: 0 6px 6px 0;
+        }
+
+        .bonif-toggle button.active {
+            background: #fc0303;
+            color: white;
+            border-color: #fc0303;
+        }
+
+        .bonif-col {
+            background: rgba(252, 3, 3, 0.08);
+            color: #c0392b;
+        }
+
+        th.bonif-col {
+            background: rgba(252, 3, 3, 0.15);
+            color: #c0392b;
+            font-weight: 600;
+        }
+
+        .kpi-bonif {
+            border: 2px solid rgba(252, 3, 3, 0.2);
+        }
+
+        .kpi-bonif .kpi-value {
+            color: #c0392b;
         }
 
         /* NOVO LAYOUT: 70% Tabela / 30% Dashboard */
@@ -518,6 +566,15 @@
                     <option value="">Selecione Representante ou Supervisor primeiro</option>
                 </select>
             </div>
+
+            <!-- Bonificação -->
+            <div class="filter-group">
+                <label>🎁 Bonificação</label>
+                <div class="bonif-toggle">
+                    <button type="button" id="btnBonifNao" class="active" onclick="setBonificacao('nao')">Não</button>
+                    <button type="button" id="btnBonifSim" onclick="setBonificacao('sim')">Sim</button>
+                </div>
+            </div>
         </div>
 
         <div class="filters-buttons">
@@ -598,6 +655,16 @@
                     <div class="kpi-label">Total Registros</div>
                     <div class="kpi-value" id="kpiRegistros">0</div>
                 </div>
+                <div class="kpi-card kpi-bonif" id="kpiBonifCard" style="display: none;">
+                    <div class="kpi-icon">🎁</div>
+                    <div class="kpi-label">Bonificação</div>
+                    <div class="kpi-value" id="kpiBonif">R$ 0,00</div>
+                </div>
+                <div class="kpi-card kpi-bonif" id="kpiBonifPctCard" style="display: none;">
+                    <div class="kpi-icon">📊</div>
+                    <div class="kpi-label">% Bonificação</div>
+                    <div class="kpi-value" id="kpiBonifPct">0%</div>
+                </div>
             </div>
 
             <!-- Gráfico 1: Top 10 Produtos -->
@@ -655,8 +722,16 @@
         window.todosSupervisores = [];
         window.todosRepresentantes = [];
         window.todasCidades = [];
+        window.bonificacaoAtiva = false;
 
         let chart1, chart2;
+
+        // Toggle Bonificação
+        window.setBonificacao = function(valor) {
+            window.bonificacaoAtiva = (valor === 'sim');
+            document.getElementById('btnBonifSim').classList.toggle('active', window.bonificacaoAtiva);
+            document.getElementById('btnBonifNao').classList.toggle('active', !window.bonificacaoAtiva);
+        };
 
         // Verifica configuração
         if (!config.authToken || config.authToken === 'SEU_TOKEN_AQUI') {
@@ -879,6 +954,10 @@
             }
             preencherSelect('filtroRepresentante', []);
             preencherSelect('filtroCidade', []);
+            // Reset bonificação
+            window.bonificacaoAtiva = false;
+            document.getElementById('btnBonifSim').classList.remove('active');
+            document.getElementById('btnBonifNao').classList.add('active');
         };
 
         // Datas rápidas
@@ -939,6 +1018,12 @@
 
                 if (!db.isConnected()) await db.connect();
 
+                // Campos extras de bonificação (CASE WHEN nat_oper)
+                const bonifFields = window.bonificacaoAtiva ? `,
+                    SUM(CASE WHEN v.nat_oper IN ('5910','6910') THEN v.qtde_faturada ELSE 0 END) as bonif_qtde,
+                    SUM(CASE WHEN v.nat_oper IN ('5910','6910') THEN v.valor_liquido ELSE 0 END) as bonif_valor,
+                    SUM(CASE WHEN v.nat_oper IN ('5910','6910') THEN v.peso_liq ELSE 0 END) as bonif_peso` : '';
+
                 // Construir query SQL dinamicamente baseado no modo
                 let sql, groupBy;
                 if (modo === 'clientes') {
@@ -948,7 +1033,7 @@
                             c.nome as razao_social,
                             SUM(v.qtde_faturada) as qtde,
                             SUM(v.valor_liquido) as valor,
-                            SUM(v.peso_liq) as peso
+                            SUM(v.peso_liq) as peso${bonifFields}
                         FROM vendas v
                         LEFT JOIN tab_representante r ON v.representante = r.representante
                         LEFT JOIN tab_cliente c ON v.cliente = c.cliente
@@ -962,7 +1047,7 @@
                             v.complemento as descricao,
                             SUM(v.qtde_faturada) as qtde,
                             SUM(v.valor_liquido) as valor,
-                            SUM(v.peso_liq) as peso
+                            SUM(v.peso_liq) as peso${bonifFields}
                         FROM vendas v
                         LEFT JOIN tab_representante r ON v.representante = r.representante
                         WHERE 1=1
@@ -1004,6 +1089,16 @@
                 sql += groupBy;
 
                 const result = await db.execute(sql, params);
+
+                // Calcular percentual de bonificação
+                if (window.bonificacaoAtiva) {
+                    result.rows.forEach(row => {
+                        const valor = parseFloat(row.valor || 0);
+                        const bonifValor = parseFloat(row.bonif_valor || 0);
+                        row.bonif_pct = valor > 0 ? (bonifValor / valor * 100) : 0;
+                    });
+                }
+
                 window.dadosAtuais = result.rows;
 
                 // Configurar paginação
@@ -1031,6 +1126,15 @@
         window.atualizarDadosItens = () => atualizarDados('itens');
         window.atualizarDadosClientes = () => atualizarDados('clientes');
 
+        // Campos extras de bonificação para a tabela
+        const BONIF_FIELDS = [
+            { key: 'bonif_qtde', align: 'right', format: 'number', bonif: true },
+            { key: 'bonif_valor', align: 'right', format: 'currency', bonif: true },
+            { key: 'bonif_pct', align: 'right', format: 'percent', bonif: true },
+            { key: 'bonif_peso', align: 'right', format: 'decimal', bonif: true }
+        ];
+        const BONIF_HEADERS = ['Bonif. Qtde', 'Bonif. Valor (R$)', 'Bonif. %', 'Bonif. Peso (kg)'];
+
         // Função de renderização de tabela refatorada com objeto de configuração
         function renderizarTabela() {
             const pageData = window.pagination.getCurrentPageData();
@@ -1040,7 +1144,7 @@
             tbody.innerHTML = '';
 
             // Configuração baseada no modo de visualização
-            const config = {
+            const configBase = {
                 clientes: {
                     title: '👥 Clientes',
                     headers: ['CodCliente', 'Razão Social', 'Qtde', 'Valor (R$)', 'Peso (kg)'],
@@ -1065,16 +1169,28 @@
                 }
             };
 
-            const currentConfig = config[window.modoVisualizacao] || config.itens;
+            const base = configBase[window.modoVisualizacao] || configBase.itens;
+
+            // Adicionar colunas de bonificação quando ativo
+            const currentConfig = {
+                title: base.title,
+                headers: window.bonificacaoAtiva ? [...base.headers, ...BONIF_HEADERS] : base.headers,
+                fields: window.bonificacaoAtiva ? [...base.fields, ...BONIF_FIELDS] : base.fields
+            };
+
+            const totalCols = currentConfig.fields.length;
 
             // Atualizar cabeçalho da tabela
             tableTitle.textContent = currentConfig.title;
             theadRow.innerHTML = currentConfig.headers
-                .map((header, i) => `<th class="${currentConfig.fields[i].align === 'right' ? 'text-right' : ''}">${header}</th>`)
-                .join('');
+                .map((header, i) => {
+                    const alignClass = currentConfig.fields[i].align === 'right' ? 'text-right' : '';
+                    const bonifClass = currentConfig.fields[i].bonif ? ' bonif-col' : '';
+                    return `<th class="${alignClass}${bonifClass}">${header}</th>`;
+                }).join('');
 
             if (pageData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #6c757d;">Nenhum resultado encontrado</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="${totalCols}" style="text-align: center; padding: 40px; color: #6c757d;">Nenhum resultado encontrado</td></tr>`;
                 return;
             }
 
@@ -1091,11 +1207,15 @@
                         formatted = `R$ ${parseFloat(value).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
                     } else if (field.format === 'decimal') {
                         formatted = parseFloat(value).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                    } else if (field.format === 'percent') {
+                        formatted = parseFloat(value).toLocaleString('pt-BR', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + '%';
                     } else {
                         formatted = value;
                     }
 
-                    return `<td class="${field.align === 'right' ? 'text-right' : ''}">${formatted}</td>`;
+                    const alignClass = field.align === 'right' ? 'text-right' : '';
+                    const bonifClass = field.bonif ? ' bonif-col' : '';
+                    return `<td class="${alignClass}${bonifClass}">${formatted}</td>`;
                 }).join('');
 
                 tbody.appendChild(tr);
@@ -1116,6 +1236,19 @@
             document.getElementById('kpiQtde').textContent = totalQtde.toLocaleString('pt-BR');
             document.getElementById('kpiPeso').textContent = totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg';
             document.getElementById('kpiRegistros').textContent = dados.length.toLocaleString('pt-BR');
+
+            // KPIs de bonificação
+            if (window.bonificacaoAtiva) {
+                const totalBonifValor = dados.reduce((sum, row) => sum + parseFloat(row.bonif_valor || 0), 0);
+                const pctBonif = totalValor > 0 ? (totalBonifValor / totalValor * 100) : 0;
+                document.getElementById('kpiBonif').textContent = 'R$ ' + totalBonifValor.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                document.getElementById('kpiBonifPct').textContent = pctBonif.toLocaleString('pt-BR', {minimumFractionDigits: 1}) + '%';
+                document.getElementById('kpiBonifCard').style.display = '';
+                document.getElementById('kpiBonifPctCard').style.display = '';
+            } else {
+                document.getElementById('kpiBonifCard').style.display = 'none';
+                document.getElementById('kpiBonifPctCard').style.display = 'none';
+            }
         }
 
         // Função de atualização de gráficos refatorada para suportar ambos os modos
@@ -1207,7 +1340,7 @@
                 const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
 
                 // Configuração baseada no modo
-                const config = {
+                const excelConfig = {
                     clientes: {
                         fields: { 'CodCliente': 'cod_cliente', 'Razão Social': 'razao_social', 'Quantidade': 'qtde', 'Valor': 'valor', 'Peso': 'peso' },
                         sheetName: 'Clientes',
@@ -1220,14 +1353,28 @@
                     }
                 };
 
-                const currentConfig = config[window.modoVisualizacao] || config.itens;
+                const currentConfig = excelConfig[window.modoVisualizacao] || excelConfig.itens;
+                const fields = { ...currentConfig.fields };
+
+                // Adicionar campos de bonificação se ativo
+                if (window.bonificacaoAtiva) {
+                    fields['Bonif. Qtde'] = 'bonif_qtde';
+                    fields['Bonif. Valor'] = 'bonif_valor';
+                    fields['Bonif. %'] = 'bonif_pct';
+                    fields['Bonif. Peso'] = 'bonif_peso';
+                }
 
                 // Mapear dados usando Object.fromEntries e spread
                 const dados = window.dadosAtuais.map(row =>
                     Object.fromEntries(
-                        Object.entries(currentConfig.fields).map(([header, key]) =>
-                            [header, parseFloat(row[key] || 0)]
-                        )
+                        Object.entries(fields).map(([header, key]) => {
+                            const val = row[key];
+                            // Manter texto para código/nome, números para o resto
+                            if (key === 'cod_cliente' || key === 'razao_social' || key === 'cod' || key === 'descricao') {
+                                return [header, val || '-'];
+                            }
+                            return [header, parseFloat(val || 0)];
+                        })
                     )
                 );
 
@@ -1258,7 +1405,7 @@
                 const doc = new jsPDF();
 
                 // Configuração baseada no modo
-                const config = {
+                const pdfConfig = {
                     clientes: {
                         title: 'Vendas por Equipe - Clientes',
                         headers: ['CodCliente', 'Razão Social', 'Qtde', 'Valor', 'Peso'],
@@ -1271,37 +1418,63 @@
                     }
                 };
 
-                const currentConfig = config[window.modoVisualizacao] || config.itens;
+                const pdfCurrent = pdfConfig[window.modoVisualizacao] || pdfConfig.itens;
+                const pdfHeaders = [...pdfCurrent.headers];
+                const pdfFields = [...pdfCurrent.fields];
+
+                // Adicionar campos de bonificação se ativo
+                if (window.bonificacaoAtiva) {
+                    pdfHeaders.push('Bonif. Qtde', 'Bonif. Valor', 'Bonif. %', 'Bonif. Peso');
+                    pdfFields.push('bonif_qtde', 'bonif_valor', 'bonif_pct', 'bonif_peso');
+                }
+
+                // Landscape se bonificação ativa (mais colunas)
+                const pdfDoc = window.bonificacaoAtiva ? new jsPDF('l') : doc;
 
                 // Configurar cabeçalho do PDF
-                doc.setFontSize(18);
-                doc.setTextColor(252, 3, 3);
-                doc.text(currentConfig.title, 14, 20);
-                doc.setFontSize(10);
-                doc.setTextColor(100);
-                doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+                pdfDoc.setFontSize(18);
+                pdfDoc.setTextColor(252, 3, 3);
+                pdfDoc.text(pdfCurrent.title, 14, 20);
+                pdfDoc.setFontSize(10);
+                pdfDoc.setTextColor(100);
+                pdfDoc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+
+                // Formatação dos campos
+                function formatPdfField(field, row) {
+                    const value = parseFloat(row[field] || 0);
+                    if (field === 'cod_cliente' || field === 'razao_social' || field === 'cod' || field === 'descricao') return row[field] || '-';
+                    if (field === 'qtde' || field === 'bonif_qtde') return value.toLocaleString('pt-BR');
+                    if (field === 'valor' || field === 'bonif_valor') return 'R$ ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                    if (field === 'peso' || field === 'bonif_peso') return value.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg';
+                    if (field === 'bonif_pct') return value.toLocaleString('pt-BR', {minimumFractionDigits: 1}) + '%';
+                    return value;
+                }
 
                 // Preparar dados da tabela
                 const tableData = window.dadosAtuais.map(row =>
-                    currentConfig.fields.map((field, idx) => {
-                        const value = parseFloat(row[field] || 0);
-                        if (idx === 0 || idx === 1) return row[field] || '-'; // Código/Nome - sem formatação
-                        if (idx === 2) return value.toLocaleString('pt-BR'); // Qtde
-                        if (idx === 3) return 'R$ ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 2}); // Valor
-                        if (idx === 4) return value.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg'; // Peso
-                    })
+                    pdfFields.map(field => formatPdfField(field, row))
                 );
 
-                doc.autoTable({
-                    head: [currentConfig.headers],
+                // Estilos para colunas de bonificação (vermelho claro)
+                const columnStyles = {};
+                if (window.bonificacaoAtiva) {
+                    const baseLen = pdfCurrent.headers.length;
+                    for (let i = baseLen; i < pdfHeaders.length; i++) {
+                        columnStyles[i] = { textColor: [192, 57, 43], fillColor: [255, 235, 235] };
+                    }
+                }
+
+                pdfDoc.autoTable({
+                    head: [pdfHeaders],
                     body: tableData,
                     startY: 35,
                     theme: 'striped',
                     headStyles: { fillColor: [252, 3, 3], textColor: [255, 255, 255], fontStyle: 'bold' },
-                    alternateRowStyles: { fillColor: [248, 249, 250] }
+                    alternateRowStyles: { fillColor: [248, 249, 250] },
+                    columnStyles
                 });
 
-                doc.save(`vendas_equipe_${new Date().toISOString().split('T')[0]}.pdf`);
+                pdfDoc.save(`vendas_equipe_${new Date().toISOString().split('T')[0]}.pdf`);
 
             } catch (error) {
                 console.error('Erro ao exportar PDF:', error);
