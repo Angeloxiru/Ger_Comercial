@@ -364,6 +364,31 @@
             background: #f1f3f5;
         }
 
+        tbody tr.rep-header {
+            background: #e9ecef;
+            border-top: 2px solid #dee2e6;
+        }
+
+        tbody tr.rep-header td {
+            font-weight: 700;
+            color: #212529;
+            font-size: 0.95em;
+        }
+
+        tbody tr.rep-header:hover {
+            background: #dee2e6;
+        }
+
+        tbody tr.rep-subtotal {
+            background: #f1f3f5;
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        tbody tr.rep-subtotal:hover {
+            background: #e9ecef;
+        }
+
         .table-footer {
             padding: 16px 20px;
             background: #f8f9fa;
@@ -593,11 +618,6 @@
                         <span class="categoria-color" style="background: #fc0303;"></span>
                         Biscoitos
                     </label>
-                    <label class="categoria-check checked" data-cat="catterino">
-                        <input type="checkbox" value="catterino" checked>
-                        <span class="categoria-color" style="background: #b50909;"></span>
-                        Catterino
-                    </label>
                     <label class="categoria-check checked" data-cat="cereais">
                         <input type="checkbox" value="cereais" checked>
                         <span class="categoria-color" style="background: #03ff1c;"></span>
@@ -613,13 +633,19 @@
                         <span class="categoria-color" style="background: #0d6efd;"></span>
                         Instantaneo
                     </label>
+                    <label class="categoria-check checked" data-cat="catterino">
+                        <input type="checkbox" value="catterino" checked>
+                        <span class="categoria-color" style="background: #b50909;"></span>
+                        Catterino
+                    </label>
                 </div>
             </div>
         </div>
 
         <div class="filters-buttons">
             <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar Filtros</button>
-            <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">🔄 Atualizar Dados</button>
+            <button class="btn-atualizar" id="btnResumido" onclick="atualizarDadosResumido()">📊 Resumido</button>
+            <button class="btn-atualizar" id="btnDetalhado" onclick="atualizarDadosDetalhado()">📋 Detalhado</button>
         </div>
     </div>
 
@@ -710,7 +736,15 @@
                 </div>
             </div>
 
-            <!-- Grafico 3: Linhas Semanais - R$/KG -->
+            <!-- Grafico 3: Linhas Semanais - Peso -->
+            <div class="chart-card">
+                <div class="chart-title">⚖️ Evolucao Semanal - Peso (kg)</div>
+                <div class="chart-container">
+                    <canvas id="chartLinhasPeso"></canvas>
+                </div>
+            </div>
+
+            <!-- Grafico 4: Linhas Semanais - R$/KG -->
             <div class="chart-card">
                 <div class="chart-title">📉 Evolucao Semanal - R$/KG</div>
                 <div class="chart-container">
@@ -755,10 +789,12 @@
         window.db = db;
         window.dadosCategorias = [];
         window.dadosSemanais = [];
+        window.dadosDetalhados = [];
         window.todosSupervisores = [];
         window.todosRepresentantes = [];
+        window.modoVisualizacao = 'resumido';
 
-        let chartDonut, chartLinhasValor, chartLinhasValorKg;
+        let chartDonut, chartLinhasValor, chartLinhasPeso, chartLinhasValorKg;
 
         // Cores por categoria
         const CATEGORIAS_CONFIG = {
@@ -782,7 +818,8 @@
         // Verifica configuracao
         if (!config.authToken || config.authToken === 'SEU_TOKEN_AQUI') {
             document.getElementById('configAlert').style.display = 'block';
-            document.getElementById('btnAtualizar').disabled = true;
+            document.getElementById('btnResumido').disabled = true;
+            document.getElementById('btnDetalhado').disabled = true;
         }
 
         // Toggle visual dos checkboxes
@@ -967,12 +1004,33 @@
             document.getElementById('dataFim').value = fim.toISOString().split('T')[0];
         };
 
-        // Atualizar dados
-        window.atualizarDados = async function() {
-            const dataInicio = document.getElementById('dataInicio').value;
-            const dataFim = document.getElementById('dataFim').value;
+        // Construir filtros dinamicos de supervisor/representante
+        function buildFiltrosDinamicos(sql, params) {
             const supervisores = Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value);
             const representantes = Array.from(document.getElementById('filtroRepresentante').selectedOptions).map(o => o.value);
+
+            if (supervisores.length > 0) {
+                sql += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`;
+                params.push(...supervisores);
+            }
+            if (representantes.length > 0) {
+                const codigosRepresentantes = window.todosRepresentantes
+                    .filter(r => representantes.includes(r.desc_representante))
+                    .map(r => r.representante);
+                if (codigosRepresentantes.length > 0) {
+                    sql += ` AND r.representante IN (${codigosRepresentantes.map(() => '?').join(',')})`;
+                    params.push(...codigosRepresentantes);
+                }
+            }
+            return sql;
+        }
+
+        // Atualizar dados (modo: 'resumido' ou 'detalhado')
+        async function atualizarDados(modo) {
+            window.modoVisualizacao = modo;
+
+            const dataInicio = document.getElementById('dataInicio').value;
+            const dataFim = document.getElementById('dataFim').value;
             const categoriasAtivas = getCategoriasAtivas();
 
             if (!dataInicio || !dataFim) {
@@ -989,14 +1047,15 @@
 
             try {
                 document.getElementById('loading').classList.add('active');
-                document.getElementById('btnAtualizar').disabled = true;
+                document.getElementById('btnResumido').disabled = true;
+                document.getElementById('btnDetalhado').disabled = true;
                 document.getElementById('emptyState').style.display = 'none';
 
                 if (!db.isConnected()) await db.connect();
 
                 const categoriasWhere = buildCategoriasWhere(categoriasAtivas);
 
-                // Query 1: Dados agregados por categoria
+                // Query 1: Dados agregados por categoria (sempre necessaria para KPIs e graficos)
                 let sqlCategorias = `
                     SELECT
                         ${CATEGORIA_CASE} as categoria,
@@ -1008,23 +1067,8 @@
                     WHERE v.emissao >= ? AND v.emissao <= ?
                     AND ${categoriasWhere}
                 `;
-
                 const paramsCat = [dataInicio, dataFim];
-
-                if (supervisores.length > 0) {
-                    sqlCategorias += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`;
-                    paramsCat.push(...supervisores);
-                }
-                if (representantes.length > 0) {
-                    const codigosRepresentantes = window.todosRepresentantes
-                        .filter(r => representantes.includes(r.desc_representante))
-                        .map(r => r.representante);
-                    if (codigosRepresentantes.length > 0) {
-                        sqlCategorias += ` AND r.representante IN (${codigosRepresentantes.map(() => '?').join(',')})`;
-                        paramsCat.push(...codigosRepresentantes);
-                    }
-                }
-
+                sqlCategorias = buildFiltrosDinamicos(sqlCategorias, paramsCat);
                 sqlCategorias += ` GROUP BY categoria HAVING categoria IS NOT NULL ORDER BY valor DESC`;
 
                 // Query 2: Dados semanais para graficos
@@ -1041,38 +1085,48 @@
                     WHERE v.emissao >= ? AND v.emissao <= ?
                     AND ${categoriasWhere}
                 `;
-
                 const paramsSem = [dataInicio, dataFim];
-
-                if (supervisores.length > 0) {
-                    sqlSemanal += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`;
-                    paramsSem.push(...supervisores);
-                }
-                if (representantes.length > 0) {
-                    const codigosRepresentantes = window.todosRepresentantes
-                        .filter(r => representantes.includes(r.desc_representante))
-                        .map(r => r.representante);
-                    if (codigosRepresentantes.length > 0) {
-                        sqlSemanal += ` AND r.representante IN (${codigosRepresentantes.map(() => '?').join(',')})`;
-                        paramsSem.push(...codigosRepresentantes);
-                    }
-                }
-
+                sqlSemanal = buildFiltrosDinamicos(sqlSemanal, paramsSem);
                 sqlSemanal += ` GROUP BY categoria, semana_key HAVING categoria IS NOT NULL ORDER BY semana_key, categoria`;
 
-                // Executar ambas as queries
-                const [resultCat, resultSem] = await Promise.all([
+                // Queries a executar
+                const queries = [
                     db.execute(sqlCategorias, paramsCat),
                     db.execute(sqlSemanal, paramsSem)
-                ]);
+                ];
 
-                window.dadosCategorias = resultCat.rows;
-                window.dadosSemanais = resultSem.rows;
+                // Query 3 (so no modo detalhado): Dados por representante + categoria
+                if (modo === 'detalhado') {
+                    let sqlDetalhado = `
+                        SELECT
+                            r.representante as cod_representante,
+                            COALESCE(r.desc_representante, r.representante) as nome_representante,
+                            ${CATEGORIA_CASE} as categoria,
+                            SUM(v.peso_liq) as peso,
+                            SUM(v.valor_liquido) as valor
+                        FROM vendas v
+                        INNER JOIN tab_produto p ON v.produto = p.produto
+                        LEFT JOIN tab_representante r ON v.representante = r.representante
+                        WHERE v.emissao >= ? AND v.emissao <= ?
+                        AND ${categoriasWhere}
+                    `;
+                    const paramsDet = [dataInicio, dataFim];
+                    sqlDetalhado = buildFiltrosDinamicos(sqlDetalhado, paramsDet);
+                    sqlDetalhado += ` GROUP BY r.representante, nome_representante, categoria HAVING categoria IS NOT NULL ORDER BY nome_representante, valor DESC`;
+                    queries.push(db.execute(sqlDetalhado, paramsDet));
+                }
+
+                // Executar queries
+                const results = await Promise.all(queries);
+
+                window.dadosCategorias = results[0].rows;
+                window.dadosSemanais = results[1].rows;
+                window.dadosDetalhados = modo === 'detalhado' ? results[2].rows : [];
 
                 // Renderizar
                 renderizarTabela();
-                atualizarKPIs(resultCat.rows);
-                atualizarGraficos(resultCat.rows, resultSem.rows);
+                atualizarKPIs(results[0].rows);
+                atualizarGraficos(results[0].rows, results[1].rows);
 
                 document.getElementById('mainContent').style.display = 'grid';
                 document.getElementById('tableFooter').style.display = 'flex';
@@ -1082,15 +1136,29 @@
                 alert('Erro ao buscar dados: ' + error.message);
             } finally {
                 document.getElementById('loading').classList.remove('active');
-                document.getElementById('btnAtualizar').disabled = false;
+                document.getElementById('btnResumido').disabled = false;
+                document.getElementById('btnDetalhado').disabled = false;
             }
-        };
+        }
+
+        window.atualizarDadosResumido = () => atualizarDados('resumido');
+        window.atualizarDadosDetalhado = () => atualizarDados('detalhado');
 
         // Renderizar tabela comparativa
         function renderizarTabela() {
+            if (window.modoVisualizacao === 'detalhado') {
+                renderizarTabelaDetalhada();
+            } else {
+                renderizarTabelaResumida();
+            }
+        }
+
+        function renderizarTabelaResumida() {
             const dados = window.dadosCategorias;
             const tbody = document.getElementById('tableBody');
+            const tableTitle = document.querySelector('.table-title');
             tbody.innerHTML = '';
+            tableTitle.textContent = '📊 Comparativo por Categoria';
 
             if (dados.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #6c757d;">Nenhum resultado encontrado</td></tr>';
@@ -1101,7 +1169,6 @@
             const totalPeso = dados.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
             const totalValor = dados.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
 
-            // Linhas de categorias
             dados.forEach(row => {
                 const peso = parseFloat(row.peso || 0);
                 const valor = parseFloat(row.valor || 0);
@@ -1127,7 +1194,6 @@
                 tbody.appendChild(tr);
             });
 
-            // Linha de total
             const totalValorKg = totalPeso > 0 ? totalValor / totalPeso : 0;
             const trTotal = document.createElement('tr');
             trTotal.className = 'total-row';
@@ -1143,6 +1209,108 @@
 
             document.getElementById('tableStats').textContent = `${dados.length} categoria(s)`;
             document.getElementById('totalValue').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        }
+
+        function renderizarTabelaDetalhada() {
+            const dados = window.dadosDetalhados;
+            const tbody = document.getElementById('tableBody');
+            const tableTitle = document.querySelector('.table-title');
+            tbody.innerHTML = '';
+            tableTitle.textContent = '📋 Detalhado por Representante';
+
+            if (dados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #6c757d;">Nenhum resultado encontrado</td></tr>';
+                document.getElementById('tableStats').textContent = '0 registros';
+                return;
+            }
+
+            // Totais gerais
+            const totalGeralPeso = dados.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
+            const totalGeralValor = dados.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
+
+            // Agrupar por representante
+            const porRepresentante = {};
+            dados.forEach(row => {
+                const rep = row.nome_representante || 'Sem Representante';
+                if (!porRepresentante[rep]) porRepresentante[rep] = [];
+                porRepresentante[rep].push(row);
+            });
+
+            let totalReps = 0;
+            Object.keys(porRepresentante).sort().forEach(rep => {
+                totalReps++;
+                const linhas = porRepresentante[rep];
+                const subPeso = linhas.reduce((sum, r) => sum + parseFloat(r.peso || 0), 0);
+                const subValor = linhas.reduce((sum, r) => sum + parseFloat(r.valor || 0), 0);
+                const subValorKg = subPeso > 0 ? subValor / subPeso : 0;
+
+                // Header do representante
+                const trHeader = document.createElement('tr');
+                trHeader.className = 'rep-header';
+                trHeader.innerHTML = `
+                    <td colspan="3">👤 ${rep}</td>
+                    <td class="text-right">R$ ${subValorKg.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    <td class="text-right">${totalGeralPeso > 0 ? (subPeso / totalGeralPeso * 100).toLocaleString('pt-BR', {minimumFractionDigits: 1}) : '0,0'}%</td>
+                    <td class="text-right">${totalGeralValor > 0 ? (subValor / totalGeralValor * 100).toLocaleString('pt-BR', {minimumFractionDigits: 1}) : '0,0'}%</td>
+                `;
+                tbody.appendChild(trHeader);
+
+                // Linhas de categorias do representante
+                linhas.forEach(row => {
+                    const peso = parseFloat(row.peso || 0);
+                    const valor = parseFloat(row.valor || 0);
+                    const valorKg = peso > 0 ? valor / peso : 0;
+                    const percPeso = totalGeralPeso > 0 ? (peso / totalGeralPeso * 100) : 0;
+                    const percValor = totalGeralValor > 0 ? (valor / totalGeralValor * 100) : 0;
+                    const corCategoria = CATEGORIAS_CONFIG[row.categoria]?.cor || '#6c757d';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="padding-left: 32px;">
+                            <span class="categoria-badge">
+                                <span class="categoria-dot" style="background: ${corCategoria};"></span>
+                                ${row.categoria}
+                            </span>
+                        </td>
+                        <td class="text-right">${peso.toLocaleString('pt-BR', {minimumFractionDigits: 2})} kg</td>
+                        <td class="text-right">R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td class="text-right">R$ ${valorKg.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td class="text-right">${percPeso.toLocaleString('pt-BR', {minimumFractionDigits: 1})}%</td>
+                        <td class="text-right">${percValor.toLocaleString('pt-BR', {minimumFractionDigits: 1})}%</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // Subtotal do representante
+                const trSub = document.createElement('tr');
+                trSub.className = 'rep-subtotal';
+                trSub.innerHTML = `
+                    <td style="padding-left: 32px;">Subtotal</td>
+                    <td class="text-right">${subPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2})} kg</td>
+                    <td class="text-right">R$ ${subValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    <td class="text-right">R$ ${subValorKg.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    <td class="text-right"></td>
+                    <td class="text-right"></td>
+                `;
+                tbody.appendChild(trSub);
+            });
+
+            // Total geral
+            const totalGeralValorKg = totalGeralPeso > 0 ? totalGeralValor / totalGeralPeso : 0;
+            const trTotal = document.createElement('tr');
+            trTotal.className = 'total-row';
+            trTotal.innerHTML = `
+                <td><strong>TOTAL GERAL</strong></td>
+                <td class="text-right">${totalGeralPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2})} kg</td>
+                <td class="text-right">R$ ${totalGeralValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                <td class="text-right">R$ ${totalGeralValorKg.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                <td class="text-right">100,0%</td>
+                <td class="text-right">100,0%</td>
+            `;
+            tbody.appendChild(trTotal);
+
+            document.getElementById('tableStats').textContent = `${totalReps} representante(s) | ${dados.length} registro(s)`;
+            document.getElementById('totalValue').textContent = `Total: R$ ${totalGeralValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
         }
 
         // Atualizar KPIs
@@ -1255,7 +1423,59 @@
                 }
             });
 
-            // Grafico 3: Linhas Semanais - R$/KG
+            // Grafico 3: Linhas Semanais - Peso
+            const datasetsPeso = categoriasPresentes.map(cat => {
+                const dados = semanasUnicas.map(sem => {
+                    const row = dadosSem.find(d => d.semana_key === sem && d.categoria === cat);
+                    return row ? parseFloat(row.peso || 0) : 0;
+                });
+                return {
+                    label: cat,
+                    data: dados,
+                    borderColor: CATEGORIAS_CONFIG[cat]?.cor || '#6c757d',
+                    backgroundColor: CATEGORIAS_CONFIG[cat]?.corRgba || 'rgba(108, 117, 125, 0.2)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: false,
+                    pointRadius: 3,
+                    pointHoverRadius: 5
+                };
+            });
+
+            if (chartLinhasPeso) chartLinhasPeso.destroy();
+            chartLinhasPeso = new Chart(document.getElementById('chartLinhasPeso'), {
+                type: 'line',
+                data: {
+                    labels: semanasLabels,
+                    datasets: datasetsPeso
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { size: 10 }, padding: 8, boxWidth: 12 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('pt-BR') + ' kg';
+                                },
+                                font: { size: 10 }
+                            }
+                        },
+                        x: {
+                            ticks: { font: { size: 10 }, maxRotation: 45 }
+                        }
+                    }
+                }
+            });
+
+            // Grafico 4: Linhas Semanais - R$/KG
             const datasetsValorKg = categoriasPresentes.map(cat => {
                 const dados = semanasUnicas.map(sem => {
                     const row = dadosSem.find(d => d.semana_key === sem && d.categoria === cat);
@@ -1343,6 +1563,23 @@
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, 'Categorias');
 
+                // Aba detalhada por representante
+                if (window.dadosDetalhados.length > 0) {
+                    const dadosDet = window.dadosDetalhados.map(row => {
+                        const peso = parseFloat(row.peso || 0);
+                        const valor = parseFloat(row.valor || 0);
+                        return {
+                            'Representante': row.nome_representante,
+                            'Categoria': row.categoria,
+                            'Peso (kg)': peso,
+                            'Valor (R$)': valor,
+                            'R$/KG': peso > 0 ? parseFloat((valor / peso).toFixed(2)) : 0
+                        };
+                    });
+                    const wsDet = XLSX.utils.json_to_sheet(dadosDet);
+                    XLSX.utils.book_append_sheet(wb, wsDet, 'Por Representante');
+                }
+
                 // Aba de dados semanais
                 if (window.dadosSemanais.length > 0) {
                     const dadosSem = window.dadosSemanais.map(row => {
@@ -1414,14 +1651,47 @@
                     ];
                 });
 
+                const modoLabel = window.modoVisualizacao === 'detalhado' ? ' (Detalhado)' : ' (Resumido)';
+                doc.text(`Modo: ${modoLabel}`, 14, 40);
+
                 doc.autoTable({
                     head: [['Categoria', 'Peso (kg)', 'Valor (R$)', 'R$/KG', '% Peso', '% Valor']],
                     body: tableData,
-                    startY: 40,
+                    startY: 46,
                     theme: 'striped',
                     headStyles: { fillColor: [252, 3, 3], textColor: [255, 255, 255], fontStyle: 'bold' },
                     alternateRowStyles: { fillColor: [248, 249, 250] }
                 });
+
+                // Se modo detalhado, adicionar tabela por representante
+                if (window.modoVisualizacao === 'detalhado' && window.dadosDetalhados.length > 0) {
+                    doc.addPage();
+                    doc.setFontSize(14);
+                    doc.setTextColor(252, 3, 3);
+                    doc.text('Detalhado por Representante', 14, 20);
+
+                    const detData = window.dadosDetalhados.map(row => {
+                        const peso = parseFloat(row.peso || 0);
+                        const valor = parseFloat(row.valor || 0);
+                        const valorKg = peso > 0 ? valor / peso : 0;
+                        return [
+                            row.nome_representante,
+                            row.categoria,
+                            peso.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg',
+                            'R$ ' + valor.toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                            'R$ ' + valorKg.toLocaleString('pt-BR', {minimumFractionDigits: 2})
+                        ];
+                    });
+
+                    doc.autoTable({
+                        head: [['Representante', 'Categoria', 'Peso (kg)', 'Valor (R$)', 'R$/KG']],
+                        body: detData,
+                        startY: 28,
+                        theme: 'striped',
+                        headStyles: { fillColor: [252, 3, 3], textColor: [255, 255, 255], fontStyle: 'bold' },
+                        alternateRowStyles: { fillColor: [248, 249, 250] }
+                    });
+                }
 
                 doc.save(`categorias_produtos_${dataInicio}_${dataFim}.pdf`);
 

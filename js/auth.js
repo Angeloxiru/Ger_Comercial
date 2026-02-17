@@ -368,6 +368,12 @@ class AuthManager {
                 url: 'dashboards/dashboard-clientes-semcompras.html'
             },
             {
+                id: 'categorias-produtos',
+                name: 'Categorias de Produtos',
+                icon: '🏷️',
+                url: 'dashboards/dashboard-categorias-produtos.html'
+            },
+            {
                 id: 'gerenciar-usuarios',
                 name: 'Gerenciar Usuários',
                 icon: '👥',
@@ -454,6 +460,7 @@ class AuthManager {
             'produtos-parados': 'dashboard-produtos-parados.html',
             'ranking-clientes': 'dashboard-ranking-clientes.html',
             'clientes-semcompras': 'dashboard-clientes-semcompras.html',
+            'categorias-produtos': 'dashboard-categorias-produtos.html',
             'gerenciar-usuarios': 'dashboard-gerenciar-usuarios.html'
         };
 
