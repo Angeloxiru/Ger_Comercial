@@ -188,6 +188,135 @@
             border-color: rgba(255, 255, 255, 0.5);
         }
 
+        .btn-alterar-senha {
+            color: white;
+            background: none;
+            border: none;
+            font-size: 0.8em;
+            cursor: pointer;
+            text-decoration: underline;
+            opacity: 0.8;
+            display: block;
+            margin-bottom: 8px;
+            font-family: inherit;
+        }
+
+        .btn-alterar-senha:hover {
+            opacity: 1;
+        }
+
+        /* Modal Alterar Senha */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-box {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-box h3 {
+            color: #212529;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+
+        .modal-field {
+            margin-bottom: 16px;
+        }
+
+        .modal-field label {
+            display: block;
+            color: #495057;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 0.9em;
+        }
+
+        .modal-field input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.95em;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .modal-field input:focus {
+            outline: none;
+            border-color: #fc0303;
+            box-shadow: 0 0 0 3px rgba(252, 3, 3, 0.1);
+        }
+
+        .modal-error {
+            background: #f8d7da;
+            color: #842029;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            margin-bottom: 16px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .btn-modal-cancelar {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .btn-modal-cancelar:hover {
+            background: #5a6268;
+        }
+
+        .btn-modal-salvar {
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .btn-modal-salvar:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(252, 3, 3, 0.3);
+        }
+
+        .btn-modal-salvar:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 12px;
@@ -210,6 +339,7 @@
             </div>
             <div class="header-user">
                 <div class="user-info" id="userInfo">👤 Usuário</div>
+                <a href="#" class="btn-alterar-senha" onclick="abrirAlterarSenha(); return false;">Alterar Senha</a>
                 <button class="btn-logout" onclick="handleLogout()">🚪 Sair</button>
             </div>
         </div>
@@ -337,9 +467,34 @@
         </div>
     </div>
 
+    <!-- Modal Alterar Senha -->
+    <div class="modal-overlay" id="modalAlterarSenha" style="display: none;">
+        <div class="modal-box">
+            <h3>🔑 Alterar Senha</h3>
+            <div class="modal-field">
+                <label>Senha Atual</label>
+                <input type="password" id="senhaAtual" placeholder="Digite sua senha atual">
+            </div>
+            <div class="modal-field">
+                <label>Nova Senha</label>
+                <input type="password" id="senhaNova" placeholder="Minimo 6 caracteres">
+            </div>
+            <div class="modal-field">
+                <label>Confirmar Nova Senha</label>
+                <input type="password" id="senhaConfirma" placeholder="Repita a nova senha">
+            </div>
+            <div class="modal-error" id="modalError" style="display: none;"></div>
+            <div class="modal-actions">
+                <button class="btn-modal-cancelar" onclick="fecharAlterarSenha()">Cancelar</button>
+                <button class="btn-modal-salvar" id="btnSalvarSenha" onclick="salvarNovaSenha()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts de Autenticação -->
     <script type="module">
         import { authManager } from './js/auth.js';
+        import { db } from './js/db.js';
 
         // Verificar autenticação ao carregar a página
         document.addEventListener('DOMContentLoaded', () => {
@@ -373,6 +528,76 @@
         window.handleLogout = function() {
             if (confirm('Deseja realmente sair do sistema?')) {
                 authManager.logout();
+            }
+        };
+
+        // Alterar Senha
+        window.abrirAlterarSenha = function() {
+            document.getElementById('modalAlterarSenha').style.display = 'flex';
+            document.getElementById('senhaAtual').value = '';
+            document.getElementById('senhaNova').value = '';
+            document.getElementById('senhaConfirma').value = '';
+            document.getElementById('modalError').style.display = 'none';
+        };
+
+        window.fecharAlterarSenha = function() {
+            document.getElementById('modalAlterarSenha').style.display = 'none';
+        };
+
+        window.salvarNovaSenha = async function() {
+            const senhaAtual = document.getElementById('senhaAtual').value;
+            const senhaNova = document.getElementById('senhaNova').value;
+            const senhaConfirma = document.getElementById('senhaConfirma').value;
+            const errorEl = document.getElementById('modalError');
+
+            errorEl.style.display = 'none';
+
+            if (!senhaAtual || !senhaNova || !senhaConfirma) {
+                errorEl.textContent = 'Preencha todos os campos';
+                errorEl.style.display = 'block';
+                return;
+            }
+            if (senhaNova.length < 6) {
+                errorEl.textContent = 'A nova senha deve ter no minimo 6 caracteres';
+                errorEl.style.display = 'block';
+                return;
+            }
+            if (senhaNova !== senhaConfirma) {
+                errorEl.textContent = 'A nova senha e a confirmacao nao conferem';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            try {
+                document.getElementById('btnSalvarSenha').disabled = true;
+
+                if (!db.isConnected()) await db.connect();
+                const user = authManager.getCurrentUser();
+
+                // Verificar senha atual no banco
+                const check = await db.execute(
+                    'SELECT id FROM users WHERE id = ? AND password = ?',
+                    [user.id, senhaAtual]
+                );
+                if (!check.rows || check.rows.length === 0) {
+                    errorEl.textContent = 'Senha atual incorreta';
+                    errorEl.style.display = 'block';
+                    return;
+                }
+
+                // Atualizar senha
+                await db.execute(
+                    'UPDATE users SET password = ?, updated_at = ? WHERE id = ?',
+                    [senhaNova, new Date().toISOString(), user.id]
+                );
+
+                fecharAlterarSenha();
+                alert('Senha alterada com sucesso!');
+            } catch (error) {
+                errorEl.textContent = 'Erro ao alterar senha: ' + error.message;
+                errorEl.style.display = 'block';
+            } finally {
+                document.getElementById('btnSalvarSenha').disabled = false;
             }
         };
     </script>
