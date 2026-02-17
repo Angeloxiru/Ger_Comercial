@@ -712,8 +712,8 @@
                     grupos = await db.execute('SELECT DISTINCT grupo_desc FROM lkp_clientes WHERE grupo_desc IS NOT NULL ORDER BY grupo_desc');
                     if (!grupos?.rows?.length) grupos = await db.execute('SELECT DISTINCT grupo_desc FROM tab_cliente WHERE grupo_desc IS NOT NULL ORDER BY grupo_desc');
 
-                    clientes = await db.execute('SELECT cliente, nome, grupo_desc FROM lkp_clientes WHERE nome IS NOT NULL ORDER BY nome');
-                    if (!clientes?.rows?.length) clientes = await db.execute('SELECT DISTINCT cliente, nome, grupo_desc FROM tab_cliente WHERE nome IS NOT NULL ORDER BY nome');
+                    clientes = await db.execute('SELECT cliente, nome, fantasia, grupo_desc FROM lkp_clientes WHERE nome IS NOT NULL ORDER BY nome');
+                    if (!clientes?.rows?.length) clientes = await db.execute('SELECT DISTINCT cliente, nome, fantasia, grupo_desc FROM tab_cliente WHERE nome IS NOT NULL ORDER BY nome');
 
                     // Valida antes de salvar no cache
                     if (grupos?.rows?.length > 0 && clientes?.rows?.length > 0) {
@@ -772,19 +772,23 @@
             }
         }
 
+        // Label do cliente: "cod - fantasia" para diferenciar clientes com mesma razao social
+        function clienteLabel(c) {
+            return `${c.cliente} - ${c.fantasia || c.nome}`;
+        }
+
         // CASCATA: Grupo → Cliente
         document.getElementById('filtroGrupo').addEventListener('change', function() {
             const gruposSelecionados = Array.from(this.selectedOptions).map(o => o.value);
 
             if (gruposSelecionados.length === 0) {
                 preencherSelect('filtroCliente', window.todosClientes
-                    .map(c => c.nome)
-                    .filter(v => v !== null && v !== undefined && v !== '')
-                    .filter((v, i, s) => s.indexOf(v) === i));
+                    .map(c => clienteLabel(c))
+                    .filter(v => v !== null && v !== undefined && v !== ''));
             } else {
                 const clientesFiltrados = window.todosClientes
                     .filter(c => gruposSelecionados.includes(c.grupo_desc))
-                    .map(c => c.nome)
+                    .map(c => clienteLabel(c))
                     .filter(v => v !== null && v !== undefined && v !== '')
                     .filter((v, i, s) => s.indexOf(v) === i);
 
@@ -862,10 +866,12 @@
                     SELECT
                         v.produto,
                         v.complemento as descricao,
+                        v.cliente as cliente_codigo,
                         SUM(v.qtde_faturada) as qtde,
                         SUM(v.valor_liquido) as valor,
                         SUM(v.peso_liq) as peso,
-                        c.nome as cliente_nome
+                        c.nome as cliente_nome,
+                        c.fantasia as cliente_fantasia
                     FROM vendas v
                     INNER JOIN tab_cliente c ON v.cliente = c.cliente
                     WHERE v.emissao >= ? AND v.emissao <= ?
@@ -878,17 +884,18 @@
                     sql += ` AND v.cliente IN (${codigosCliente.map(() => '?').join(',')})`;
                     params.push(...codigosCliente);
                 } else {
-                    if (grupos.length > 0) {
+                    // Extrair codigos de cliente do formato "cod - fantasia"
+                    if (clientesNomes.length > 0) {
+                        const codigosDoDropdown = clientesNomes.map(v => v.split(' - ')[0].trim());
+                        sql += ` AND v.cliente IN (${codigosDoDropdown.map(() => '?').join(',')})`;
+                        params.push(...codigosDoDropdown);
+                    } else if (grupos.length > 0) {
                         sql += ` AND c.grupo_desc IN (${grupos.map(() => '?').join(',')})`;
                         params.push(...grupos);
                     }
-                    if (clientesNomes.length > 0) {
-                        sql += ` AND c.nome IN (${clientesNomes.map(() => '?').join(',')})`;
-                        params.push(...clientesNomes);
-                    }
                 }
 
-                sql += ' GROUP BY v.produto, v.complemento, c.nome ORDER BY qtde DESC';
+                sql += ' GROUP BY v.produto, v.complemento, v.cliente, c.nome, c.fantasia ORDER BY qtde DESC';
 
                 const result = await db.execute(sql, params);
                 window.dadosCompletos = result.rows;
@@ -929,7 +936,7 @@
                 tr.innerHTML = `
                     <td>${row.produto || '-'}</td>
                     <td>${row.descricao || '-'}</td>
-                    <td>${row.cliente_nome || '-'}</td>
+                    <td>${row.cliente_codigo} - ${row.cliente_fantasia || row.cliente_nome || '-'}</td>
                     <td class="text-right">${parseFloat(row.qtde || 0).toLocaleString('pt-BR')}</td>
                     <td class="text-right">R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                     <td class="text-right">${parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
@@ -948,8 +955,8 @@
             const totalQtde = dados.reduce((sum, row) => sum + parseFloat(row.qtde || 0), 0);
             const totalPeso = dados.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
 
-            // Clientes únicos
-            const clientesUnicos = new Set(dados.map(d => d.cliente_nome).filter(Boolean));
+            // Clientes únicos (por código para evitar duplicidade de razão social)
+            const clientesUnicos = new Set(dados.map(d => d.cliente_codigo).filter(Boolean));
             const numClientes = clientesUnicos.size;
             const ticketMedio = numClientes > 0 ? totalValor / numClientes : 0;
 
@@ -998,8 +1005,9 @@
             // Gráfico 2: Top 5 Clientes por Valor
             const clientesMap = {};
             dados.forEach(d => {
-                if (d.cliente_nome) {
-                    clientesMap[d.cliente_nome] = (clientesMap[d.cliente_nome] || 0) + parseFloat(d.valor || 0);
+                if (d.cliente_codigo) {
+                    const label = `${d.cliente_codigo} - ${d.cliente_fantasia || d.cliente_nome || ''}`;
+                    clientesMap[label] = (clientesMap[label] || 0) + parseFloat(d.valor || 0);
                 }
             });
 
@@ -1043,7 +1051,7 @@
                 const dados = window.dadosCompletos.map(row => ({
                     'Produto': row.produto,
                     'Descrição': row.descricao,
-                    'Cliente': row.cliente_nome || '-',
+                    'Cliente': `${row.cliente_codigo} - ${row.cliente_fantasia || row.cliente_nome || '-'}`,
                     'Quantidade': parseFloat(row.qtde || 0),
                     'Valor (R$)': parseFloat(row.valor || 0),
                     'Peso (kg)': parseFloat(row.peso || 0)
@@ -1094,7 +1102,7 @@
                 const totalValor = window.dadosCompletos.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
                 const totalQtde = window.dadosCompletos.reduce((sum, row) => sum + parseFloat(row.qtde || 0), 0);
                 const totalPeso = window.dadosCompletos.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
-                const clientesUnicos = new Set(window.dadosCompletos.map(d => d.cliente_nome).filter(Boolean));
+                const clientesUnicos = new Set(window.dadosCompletos.map(d => d.cliente_codigo).filter(Boolean));
                 const ticketMedio = clientesUnicos.size > 0 ? totalValor / clientesUnicos.size : 0;
 
                 doc.setFontSize(9);
@@ -1112,7 +1120,7 @@
                 const tableData = window.dadosCompletos.map(row => [
                     row.produto || '-',
                     (row.descricao || '-').substring(0, 40),
-                    (row.cliente_nome || '-').substring(0, 35),
+                    (`${row.cliente_codigo} - ${row.cliente_fantasia || row.cliente_nome || '-'}`).substring(0, 40),
                     parseFloat(row.qtde || 0).toLocaleString('pt-BR'),
                     'R$ ' + parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
                     parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})
