@@ -552,103 +552,48 @@
             opacity: 0.5;
         }
 
-        /* Medalhas */
-        .medalhas-card {
-            background: white;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .medalhas-title {
-            color: #495057;
-            font-size: 0.9em;
-            font-weight: 600;
-            margin-bottom: 12px;
-            text-align: center;
-        }
-
-        .medalhas-section {
-            margin-bottom: 14px;
-        }
-
-        .medalhas-section:last-child {
-            margin-bottom: 0;
-        }
-
-        .medalhas-section-title {
-            font-size: 0.75em;
-            font-weight: 600;
-            color: #6c757d;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-            text-align: center;
-        }
-
-        .medalhas-row {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .medalha {
-            display: flex;
+        /* Medalhas inline na tabela */
+        .medalha-inline {
+            display: inline-flex;
             flex-direction: column;
             align-items: center;
-            width: 80px;
+            margin-left: 8px;
+            vertical-align: middle;
+            position: relative;
         }
 
-        .medalha-cordao {
-            width: 2px;
-            height: 10px;
-            margin-bottom: -2px;
-            z-index: 1;
+        .medalha-cordao-v {
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 18px solid;
         }
 
-        .medalha-circulo {
-            width: 32px;
-            height: 32px;
+        .medalha-num {
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
+            font-size: 0.7em;
             font-weight: 800;
-            font-size: 0.85em;
             color: white;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-            border: 2px solid;
+            margin-top: -5px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
         }
 
-        .medalha-pos-1 .medalha-circulo {
+        .medalha-pos-1 .medalha-num {
             background: linear-gradient(135deg, #FFD700, #FFA500);
-            border-color: #DAA520;
         }
 
-        .medalha-pos-2 .medalha-circulo {
+        .medalha-pos-2 .medalha-num {
             background: linear-gradient(135deg, #C0C0C0, #A8A8A8);
-            border-color: #808080;
         }
 
-        .medalha-pos-3 .medalha-circulo {
+        .medalha-pos-3 .medalha-num {
             background: linear-gradient(135deg, #CD7F32, #A0522D);
-            border-color: #8B4513;
-        }
-
-        .medalha-categoria {
-            font-size: 0.65em;
-            font-weight: 600;
-            color: #495057;
-            margin-top: 4px;
-            text-align: center;
-            line-height: 1.2;
-        }
-
-        .medalha-valor {
-            font-size: 0.6em;
-            color: #6c757d;
-            text-align: center;
-            line-height: 1.2;
         }
     </style>
 
@@ -824,12 +769,6 @@
                     <div class="kpi-label">Categorias Ativas</div>
                     <div class="kpi-value" id="kpiCategorias">0</div>
                 </div>
-            </div>
-
-            <!-- Medalhas: Top 3 por metrica -->
-            <div class="medalhas-card" id="medalhasCard" style="display: none;">
-                <div class="medalhas-title">🏅 Ranking por Categoria</div>
-                <div id="medalhasContainer"></div>
             </div>
 
             <!-- Grafico 1: Donut - Participacao por Valor -->
@@ -1256,7 +1195,6 @@
                 // Renderizar
                 renderizarTabela();
                 atualizarKPIs(results[0].rows);
-                atualizarMedalhas(results[0].rows);
                 atualizarGraficos(results[0].rows, results[1].rows, window.dadosDetalhados);
 
                 document.getElementById('mainContent').style.display = 'grid';
@@ -1359,6 +1297,9 @@
             const totalGeralPeso = dados.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
             const totalGeralValor = dados.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
 
+            // Calcular rankings para medalhas
+            const rankings = calcularRankings(dados);
+
             // Agrupar por representante
             const porRepresentante = {};
             dados.forEach(row => {
@@ -1402,6 +1343,12 @@
                     const percValor = totalGeralValor > 0 ? (valor / totalGeralValor * 100) : 0;
                     const corCategoria = CATEGORIAS_CONFIG[row.categoria]?.cor || '#6c757d';
 
+                    // Medalhas inline
+                    const chave = rep + '|' + row.categoria;
+                    const mPeso = htmlMedalha(rankings.medalhasPeso[chave], corCategoria);
+                    const mValor = htmlMedalha(rankings.medalhasValor[chave], corCategoria);
+                    const mVK = htmlMedalha(rankings.medalhasVK[chave], corCategoria);
+
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td style="padding-left: 32px;">
@@ -1410,9 +1357,9 @@
                                 ${row.categoria}
                             </span>
                         </td>
-                        <td class="text-right">${peso.toLocaleString('pt-BR', {minimumFractionDigits: 2})} kg</td>
-                        <td class="text-right">R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                        <td class="text-right">R$ ${valorKg.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td class="text-right">${peso.toLocaleString('pt-BR', {minimumFractionDigits: 2})} kg${mPeso}</td>
+                        <td class="text-right">R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}${mValor}</td>
+                        <td class="text-right">R$ ${valorKg.toLocaleString('pt-BR', {minimumFractionDigits: 2})}${mVK}</td>
                         <td class="text-right">${percPeso.toLocaleString('pt-BR', {minimumFractionDigits: 1})}%</td>
                         <td class="text-right">${percValor.toLocaleString('pt-BR', {minimumFractionDigits: 1})}%</td>
                     `;
@@ -1463,61 +1410,41 @@
             document.getElementById('kpiCategorias').textContent = dados.length;
         }
 
-        // Atualizar medalhas (Top 3 por Peso, Valor e R$/KG)
-        function atualizarMedalhas(dados) {
-            const container = document.getElementById('medalhasContainer');
-            const card = document.getElementById('medalhasCard');
-
-            if (!dados || dados.length === 0) {
-                card.style.display = 'none';
-                return;
-            }
-
-            // Preparar dados com R$/KG calculado
-            const categoriasComVK = dados.map(row => {
+        // Calcular rankings Top 3 para medalhas inline na tabela detalhada
+        function calcularRankings(dados) {
+            const items = dados.map(row => {
                 const peso = parseFloat(row.peso || 0);
                 const valor = parseFloat(row.valor || 0);
                 return {
                     categoria: row.categoria,
+                    rep: row.nome_representante,
                     peso,
                     valor,
                     valorKg: peso > 0 ? valor / peso : 0
                 };
             });
 
-            // Top 3 de cada metrica (maior primeiro)
-            const top3Peso = [...categoriasComVK].sort((a, b) => b.peso - a.peso).slice(0, 3);
-            const top3Valor = [...categoriasComVK].sort((a, b) => b.valor - a.valor).slice(0, 3);
-            const top3VK = [...categoriasComVK].sort((a, b) => b.valorKg - a.valorKg).slice(0, 3);
+            // Top 3 por metrica (maior primeiro)
+            const rankPeso = [...items].sort((a, b) => b.peso - a.peso).slice(0, 3);
+            const rankValor = [...items].sort((a, b) => b.valor - a.valor).slice(0, 3);
+            const rankVK = [...items].sort((a, b) => b.valorKg - a.valorKg).slice(0, 3);
 
-            function renderMedalha(item, posicao, valorFormatado) {
-                const cor = CATEGORIAS_CONFIG[item.categoria]?.cor || '#6c757d';
-                return `
-                    <div class="medalha medalha-pos-${posicao}">
-                        <div class="medalha-cordao" style="background: ${cor};"></div>
-                        <div class="medalha-circulo">${posicao}</div>
-                        <div class="medalha-categoria">${item.categoria}</div>
-                        <div class="medalha-valor">${valorFormatado}</div>
-                    </div>
-                `;
-            }
+            // Mapas: chave "rep|categoria" -> posicao (1, 2 ou 3)
+            const medalhasPeso = {};
+            const medalhasValor = {};
+            const medalhasVK = {};
 
-            function renderSection(titulo, items, formatFn) {
-                const medalhas = items.map((item, i) => renderMedalha(item, i + 1, formatFn(item))).join('');
-                return `
-                    <div class="medalhas-section">
-                        <div class="medalhas-section-title">${titulo}</div>
-                        <div class="medalhas-row">${medalhas}</div>
-                    </div>
-                `;
-            }
+            rankPeso.forEach((item, i) => { medalhasPeso[item.rep + '|' + item.categoria] = i + 1; });
+            rankValor.forEach((item, i) => { medalhasValor[item.rep + '|' + item.categoria] = i + 1; });
+            rankVK.forEach((item, i) => { medalhasVK[item.rep + '|' + item.categoria] = i + 1; });
 
-            container.innerHTML =
-                renderSection('⚖️ Peso (kg)', top3Peso, i => i.peso.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ' kg') +
-                renderSection('💰 Valor (R$)', top3Valor, i => 'R$ ' + i.valor.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0})) +
-                renderSection('📊 R$/KG', top3VK, i => 'R$ ' + i.valorKg.toLocaleString('pt-BR', {minimumFractionDigits: 2}));
+            return { medalhasPeso, medalhasValor, medalhasVK };
+        }
 
-            card.style.display = '';
+        // Gerar HTML de medalha inline com cordao V na cor da categoria
+        function htmlMedalha(posicao, cor) {
+            if (!posicao) return '';
+            return `<span class="medalha-inline medalha-pos-${posicao}"><span class="medalha-cordao-v" style="border-top-color: ${cor};"></span><span class="medalha-num">${posicao}</span></span>`;
         }
 
         // Atualizar graficos
