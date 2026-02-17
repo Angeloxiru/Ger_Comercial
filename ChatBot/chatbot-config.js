@@ -8,7 +8,7 @@
 
 export const chatbotConfig = {
     // Chave da API do Google Gemini
-    geminiApiKey: 'gen-lang-client-0629320584',
+    geminiApiKey: 'AIzaSyB3lTJkhk4uy0yx6jCPYYVIaVp0rggCMxM',
 
     // Modelo a ser utilizado
     model: 'gemini-2.5-flash',

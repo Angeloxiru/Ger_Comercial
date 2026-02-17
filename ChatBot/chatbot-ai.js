@@ -177,6 +177,7 @@ export class ChatbotAI {
 
         } catch (error) {
             console.error('Erro ao enviar mensagem:', error);
+            console.error('Detalhes do erro:', { status: error.status, statusText: error.statusText, message: error.message });
 
             let userFriendlyMessage;
 
