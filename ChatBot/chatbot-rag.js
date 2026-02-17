@@ -3,6 +3,7 @@
  *
  * Detecta a intencao do usuario e consulta o banco de dados Turso
  * para fornecer contexto real ao Gemini.
+ * O chatbot tem acesso a TODO o historico de dados do banco.
  */
 
 import { db } from '../js/db.js';
@@ -16,9 +17,10 @@ const INTENT_CATALOG = {
         label: 'Resumo de Vendas',
         queries: [
             {
-                name: 'resumo_vendas_mes',
-                description: 'Resumo geral de vendas do mes atual',
+                name: 'resumo_vendas_mes_atual',
+                description: 'Resumo de vendas do MES ATUAL',
                 sql: `SELECT
+                    strftime('%Y-%m', date('now')) as periodo,
                     COUNT(DISTINCT nota_fiscal) as total_notas,
                     COUNT(DISTINCT cliente) as total_clientes_ativos,
                     COUNT(DISTINCT representante) as total_representantes,
@@ -32,14 +34,46 @@ const INTENT_CATALOG = {
                 WHERE emissao >= date('now', 'start of month')`
             },
             {
+                name: 'resumo_vendas_mes_anterior',
+                description: 'Resumo de vendas do MES ANTERIOR (para comparativo)',
+                sql: `SELECT
+                    strftime('%Y-%m', date('now', '-1 month')) as periodo,
+                    COUNT(DISTINCT nota_fiscal) as total_notas,
+                    COUNT(DISTINCT cliente) as total_clientes_ativos,
+                    COUNT(DISTINCT representante) as total_representantes,
+                    COUNT(DISTINCT produto) as total_produtos,
+                    ROUND(SUM(valor_liquido), 2) as total_faturamento,
+                    ROUND(SUM(peso_liq), 2) as total_peso_kg,
+                    ROUND(AVG(perc_desc), 2) as media_desconto_perc,
+                    ROUND(SUM(valor_bruto), 2) as total_bruto,
+                    ROUND(SUM(valor_desconto), 2) as total_descontos
+                FROM vendas
+                WHERE emissao >= date('now', 'start of month', '-1 month')
+                  AND emissao < date('now', 'start of month')`
+            },
+            {
+                name: 'tendencia_mensal',
+                description: 'Tendencia mensal de vendas (ultimos 6 meses)',
+                sql: `SELECT
+                    strftime('%Y-%m', emissao) as mes,
+                    COUNT(DISTINCT nota_fiscal) as notas,
+                    COUNT(DISTINCT cliente) as clientes,
+                    ROUND(SUM(valor_liquido), 2) as faturamento,
+                    ROUND(SUM(peso_liq), 2) as peso_kg
+                FROM vendas
+                WHERE emissao >= date('now', '-6 months')
+                GROUP BY strftime('%Y-%m', emissao)
+                ORDER BY mes`
+            },
+            {
                 name: 'vendas_por_uf',
-                description: 'Vendas por estado (UF) no mes',
+                description: 'Vendas por estado (UF) nos ultimos 6 meses',
                 sql: `SELECT uf,
                     COUNT(DISTINCT cliente) as clientes,
                     ROUND(SUM(valor_liquido), 2) as faturamento,
                     ROUND(SUM(peso_liq), 2) as peso_kg
                 FROM vendas
-                WHERE emissao >= date('now', 'start of month')
+                WHERE emissao >= date('now', '-6 months')
                 GROUP BY uf
                 ORDER BY faturamento DESC
                 LIMIT 10`
@@ -53,21 +87,21 @@ const INTENT_CATALOG = {
         queries: [
             {
                 name: 'top_clientes',
-                description: 'Top 10 clientes por faturamento no mes',
+                description: 'Top 10 clientes por faturamento (ultimos 3 meses)',
                 sql: `SELECT v.cliente, v.nome, v.cidade, v.uf,
                     COUNT(DISTINCT v.nota_fiscal) as qtd_pedidos,
                     ROUND(SUM(v.valor_liquido), 2) as faturamento,
                     ROUND(SUM(v.peso_liq), 2) as peso_kg,
                     ROUND(AVG(v.perc_desc), 2) as media_desconto
                 FROM vendas v
-                WHERE v.emissao >= date('now', 'start of month')
+                WHERE v.emissao >= date('now', '-3 months')
                 GROUP BY v.cliente
                 ORDER BY faturamento DESC
                 LIMIT 10`
             },
             {
                 name: 'total_clientes_cadastrados',
-                description: 'Total de clientes na base',
+                description: 'Total de clientes na base (cadastro completo)',
                 sql: `SELECT
                     COUNT(*) as total_cadastrados,
                     COUNT(CASE WHEN sit_cliente = 'ATIVO' THEN 1 END) as ativos,
@@ -85,7 +119,7 @@ const INTENT_CATALOG = {
         queries: [
             {
                 name: 'ranking_representantes',
-                description: 'Ranking de representantes por faturamento no mes',
+                description: 'Ranking de representantes por faturamento (ultimos 3 meses)',
                 sql: `SELECT v.representante,
                     MAX(r.desc_representante) as nome_representante,
                     MAX(r.rep_tipo) as tipo,
@@ -96,7 +130,7 @@ const INTENT_CATALOG = {
                     ROUND(SUM(v.peso_liq), 2) as peso_kg
                 FROM vendas v
                 LEFT JOIN tab_representante r ON v.representante = r.representante
-                WHERE v.emissao >= date('now', 'start of month')
+                WHERE v.emissao >= date('now', '-3 months')
                 GROUP BY v.representante
                 ORDER BY faturamento DESC
                 LIMIT 15`
@@ -110,7 +144,7 @@ const INTENT_CATALOG = {
         queries: [
             {
                 name: 'top_produtos',
-                description: 'Top 15 produtos mais vendidos no mes',
+                description: 'Top 15 produtos mais vendidos (ultimos 3 meses)',
                 sql: `SELECT v.produto,
                     MAX(p.desc_produto) as descricao,
                     MAX(p.desc_familia) as familia,
@@ -121,14 +155,14 @@ const INTENT_CATALOG = {
                     COUNT(DISTINCT v.cliente) as clientes_compraram
                 FROM vendas v
                 LEFT JOIN tab_produto p ON v.produto = p.produto
-                WHERE v.emissao >= date('now', 'start of month')
+                WHERE v.emissao >= date('now', '-3 months')
                 GROUP BY v.produto
                 ORDER BY faturamento DESC
                 LIMIT 15`
             },
             {
                 name: 'vendas_por_familia',
-                description: 'Vendas agrupadas por familia de produto',
+                description: 'Vendas agrupadas por familia de produto (ultimos 3 meses)',
                 sql: `SELECT v.familia,
                     MAX(p.desc_familia) as desc_familia,
                     COUNT(DISTINCT v.produto) as qtd_produtos,
@@ -137,7 +171,7 @@ const INTENT_CATALOG = {
                     COUNT(DISTINCT v.cliente) as clientes
                 FROM vendas v
                 LEFT JOIN tab_produto p ON v.produto = p.produto
-                WHERE v.emissao >= date('now', 'start of month')
+                WHERE v.emissao >= date('now', '-3 months')
                 GROUP BY v.familia
                 ORDER BY faturamento DESC
                 LIMIT 10`
@@ -151,7 +185,7 @@ const INTENT_CATALOG = {
         queries: [
             {
                 name: 'metas_representantes',
-                description: 'Metas vs realizado dos representantes',
+                description: 'Metas vs realizado dos representantes (mes atual)',
                 sql: `SELECT
                     pr.representante,
                     pr.desc_representante,
@@ -202,19 +236,19 @@ const INTENT_CATALOG = {
         queries: [
             {
                 name: 'clientes_sem_compras',
-                description: 'Clientes ativos que nao compraram no mes atual',
+                description: 'Clientes ativos que NAO compraram nos ultimos 3 meses',
                 sql: `SELECT COUNT(*) as clientes_sem_compra
                 FROM tab_cliente c
                 WHERE c.sit_cliente = 'ATIVO'
                 AND c.cliente NOT IN (
                     SELECT DISTINCT cliente
                     FROM vendas
-                    WHERE emissao >= date('now', 'start of month')
+                    WHERE emissao >= date('now', '-3 months')
                 )`
             },
             {
                 name: 'distribuicao_inativos_por_rota',
-                description: 'Clientes inativos distribuidos por rota',
+                description: 'Clientes inativos (sem compra em 3 meses) distribuidos por rota',
                 sql: `SELECT c.rota,
                     COUNT(*) as clientes_sem_compra
                 FROM tab_cliente c
@@ -222,7 +256,7 @@ const INTENT_CATALOG = {
                 AND c.cliente NOT IN (
                     SELECT DISTINCT cliente
                     FROM vendas
-                    WHERE emissao >= date('now', 'start of month')
+                    WHERE emissao >= date('now', '-3 months')
                 )
                 GROUP BY c.rota
                 ORDER BY clientes_sem_compra DESC
@@ -237,7 +271,7 @@ const INTENT_CATALOG = {
         queries: [
             {
                 name: 'analise_precos',
-                description: 'Analise de precos e descontos do mes',
+                description: 'Analise de precos e descontos (ultimos 3 meses)',
                 sql: `SELECT
                     ROUND(AVG(preco_unitario), 2) as preco_medio,
                     ROUND(AVG(perc_desc), 2) as desconto_medio_perc,
@@ -247,7 +281,7 @@ const INTENT_CATALOG = {
                     ROUND((SUM(valor_desconto) / NULLIF(SUM(valor_bruto), 0)) * 100, 2) as perc_desconto_global,
                     ROUND(SUM(valor_liquido) / NULLIF(COUNT(DISTINCT nota_fiscal), 0), 2) as ticket_medio
                 FROM vendas
-                WHERE emissao >= date('now', 'start of month')`
+                WHERE emissao >= date('now', '-3 months')`
             }
         ]
     },
@@ -258,7 +292,7 @@ const INTENT_CATALOG = {
         queries: [
             {
                 name: 'vendas_por_rota',
-                description: 'Vendas por rota no mes',
+                description: 'Vendas por rota (ultimos 3 meses)',
                 sql: `SELECT c.rota,
                     COUNT(DISTINCT v.cliente) as clientes,
                     COUNT(DISTINCT v.representante) as representantes,
@@ -266,10 +300,58 @@ const INTENT_CATALOG = {
                     ROUND(SUM(v.peso_liq), 2) as peso_kg
                 FROM vendas v
                 LEFT JOIN tab_cliente c ON v.cliente = c.cliente
-                WHERE v.emissao >= date('now', 'start of month')
+                WHERE v.emissao >= date('now', '-3 months')
                 GROUP BY c.rota
                 ORDER BY faturamento DESC
                 LIMIT 10`
+            }
+        ]
+    },
+
+    historico: {
+        keywords: ['historico', 'evolucao', 'tendencia', 'comparativo', 'trimestre', 'semestre', 'ano', 'anual', 'mensal', 'periodo', 'crescimento', 'queda'],
+        label: 'Historico e Tendencias',
+        queries: [
+            {
+                name: 'evolucao_mensal_12m',
+                description: 'Evolucao mensal de vendas (ultimos 12 meses)',
+                sql: `SELECT
+                    strftime('%Y-%m', emissao) as mes,
+                    COUNT(DISTINCT nota_fiscal) as notas,
+                    COUNT(DISTINCT cliente) as clientes,
+                    COUNT(DISTINCT representante) as representantes,
+                    COUNT(DISTINCT produto) as produtos,
+                    ROUND(SUM(valor_liquido), 2) as faturamento,
+                    ROUND(SUM(peso_liq), 2) as peso_kg,
+                    ROUND(AVG(perc_desc), 2) as media_desconto_perc
+                FROM vendas
+                WHERE emissao >= date('now', '-12 months')
+                GROUP BY strftime('%Y-%m', emissao)
+                ORDER BY mes`
+            },
+            {
+                name: 'comparativo_trimestral',
+                description: 'Comparativo trimestral de faturamento',
+                sql: `SELECT
+                    CASE
+                        WHEN emissao >= date('now', '-3 months') THEN 'Ultimos 3 meses'
+                        WHEN emissao >= date('now', '-6 months') THEN '3 a 6 meses atras'
+                        WHEN emissao >= date('now', '-9 months') THEN '6 a 9 meses atras'
+                        ELSE '9 a 12 meses atras'
+                    END as trimestre,
+                    COUNT(DISTINCT nota_fiscal) as notas,
+                    COUNT(DISTINCT cliente) as clientes,
+                    ROUND(SUM(valor_liquido), 2) as faturamento,
+                    ROUND(SUM(peso_liq), 2) as peso_kg
+                FROM vendas
+                WHERE emissao >= date('now', '-12 months')
+                GROUP BY CASE
+                    WHEN emissao >= date('now', '-3 months') THEN 1
+                    WHEN emissao >= date('now', '-6 months') THEN 2
+                    WHEN emissao >= date('now', '-9 months') THEN 3
+                    ELSE 4
+                END
+                ORDER BY 1`
             }
         ]
     }
@@ -280,14 +362,17 @@ const INTENT_CATALOG = {
  */
 const BASE_CONTEXT_QUERY = {
     name: 'contexto_base',
-    description: 'Visao geral da base de dados',
+    description: 'Visao geral da base de dados (acesso total ao historico)',
     sql: `SELECT
         (SELECT COUNT(*) FROM tab_cliente WHERE sit_cliente = 'ATIVO') as clientes_ativos,
         (SELECT COUNT(*) FROM tab_representante) as total_representantes,
         (SELECT COUNT(*) FROM tab_produto) as total_produtos,
         (SELECT MIN(emissao) FROM vendas) as primeira_venda,
         (SELECT MAX(emissao) FROM vendas) as ultima_venda,
-        (SELECT COUNT(*) FROM vendas WHERE emissao >= date('now', 'start of month')) as vendas_mes_atual`
+        (SELECT COUNT(*) FROM vendas) as total_registros_vendas,
+        (SELECT COUNT(*) FROM vendas WHERE emissao >= date('now', 'start of month')) as vendas_mes_atual,
+        (SELECT COUNT(*) FROM vendas WHERE emissao >= date('now', '-3 months')) as vendas_ultimos_3m,
+        (SELECT COUNT(*) FROM vendas WHERE emissao >= date('now', '-12 months')) as vendas_ultimos_12m`
 };
 
 /**
