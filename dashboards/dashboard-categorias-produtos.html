@@ -551,6 +551,105 @@
             margin-bottom: 16px;
             opacity: 0.5;
         }
+
+        /* Medalhas */
+        .medalhas-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .medalhas-title {
+            color: #495057;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .medalhas-section {
+            margin-bottom: 14px;
+        }
+
+        .medalhas-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .medalhas-section-title {
+            font-size: 0.75em;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .medalhas-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .medalha {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 80px;
+        }
+
+        .medalha-cordao {
+            width: 2px;
+            height: 10px;
+            margin-bottom: -2px;
+            z-index: 1;
+        }
+
+        .medalha-circulo {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85em;
+            color: white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            border: 2px solid;
+        }
+
+        .medalha-pos-1 .medalha-circulo {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border-color: #DAA520;
+        }
+
+        .medalha-pos-2 .medalha-circulo {
+            background: linear-gradient(135deg, #C0C0C0, #A8A8A8);
+            border-color: #808080;
+        }
+
+        .medalha-pos-3 .medalha-circulo {
+            background: linear-gradient(135deg, #CD7F32, #A0522D);
+            border-color: #8B4513;
+        }
+
+        .medalha-categoria {
+            font-size: 0.65em;
+            font-weight: 600;
+            color: #495057;
+            margin-top: 4px;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .medalha-valor {
+            font-size: 0.6em;
+            color: #6c757d;
+            text-align: center;
+            line-height: 1.2;
+        }
     </style>
 
     <!-- Mobile responsive -->
@@ -725,6 +824,12 @@
                     <div class="kpi-label">Categorias Ativas</div>
                     <div class="kpi-value" id="kpiCategorias">0</div>
                 </div>
+            </div>
+
+            <!-- Medalhas: Top 3 por metrica -->
+            <div class="medalhas-card" id="medalhasCard" style="display: none;">
+                <div class="medalhas-title">🏅 Ranking por Categoria</div>
+                <div id="medalhasContainer"></div>
             </div>
 
             <!-- Grafico 1: Donut - Participacao por Valor -->
@@ -1151,6 +1256,7 @@
                 // Renderizar
                 renderizarTabela();
                 atualizarKPIs(results[0].rows);
+                atualizarMedalhas(results[0].rows);
                 atualizarGraficos(results[0].rows, results[1].rows, window.dadosDetalhados);
 
                 document.getElementById('mainContent').style.display = 'grid';
@@ -1355,6 +1461,63 @@
             document.getElementById('kpiValor').textContent = 'R$ ' + totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2});
             document.getElementById('kpiValorKg').textContent = 'R$ ' + valorKg.toLocaleString('pt-BR', {minimumFractionDigits: 2});
             document.getElementById('kpiCategorias').textContent = dados.length;
+        }
+
+        // Atualizar medalhas (Top 3 por Peso, Valor e R$/KG)
+        function atualizarMedalhas(dados) {
+            const container = document.getElementById('medalhasContainer');
+            const card = document.getElementById('medalhasCard');
+
+            if (!dados || dados.length === 0) {
+                card.style.display = 'none';
+                return;
+            }
+
+            // Preparar dados com R$/KG calculado
+            const categoriasComVK = dados.map(row => {
+                const peso = parseFloat(row.peso || 0);
+                const valor = parseFloat(row.valor || 0);
+                return {
+                    categoria: row.categoria,
+                    peso,
+                    valor,
+                    valorKg: peso > 0 ? valor / peso : 0
+                };
+            });
+
+            // Top 3 de cada metrica (maior primeiro)
+            const top3Peso = [...categoriasComVK].sort((a, b) => b.peso - a.peso).slice(0, 3);
+            const top3Valor = [...categoriasComVK].sort((a, b) => b.valor - a.valor).slice(0, 3);
+            const top3VK = [...categoriasComVK].sort((a, b) => b.valorKg - a.valorKg).slice(0, 3);
+
+            function renderMedalha(item, posicao, valorFormatado) {
+                const cor = CATEGORIAS_CONFIG[item.categoria]?.cor || '#6c757d';
+                return `
+                    <div class="medalha medalha-pos-${posicao}">
+                        <div class="medalha-cordao" style="background: ${cor};"></div>
+                        <div class="medalha-circulo">${posicao}</div>
+                        <div class="medalha-categoria">${item.categoria}</div>
+                        <div class="medalha-valor">${valorFormatado}</div>
+                    </div>
+                `;
+            }
+
+            function renderSection(titulo, items, formatFn) {
+                const medalhas = items.map((item, i) => renderMedalha(item, i + 1, formatFn(item))).join('');
+                return `
+                    <div class="medalhas-section">
+                        <div class="medalhas-section-title">${titulo}</div>
+                        <div class="medalhas-row">${medalhas}</div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML =
+                renderSection('⚖️ Peso (kg)', top3Peso, i => i.peso.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ' kg') +
+                renderSection('💰 Valor (R$)', top3Valor, i => 'R$ ' + i.valor.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0})) +
+                renderSection('📊 R$/KG', top3VK, i => 'R$ ' + i.valorKg.toLocaleString('pt-BR', {minimumFractionDigits: 2}));
+
+            card.style.display = '';
         }
 
         // Atualizar graficos
