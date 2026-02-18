@@ -1410,7 +1410,8 @@
             document.getElementById('kpiCategorias').textContent = dados.length;
         }
 
-        // Calcular rankings Top 3 para medalhas inline na tabela detalhada
+        // Calcular rankings Top 3 POR CATEGORIA para medalhas inline na tabela detalhada
+        // Cada categoria tem seus proprios top 3 (ouro, prata, bronze) para peso, valor e R$/KG
         function calcularRankings(dados) {
             const items = dados.map(row => {
                 const peso = parseFloat(row.peso || 0);
@@ -1424,19 +1425,28 @@
                 };
             });
 
-            // Top 3 por metrica (maior primeiro)
-            const rankPeso = [...items].sort((a, b) => b.peso - a.peso).slice(0, 3);
-            const rankValor = [...items].sort((a, b) => b.valor - a.valor).slice(0, 3);
-            const rankVK = [...items].sort((a, b) => b.valorKg - a.valorKg).slice(0, 3);
-
             // Mapas: chave "rep|categoria" -> posicao (1, 2 ou 3)
             const medalhasPeso = {};
             const medalhasValor = {};
             const medalhasVK = {};
 
-            rankPeso.forEach((item, i) => { medalhasPeso[item.rep + '|' + item.categoria] = i + 1; });
-            rankValor.forEach((item, i) => { medalhasValor[item.rep + '|' + item.categoria] = i + 1; });
-            rankVK.forEach((item, i) => { medalhasVK[item.rep + '|' + item.categoria] = i + 1; });
+            // Agrupar por categoria e rankear dentro de cada uma
+            const categorias = [...new Set(items.map(i => i.categoria))];
+            categorias.forEach(cat => {
+                const catItems = items.filter(i => i.categoria === cat);
+
+                // Top 3 por peso dentro desta categoria
+                [...catItems].sort((a, b) => b.peso - a.peso).slice(0, 3)
+                    .forEach((item, i) => { medalhasPeso[item.rep + '|' + item.categoria] = i + 1; });
+
+                // Top 3 por valor dentro desta categoria
+                [...catItems].sort((a, b) => b.valor - a.valor).slice(0, 3)
+                    .forEach((item, i) => { medalhasValor[item.rep + '|' + item.categoria] = i + 1; });
+
+                // Top 3 por R$/KG dentro desta categoria
+                [...catItems].sort((a, b) => b.valorKg - a.valorKg).slice(0, 3)
+                    .forEach((item, i) => { medalhasVK[item.rep + '|' + item.categoria] = i + 1; });
+            });
 
             return { medalhasPeso, medalhasValor, medalhasVK };
         }
