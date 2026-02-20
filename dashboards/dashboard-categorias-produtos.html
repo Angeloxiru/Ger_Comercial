@@ -1134,6 +1134,7 @@
                     INNER JOIN tab_produto p ON v.produto = p.produto
                     LEFT JOIN tab_representante r ON v.representante = r.representante
                     WHERE v.emissao >= ? AND v.emissao <= ?
+                    AND v.nat_oper NOT IN ('5910', '6910')
                     AND ${categoriasWhere}
                 `;
                 const paramsCat = [dataInicio, dataFim];
@@ -1152,6 +1153,7 @@
                     INNER JOIN tab_produto p ON v.produto = p.produto
                     LEFT JOIN tab_representante r ON v.representante = r.representante
                     WHERE v.emissao >= ? AND v.emissao <= ?
+                    AND v.nat_oper NOT IN ('5910', '6910')
                     AND ${categoriasWhere}
                 `;
                 const paramsSem = [dataInicio, dataFim];
@@ -1177,6 +1179,7 @@
                         INNER JOIN tab_produto p ON v.produto = p.produto
                         LEFT JOIN tab_representante r ON v.representante = r.representante
                         WHERE v.emissao >= ? AND v.emissao <= ?
+                        AND v.nat_oper NOT IN ('5910', '6910')
                         AND ${categoriasWhere}
                     `;
                     const paramsDet = [dataInicio, dataFim];
