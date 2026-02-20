@@ -1086,6 +1086,11 @@
                     params.push(...cidades);
                 }
 
+                // Quando bonificação está desligada, excluir registros de bonificação dos totais
+                if (!window.bonificacaoAtiva) {
+                    sql += " AND v.nat_oper NOT IN ('5910', '6910')";
+                }
+
                 sql += groupBy;
 
                 const result = await db.execute(sql, params);
