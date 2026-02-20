@@ -1086,6 +1086,14 @@
                     </div>
                 </div>
 
+                <div class="permissions-group">
+                    <h3>Configurações do Usuário</h3>
+                    <div class="permission-item">
+                        <input type="checkbox" id="periodoEstendido" name="periodoEstendido">
+                        <label for="periodoEstendido">Período estendido (até 366 dias nos filtros de data)</label>
+                    </div>
+                </div>
+
                 <div class="form-actions">
                     <button type="button" class="btn-secondary" onclick="userManager.closeModal()">
                         Cancelar
@@ -1302,7 +1310,7 @@
 
                     const result = await db.execute(`
                         SELECT id, username, full_name, permissions, active,
-                               created_at, updated_at
+                               periodo_estendido, created_at, updated_at
                         FROM users
                         ORDER BY username
                     `);
@@ -1345,6 +1353,7 @@
                         </td>
                         <td class="permissions-cell">
                             ${permissionCount} de ${totalDashboards} dashboards
+                            ${user.periodo_estendido ? '<br><span class="badge badge-active" style="font-size:0.75em;">366 dias</span>' : ''}
                         </td>
                         <td>${this.formatDate(user.created_at)}</td>
                         <td>
@@ -1424,6 +1433,9 @@
                     }
                 });
 
+                // Set periodo estendido
+                document.getElementById('periodoEstendido').checked = user.periodo_estendido === 1;
+
                 // Show modal
                 document.getElementById('userModal').style.display = 'block';
             }
@@ -1449,14 +1461,15 @@
                 });
 
                 const permissionsJson = JSON.stringify(selectedPermissions);
+                const periodoEstendido = document.getElementById('periodoEstendido').checked ? 1 : 0;
 
                 try {
                     if (userId) {
                         // Update existing user
-                        await this.updateUser(userId, fullName, password, permissionsJson);
+                        await this.updateUser(userId, fullName, password, permissionsJson, periodoEstendido);
                     } else {
                         // Create new user
-                        await this.createUser(username, fullName, password, permissionsJson);
+                        await this.createUser(username, fullName, password, permissionsJson, periodoEstendido);
                     }
 
                     this.closeModal();
@@ -1467,7 +1480,7 @@
                 }
             }
 
-            async createUser(username, fullName, password, permissions) {
+            async createUser(username, fullName, password, permissions, periodoEstendido) {
                 // Check if username already exists
                 const checkResult = await db.execute(
                     'SELECT id FROM users WHERE username = ?',
@@ -1481,30 +1494,30 @@
                 // Insert new user
                 const now = new Date().toISOString();
                 await db.execute(`
-                    INSERT INTO users (username, password, full_name, permissions, active, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, 1, ?, ?)
-                `, [username, password, fullName, permissions, now, now]);
+                    INSERT INTO users (username, password, full_name, permissions, active, periodo_estendido, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, 1, ?, ?, ?)
+                `, [username, password, fullName, permissions, periodoEstendido, now, now]);
 
                 alert('Usuário criado com sucesso!');
             }
 
-            async updateUser(userId, fullName, password, permissions) {
+            async updateUser(userId, fullName, password, permissions, periodoEstendido) {
                 const now = new Date().toISOString();
 
                 if (password) {
                     // Update with new password
                     await db.execute(`
                         UPDATE users
-                        SET full_name = ?, password = ?, permissions = ?, updated_at = ?
+                        SET full_name = ?, password = ?, permissions = ?, periodo_estendido = ?, updated_at = ?
                         WHERE id = ?
-                    `, [fullName, password, permissions, now, userId]);
+                    `, [fullName, password, permissions, periodoEstendido, now, userId]);
                 } else {
                     // Update without changing password
                     await db.execute(`
                         UPDATE users
-                        SET full_name = ?, permissions = ?, updated_at = ?
+                        SET full_name = ?, permissions = ?, periodo_estendido = ?, updated_at = ?
                         WHERE id = ?
-                    `, [fullName, permissions, now, userId]);
+                    `, [fullName, permissions, periodoEstendido, now, userId]);
                 }
 
                 alert('Usuário atualizado com sucesso!');

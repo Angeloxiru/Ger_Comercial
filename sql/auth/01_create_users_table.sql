@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
     full_name TEXT,
     permissions TEXT NOT NULL, -- JSON com array de dashboards permitidos
     active INTEGER DEFAULT 1, -- 1 = ativo, 0 = inativo
+    periodo_estendido INTEGER DEFAULT 0, -- 0 = máx 100 dias, 1 = máx 366 dias
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
 );

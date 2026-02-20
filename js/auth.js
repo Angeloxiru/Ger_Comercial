@@ -169,7 +169,7 @@ class AuthManager {
 
             // Consultar usuário no banco
             const sql = `
-                SELECT id, username, full_name, permissions, active
+                SELECT id, username, full_name, permissions, active, periodo_estendido
                 FROM users
                 WHERE username = ? AND password = ? AND active = 1
             `;
@@ -205,6 +205,7 @@ class AuthManager {
                 username: user.username,
                 fullName: user.full_name,
                 permissions: permissions,
+                periodoEstendido: user.periodo_estendido === 1,
                 loginTime: new Date().toISOString()
             };
 
