@@ -89,3 +89,26 @@ CREATE TABLE IF NOT EXISTS lkp_produtos (
     desc_familia TEXT,
     desc_origem  TEXT
 );
+
+-- -----------------------------------------------------------------------------
+-- lkp_produtos_parados
+-- Materialização da view vw_produtos_parados que executa 2 full table scans
+-- na tabela vendas a cada consulta. Esta tabela é recalculada semanalmente
+-- pelo GitHub Actions, eliminando as queries pesadas em tempo real.
+-- Usado pelo dashboard Produtos Parados.
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS lkp_produtos_parados (
+    rep_supervisor       TEXT,
+    desc_representante   TEXT,
+    cod_representante    TEXT,
+    sku_produto          TEXT,
+    desc_produto         TEXT,
+    categoria_produto    TEXT,
+    ultima_venda         TEXT,
+    ultimo_cliente_cod   TEXT,
+    ultimo_cliente_nome  TEXT,
+    qtd_semanas_parado   INTEGER,
+    valor_medio_perdido  REAL,
+    qtd_vendas_anteriores INTEGER,
+    nivel_risco          TEXT
+);

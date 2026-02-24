@@ -634,7 +634,7 @@
         import { Pagination, injectPaginationStyles } from '../js/pagination.js';
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
-        import { serializeDbResult, validateCacheStructure } from '../js/db-utils.js';
+        import { serializeDbResult, validateCacheStructure, buildDataCacheKey } from '../js/db-utils.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
 
         // Inicializa isolamento do dashboard
@@ -864,6 +864,19 @@
                 document.getElementById('btnAtualizar').disabled = true;
                 document.getElementById('emptyState').style.display = 'none';
 
+                // Cache de dados: evita query repetida com mesmos filtros (TTL 6h)
+                const cacheKey = buildDataCacheKey('dados_performance', { dataInicio, dataFim, codigosCliente, grupos, clientesNomes });
+                const cachedData = cache.get(cacheKey);
+                if (cachedData) {
+                    window.dadosCompletos = cachedData;
+                    window.pagination.setData(cachedData);
+                    renderizarTabela();
+                    atualizarKPIs(cachedData);
+                    atualizarGraficos(cachedData);
+                    document.getElementById('mainContent').style.display = 'grid';
+                    return;
+                }
+
                 if (!db.isConnected()) await db.connect();
 
                 // Construir query SQL
@@ -904,6 +917,7 @@
 
                 const result = await db.execute(sql, params);
                 window.dadosCompletos = result.rows;
+                cache.set(cacheKey, result.rows, CACHE_TTL.DASHBOARDS);
 
                 // Configurar paginação
                 window.pagination.setData(result.rows);

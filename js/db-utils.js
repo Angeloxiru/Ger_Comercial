@@ -64,6 +64,28 @@ export function validateCacheStructure(cached, propertyName) {
 }
 
 /**
+ * Gera uma cache key determinística a partir de um prefixo e parâmetros de query.
+ * Útil para cachear resultados de queries com filtros dinâmicos.
+ *
+ * @param {string} prefix - Prefixo identificador do dashboard/query
+ * @param {Object} params - Parâmetros da query (filtros, datas, modo, etc.)
+ * @returns {string} Cache key única e determinística
+ *
+ * @example
+ * const key = buildDataCacheKey('dados_regiao', { dataInicio: '2024-01-01', dataFim: '2024-01-31', rotas: ['SP'] });
+ * const cached = cache.get(key);
+ */
+export function buildDataCacheKey(prefix, params) {
+    const sorted = JSON.stringify(params, Object.keys(params).sort());
+    let hash = 0;
+    for (let i = 0; i < sorted.length; i++) {
+        hash = ((hash << 5) - hash) + sorted.charCodeAt(i);
+        hash |= 0;
+    }
+    return `${prefix}_${Math.abs(hash).toString(36)}`;
+}
+
+/**
  * Serializa múltiplos resultados de queries para cache
  *
  * Útil quando você precisa cachear vários resultados de uma vez,

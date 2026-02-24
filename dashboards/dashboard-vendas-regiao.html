@@ -629,7 +629,7 @@
         import { Pagination, injectPaginationStyles } from '../js/pagination.js';
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
-        import { serializeDbResult, validateCacheStructure } from '../js/db-utils.js';
+        import { serializeDbResult, validateCacheStructure, buildDataCacheKey } from '../js/db-utils.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
 
         // Inicializa isolamento do dashboard
@@ -707,15 +707,20 @@
 
                     if (!db.isConnected()) await db.connect();
 
-                    // Lê das tabelas de lookup (pré-computadas semanalmente pelo GitHub Actions).
+                    // Lê das tabelas de lookup em batch (1 round trip).
                     // Fallback automático para as tabelas originais caso o lookup ainda esteja vazio.
-                    rotas = await db.execute('SELECT DISTINCT rota FROM lkp_localidades WHERE rota IS NOT NULL ORDER BY rota');
+                    const batchResults = await db.batch([
+                        { sql: 'SELECT DISTINCT rota FROM lkp_localidades WHERE rota IS NOT NULL ORDER BY rota', args: [] },
+                        { sql: 'SELECT DISTINCT sub_rota, rota FROM lkp_localidades WHERE sub_rota IS NOT NULL ORDER BY sub_rota', args: [] },
+                        { sql: 'SELECT cidade, rota, sub_rota FROM lkp_cidades_regiao ORDER BY cidade', args: [] }
+                    ]);
+                    rotas = batchResults[0];
+                    subRotas = batchResults[1];
+                    cidades = batchResults[2];
+
+                    // Fallback sequencial se lookups estiverem vazios
                     if (!rotas?.rows?.length) rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL ORDER BY rota');
-
-                    subRotas = await db.execute('SELECT DISTINCT sub_rota, rota FROM lkp_localidades WHERE sub_rota IS NOT NULL ORDER BY sub_rota');
                     if (!subRotas?.rows?.length) subRotas = await db.execute('SELECT DISTINCT sub_rota, rota FROM tab_cliente WHERE sub_rota IS NOT NULL ORDER BY sub_rota');
-
-                    cidades = await db.execute('SELECT cidade, rota, sub_rota FROM lkp_cidades_regiao ORDER BY cidade');
                     if (!cidades?.rows?.length) cidades = await db.execute('SELECT DISTINCT v.cidade, c.rota, c.sub_rota FROM vendas v LEFT JOIN tab_cliente c ON v.cliente = c.cliente WHERE v.cidade IS NOT NULL ORDER BY v.cidade');
 
                     // VALIDAÇÃO EXTRA: Não salva cache se os dados estiverem vazios
@@ -968,6 +973,15 @@
                 document.getElementById('btnItens').disabled = true;
                 document.getElementById('btnClientes').disabled = true;
                 document.getElementById('btnRoteiros').disabled = true;
+                // Cache de dados: evita query repetida com mesmos filtros (TTL 6h)
+                const cacheKey = buildDataCacheKey('dados_regiao', { modo, dataInicio, dataFim, rotas, subRotas, cidades });
+                const cached = cache.get(cacheKey);
+                if (cached) {
+                    window.dadosCompletos = cached;
+                    mostrarResultados(cached);
+                    return;
+                }
+
                 if (!db.isConnected()) await db.connect();
 
                 // Construir query SQL dinamicamente baseado no modo
@@ -1003,6 +1017,7 @@
 
                 const result = await db.execute(sql, params);
                 window.dadosCompletos = result.rows;
+                cache.set(cacheKey, result.rows, CACHE_TTL.DASHBOARDS);
                 mostrarResultados(result.rows);
 
             } catch (error) {

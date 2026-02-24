@@ -76,6 +76,12 @@ const TABELAS = [
         select:    `SELECT DISTINCT produto, desc_produto, desc_familia, desc_origem
                     FROM tab_produto
                     WHERE produto IS NOT NULL`
+    },
+    {
+        nome:      'lkp_produtos_parados',
+        descricao: 'Materialização de vw_produtos_parados (elimina 2 full scans)',
+        colunas:   'rep_supervisor, desc_representante, cod_representante, sku_produto, desc_produto, categoria_produto, ultima_venda, ultimo_cliente_cod, ultimo_cliente_nome, qtd_semanas_parado, valor_medio_perdido, qtd_vendas_anteriores, nivel_risco',
+        select:    `SELECT * FROM vw_produtos_parados`
     }
 ];
 

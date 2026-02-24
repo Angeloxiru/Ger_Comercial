@@ -837,7 +837,7 @@
         import { Pagination, injectPaginationStyles } from '../js/pagination.js';
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
-        import { serializeDbResult, validateCacheStructure } from '../js/db-utils.js';
+        import { serializeDbResult, validateCacheStructure, buildDataCacheKey } from '../js/db-utils.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Clientes Sem Compras');
@@ -940,20 +940,19 @@
 
                     if (!db.isConnected()) await db.connect();
 
-                    // Carregar filtros de tab_cliente (apenas ATIVOS)
-                    rotas = await db.execute('SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL AND sit_cliente = "Ativo" ORDER BY rota');
-                    subRotas = await db.execute('SELECT DISTINCT sub_rota, rota FROM tab_cliente WHERE sub_rota IS NOT NULL AND sit_cliente = "Ativo" ORDER BY sub_rota');
-                    cidades = await db.execute('SELECT DISTINCT cidade, rota, sub_rota FROM tab_cliente WHERE cidade IS NOT NULL AND sit_cliente = "Ativo" ORDER BY cidade');
-
-                    // Carregar coordenadas das cidades
-                    coordenadas = await db.execute('SELECT cidade, latitude, longitude FROM potencial_cidade WHERE latitude IS NOT NULL AND longitude IS NOT NULL');
-
-                    // Carregar relacionamento representante-cidade
-                    repCidades = await db.execute(`
-                        SELECT rc.cidade, rc.representante, tr.desc_representante
-                        FROM representante_cidades rc
-                        LEFT JOIN tab_representante tr ON rc.representante = tr.representante
-                    `);
+                    // Carregar todos os filtros em batch (1 round trip)
+                    const batchResults = await db.batch([
+                        { sql: 'SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL AND sit_cliente = "Ativo" ORDER BY rota', args: [] },
+                        { sql: 'SELECT DISTINCT sub_rota, rota FROM tab_cliente WHERE sub_rota IS NOT NULL AND sit_cliente = "Ativo" ORDER BY sub_rota', args: [] },
+                        { sql: 'SELECT DISTINCT cidade, rota, sub_rota FROM tab_cliente WHERE cidade IS NOT NULL AND sit_cliente = "Ativo" ORDER BY cidade', args: [] },
+                        { sql: 'SELECT cidade, latitude, longitude FROM potencial_cidade WHERE latitude IS NOT NULL AND longitude IS NOT NULL', args: [] },
+                        { sql: 'SELECT rc.cidade, rc.representante, tr.desc_representante FROM representante_cidades rc LEFT JOIN tab_representante tr ON rc.representante = tr.representante', args: [] }
+                    ]);
+                    rotas = batchResults[0];
+                    subRotas = batchResults[1];
+                    cidades = batchResults[2];
+                    coordenadas = batchResults[3];
+                    repCidades = batchResults[4];
 
                     if (rotas?.rows?.length > 0 && subRotas?.rows?.length > 0 && cidades?.rows?.length > 0) {
                         cache.set(cacheKey, {
@@ -1169,6 +1168,31 @@
             try {
                 document.getElementById('loading').classList.add('active');
                 document.getElementById('btnAtualizar').disabled = true;
+
+                // Cache de dados: evita query repetida com mesmos filtros (TTL 6h)
+                const cacheKey = buildDataCacheKey('dados_semcompras', { rotas, subRotas, cidades });
+                const cachedRows = cache.get(cacheKey);
+                if (cachedRows) {
+                    let dados = cachedRows.map(row => {
+                        const risco = classificarRisco(row.dias_sem_compra);
+                        const representantes = window.representantesCidades[row.cidade] || [];
+                        return {
+                            ...row,
+                            risco: risco.nivel,
+                            badgeClass: risco.badge,
+                            cor: risco.cor,
+                            representantes: representantes.join(', ') || '-',
+                            dias_sem_compra: row.dias_sem_compra === null ? 'Nunca' : row.dias_sem_compra
+                        };
+                    });
+                    if (riscosSelec.length > 0) {
+                        dados = dados.filter(d => riscosSelec.includes(d.risco));
+                    }
+                    window.dadosCompletos = dados;
+                    mostrarResultados(dados);
+                    return;
+                }
+
                 if (!db.isConnected()) await db.connect();
 
                 // Query principal: buscar clientes ativos e sua ultima compra (usa data maxima do banco)
@@ -1219,6 +1243,7 @@
                 sql += ' ORDER BY dias_sem_compra DESC NULLS FIRST, c.nome ASC';
 
                 const result = await db.execute(sql, params);
+                cache.set(cacheKey, result.rows, CACHE_TTL.DASHBOARDS);
 
                 // Processar dados e aplicar filtro de risco
                 let dados = result.rows.map(row => {

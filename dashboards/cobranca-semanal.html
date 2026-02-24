@@ -586,6 +586,8 @@
         import { db } from '../js/db.js';
         import { config } from '../js/config.js';
         import { cache, CACHE_TTL } from '../js/cache.js';
+        import { buildDataCacheKey } from '../js/db-utils.js';
+        import { getRepresentantes } from '../js/shared-filters.js';
         import { Pagination } from '../js/pagination.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
@@ -699,25 +701,10 @@
             if (chart2) chart2.destroy();
         };
 
-        // Carregar filtros
+        // Carregar filtros (usa cache compartilhado via shared-filters.js)
         async function carregarFiltros() {
             try {
-                if (!db.isConnected()) await db.connect();
-
-                // Lê da tabela de lookup (pré-computada semanalmente pelo GitHub Actions).
-                // Fallback automático para a tabela original caso o lookup ainda esteja vazio.
-                let dados = await db.execute(`
-                    SELECT rep_supervisor, desc_representante, representante
-                    FROM lkp_representantes
-                    WHERE rep_supervisor IS NOT NULL AND rep_supervisor != ''
-                    ORDER BY rep_supervisor, desc_representante
-                `);
-                if (!dados?.rows?.length) dados = await db.execute(`
-                    SELECT DISTINCT rep_supervisor, desc_representante, representante
-                    FROM tab_representante
-                    WHERE rep_supervisor IS NOT NULL AND rep_supervisor != ''
-                    ORDER BY rep_supervisor, desc_representante
-                `);
+                const dados = await getRepresentantes();
 
                 window.todosSupervisores = [...new Set(dados.rows.map(r => r.rep_supervisor))].filter(s => s);
                 window.todosRepresentantes = dados.rows;
@@ -789,8 +776,6 @@
         // Atualizar dados
         window.atualizarDados = async function() {
             try {
-                if (!db.isConnected()) await db.connect();
-
                 const dataInicio = document.getElementById('filtroDataInicio').value;
                 const dataFim = document.getElementById('filtroDataFim').value;
 
@@ -808,7 +793,22 @@
                     document.getElementById('filtroRepresentante').selectedOptions
                 ).map(o => o.value).filter(v => v !== '');
 
-                // 1. Buscar dados do período atual (faturamento, peso, clientes)
+                // Cache de dados: evita query repetida com mesmos filtros (TTL 6h)
+                const cacheKey = buildDataCacheKey('dados_cobranca', { dataInicio, dataFim, supervisoresSelecionados, representantesSelecionados });
+                const cachedData = cache.get(cacheKey);
+                if (cachedData) {
+                    window.dadosCompletos = cachedData;
+                    window.pagination.setData(cachedData);
+                    atualizarKPIs();
+                    atualizarGraficos();
+                    document.getElementById('totalRegistros').textContent = `${cachedData.length} registros`;
+                    document.getElementById('footerTotal').textContent = `Total: ${cachedData.length} registros`;
+                    return;
+                }
+
+                if (!db.isConnected()) await db.connect();
+
+                // 1. Montar query do período atual
                 let sqlAtual = `
                     SELECT
                         r.representante,
@@ -838,38 +838,24 @@
 
                 sqlAtual += ' GROUP BY r.representante, r.desc_representante, r.rep_supervisor';
 
-                const resultAtual = await db.execute(sqlAtual, paramsAtual);
-
-                // 2. Buscar metas do mês
+                // 2. Montar query de metas
                 const mesAno = getMesAno(dataInicio);
-                const sqlMetas = `
-                    SELECT
-                        representante,
-                        meta_faturamento,
-                        meta_peso,
-                        meta_clientes
-                    FROM metas_mensais
-                    WHERE ano_mes = ?
-                `;
-                const resultMetas = await db.execute(sqlMetas, [mesAno]);
+
+                // 3. Montar query do ano anterior
+                const anoAnt = getAnoAnterior(dataInicio);
+
+                // Executar as 3 queries em batch (1 round trip ao invés de 3)
+                const [resultAtual, resultMetas, resultAnoAnt] = await db.batch([
+                    { sql: sqlAtual, args: paramsAtual },
+                    { sql: 'SELECT representante, meta_faturamento, meta_peso, meta_clientes FROM metas_mensais WHERE ano_mes = ?', args: [mesAno] },
+                    { sql: 'SELECT representante, COALESCE(SUM(valor_liquido), 0) as faturamento_ano_ant, COALESCE(SUM(peso_liq), 0) as peso_ano_ant FROM vendas WHERE emissao >= ? AND emissao <= ? AND nat_oper NOT IN (\'5910\', \'6910\') GROUP BY representante', args: [anoAnt.inicio, anoAnt.fim] }
+                ]);
+
                 const metas = {};
                 resultMetas.rows.forEach(m => {
                     metas[m.representante] = m;
                 });
 
-                // 3. Buscar dados do ano anterior
-                const anoAnt = getAnoAnterior(dataInicio);
-                const sqlAnoAnterior = `
-                    SELECT
-                        representante,
-                        COALESCE(SUM(valor_liquido), 0) as faturamento_ano_ant,
-                        COALESCE(SUM(peso_liq), 0) as peso_ano_ant
-                    FROM vendas
-                    WHERE emissao >= ? AND emissao <= ?
-                        AND nat_oper NOT IN ('5910', '6910')
-                    GROUP BY representante
-                `;
-                const resultAnoAnt = await db.execute(sqlAnoAnterior, [anoAnt.inicio, anoAnt.fim]);
                 const anoAnterior = {};
                 resultAnoAnt.rows.forEach(a => {
                     anoAnterior[a.representante] = a;
@@ -900,6 +886,8 @@
                         perc_vs_ano_ant_peso: pesoAnoAnt > 0 ? ((peso - pesoAnoAnt) / pesoAnoAnt * 100) : 0
                     };
                 });
+
+                cache.set(cacheKey, window.dadosCompletos, CACHE_TTL.DASHBOARDS);
 
                 // Atualizar paginação
                 window.pagination.setData(window.dadosCompletos);
