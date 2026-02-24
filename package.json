@@ -10,7 +10,8 @@
     "fix-hora": "node scripts/fix-hora-column.js",
     "importar-vendas": "node scripts/importar-vendas-excel.js",
     "gerar-template-vendas": "node scripts/gerar-template-vendas.js",
-    "atualizar-lookup": "node scripts/atualizar-filtros-lookup.js"
+    "atualizar-lookup": "node scripts/atualizar-filtros-lookup.js",
+    "manutencao-banco": "node scripts/manutencao-banco.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

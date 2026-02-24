@@ -1,0 +1,27 @@
+name: Manutenção do Banco (ANALYZE)
+
+# Execução manual pelo GitHub Actions
+on:
+  workflow_dispatch:
+
+jobs:
+  manutencao:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Executar manutenção (ANALYZE + integrity check)
+        env:
+          TURSO_URL:   ${{ secrets.TURSO_URL }}
+          TURSO_TOKEN: ${{ secrets.TURSO_TOKEN }}
+        run: node scripts/manutencao-banco.js
