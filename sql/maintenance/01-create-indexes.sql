@@ -143,7 +143,23 @@ CREATE INDEX IF NOT EXISTS idx_representante_codigo
 ON tab_representante(representante);
 
 -- =====================================================
--- 6. ATUALIZAR ESTATÍSTICAS DO BANCO
+-- 6. ÍNDICES ADICIONAIS PARA REDUÇÃO DE READS
+-- =====================================================
+
+-- sit_cliente: usado em dashboard-clientes-semcompras (5 queries filtram por sit_cliente = 'Ativo')
+CREATE INDEX IF NOT EXISTS idx_cliente_sit_cliente
+ON tab_cliente(sit_cliente);
+
+-- nat_oper: usado em vendas-equipe e categorias-produtos (NOT IN ('5910','6910'))
+CREATE INDEX IF NOT EXISTS idx_vendas_nat_oper
+ON vendas(nat_oper);
+
+-- Composto para vw_produtos_parados: PARTITION BY(representante, produto) ORDER BY emissao DESC
+CREATE INDEX IF NOT EXISTS idx_vendas_rep_produto_emissao
+ON vendas(representante, produto, emissao DESC);
+
+-- =====================================================
+-- 7. ATUALIZAR ESTATÍSTICAS DO BANCO
 -- =====================================================
 -- O comando ANALYZE atualiza estatísticas que o SQLite
 -- usa para escolher o melhor índice em cada query

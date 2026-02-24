@@ -696,7 +696,7 @@
         import { Pagination, injectPaginationStyles } from '../js/pagination.js';
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
-        import { serializeDbResult, validateCacheStructure } from '../js/db-utils.js';
+        import { serializeDbResult, validateCacheStructure, buildDataCacheKey } from '../js/db-utils.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
 
         // Inicializa isolamento do dashboard
@@ -1026,6 +1026,21 @@
                 document.getElementById('btnGrupos').disabled = true;
                 document.getElementById('btnAtualizar').disabled = true;
 
+                // Cache de dados: evita query repetida com mesmos filtros (TTL 6h)
+                const modoAtual = window.modoAtual;
+                const cacheKey = buildDataCacheKey('dados_ranking', { modoAtual, dataInicio, dataFim, rotas, subRotas, cidades, supervisores, representantes });
+                const cachedData = cache.get(cacheKey);
+                if (cachedData) {
+                    window.dadosAtuais = cachedData;
+                    window.pagination.setData(cachedData);
+                    renderizarTabela();
+                    atualizarKPIs(cachedData);
+                    atualizarGraficos(cachedData);
+                    document.getElementById('mainContent').style.display = 'grid';
+                    document.getElementById('tableFooter').style.display = 'flex';
+                    return;
+                }
+
                 if (!db.isConnected()) await db.connect();
 
                 let sql, params;
@@ -1133,6 +1148,7 @@
 
                 const result = await db.execute(sql, params);
                 window.dadosAtuais = result.rows;
+                cache.set(cacheKey, result.rows, CACHE_TTL.DASHBOARDS);
 
                 // Configurar paginação
                 window.pagination.setData(result.rows);

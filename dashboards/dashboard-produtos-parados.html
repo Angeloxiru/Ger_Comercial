@@ -552,6 +552,7 @@
     <script type="module">
         import { db } from '../js/db.js';
         import { cache, CACHE_TTL } from '../js/cache.js';
+        import { getRepresentantes } from '../js/shared-filters.js';
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
 
         // Injetar estilos do FilterSearch
@@ -564,15 +565,12 @@
         let chartRisco = null;
         let filterSearchInstances = {};
 
-        // Carregar apenas filtros (sem dados) ao abrir a página
+        // Carregar apenas filtros (sem dados) ao abrir a página (usa cache compartilhado)
         async function carregarFiltros() {
             try {
-                await db.connect();
-
-                const [supervisoresResult, representantesResult] = await Promise.all([
-                    db.execute('SELECT DISTINCT rep_supervisor FROM tab_representante WHERE rep_supervisor IS NOT NULL ORDER BY rep_supervisor'),
-                    db.execute('SELECT DISTINCT rep_supervisor, desc_representante FROM tab_representante WHERE desc_representante IS NOT NULL ORDER BY desc_representante')
-                ]);
+                const repData = await getRepresentantes();
+                const supervisoresResult = { rows: [...new Set(repData.rows.map(r => r.rep_supervisor).filter(s => s))].map(s => ({ rep_supervisor: s })) };
+                const representantesResult = { rows: repData.rows };
 
                 const selectSupervisor = document.getElementById('filterSupervisor');
                 selectSupervisor.innerHTML = '<option value="">Todos os Supervisores</option>';
@@ -642,15 +640,27 @@
             try {
                 mostrarLoading(true);
 
-                // Reconectar para garantir conexão fresca
-                await db.connect();
+                if (!db.isConnected()) await db.connect();
 
-                // Limitar a 90 dias (13 semanas) para não pesar
-                const result = await db.execute(`
-                    SELECT * FROM vw_produtos_parados
-                    WHERE qtd_semanas_parado <= 13
-                    ORDER BY qtd_semanas_parado DESC, valor_medio_perdido DESC
-                `);
+                // Usa tabela materializada (1 read) com fallback para a view (pesada)
+                let result;
+                try {
+                    result = await db.execute(`
+                        SELECT * FROM lkp_produtos_parados
+                        WHERE qtd_semanas_parado <= 13
+                        ORDER BY qtd_semanas_parado DESC, valor_medio_perdido DESC
+                    `);
+                } catch (e) {
+                    // Fallback: tabela lkp ainda não existe
+                    result = { rows: [] };
+                }
+                if (!result?.rows?.length) {
+                    result = await db.execute(`
+                        SELECT * FROM vw_produtos_parados
+                        WHERE qtd_semanas_parado <= 13
+                        ORDER BY qtd_semanas_parado DESC, valor_medio_perdido DESC
+                    `);
+                }
 
                 dadosCompletos = result.rows || [];
                 dadosFiltrados = [...dadosCompletos];

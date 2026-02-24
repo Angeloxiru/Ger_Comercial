@@ -201,7 +201,7 @@ class CacheManager {
 // Configurações de TTL por tipo de dado
 export const CACHE_TTL = {
     FILTERS: 21600000,     // 6 horas - Filtros mudam pouco
-    DASHBOARDS: 300000,    // 5 minutos - Dados de vendas
+    DASHBOARDS: 21600000,  // 6 horas - Dados de vendas
     KPIS: 600000,          // 10 minutos - KPIs
     CHARTS: 900000,        // 15 minutos - Gráficos
     REPORTS: 1800000       // 30 minutos - Relatórios

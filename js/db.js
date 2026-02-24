@@ -30,9 +30,6 @@ class DatabaseManager {
                 authToken: config.authToken
             });
 
-            // Testa a conexão
-            await this.client.execute('SELECT 1');
-
             this.connected = true;
             console.log('✅ Conectado ao banco de dados Turso');
             return true;
