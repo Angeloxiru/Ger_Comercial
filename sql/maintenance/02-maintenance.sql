@@ -10,17 +10,14 @@
 -- =====================================================
 
 -- =====================================================
--- 1. ATUALIZAR ESTATÍSTICAS
+-- 1. ATUALIZAR ESTATÍSTICAS (NÃO SUPORTADO NO TURSO)
 -- =====================================================
--- O ANALYZE atualiza as estatísticas que o SQLite usa
--- para decidir qual índice usar em cada query.
+-- O Turso/libSQL NÃO suporta o comando ANALYZE.
+-- Os índices funcionam automaticamente sem necessidade
+-- de ANALYZE — o query planner do Turso escolhe os
+-- índices corretos baseado na estrutura das queries.
 --
--- Quando executar:
--- - Após adicionar muitos dados (ex: importar vendas)
--- - 1x por mês como manutenção preventiva
--- - Após criar novos índices
-
-ANALYZE;
+-- ANALYZE;  -- NÃO EXECUTAR NO TURSO
 
 -- =====================================================
 -- 2. REORGANIZAR E COMPACTAR O BANCO (VACUUM)
