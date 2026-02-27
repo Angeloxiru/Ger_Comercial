@@ -908,7 +908,7 @@
                     params.push(...codigosCliente);
                 } else if (codigosGrupo.length > 0) {
                     // Código do Grupo tem prioridade sobre dropdowns
-                    sql += ` AND c.grupo_desc IN (${codigosGrupo.map(() => '?').join(',')})`;
+                    sql += ` AND c.grupo IN (${codigosGrupo.map(() => '?').join(',')})`;
                     params.push(...codigosGrupo);
                 } else {
                     // Extrair codigos de cliente do formato "cod - fantasia"
