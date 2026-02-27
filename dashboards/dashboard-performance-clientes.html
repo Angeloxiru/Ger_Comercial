@@ -493,6 +493,13 @@
                 <small style="color: #6c757d; font-size: 0.75em; margin-top: 4px;">Separe múltiplos códigos por vírgula. Tem prioridade sobre Grupo/Cliente.</small>
             </div>
 
+            <!-- Código do Grupo de Cliente -->
+            <div class="filter-group">
+                <label>🔍 Código do Grupo de Cliente</label>
+                <input type="text" id="filtroCodigoGrupo" placeholder="Ex: GRUPO A, GRUPO B">
+                <small style="color: #6c757d; font-size: 0.75em; margin-top: 4px;">Separe múltiplos códigos por vírgula. Tem prioridade sobre Grupo/Cliente.</small>
+            </div>
+
             <!-- Grupo -->
             <div class="filter-group">
                 <label>👥 Grupo</label>
@@ -837,6 +844,7 @@
             document.getElementById('dataInicio').value = '';
             document.getElementById('dataFim').value = '';
             document.getElementById('filtroCodigoCliente').value = '';
+            document.getElementById('filtroCodigoGrupo').value = '';
             document.getElementById('filtroGrupo').selectedIndex = -1;
             document.getElementById('filtroCliente').selectedIndex = -1;
 
@@ -848,6 +856,8 @@
             const dataInicio = document.getElementById('dataInicio').value;
             const dataFim = document.getElementById('dataFim').value;
             const codigosCliente = document.getElementById('filtroCodigoCliente').value
+                .split(',').map(c => c.trim()).filter(c => c !== '');
+            const codigosGrupo = document.getElementById('filtroCodigoGrupo').value
                 .split(',').map(c => c.trim()).filter(c => c !== '');
             const grupos = Array.from(document.getElementById('filtroGrupo').selectedOptions).map(o => o.value);
             const clientesNomes = Array.from(document.getElementById('filtroCliente').selectedOptions).map(o => o.value);
@@ -865,7 +875,7 @@
                 document.getElementById('emptyState').style.display = 'none';
 
                 // Cache de dados: evita query repetida com mesmos filtros (TTL 6h)
-                const cacheKey = buildDataCacheKey('dados_performance', { dataInicio, dataFim, codigosCliente, grupos, clientesNomes });
+                const cacheKey = buildDataCacheKey('dados_performance', { dataInicio, dataFim, codigosCliente, codigosGrupo, grupos, clientesNomes });
                 const cachedData = cache.get(cacheKey);
                 if (cachedData) {
                     window.dadosCompletos = cachedData;
@@ -897,10 +907,14 @@
 
                 const params = [dataInicio, dataFim];
 
-                // Código do Cliente tem prioridade — busca direta sem depender de outros filtros
+                // Código do Cliente tem prioridade máxima — busca direta sem depender de outros filtros
                 if (codigosCliente.length > 0) {
                     sql += ` AND v.cliente IN (${codigosCliente.map(() => '?').join(',')})`;
                     params.push(...codigosCliente);
+                } else if (codigosGrupo.length > 0) {
+                    // Código do Grupo tem prioridade sobre dropdowns
+                    sql += ` AND c.grupo_desc IN (${codigosGrupo.map(() => '?').join(',')})`;
+                    params.push(...codigosGrupo);
                 } else {
                     // Extrair codigos de cliente do formato "cod - fantasia"
                     if (clientesNomes.length > 0) {
