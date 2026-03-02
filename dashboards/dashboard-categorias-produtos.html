@@ -1861,12 +1861,23 @@
                 const modoLabel = window.modoVisualizacao === 'detalhado' ? ' (Detalhado)' : ' (Resumido)';
                 doc.text(`Modo: ${modoLabel}`, 14, 40);
 
+                const valorKgTotal = totalPeso > 0 ? totalValor / totalPeso : 0;
+
                 doc.autoTable({
                     head: [['Categoria', 'Peso (kg)', 'Valor (R$)', 'R$/KG', '% Peso', '% Valor']],
                     body: tableData,
+                    foot: [[
+                        'TOTAL',
+                        totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg',
+                        'R$ ' + totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                        'R$ ' + valorKgTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                        '100,0%',
+                        '100,0%'
+                    ]],
                     startY: 46,
                     theme: 'striped',
                     headStyles: { fillColor: [252, 3, 3], textColor: [255, 255, 255], fontStyle: 'bold' },
+                    footStyles: { fillColor: [52, 58, 64], textColor: [255, 255, 255], fontStyle: 'bold' },
                     alternateRowStyles: { fillColor: [248, 249, 250] }
                 });
 
@@ -1890,12 +1901,24 @@
                         ];
                     });
 
+                    const detTotalPeso = window.dadosDetalhados.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
+                    const detTotalValor = window.dadosDetalhados.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
+                    const detValorKg = detTotalPeso > 0 ? detTotalValor / detTotalPeso : 0;
+
                     doc.autoTable({
                         head: [['Representante', 'Categoria', 'Peso (kg)', 'Valor (R$)', 'R$/KG']],
                         body: detData,
+                        foot: [[
+                            'TOTAL',
+                            '',
+                            detTotalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg',
+                            'R$ ' + detTotalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                            'R$ ' + detValorKg.toLocaleString('pt-BR', {minimumFractionDigits: 2})
+                        ]],
                         startY: 28,
                         theme: 'striped',
                         headStyles: { fillColor: [252, 3, 3], textColor: [255, 255, 255], fontStyle: 'bold' },
+                        footStyles: { fillColor: [52, 58, 64], textColor: [255, 255, 255], fontStyle: 'bold' },
                         alternateRowStyles: { fillColor: [248, 249, 250] }
                     });
                 }
