@@ -940,19 +940,29 @@
 
                     if (!db.isConnected()) await db.connect();
 
-                    // Carregar todos os filtros em batch (1 round trip)
-                    const batchResults = await db.batch([
+                    // Queries essenciais dos filtros (rotas, subrotas, cidades)
+                    const batchFiltros = await db.batch([
                         { sql: 'SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL AND sit_cliente = "Ativo" ORDER BY rota', args: [] },
                         { sql: 'SELECT DISTINCT sub_rota, rota FROM tab_cliente WHERE sub_rota IS NOT NULL AND sit_cliente = "Ativo" ORDER BY sub_rota', args: [] },
-                        { sql: 'SELECT DISTINCT cidade, rota, sub_rota FROM tab_cliente WHERE cidade IS NOT NULL AND sit_cliente = "Ativo" ORDER BY cidade', args: [] },
-                        { sql: 'SELECT cidade, latitude, longitude FROM potencial_cidade WHERE latitude IS NOT NULL AND longitude IS NOT NULL', args: [] },
-                        { sql: 'SELECT rc.cidade, rc.representante, tr.desc_representante FROM representante_cidades rc LEFT JOIN tab_representante tr ON rc.representante = tr.representante', args: [] }
+                        { sql: 'SELECT DISTINCT cidade, rota, sub_rota FROM tab_cliente WHERE cidade IS NOT NULL AND sit_cliente = "Ativo" ORDER BY cidade', args: [] }
                     ]);
-                    rotas = batchResults[0];
-                    subRotas = batchResults[1];
-                    cidades = batchResults[2];
-                    coordenadas = batchResults[3];
-                    repCidades = batchResults[4];
+                    rotas = batchFiltros[0];
+                    subRotas = batchFiltros[1];
+                    cidades = batchFiltros[2];
+
+                    // Queries opcionais (coordenadas e representantes) - não impedem o carregamento dos filtros
+                    try {
+                        const batchExtras = await db.batch([
+                            { sql: 'SELECT cidade, latitude, longitude FROM potencial_cidade WHERE latitude IS NOT NULL AND longitude IS NOT NULL', args: [] },
+                            { sql: 'SELECT rc.cidade, rc.representante, tr.desc_representante FROM representante_cidades rc LEFT JOIN tab_representante tr ON rc.representante = tr.representante', args: [] }
+                        ]);
+                        coordenadas = batchExtras[0];
+                        repCidades = batchExtras[1];
+                    } catch (e) {
+                        console.warn('Aviso: dados extras (coordenadas/representantes) não carregados:', e.message);
+                        coordenadas = { rows: [] };
+                        repCidades = { rows: [] };
+                    }
 
                     if (rotas?.rows?.length > 0 && subRotas?.rows?.length > 0 && cidades?.rows?.length > 0) {
                         cache.set(cacheKey, {
