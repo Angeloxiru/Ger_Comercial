@@ -1184,6 +1184,8 @@
             const subRotas = Array.from(elemFiltroSubRota?.selectedOptions || []).map(o => o.value);
             const cidades = Array.from(elemFiltroCidade?.selectedOptions || []).map(o => o.value);
 
+            console.log('[buscarClientes] Filtros:', { riscosSelec, rotas, subRotas, cidades });
+
             // Salvar filtros aplicados para uso no WhatsApp
             window.filtrosAplicados = {
                 riscos: riscosSelec,
@@ -1200,6 +1202,7 @@
                 const cacheKey = buildDataCacheKey('dados_semcompras', { rotas, subRotas, cidades });
                 const cachedRows = cache.get(cacheKey);
                 if (cachedRows) {
+                    console.log('[buscarClientes] Cache hit:', cachedRows.length, 'registros');
                     let dados = cachedRows.map(row => {
                         const risco = classificarRisco(row.dias_sem_compra);
                         const representantes = window.representantesCidades[row.cidade] || [];
@@ -1222,36 +1225,72 @@
 
                 if (!db.isConnected()) await db.connect();
 
-                // Query principal: buscar clientes ativos e sua ultima compra (usa data maxima do banco)
-                let sql = `
-                    WITH ultima_compra AS (
-                        SELECT
-                            cliente,
-                            MAX(emissao) as ultima_venda
-                        FROM vendas
-                        GROUP BY cliente
-                    ),
-                    data_ref AS (
-                        SELECT MAX(emissao) as data_maxima FROM vendas
-                    )
-                    SELECT
-                        c.cliente as cod_cliente,
-                        c.nome,
-                        c.cidade,
-                        c.rota,
-                        c.sub_rota,
-                        uc.ultima_venda,
-                        CASE
-                            WHEN uc.ultima_venda IS NULL THEN NULL
-                            ELSE CAST(julianday(dr.data_maxima) - julianday(uc.ultima_venda) AS INTEGER)
-                        END as dias_sem_compra
-                    FROM tab_cliente c
-                    CROSS JOIN data_ref dr
-                    LEFT JOIN ultima_compra uc ON c.cliente = uc.cliente
-                    WHERE UPPER(c.sit_cliente) = 'ATIVO'
-                `;
+                // Diagnostico: verificar valores de sit_cliente no banco
+                try {
+                    const diagSit = await db.execute("SELECT sit_cliente, COUNT(*) as qtd FROM tab_cliente GROUP BY sit_cliente LIMIT 10", []);
+                    console.log('[buscarClientes] Valores de sit_cliente no banco:', diagSit.rows);
+                } catch (e) {
+                    console.warn('[buscarClientes] Erro ao diagnosticar sit_cliente:', e.message);
+                }
 
-                const params = [];
+                // Verificar se tabela vendas tem dados
+                let temVendas = false;
+                try {
+                    const checkVendas = await db.execute("SELECT COUNT(*) as total FROM vendas LIMIT 1", []);
+                    temVendas = checkVendas.rows[0]?.total > 0;
+                    console.log('[buscarClientes] Tabela vendas tem dados:', temVendas, '- total:', checkVendas.rows[0]?.total);
+                } catch (e) {
+                    console.warn('[buscarClientes] Tabela vendas não existe ou erro:', e.message);
+                }
+
+                let sql, params = [];
+
+                if (temVendas) {
+                    // Query completa: clientes com cálculo de dias sem compra
+                    sql = `
+                        WITH ultima_compra AS (
+                            SELECT
+                                cliente,
+                                MAX(emissao) as ultima_venda
+                            FROM vendas
+                            GROUP BY cliente
+                        ),
+                        data_ref AS (
+                            SELECT MAX(emissao) as data_maxima FROM vendas
+                        )
+                        SELECT
+                            c.cliente as cod_cliente,
+                            c.nome,
+                            c.cidade,
+                            c.rota,
+                            c.sub_rota,
+                            uc.ultima_venda,
+                            CASE
+                                WHEN uc.ultima_venda IS NULL THEN NULL
+                                ELSE CAST(julianday(dr.data_maxima) - julianday(uc.ultima_venda) AS INTEGER)
+                            END as dias_sem_compra
+                        FROM tab_cliente c
+                        CROSS JOIN data_ref dr
+                        LEFT JOIN ultima_compra uc ON c.cliente = uc.cliente
+                        WHERE c.sit_cliente IS NOT NULL
+                            AND UPPER(TRIM(c.sit_cliente)) = 'ATIVO'
+                    `;
+                } else {
+                    // Query simplificada: sem vendas, todos os clientes ativos = EXTREMO
+                    sql = `
+                        SELECT
+                            c.cliente as cod_cliente,
+                            c.nome,
+                            c.cidade,
+                            c.rota,
+                            c.sub_rota,
+                            NULL as ultima_venda,
+                            NULL as dias_sem_compra
+                        FROM tab_cliente c
+                        WHERE c.sit_cliente IS NOT NULL
+                            AND UPPER(TRIM(c.sit_cliente)) = 'ATIVO'
+                    `;
+                }
 
                 // Adicionar filtros de localização
                 if (rotas.length > 0) {
@@ -1269,7 +1308,75 @@
 
                 sql += ' ORDER BY dias_sem_compra DESC NULLS FIRST, c.nome ASC';
 
+                console.log('[buscarClientes] Executando query com', params.length, 'parametros');
                 const result = await db.execute(sql, params);
+                console.log('[buscarClientes] Query retornou', result.rows?.length, 'registros');
+
+                // Se retornou 0 com filtro ATIVO, tenta sem filtro de situação como diagnóstico
+                if (result.rows?.length === 0) {
+                    console.warn('[buscarClientes] 0 resultados! Testando query sem filtro sit_cliente...');
+                    const diagQuery = temVendas
+                        ? "SELECT COUNT(*) as total FROM tab_cliente c WHERE c.rota IS NOT NULL"
+                        : "SELECT COUNT(*) as total FROM tab_cliente";
+                    const diagResult = await db.execute(diagQuery, []);
+                    console.warn('[buscarClientes] Total clientes sem filtro sit_cliente:', diagResult.rows[0]?.total);
+
+                    // Se tem clientes mas nenhum com sit_cliente = ATIVO, busca todos
+                    if (diagResult.rows[0]?.total > 0) {
+                        console.warn('[buscarClientes] Há clientes no banco mas nenhum com UPPER(TRIM(sit_cliente)) = ATIVO. Buscando todos...');
+
+                        let sqlFallback;
+                        if (temVendas) {
+                            sqlFallback = `
+                                WITH ultima_compra AS (
+                                    SELECT cliente, MAX(emissao) as ultima_venda FROM vendas GROUP BY cliente
+                                ),
+                                data_ref AS (
+                                    SELECT MAX(emissao) as data_maxima FROM vendas
+                                )
+                                SELECT
+                                    c.cliente as cod_cliente, c.nome, c.cidade, c.rota, c.sub_rota,
+                                    uc.ultima_venda,
+                                    CASE WHEN uc.ultima_venda IS NULL THEN NULL
+                                         ELSE CAST(julianday(dr.data_maxima) - julianday(uc.ultima_venda) AS INTEGER)
+                                    END as dias_sem_compra
+                                FROM tab_cliente c
+                                CROSS JOIN data_ref dr
+                                LEFT JOIN ultima_compra uc ON c.cliente = uc.cliente
+                                WHERE 1=1
+                            `;
+                        } else {
+                            sqlFallback = `
+                                SELECT c.cliente as cod_cliente, c.nome, c.cidade, c.rota, c.sub_rota,
+                                    NULL as ultima_venda, NULL as dias_sem_compra
+                                FROM tab_cliente c WHERE 1=1
+                            `;
+                        }
+
+                        const paramsFallback = [];
+                        if (rotas.length > 0) {
+                            sqlFallback += ` AND c.rota IN (${rotas.map(() => '?').join(',')})`;
+                            paramsFallback.push(...rotas);
+                        }
+                        if (subRotas.length > 0) {
+                            sqlFallback += ` AND c.sub_rota IN (${subRotas.map(() => '?').join(',')})`;
+                            paramsFallback.push(...subRotas);
+                        }
+                        if (cidades.length > 0) {
+                            sqlFallback += ` AND c.cidade IN (${cidades.map(() => '?').join(',')})`;
+                            paramsFallback.push(...cidades);
+                        }
+                        sqlFallback += ' ORDER BY dias_sem_compra DESC NULLS FIRST, c.nome ASC';
+
+                        const fallbackResult = await db.execute(sqlFallback, paramsFallback);
+                        console.log('[buscarClientes] Fallback retornou', fallbackResult.rows?.length, 'registros');
+
+                        if (fallbackResult.rows?.length > 0) {
+                            result.rows = fallbackResult.rows;
+                        }
+                    }
+                }
+
                 cache.set(cacheKey, result.rows, CACHE_TTL.DASHBOARDS);
 
                 // Processar dados e aplicar filtro de risco
@@ -1296,7 +1403,7 @@
                 mostrarResultados(dados);
 
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('[buscarClientes] Erro completo:', error);
                 alert('Erro ao buscar dados: ' + error.message);
             } finally {
                 document.getElementById('loading').classList.remove('active');
