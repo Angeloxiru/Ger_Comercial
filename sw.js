@@ -91,6 +91,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Ignora requisições POST (ex: chamadas ao Turso) - Cache API só suporta GET
+  if (request.method !== 'GET') {
+    return;
+  }
+
   // Ignora requisições para APIs externas (CDN, analytics, etc)
   const externalDomains = ['cdn.jsdelivr.net', 'cdnjs.cloudflare.com', 'unpkg.com'];
   if (externalDomains.some(domain => url.hostname.includes(domain))) {

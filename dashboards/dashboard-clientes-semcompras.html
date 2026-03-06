@@ -1201,7 +1201,7 @@
                 // Cache de dados: evita query repetida com mesmos filtros (TTL 6h)
                 const cacheKey = buildDataCacheKey('dados_semcompras', { rotas, subRotas, cidades });
                 const cachedRows = cache.get(cacheKey);
-                if (cachedRows) {
+                if (cachedRows && cachedRows.length > 0) {
                     console.log('[buscarClientes] Cache hit:', cachedRows.length, 'registros');
                     let dados = cachedRows.map(row => {
                         const risco = classificarRisco(row.dias_sem_compra);
@@ -1377,7 +1377,10 @@
                     }
                 }
 
-                cache.set(cacheKey, result.rows, CACHE_TTL.DASHBOARDS);
+                // Só cacheia se tiver resultados (evita "cache envenenado" com 0 rows)
+                if (result.rows?.length > 0) {
+                    cache.set(cacheKey, result.rows, CACHE_TTL.DASHBOARDS);
+                }
 
                 // Processar dados e aplicar filtro de risco
                 let dados = result.rows.map(row => {
