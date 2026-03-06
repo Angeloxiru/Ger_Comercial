@@ -940,15 +940,32 @@
 
                     if (!db.isConnected()) await db.connect();
 
-                    // Queries essenciais dos filtros (rotas, subrotas, cidades)
-                    const batchFiltros = await db.batch([
-                        { sql: 'SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL AND sit_cliente = "ATIVO" ORDER BY rota', args: [] },
-                        { sql: 'SELECT DISTINCT sub_rota, rota FROM tab_cliente WHERE sub_rota IS NOT NULL AND sit_cliente = "ATIVO" ORDER BY sub_rota', args: [] },
-                        { sql: 'SELECT DISTINCT cidade, rota, sub_rota FROM tab_cliente WHERE cidade IS NOT NULL AND sit_cliente = "ATIVO" ORDER BY cidade', args: [] }
-                    ]);
-                    rotas = batchFiltros[0];
-                    subRotas = batchFiltros[1];
-                    cidades = batchFiltros[2];
+                    // Tenta lookup tables primeiro (mais rápido e já populadas pelo GitHub Actions)
+                    try {
+                        const batchLookup = await db.batch([
+                            { sql: 'SELECT DISTINCT rota FROM lkp_localidades WHERE rota IS NOT NULL ORDER BY rota', args: [] },
+                            { sql: 'SELECT DISTINCT sub_rota, rota FROM lkp_localidades WHERE sub_rota IS NOT NULL ORDER BY sub_rota', args: [] },
+                            { sql: 'SELECT DISTINCT cidade, rota, sub_rota FROM lkp_localidades WHERE cidade IS NOT NULL ORDER BY cidade', args: [] }
+                        ]);
+                        rotas = batchLookup[0];
+                        subRotas = batchLookup[1];
+                        cidades = batchLookup[2];
+                    } catch (e) {
+                        console.warn('Lookup tables indisponíveis, usando tab_cliente:', e.message);
+                        rotas = { rows: [] };
+                    }
+
+                    // Fallback para tab_cliente se lookup estiver vazia
+                    if (!rotas?.rows?.length) {
+                        const batchFiltros = await db.batch([
+                            { sql: "SELECT DISTINCT rota FROM tab_cliente WHERE rota IS NOT NULL AND UPPER(sit_cliente) = 'ATIVO' ORDER BY rota", args: [] },
+                            { sql: "SELECT DISTINCT sub_rota, rota FROM tab_cliente WHERE sub_rota IS NOT NULL AND UPPER(sit_cliente) = 'ATIVO' ORDER BY sub_rota", args: [] },
+                            { sql: "SELECT DISTINCT cidade, rota, sub_rota FROM tab_cliente WHERE cidade IS NOT NULL AND UPPER(sit_cliente) = 'ATIVO' ORDER BY cidade", args: [] }
+                        ]);
+                        rotas = batchFiltros[0];
+                        subRotas = batchFiltros[1];
+                        cidades = batchFiltros[2];
+                    }
 
                     // Queries opcionais (coordenadas e representantes) - não impedem o carregamento dos filtros
                     try {
@@ -1231,7 +1248,7 @@
                     FROM tab_cliente c
                     CROSS JOIN data_ref dr
                     LEFT JOIN ultima_compra uc ON c.cliente = uc.cliente
-                    WHERE c.sit_cliente = 'ATIVO'
+                    WHERE UPPER(c.sit_cliente) = 'ATIVO'
                 `;
 
                 const params = [];
