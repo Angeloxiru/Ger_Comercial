@@ -199,6 +199,16 @@
             transform: none;
         }
 
+        .btn-resumido {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%) !important;
+        }
+        .btn-resumido:hover {
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3) !important;
+        }
+        .btn-detalhado {
+            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%) !important;
+        }
+
         /* LAYOUT: 70% Tabela / 30% Dashboard */
         .main-content {
             display: grid;
@@ -515,7 +525,8 @@
 
         <div class="filters-buttons">
             <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar Filtros</button>
-            <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">🔄 Atualizar Dados</button>
+            <button class="btn-atualizar btn-resumido" id="btnResumido" onclick="atualizarDados('resumido')">📊 Resumido</button>
+            <button class="btn-atualizar btn-detalhado" id="btnDetalhado" onclick="atualizarDados('detalhado')">📋 Detalhado</button>
         </div>
     </div>
 
@@ -537,11 +548,11 @@
 
             <div class="table-container" id="tableContainer">
                 <table>
-                    <thead>
+                    <thead id="tableHead">
                         <tr>
                             <th>Produto</th>
                             <th>Descrição</th>
-                            <th>Cliente</th>
+                            <th class="col-cliente">Cliente</th>
                             <th class="text-right">Qtde</th>
                             <th class="text-right">Valor (R$)</th>
                             <th class="text-right">Peso (kg)</th>
@@ -669,7 +680,8 @@
         // Verifica configuração
         if (!config.authToken || config.authToken === 'SEU_TOKEN_AQUI') {
             document.getElementById('configAlert').style.display = 'block';
-            document.getElementById('btnAtualizar').disabled = true;
+            document.getElementById('btnResumido').disabled = true;
+            document.getElementById('btnDetalhado').disabled = true;
         }
 
         // Configurar paginação (25 registros)
@@ -847,7 +859,12 @@
         };
 
         // Atualizar dados
-        window.atualizarDados = async function() {
+        // Modo de visualização: 'resumido' (sem cliente) ou 'detalhado' (com cliente)
+        window.modoVisualizacao = 'detalhado';
+
+        window.atualizarDados = async function(modo = 'detalhado') {
+            window.modoVisualizacao = modo;
+
             const dataInicio = document.getElementById('dataInicio').value;
             const dataFim = document.getElementById('dataFim').value;
             const codigosCliente = document.getElementById('filtroCodigoCliente').value
@@ -866,11 +883,21 @@
 
             try {
                 document.getElementById('loading').classList.add('active');
-                document.getElementById('btnAtualizar').disabled = true;
+                document.getElementById('btnResumido').disabled = true;
+                document.getElementById('btnDetalhado').disabled = true;
                 document.getElementById('emptyState').style.display = 'none';
 
+                // Atualizar visual dos botões para indicar modo ativo
+                document.getElementById('btnResumido').classList.toggle('active', modo === 'resumido');
+                document.getElementById('btnDetalhado').classList.toggle('active', modo === 'detalhado');
+
+                // Mostrar/ocultar coluna Cliente no header
+                document.querySelectorAll('.col-cliente').forEach(el => {
+                    el.style.display = modo === 'resumido' ? 'none' : '';
+                });
+
                 // Cache de dados: evita query repetida com mesmos filtros (TTL 6h)
-                const cacheKey = buildDataCacheKey('dados_performance', { dataInicio, dataFim, codigosCliente, codigosGrupo, grupos, clientesNomes });
+                const cacheKey = buildDataCacheKey('dados_performance', { modo, dataInicio, dataFim, codigosCliente, codigosGrupo, grupos, clientesNomes });
                 const cachedData = cache.get(cacheKey);
                 if (cachedData) {
                     window.dadosCompletos = cachedData;
@@ -884,21 +911,38 @@
 
                 if (!db.isConnected()) await db.connect();
 
-                // Construir query SQL
-                let sql = `
-                    SELECT
-                        v.produto,
-                        v.complemento as descricao,
-                        v.cliente as cliente_codigo,
-                        SUM(v.qtde_faturada) as qtde,
-                        SUM(v.valor_liquido) as valor,
-                        SUM(v.peso_liq) as peso,
-                        c.nome as cliente_nome,
-                        c.fantasia as cliente_fantasia
-                    FROM vendas v
-                    INNER JOIN tab_cliente c ON v.cliente = c.cliente
-                    WHERE v.emissao >= ? AND v.emissao <= ?
-                `;
+                // Construir query SQL de acordo com o modo
+                let sql;
+                if (modo === 'resumido') {
+                    // Resumido: agrupa apenas por produto (sem cliente)
+                    sql = `
+                        SELECT
+                            v.produto,
+                            v.complemento as descricao,
+                            SUM(v.qtde_faturada) as qtde,
+                            SUM(v.valor_liquido) as valor,
+                            SUM(v.peso_liq) as peso
+                        FROM vendas v
+                        INNER JOIN tab_cliente c ON v.cliente = c.cliente
+                        WHERE v.emissao >= ? AND v.emissao <= ?
+                    `;
+                } else {
+                    // Detalhado: agrupa por produto + cliente (comportamento original)
+                    sql = `
+                        SELECT
+                            v.produto,
+                            v.complemento as descricao,
+                            v.cliente as cliente_codigo,
+                            SUM(v.qtde_faturada) as qtde,
+                            SUM(v.valor_liquido) as valor,
+                            SUM(v.peso_liq) as peso,
+                            c.nome as cliente_nome,
+                            c.fantasia as cliente_fantasia
+                        FROM vendas v
+                        INNER JOIN tab_cliente c ON v.cliente = c.cliente
+                        WHERE v.emissao >= ? AND v.emissao <= ?
+                    `;
+                }
 
                 const params = [dataInicio, dataFim];
 
@@ -922,7 +966,11 @@
                     }
                 }
 
-                sql += ' GROUP BY v.produto, v.complemento, v.cliente, c.nome, c.fantasia ORDER BY qtde DESC';
+                if (modo === 'resumido') {
+                    sql += ' GROUP BY v.produto, v.complemento ORDER BY qtde DESC';
+                } else {
+                    sql += ' GROUP BY v.produto, v.complemento, v.cliente, c.nome, c.fantasia ORDER BY qtde DESC';
+                }
 
                 const result = await db.execute(sql, params);
                 window.dadosCompletos = result.rows;
@@ -943,17 +991,20 @@
                 alert('Erro ao buscar dados: ' + error.message);
             } finally {
                 document.getElementById('loading').classList.remove('active');
-                document.getElementById('btnAtualizar').disabled = false;
+                document.getElementById('btnResumido').disabled = false;
+                document.getElementById('btnDetalhado').disabled = false;
             }
         };
 
         function renderizarTabela() {
             const pageData = window.pagination.getCurrentPageData();
             const tbody = document.getElementById('tableBody');
+            const resumido = window.modoVisualizacao === 'resumido';
+            const colspan = resumido ? 5 : 6;
             tbody.innerHTML = '';
 
             if (pageData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #6c757d;">Nenhum resultado encontrado</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center; padding: 40px; color: #6c757d;">Nenhum resultado encontrado</td></tr>`;
                 return;
             }
 
@@ -961,20 +1012,31 @@
                 const tr = document.createElement('tr');
                 const valor = parseFloat(row.valor || 0);
 
-                tr.innerHTML = `
-                    <td>${row.produto || '-'}</td>
-                    <td>${row.descricao || '-'}</td>
-                    <td>${row.cliente_codigo} - ${row.cliente_fantasia || row.cliente_nome || '-'}</td>
-                    <td class="text-right">${parseFloat(row.qtde || 0).toLocaleString('pt-BR')}</td>
-                    <td class="text-right">R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                    <td class="text-right">${parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                `;
+                if (resumido) {
+                    tr.innerHTML = `
+                        <td>${row.produto || '-'}</td>
+                        <td>${row.descricao || '-'}</td>
+                        <td class="text-right">${parseFloat(row.qtde || 0).toLocaleString('pt-BR')}</td>
+                        <td class="text-right">R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td class="text-right">${parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    `;
+                } else {
+                    tr.innerHTML = `
+                        <td>${row.produto || '-'}</td>
+                        <td>${row.descricao || '-'}</td>
+                        <td class="col-cliente">${row.cliente_codigo} - ${row.cliente_fantasia || row.cliente_nome || '-'}</td>
+                        <td class="text-right">${parseFloat(row.qtde || 0).toLocaleString('pt-BR')}</td>
+                        <td class="text-right">R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td class="text-right">${parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    `;
+                }
                 tbody.appendChild(tr);
             });
 
             // Atualizar stats
             const totalValor = window.dadosCompletos.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
-            document.getElementById('tableStats').textContent = `${window.dadosCompletos.length} registro(s)`;
+            const modoLabel = resumido ? 'produto(s)' : 'registro(s)';
+            document.getElementById('tableStats').textContent = `${window.dadosCompletos.length} ${modoLabel}`;
             document.getElementById('totalValue').textContent = `Total: R$ ${totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
         }
 
@@ -991,9 +1053,16 @@
             document.getElementById('kpiValor').textContent = 'R$ ' + totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2});
             document.getElementById('kpiQtde').textContent = totalQtde.toLocaleString('pt-BR');
             document.getElementById('kpiPeso').textContent = totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg';
-            document.getElementById('kpiRegistros').textContent = dados.length.toLocaleString('pt-BR');
-            document.getElementById('kpiTicket').textContent = 'R$ ' + ticketMedio.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-            document.getElementById('kpiClientes').textContent = numClientes.toLocaleString('pt-BR');
+
+            if (window.modoVisualizacao === 'resumido') {
+                document.getElementById('kpiRegistros').textContent = dados.length.toLocaleString('pt-BR') + ' prod.';
+                document.getElementById('kpiClientes').textContent = '-';
+                document.getElementById('kpiTicket').textContent = '-';
+            } else {
+                document.getElementById('kpiRegistros').textContent = dados.length.toLocaleString('pt-BR');
+                document.getElementById('kpiClientes').textContent = numClientes.toLocaleString('pt-BR');
+                document.getElementById('kpiTicket').textContent = 'R$ ' + ticketMedio.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            }
         }
 
         function atualizarGraficos(dados) {
@@ -1076,14 +1145,20 @@
             try {
                 const XLSX = await import('https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs');
 
-                const dados = window.dadosCompletos.map(row => ({
-                    'Produto': row.produto,
-                    'Descrição': row.descricao,
-                    'Cliente': `${row.cliente_codigo} - ${row.cliente_fantasia || row.cliente_nome || '-'}`,
-                    'Quantidade': parseFloat(row.qtde || 0),
-                    'Valor (R$)': parseFloat(row.valor || 0),
-                    'Peso (kg)': parseFloat(row.peso || 0)
-                }));
+                const resumido = window.modoVisualizacao === 'resumido';
+                const dados = window.dadosCompletos.map(row => {
+                    const base = {
+                        'Produto': row.produto,
+                        'Descrição': row.descricao,
+                    };
+                    if (!resumido) {
+                        base['Cliente'] = `${row.cliente_codigo} - ${row.cliente_fantasia || row.cliente_nome || '-'}`;
+                    }
+                    base['Quantidade'] = parseFloat(row.qtde || 0);
+                    base['Valor (R$)'] = parseFloat(row.valor || 0);
+                    base['Peso (kg)'] = parseFloat(row.peso || 0);
+                    return base;
+                });
 
                 const ws = XLSX.utils.json_to_sheet(dados);
                 const wb = XLSX.utils.book_new();
@@ -1145,17 +1220,29 @@
                 );
 
                 // Tabela
-                const tableData = window.dadosCompletos.map(row => [
-                    row.produto || '-',
-                    (row.descricao || '-').substring(0, 40),
-                    (`${row.cliente_codigo} - ${row.cliente_fantasia || row.cliente_nome || '-'}`).substring(0, 40),
-                    parseFloat(row.qtde || 0).toLocaleString('pt-BR'),
-                    'R$ ' + parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
-                    parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})
-                ]);
+                const pdfResumido = window.modoVisualizacao === 'resumido';
+                const tableData = window.dadosCompletos.map(row => {
+                    const cols = [
+                        row.produto || '-',
+                        (row.descricao || '-').substring(0, 40),
+                    ];
+                    if (!pdfResumido) {
+                        cols.push((`${row.cliente_codigo} - ${row.cliente_fantasia || row.cliente_nome || '-'}`).substring(0, 40));
+                    }
+                    cols.push(
+                        parseFloat(row.qtde || 0).toLocaleString('pt-BR'),
+                        'R$ ' + parseFloat(row.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                        parseFloat(row.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})
+                    );
+                    return cols;
+                });
+
+                const pdfHead = pdfResumido
+                    ? [['Produto', 'Descrição', 'Qtde', 'Valor (R$)', 'Peso (kg)']]
+                    : [['Produto', 'Descrição', 'Cliente', 'Qtde', 'Valor (R$)', 'Peso (kg)']];
 
                 doc.autoTable({
-                    head: [['Produto', 'Descrição', 'Cliente', 'Qtde', 'Valor (R$)', 'Peso (kg)']],
+                    head: pdfHead,
                     body: tableData,
                     startY: 42,
                     theme: 'striped',
