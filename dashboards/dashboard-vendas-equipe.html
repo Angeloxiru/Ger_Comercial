@@ -286,7 +286,7 @@
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
         import { serializeDbResult, validateCacheStructure, buildDataCacheKey } from '../js/db-utils.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
-        import { setFreshness } from '../js/dashboard-shell.js';
+        import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
 
         // Badge "atualizado há X min" no header (princípio P5 da UX_INVESTIGATIVA)
         const freshnessEl = document.querySelector('[data-gc-freshness]');
@@ -583,6 +583,8 @@
         // Função unificada para atualizar dados (refatorada para eliminar duplicação)
         async function atualizarDados(modo) {
             window.modoVisualizacao = modo;
+            // Persiste o estado dos filtros + modo na URL (link compartilhável, voltar funciona)
+            urlFilters.write(snapshotFilters());
 
             const dataInicio = document.getElementById('dataInicio').value;
             const dataFim = document.getElementById('dataFim').value;
@@ -1090,8 +1092,88 @@
             }
         };
 
+        // ========== URL STATE (FASE 2 — filtros na URL / drill-down / voltar com contexto) ==========
+        // Marca options de um <select multiple> que casam com `values`. Quando há um FilterSearch
+        // associado, usa setSelected() pra manter o estado interno do componente em sincronia.
+        function setMultiSelectValues(selectId, values) {
+            const el = document.getElementById(selectId);
+            if (!el) return;
+            const list = Array.isArray(values) ? values : (values ? [values] : []);
+            const map = { filtroSupervisor: 'supervisor', filtroRepresentante: 'representante', filtroCidade: 'cidade' };
+            const fs = window.filterSearches?.[map[selectId]];
+            if (fs && typeof fs.setSelected === 'function') {
+                fs.setSelected(list);
+            } else {
+                const wanted = new Set(list);
+                for (const opt of el.options) opt.selected = wanted.has(opt.value);
+            }
+        }
+
+        // Lê o estado atual dos filtros do DOM e devolve um objeto pronto pra urlFilters.write().
+        function snapshotFilters() {
+            return {
+                inicio: document.getElementById('dataInicio').value || null,
+                fim: document.getElementById('dataFim').value || null,
+                supervisor: Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value),
+                representante: Array.from(document.getElementById('filtroRepresentante').selectedOptions).map(o => o.value),
+                cidade: Array.from(document.getElementById('filtroCidade').selectedOptions).map(o => o.value),
+                bonif: window.bonificacaoAtiva ? 'sim' : 'nao',
+                modo: window.modoVisualizacao || 'itens',
+            };
+        }
+
+        // Aplica o estado da URL nos inputs. Respeita o cascade Supervisor→Representante→Cidade,
+        // disparando 'change' nas etapas certas pra repovoar os dependentes.
+        // Retorna o modo (itens|clientes) da URL, ou null se não houver.
+        function hydrateFromURL() {
+            const p = urlFilters.read();
+            if (p.inicio) document.getElementById('dataInicio').value = p.inicio;
+            if (p.fim) document.getElementById('dataFim').value = p.fim;
+            if (p.bonif === 'sim' || p.bonif === 'nao') window.setBonificacao(p.bonif);
+
+            if (p.supervisor) {
+                setMultiSelectValues('filtroSupervisor', p.supervisor);
+                document.getElementById('filtroSupervisor').dispatchEvent(new Event('change'));
+            }
+            if (p.representante) {
+                setMultiSelectValues('filtroRepresentante', p.representante);
+                document.getElementById('filtroRepresentante').dispatchEvent(new Event('change'));
+            }
+            if (p.cidade) {
+                setMultiSelectValues('filtroCidade', p.cidade);
+            }
+            return (p.modo === 'itens' || p.modo === 'clientes') ? p.modo : null;
+        }
+
+        function hasAnyFilter(snap) {
+            return !!(snap.inicio || snap.fim
+                || snap.supervisor.length || snap.representante.length || snap.cidade.length);
+        }
+
+        // Init: carrega filtros, hidrata da URL e auto-busca se houver dados o suficiente.
+        async function initDashboardURL() {
+            await carregarFiltros();
+            const modo = hydrateFromURL();
+            if (hasAnyFilter(snapshotFilters())) {
+                atualizarDados(modo || 'itens');
+            }
+        }
+
+        // Limpa também a URL ao limpar filtros.
+        const _limparFiltrosOriginal = window.limparFiltros;
+        window.limparFiltros = function() {
+            _limparFiltrosOriginal();
+            urlFilters.write({ inicio: null, fim: null, supervisor: null, representante: null, cidade: null, bonif: null, modo: null });
+        };
+
+        // Voltar/avançar do navegador: re-hidrata e re-busca.
+        window.addEventListener('popstate', () => {
+            const modo = hydrateFromURL();
+            if (hasAnyFilter(snapshotFilters())) atualizarDados(modo || 'itens');
+        });
+
         // Usa apenas pageshow para evitar dupla inicialização (load + pageshow disparam juntos)
-        window.addEventListener('pageshow', carregarFiltros);
+        window.addEventListener('pageshow', initDashboardURL);
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
