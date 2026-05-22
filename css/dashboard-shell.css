@@ -13,7 +13,7 @@
 
 /* 1. TOKENS — fonte única de verdade do tema */
 :root {
-  --gc-color-primary:        #fc0303;
+  --gc-color-primary:        #03fc2c;
   --gc-color-primary-dark:   #b50909;
   --gc-color-accent:         #ffd700;
   --gc-color-accent-hover:   #ffc800;
