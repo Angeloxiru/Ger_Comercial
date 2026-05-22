@@ -1,8 +1,8 @@
 // Service Worker para Ger Comercial - Germani Alimentos
-// Versao: 1.5.0 - Mobile improvements + file cleanup
+// Versao: 1.6.0 - Shell compartilhado (dashboard-shell.css / dashboard-shell.js)
 
-const CACHE_NAME = 'ger-comercial-v7';
-const RUNTIME_CACHE = 'ger-comercial-runtime-v7';
+const CACHE_NAME = 'ger-comercial-v8';
+const RUNTIME_CACHE = 'ger-comercial-runtime-v8';
 
 // Arquivos essenciais para funcionar offline
 const ESSENTIAL_FILES = [
@@ -14,6 +14,7 @@ const ESSENTIAL_FILES = [
   '/Ger_Comercial/icon-512.png',
   '/Ger_Comercial/manifest.json',
   '/Ger_Comercial/css/mobile.css',
+  '/Ger_Comercial/css/dashboard-shell.css',
   '/Ger_Comercial/dashboards/dashboard-vendas-regiao.html',
   '/Ger_Comercial/dashboards/dashboard-vendas-equipe.html',
   '/Ger_Comercial/dashboards/dashboard-analise-produtos.html',
@@ -26,6 +27,7 @@ const ESSENTIAL_FILES = [
   '/Ger_Comercial/js/config.js',
   '/Ger_Comercial/js/auth.js',
   '/Ger_Comercial/js/cache.js',
+  '/Ger_Comercial/js/dashboard-shell.js',
   '/Ger_Comercial/js/pagination.js',
   '/Ger_Comercial/js/filter-search.js',
   '/Ger_Comercial/js/dashboard-isolation.js',

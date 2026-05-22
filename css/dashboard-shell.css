@@ -50,20 +50,16 @@
   --gc-gradient-primary:     linear-gradient(135deg, var(--gc-color-primary) 0%, var(--gc-color-primary-dark) 100%);
 }
 
-/* 2. RESET mínimo (usado por todos os dashboards) */
-.gc-shell *,
-.gc-shell *::before,
-.gc-shell *::after {
+/* 2. RESET mínimo (aplicado em toda página que linkar este arquivo) */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-.gc-shell body {
+.gc-page {
   margin: 0;
   padding: 0;
-}
-
-/* 3. PAGE — wrapper geral */
-.gc-page {
   font-family: var(--gc-font);
   background: var(--gc-color-bg);
   color: var(--gc-color-text);

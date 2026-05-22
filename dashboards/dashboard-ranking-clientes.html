@@ -11,490 +11,99 @@
     <link rel="manifest" href="/Ger_Comercial/manifest.json">
     <link rel="apple-touch-icon" href="/Ger_Comercial/icon-192.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/Ger_Comercial/icon-192.png">
+    <!-- Shell compartilhado: tokens + componentes gc-* (header, filtros, KPI, tabela, loading). Ver docs/ARQUITETURA.md (ADR-006). -->
+    <link rel="stylesheet" href="../css/dashboard-shell.css">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* Estilos específicos de "Ranking de Clientes" — o que NÃO é genérico do shell. */
 
-        body {
-            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-            background: #f8f9fa;
-            min-height: 100vh;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
-            color: white;
-            padding: 20px 30px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .header-logo img {
-            height: 60px;
-            width: auto;
-        }
-
-        .header h1 {
-            font-size: 1.6em;
-            font-weight: 600;
-        }
-
-        .btn-voltar {
-            background: white;
-            color: #fc0303;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .btn-voltar:hover {
-            background: #f8f9fa;
-        }
-
-        .filters-section {
-            background: white;
-            padding: 16px;
-            margin: 20px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            display: flex;
-            gap: 16px;
-            align-items: flex-start;
-        }
-
-        .filters-grid {
-            flex: 1;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-        }
-
+        /* Período em coluna vertical (Início / Fim empilhados) */
         .filter-group-periodo {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: var(--gc-space-sm);
             min-width: 140px;
         }
-
-        .filter-group-periodo .filter-item {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
+        .filter-group-periodo .filter-item { display: flex; flex-direction: column; gap: 4px; }
         .filter-group-periodo .filter-item label {
             font-size: 0.85em;
-            color: #495057;
+            color: var(--gc-color-text-muted);
             font-weight: 500;
         }
-
         .filter-group-periodo .filter-item input {
             padding: 8px 10px;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
+            border: 1px solid var(--gc-color-border);
+            border-radius: var(--gc-radius-sm);
             font-size: 0.9em;
-            background: white;
+            background: var(--gc-color-surface);
             transition: border-color 0.2s;
+            font-family: inherit;
         }
-
         .filter-group-periodo .filter-item input:focus {
             outline: none;
-            border-color: #fc0303;
+            border-color: var(--gc-color-primary);
         }
 
-        .filters-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            min-width: 160px;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            min-width: 180px;
-        }
-
-        .filter-group label {
-            font-size: 0.9em;
-            color: #495057;
-            font-weight: 500;
-        }
-
-        .filter-group input,
-        .filter-group select {
-            padding: 10px 12px;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            font-size: 0.95em;
-            background: white;
-            transition: border-color 0.2s;
-        }
-
-        .filter-group input:focus,
-        .filter-group select:focus {
-            outline: none;
-            border-color: #fc0303;
-        }
-
-        .filter-group select[multiple] {
-            min-height: 120px;
-        }
-
-        .btn-limpar {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn-limpar:hover {
-            background: #5a6268;
-        }
-
-        .btn-atualizar {
-            background: #fc0303;
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn-atualizar:hover {
-            background: #b50909;
-        }
-
-        .btn-atualizar:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .mode-buttons {
-            display: flex;
-            gap: 8px;
-        }
-
+        /* Toggle Clientes / Grupos (exclusivo deste dashboard) */
+        .mode-buttons { display: flex; gap: var(--gc-space-sm); }
         .btn-mode {
             background: #e9ecef;
-            color: #495057;
-            border: 2px solid #dee2e6;
-            padding: 10px 20px;
-            border-radius: 6px;
+            color: var(--gc-color-text-muted);
+            border: 2px solid var(--gc-color-border);
+            padding: 10px var(--gc-space-xl);
+            border-radius: var(--gc-radius-sm);
             cursor: pointer;
             font-weight: 500;
             transition: all 0.2s;
             white-space: nowrap;
+            font-family: inherit;
         }
-
-        .btn-mode:hover {
-            background: #dee2e6;
-            border-color: #adb5bd;
-        }
-
+        .btn-mode:hover { background: var(--gc-color-border); border-color: #adb5bd; }
         .btn-mode.active {
-            background: #fc0303;
-            color: white;
-            border-color: #fc0303;
+            background: var(--gc-color-primary);
+            color: #fff;
+            border-color: var(--gc-color-primary);
         }
-
         .btn-mode.active:hover {
-            background: #b50909;
-            border-color: #b50909;
+            background: var(--gc-color-primary-dark);
+            border-color: var(--gc-color-primary-dark);
         }
 
-        .loading {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .loading.active {
-            display: flex;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #fc0303;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loading div:last-child {
-            color: white;
-            font-size: 1.1em;
-            font-weight: 500;
-        }
-
-        .empty-state {
-            display: none;
-            text-align: center;
-            padding: 60px 20px;
-            color: #6c757d;
-        }
-
-        .empty-state.active {
-            display: block;
-        }
-
-        .empty-state h2 {
-            font-size: 1.5em;
-            margin-bottom: 10px;
-            color: #495057;
-        }
-
-        .main-content {
-            display: none;
-            margin: 20px;
-            gap: 20px;
-            grid-template-columns: 70% 30%;
-        }
-
-        /* SEÇÃO DA TABELA (70%) */
-        .table-section {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .table-header {
-            padding: 20px;
-            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .table-title {
-            font-size: 1.3em;
-            font-weight: 600;
-        }
-
-        .table-stats {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.9em;
-        }
-
-        .table-container {
-            flex: 1;
-            overflow-x: auto;
-            max-height: calc(100vh - 450px);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        thead {
-            position: sticky;
-            top: 0;
-            background: #f8f9fa;
-            z-index: 10;
-        }
-
-        th {
-            padding: 12px 16px;
-            text-align: left;
-            font-weight: 600;
-            color: #495057;
-            border-bottom: 2px solid #dee2e6;
-            font-size: 0.9em;
-            white-space: nowrap;
-        }
-
-        th.text-right {
-            text-align: right;
-        }
-
-        tbody tr {
-            border-bottom: 1px solid #dee2e6;
-            transition: background 0.2s;
-        }
-
-        tbody tr:hover {
-            background: #f8f9fa;
-        }
-
-        tbody tr:nth-child(even) {
-            background: #fafbfc;
-        }
-
-        tbody tr:nth-child(even):hover {
-            background: #f1f3f5;
-        }
-
-        td {
-            padding: 12px 16px;
-            color: #212529;
-            font-size: 0.9em;
-        }
-
-        td.text-right {
-            text-align: right;
-        }
-
-        td.rank {
-            font-weight: 700;
-            color: #fc0303;
-            font-size: 1em;
-        }
-
-        .medal {
-            font-size: 1.5em;
-            display: inline-block;
-            margin-right: 4px;
-        }
-
-        .table-footer {
-            padding: 16px 20px;
-            background: #f8f9fa;
-            border-top: 2px solid #dee2e6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .total-value {
-            color: #212529;
-            font-weight: 700;
-            font-size: 1.05em;
-        }
-
-        .export-buttons {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-export {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9em;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .btn-export:hover {
-            background: #218838;
-        }
-
-        /* SEÇÃO DO DASHBOARD (30%) */
-        .dashboard-section {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-        }
-
-        .kpi-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .kpi-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .kpi-icon {
-            font-size: 2em;
-        }
-
-        .kpi-label {
-            color: #6c757d;
-            font-size: 0.85em;
-            font-weight: 500;
-        }
-
-        .kpi-value {
-            color: #212529;
-            font-size: 1.4em;
-            font-weight: 700;
-        }
+        /* Coluna direita: KPIs 2x2 + 4 gráficos */
+        .dashboard-section { display: flex; flex-direction: column; gap: var(--gc-space-lg); }
+        .kpi-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gc-space-md); }
 
         .chart-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            background: var(--gc-color-surface);
+            border-radius: var(--gc-radius-md);
+            padding: var(--gc-space-lg);
+            box-shadow: var(--gc-shadow-sm);
         }
-
         .chart-title {
-            font-size: 1em;
+            color: var(--gc-color-text-muted);
+            font-size: 0.9em;
             font-weight: 600;
-            color: #495057;
-            margin-bottom: 16px;
+            margin-bottom: var(--gc-space-md);
+            text-align: center;
         }
+        .chart-container { position: relative; height: 250px; }
+        .chart-container.tall { height: 320px; }
 
-        .chart-container {
-            position: relative;
-            height: 250px;
-        }
+        /* Rodapé da tabela: total + botões de export */
+        .total-value { color: var(--gc-color-text); font-weight: 700; font-size: 1.1em; }
+        .export-buttons { display: flex; gap: var(--gc-space-sm); }
 
-        .chart-container.tall {
-            height: 350px;
+        /* Compat: classes legadas */
+        .text-right { text-align: right; }
+
+        /* Empty state com h2 */
+        .gc-empty h2 { color: var(--gc-color-text); font-size: 1.3em; margin-bottom: var(--gc-space-md); font-weight: 600; }
+        .gc-empty p { line-height: 1.6; }
+
+        /* Paginação */
+        #paginationContainer {
+            padding: var(--gc-space-md) var(--gc-space-xl);
+            border-top: 1px solid var(--gc-color-border);
         }
     </style>
 
@@ -502,22 +111,25 @@
     <link rel="stylesheet" href="../css/mobile.css">
     <script src="../js/mobile.js"></script>
 </head>
-<body>
-    <!-- Header -->
-    <div class="header">
-        <div class="header-left">
-            <div class="header-logo">
+<body class="gc-page">
+    <!-- Header (shell). data-gc-freshness é populado por setFreshness() após cada carga. -->
+    <header class="gc-header">
+        <div class="gc-header__left">
+            <div class="gc-header__logo">
                 <img src="https://static.wixstatic.com/media/ce3165_c01db19c0ef64e2abb8c894c7ecc6f95~mv2.png/v1/fill/w_161,h_69,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/logomarca-Germani-2023-Branca-borda-dour.png" alt="Logo Germani Alimentos">
             </div>
-            <h1>🏆 Ranking de Clientes</h1>
+            <h1 class="gc-header__title">🏆 Ranking de Clientes</h1>
         </div>
-        <a href="../index.html" class="btn-voltar">⬅ Voltar</a>
-    </div>
+        <div class="gc-header__right">
+            <span class="gc-freshness" data-gc-freshness hidden></span>
+            <a href="../index.html" class="gc-btn-back">⬅ Voltar</a>
+        </div>
+    </header>
 
     <!-- Filtros -->
-    <div class="filters-section">
-        <div class="filters-grid">
-            <!-- Período (vertical) -->
+    <section class="gc-filters">
+        <div class="gc-filters__grid">
+            <!-- Período (vertical: Início + Fim empilhados) -->
             <div class="filter-group-periodo">
                 <div class="filter-item">
                     <label for="dataInicio">📅 Início *</label>
@@ -529,75 +141,75 @@
                 </div>
             </div>
 
-            <div class="filter-group">
-                <label for="filtroRota">🛣️ Rota</label>
-                <select id="filtroRota" multiple>
+            <div class="gc-filter">
+                <label class="gc-filter__label" for="filtroRota">🛣️ Rota</label>
+                <select id="filtroRota" class="gc-filter__select" multiple>
                     <option value="">Carregando...</option>
                 </select>
             </div>
 
-            <div class="filter-group">
-                <label for="filtroSubRota">🗺️ Sub-Rota</label>
-                <select id="filtroSubRota" multiple>
+            <div class="gc-filter">
+                <label class="gc-filter__label" for="filtroSubRota">🗺️ Sub-Rota</label>
+                <select id="filtroSubRota" class="gc-filter__select" multiple>
                     <option value="">Carregando...</option>
                 </select>
             </div>
 
-            <div class="filter-group">
-                <label for="filtroCidade">🏙️ Cidade</label>
-                <select id="filtroCidade" multiple>
+            <div class="gc-filter">
+                <label class="gc-filter__label" for="filtroCidade">🏙️ Cidade</label>
+                <select id="filtroCidade" class="gc-filter__select" multiple>
                     <option value="">Carregando...</option>
                 </select>
             </div>
 
-            <div class="filter-group">
-                <label for="filtroSupervisor">👨‍💼 Supervisor</label>
-                <select id="filtroSupervisor" multiple>
+            <div class="gc-filter">
+                <label class="gc-filter__label" for="filtroSupervisor">👨‍💼 Supervisor</label>
+                <select id="filtroSupervisor" class="gc-filter__select" multiple>
                     <option value="">Carregando...</option>
                 </select>
             </div>
 
-            <div class="filter-group">
-                <label for="filtroRepresentante">🧑‍💼 Representante</label>
-                <select id="filtroRepresentante" multiple>
+            <div class="gc-filter">
+                <label class="gc-filter__label" for="filtroRepresentante">🧑‍💼 Representante</label>
+                <select id="filtroRepresentante" class="gc-filter__select" multiple>
                     <option value="">Carregando...</option>
                 </select>
             </div>
         </div>
 
-        <div class="filters-buttons">
-            <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar Filtros</button>
+        <div class="gc-filters__actions">
+            <button class="gc-btn gc-btn--secondary" onclick="limparFiltros()">🧹 Limpar Filtros</button>
             <div class="mode-buttons">
                 <button class="btn-mode active" id="btnClientes" onclick="alternarModo('clientes')">📊 Clientes</button>
                 <button class="btn-mode" id="btnGrupos" onclick="alternarModo('grupos')">🏢 Grupos</button>
             </div>
-            <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">🔄 Atualizar Dados</button>
+            <button class="gc-btn gc-btn--primary" id="btnAtualizar" onclick="atualizarDados()">🔄 Atualizar Dados</button>
         </div>
-    </div>
+    </section>
 
     <!-- Loading -->
-    <div class="loading" id="loading">
-        <div class="spinner"></div>
+    <div class="gc-loading" id="loading">
+        <div class="gc-spinner"></div>
         <div>Carregando dados...</div>
     </div>
 
     <!-- Empty State -->
-    <div class="empty-state" id="emptyState">
+    <div class="gc-empty" id="emptyState">
         <h2>📊 Selecione os filtros e o modo</h2>
         <p>1. Escolha o período<br>2. Selecione o modo (📊 Clientes ou 🏢 Grupos)<br>3. Clique em "🔄 Atualizar Dados"</p>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-content" id="mainContent">
-        <!-- SEÇÃO DA TABELA (70%) -->
-        <div class="table-section">
-            <div class="table-header">
-                <div class="table-title">🏆 Ranking de Clientes</div>
-                <div class="table-stats" id="tableStats">0 registros</div>
+    <!-- Layout 70/30 (escondido até a primeira carga de dados) -->
+    <div class="gc-layout-7030" id="mainContent" style="display: none;">
+        <!-- Seção da tabela (70%) -->
+        <div class="gc-table-card">
+            <div class="gc-table-card__header">
+                <div class="gc-table-card__title">🏆 Ranking de Clientes</div>
+                <div class="gc-table-card__stats" id="tableStats">0 registros</div>
             </div>
 
-            <div class="table-container" id="tableContainer">
-                <table>
+            <div class="gc-table-container" id="tableContainer">
+                <table class="gc-table">
                     <thead>
                         <tr id="tableHeadRow">
                             <th>#</th>
@@ -617,38 +229,38 @@
             <!-- Paginação -->
             <div id="paginationContainer"></div>
 
-            <div class="table-footer" id="tableFooter" style="display: none;">
+            <div class="gc-table-card__footer" id="tableFooter" style="display: none;">
                 <div class="total-value" id="totalValue">Total: R$ 0,00</div>
                 <div class="export-buttons">
-                    <button class="btn-export" onclick="exportarExcel()">📊 Excel</button>
-                    <button class="btn-export" onclick="exportarPDF()">📄 PDF</button>
+                    <button class="gc-btn gc-btn--accent" onclick="exportarExcel()">📊 Excel</button>
+                    <button class="gc-btn gc-btn--accent" onclick="exportarPDF()">📄 PDF</button>
                 </div>
             </div>
         </div>
 
-        <!-- SEÇÃO DO DASHBOARD (30%) -->
+        <!-- Seção do dashboard (30%) -->
         <div class="dashboard-section">
             <!-- KPIs 2x2 -->
-            <div class="kpi-grid">
-                <div class="kpi-card">
-                    <div class="kpi-icon">👥</div>
-                    <div class="kpi-label">Clientes Ativos</div>
-                    <div class="kpi-value" id="kpiClientes">0</div>
+            <div class="kpi-grid-2col">
+                <div class="gc-kpi">
+                    <div class="gc-kpi__icon">👥</div>
+                    <div class="gc-kpi__label">Clientes Ativos</div>
+                    <div class="gc-kpi__value" id="kpiClientes">0</div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon">💰</div>
-                    <div class="kpi-label">Valor Total</div>
-                    <div class="kpi-value" id="kpiValor">R$ 0,00</div>
+                <div class="gc-kpi">
+                    <div class="gc-kpi__icon">💰</div>
+                    <div class="gc-kpi__label">Valor Total</div>
+                    <div class="gc-kpi__value" id="kpiValor">R$ 0,00</div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon">🎯</div>
-                    <div class="kpi-label">Ticket Médio</div>
-                    <div class="kpi-value" id="kpiTicket">R$ 0,00</div>
+                <div class="gc-kpi">
+                    <div class="gc-kpi__icon">🎯</div>
+                    <div class="gc-kpi__label">Ticket Médio</div>
+                    <div class="gc-kpi__value" id="kpiTicket">R$ 0,00</div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon">📊</div>
-                    <div class="kpi-label">Top 10</div>
-                    <div class="kpi-value" id="kpiTop10">0%</div>
+                <div class="gc-kpi">
+                    <div class="gc-kpi__icon">📊</div>
+                    <div class="gc-kpi__label">Top 10</div>
+                    <div class="gc-kpi__value" id="kpiTop10">0%</div>
                 </div>
             </div>
 
@@ -698,6 +310,10 @@
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
         import { serializeDbResult, validateCacheStructure, buildDataCacheKey } from '../js/db-utils.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
+        import { setFreshness } from '../js/dashboard-shell.js';
+
+        // Badge "atualizado há X min" no header (princípio P5 da UX_INVESTIGATIVA)
+        const freshnessEl = document.querySelector('[data-gc-freshness]');
 
         // Inicializa isolamento do dashboard
         initDashboard('Ranking de Clientes');
@@ -1018,7 +634,7 @@
                 // Atualizar cabeçalhos baseado no modo selecionado
                 atualizarCabecalhosTabela();
 
-                document.getElementById('loading').classList.add('active');
+                document.getElementById('loading').classList.add('is-active');
                 document.getElementById('emptyState').style.display = 'none';
 
                 // Desabilitar botões durante carregamento
@@ -1165,10 +781,11 @@
                 console.error('Erro ao buscar dados:', error);
                 alert('Erro ao buscar dados: ' + error.message);
             } finally {
-                document.getElementById('loading').classList.remove('active');
+                document.getElementById('loading').classList.remove('is-active');
                 document.getElementById('btnClientes').disabled = false;
                 document.getElementById('btnGrupos').disabled = false;
                 document.getElementById('btnAtualizar').disabled = false;
+                setFreshness(freshnessEl, Date.now());
             }
         };
 
