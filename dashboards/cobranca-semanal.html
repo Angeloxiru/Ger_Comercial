@@ -13,260 +13,43 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/Ger_Comercial/icon-192.png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <!-- Shell compartilhado -->
+    <link rel="stylesheet" href="../css/dashboard-shell.css">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* Estilos específicos de "Performance Mensal" — o que NÃO é genérico do shell. */
 
-        body {
-            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-            background: #f8f9fa;
-            min-height: 100vh;
-        }
+        /* Cabeçalho da tabela em verde (identidade visual deste dashboard) */
+        .gc-table-card__header { background: #90EE90; color: var(--gc-color-text); }
 
-        .header {
-            background: #fc0303;
-            color: white;
-            padding: 20px 30px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-        }
+        /* Range de datas */
+        .date-range { display: grid; grid-template-columns: 1fr; gap: var(--gc-space-sm); }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
+        /* Coluna direita: KPIs em grid 2x2 + 2 gráficos */
+        .dashboard-section { display: flex; flex-direction: column; gap: var(--gc-space-xl); }
+        .kpi-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gc-space-md); }
 
-        .header-logo img {
-            height: 60px;
-            width: auto;
-        }
+        /* Borda esquerda vermelha nos KPI cards (variante deste dashboard) */
+        .gc-kpi { border-left: 4px solid var(--gc-color-primary); }
 
-        .header h1 {
-            font-size: 1.6em;
-            font-weight: 600;
+        .chart-container {
+            background: var(--gc-color-surface);
+            padding: var(--gc-space-xl);
+            border-radius: var(--gc-radius-md);
+            box-shadow: var(--gc-shadow-sm);
+            height: 300px;
         }
-
-        .btn-voltar {
-            background: white;
-            color: #fc0303;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
-            text-decoration: none;
-        }
-
-        .btn-voltar:hover {
-            background: #f8f9fa;
-        }
-
-        .filters-section {
-            background: white;
-            padding: 16px;
-            margin: 20px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            display: flex;
-            gap: 16px;
-            align-items: flex-start;
-        }
-
-        .filters-grid {
-            flex: 1;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
-        }
-
-        .filters-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            min-width: 160px;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .filter-group label {
-            color: #495057;
-            font-weight: 500;
-            margin-bottom: 6px;
+        .chart-title {
             font-size: 0.9em;
-        }
-
-        .filter-group input,
-        .filter-group select {
-            padding: 10px 12px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            font-size: 0.95em;
-            transition: all 0.2s;
-            background: white;
-        }
-
-        .filter-group input:focus,
-        .filter-group select:focus {
-            outline: none;
-            border-color: #fc0303;
-            box-shadow: 0 0 0 3px rgba(252, 3, 3, 0.1);
-        }
-
-        .filter-group select {
-            cursor: pointer;
-        }
-
-        .filter-group select option:checked {
-            background: #03ff1c;
-            color: #000;
-        }
-
-        .date-range {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 8px;
-        }
-
-        .quick-dates {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-
-        .quick-date-btn {
-            background: #e9ecef;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .quick-date-btn:hover {
-            background: #fc0303;
-            color: white;
-        }
-
-        .btn-atualizar {
-            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            font-size: 0.9em;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn-atualizar:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(252, 3, 3, 0.3);
-        }
-
-        .btn-atualizar:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-limpar {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            font-size: 0.9em;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn-limpar:hover {
-            background: #5a6268;
-        }
-
-        /* LAYOUT: 70% Tabela / 30% Dashboard */
-        .main-content {
-            display: grid;
-            grid-template-columns: 70% 30%;
-            gap: 20px;
-            margin: 20px;
-            min-height: calc(100vh - 400px);
-        }
-
-        .table-section {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .table-header {
-            background: #90EE90;
-            color: #212529;
-            padding: 16px 20px;
             font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            color: var(--gc-color-text-muted);
+            margin-bottom: var(--gc-space-md);
         }
 
-        .table-wrapper {
-            overflow-y: auto;
-            max-height: 650px;
-            flex: 1;
-        }
+        /* Wrapper da tabela: altura específica */
+        .gc-table-container { max-height: 650px; }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        thead {
-            position: sticky;
-            top: 0;
-            background: white;
-            z-index: 10;
-        }
-
-        th {
-            background: #f8f9fa;
-            color: #495057;
-            font-weight: 600;
-            padding: 12px 8px;
-            text-align: left;
-            border-bottom: 2px solid #dee2e6;
-            font-size: 0.85em;
-            white-space: nowrap;
-        }
-
-        td {
-            padding: 12px 8px;
-            border-bottom: 1px solid #f1f3f5;
-            font-size: 0.85em;
-        }
-
-        tr:hover {
-            background: #f8f9fa;
-        }
-
+        /* Status badges (acima/médio/abaixo da meta) */
         .status-badge {
             padding: 4px 8px;
             border-radius: 4px;
@@ -276,152 +59,27 @@
             display: inline-block;
             min-width: 60px;
         }
+        .status-acima { background: #d4edda; color: #155724; }
+        .status-abaixo { background: #f8d7da; color: #721c24; }
+        .status-medio { background: #fff3cd; color: #856404; }
 
-        .status-acima {
-            background: #d4edda;
-            color: #155724;
-        }
+        /* Variação percentual */
+        .percent-positive { color: #28a745; font-weight: 600; }
+        .percent-negative { color: #dc3545; font-weight: 600; }
 
-        .status-abaixo {
-            background: #f8d7da;
-            color: #721c24;
-        }
+        /* Footer total */
+        .footer-total { font-weight: 600; color: var(--gc-color-text); }
 
-        .status-medio {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .percent-positive {
-            color: #28a745;
-            font-weight: 600;
-        }
-
-        .percent-negative {
-            color: #dc3545;
-            font-weight: 600;
-        }
-
-        .dashboard-section {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        .kpi-card {
-            background: white;
-            padding: 16px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #fc0303;
-        }
-
-        .kpi-icon {
-            font-size: 1.8em;
-            margin-bottom: 8px;
-        }
-
-        .kpi-label {
-            color: #6c757d;
-            font-size: 0.75em;
-            font-weight: 500;
-            margin-bottom: 4px;
-        }
-
-        .kpi-value {
-            color: #212529;
-            font-size: 1.5em;
-            font-weight: 700;
-        }
-
-        .chart-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            height: 300px;
-        }
-
-        .chart-title {
-            font-size: 0.9em;
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 12px;
-        }
-
-        .table-footer {
-            background: #f8f9fa;
-            padding: 12px 20px;
-            border-top: 1px solid #dee2e6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.9em;
-        }
-
-        .footer-total {
-            font-weight: 600;
-            color: #212529;
-        }
-
-        .btn-export {
-            background: white;
-            color: #fc0303;
-            border: 1px solid #fc0303;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.85em;
-            margin-left: 8px;
-            transition: all 0.2s;
-        }
-
-        .btn-export:hover {
-            background: #fc0303;
-            color: white;
-        }
-
-        .alert {
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin: 20px;
-            font-size: 0.9em;
-        }
-
-        .alert-warning {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            color: #856404;
-        }
-
-        .empty-state {
-            padding: 60px 20px;
-            text-align: center;
-            color: #6c757d;
-        }
-
-        .empty-state-icon {
-            font-size: 3em;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
+        /* Empty state */
+        .empty-state-icon { font-size: 3em; margin-bottom: var(--gc-space-lg); opacity: 0.5; }
 
         #paginationContainer {
-            padding: 12px 20px;
-            border-top: 1px solid #dee2e6;
+            padding: var(--gc-space-md) var(--gc-space-xl);
+            border-top: 1px solid var(--gc-color-border);
         }
 
-        /* Responsividade */
         @media (max-width: 1200px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
+            .gc-layout-7030 { grid-template-columns: 1fr; }
         }
     </style>
 
@@ -429,80 +87,83 @@
     <link rel="stylesheet" href="../css/mobile.css">
     <script src="../js/mobile.js"></script>
 </head>
-<body>
-    <!-- Header -->
-    <div class="header">
-        <div class="header-left">
-            <div class="header-logo">
+<body class="gc-page">
+    <!-- Header (shell) -->
+    <header class="gc-header">
+        <div class="gc-header__left">
+            <div class="gc-header__logo">
                 <img src="https://static.wixstatic.com/media/ce3165_c01db19c0ef64e2abb8c894c7ecc6f95~mv2.png/v1/fill/w_161,h_69,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/logomarca-Germani-2023-Branca-borda-dour.png" alt="Logo Germani Alimentos">
             </div>
-            <h1>📊 Performance Mensal</h1>
+            <h1 class="gc-header__title">📊 Performance Mensal</h1>
         </div>
-        <a href=".." class="btn-voltar">← Voltar</a>
-    </div>
+        <div class="gc-header__right">
+            <span class="gc-freshness" data-gc-freshness hidden></span>
+            <a href=".." class="gc-btn-back">← Voltar</a>
+        </div>
+    </header>
 
     <!-- Alerta de Configuração -->
-    <div id="configAlert" class="alert alert-warning" style="display: none;">
+    <div id="configAlert" class="gc-alert gc-alert--warning" style="display: none;">
         <strong>⚠️ Configuração Necessária!</strong><br>
         Configure suas credenciais do Turso no arquivo <code>js/config.js</code>
     </div>
 
     <!-- Seção de Filtros -->
-    <div class="filters-section">
-        <div class="filters-grid">
+    <section class="gc-filters">
+        <div class="gc-filters__grid">
             <!-- Período -->
-            <div class="filter-group">
-                <label>📅 Período</label>
+            <div class="gc-filter">
+                <label class="gc-filter__label">📅 Período</label>
                 <div class="date-range">
-                    <input type="date" id="filtroDataInicio">
-                    <input type="date" id="filtroDataFim">
+                    <input type="date" id="filtroDataInicio" class="gc-filter__input">
+                    <input type="date" id="filtroDataFim" class="gc-filter__input">
                 </div>
-                <div class="quick-dates">
-                    <button class="quick-date-btn" onclick="setQuickDate('mes')">Mês Atual</button>
-                    <button class="quick-date-btn" onclick="setQuickDate('mesAnterior')">Mês Anterior</button>
-                    <button class="quick-date-btn" onclick="setQuickDate('trimestre')">Trimestre</button>
-                    <button class="quick-date-btn" onclick="setQuickDate('ano')">Ano Atual</button>
+                <div class="gc-quick-dates">
+                    <button class="gc-btn gc-btn--ghost" onclick="setQuickDate('mes')">Mês Atual</button>
+                    <button class="gc-btn gc-btn--ghost" onclick="setQuickDate('mesAnterior')">Mês Anterior</button>
+                    <button class="gc-btn gc-btn--ghost" onclick="setQuickDate('trimestre')">Trimestre</button>
+                    <button class="gc-btn gc-btn--ghost" onclick="setQuickDate('ano')">Ano Atual</button>
                 </div>
             </div>
 
             <!-- Supervisor -->
-            <div class="filter-group">
-                <label>👔 Supervisor</label>
-                <select id="filtroSupervisor" multiple size="3">
+            <div class="gc-filter">
+                <label class="gc-filter__label">👔 Supervisor</label>
+                <select id="filtroSupervisor" class="gc-filter__select" multiple size="3">
                     <option value="">Todos</option>
                 </select>
             </div>
 
             <!-- Representante -->
-            <div class="filter-group">
-                <label>👤 Representante</label>
-                <select id="filtroRepresentante" multiple size="3">
+            <div class="gc-filter">
+                <label class="gc-filter__label">👤 Representante</label>
+                <select id="filtroRepresentante" class="gc-filter__select" multiple size="3">
                     <option value="">Todos</option>
                 </select>
             </div>
         </div>
 
-        <div class="filters-buttons">
-            <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">
+        <div class="gc-filters__actions">
+            <button class="gc-btn gc-btn--primary" id="btnAtualizar" onclick="atualizarDados()">
                 🔄 Atualizar
             </button>
-            <button class="btn-limpar" onclick="limparFiltros()">
+            <button class="gc-btn gc-btn--secondary" onclick="limparFiltros()">
                 ✖️ Limpar
             </button>
         </div>
-    </div>
+    </section>
 
     <!-- Conteúdo Principal: 70/30 -->
-    <div class="main-content">
+    <div class="gc-layout-7030">
         <!-- Seção Tabela (70%) -->
-        <div class="table-section">
-            <div class="table-header">
-                <span>📊 Performance</span>
-                <span id="totalRegistros">0 registros</span>
+        <div class="gc-table-card">
+            <div class="gc-table-card__header">
+                <div class="gc-table-card__title">📊 Performance</div>
+                <div class="gc-table-card__stats" id="totalRegistros">0 registros</div>
             </div>
 
-            <div class="table-wrapper">
-                <table id="tabelaDados">
+            <div class="gc-table-container">
+                <table class="gc-table" id="tabelaDados">
                     <thead>
                         <tr>
                             <th>Representante</th>
@@ -517,7 +178,7 @@
                     </thead>
                     <tbody id="tbody">
                         <tr>
-                            <td colspan="8" class="empty-state">
+                            <td colspan="8" class="gc-empty">
                                 <div class="empty-state-icon">📊</div>
                                 <div>Selecione os filtros e clique em "Atualizar Dados"</div>
                             </td>
@@ -528,13 +189,13 @@
 
             <div id="paginationContainer"></div>
 
-            <div class="table-footer">
+            <div class="gc-table-card__footer">
                 <div class="footer-total" id="footerTotal">
                     Total: 0 registros
                 </div>
-                <div>
-                    <button class="btn-export" onclick="exportarExcel()">📊 Excel</button>
-                    <button class="btn-export" onclick="exportarPDF()">📄 PDF</button>
+                <div style="display: flex; gap: var(--gc-space-sm);">
+                    <button class="gc-btn gc-btn--accent" onclick="exportarExcel()">📊 Excel</button>
+                    <button class="gc-btn gc-btn--accent" onclick="exportarPDF()">📄 PDF</button>
                 </div>
             </div>
         </div>
@@ -542,29 +203,29 @@
         <!-- Seção Dashboard (30%) -->
         <div class="dashboard-section">
             <!-- KPIs em Grid 2x2 -->
-            <div class="kpi-grid">
-                <div class="kpi-card">
-                    <div class="kpi-icon">💰</div>
-                    <div class="kpi-label">FATURAMENTO TOTAL</div>
-                    <div class="kpi-value" id="kpiFaturamento">R$ 0</div>
+            <div class="kpi-grid-2col">
+                <div class="gc-kpi">
+                    <div class="gc-kpi__icon">💰</div>
+                    <div class="gc-kpi__label">FATURAMENTO TOTAL</div>
+                    <div class="gc-kpi__value" id="kpiFaturamento">R$ 0</div>
                 </div>
 
-                <div class="kpi-card">
-                    <div class="kpi-icon">⚖️</div>
-                    <div class="kpi-label">PESO TOTAL (Kg)</div>
-                    <div class="kpi-value" id="kpiPeso">0</div>
+                <div class="gc-kpi">
+                    <div class="gc-kpi__icon">⚖️</div>
+                    <div class="gc-kpi__label">PESO TOTAL (Kg)</div>
+                    <div class="gc-kpi__value" id="kpiPeso">0</div>
                 </div>
 
-                <div class="kpi-card">
-                    <div class="kpi-icon">👥</div>
-                    <div class="kpi-label">POSITIVADOS</div>
-                    <div class="kpi-value" id="kpiClientes">0</div>
+                <div class="gc-kpi">
+                    <div class="gc-kpi__icon">👥</div>
+                    <div class="gc-kpi__label">POSITIVADOS</div>
+                    <div class="gc-kpi__value" id="kpiClientes">0</div>
                 </div>
 
-                <div class="kpi-card">
-                    <div class="kpi-icon">📊</div>
-                    <div class="kpi-label">% MÉDIA META</div>
-                    <div class="kpi-value" id="kpiMetaMedia">0%</div>
+                <div class="gc-kpi">
+                    <div class="gc-kpi__icon">📊</div>
+                    <div class="gc-kpi__label">% MÉDIA META</div>
+                    <div class="gc-kpi__value" id="kpiMetaMedia">0%</div>
                 </div>
             </div>
 
@@ -591,6 +252,7 @@
         import { Pagination } from '../js/pagination.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
+        import { setFreshness } from '../js/dashboard-shell.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Performance Mensal');
@@ -632,26 +294,22 @@
 
             switch(periodo) {
                 case 'mes':
-                    // Mês atual (primeiro ao último dia)
                     dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
                     dataFim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
                     break;
 
                 case 'mesAnterior':
-                    // Mês anterior completo
                     dataInicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
                     dataFim = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
                     break;
 
                 case 'trimestre':
-                    // Trimestre atual
                     const trimestreAtual = Math.floor(hoje.getMonth() / 3);
                     dataInicio = new Date(hoje.getFullYear(), trimestreAtual * 3, 1);
                     dataFim = new Date(hoje.getFullYear(), (trimestreAtual + 1) * 3, 0);
                     break;
 
                 case 'ano':
-                    // Ano atual (01/Jan até hoje ou até 31/Dez)
                     dataInicio = new Date(hoje.getFullYear(), 0, 1);
                     dataFim = hoje;
                     break;
@@ -666,37 +324,30 @@
 
         // Limpar filtros
         window.limparFiltros = function() {
-            // Reset datas para mês atual
             inicializarDatas();
 
-            // Reset supervisor
             const selectSupervisor = document.getElementById('filtroSupervisor');
             for (let option of selectSupervisor.options) {
                 option.selected = false;
             }
 
-            // Reset representante
             const selectRep = document.getElementById('filtroRepresentante');
             for (let option of selectRep.options) {
                 option.selected = false;
             }
 
-            // Recarregar representantes (todos)
             preencherRepresentantes();
 
-            // Limpar dados da tabela
             window.dadosCompletos = [];
             window.pagination.setData([]);
             document.getElementById('totalRegistros').textContent = '0 registros';
             document.getElementById('footerTotal').textContent = 'Total: 0 registros';
 
-            // Reset KPIs
             document.getElementById('kpiFaturamento').textContent = 'R$ 0';
             document.getElementById('kpiPeso').textContent = '0';
             document.getElementById('kpiClientes').textContent = '0';
             document.getElementById('kpiMetaMedia').textContent = '0%';
 
-            // Destruir gráficos se existirem
             if (chart1) chart1.destroy();
             if (chart2) chart2.destroy();
         };
@@ -709,7 +360,6 @@
                 window.todosSupervisores = [...new Set(dados.rows.map(r => r.rep_supervisor))].filter(s => s);
                 window.todosRepresentantes = dados.rows;
 
-                // Preencher supervisores
                 const selectSupervisor = document.getElementById('filtroSupervisor');
                 selectSupervisor.innerHTML = '<option value="">Todos</option>';
                 window.todosSupervisores.forEach(sup => {
@@ -719,7 +369,6 @@
                     selectSupervisor.appendChild(option);
                 });
 
-                // Preencher representantes (todos inicialmente)
                 preencherRepresentantes();
 
             } catch (error) {
@@ -728,7 +377,6 @@
             }
         }
 
-        // Preencher select de representantes (com filtro de supervisor)
         function preencherRepresentantes() {
             const supervisoresSelecionados = Array.from(
                 document.getElementById('filtroSupervisor').selectedOptions
@@ -754,16 +402,13 @@
             });
         }
 
-        // Cascata: quando mudar supervisor, filtrar representantes
         document.getElementById('filtroSupervisor').addEventListener('change', preencherRepresentantes);
 
-        // Formatar data para YYYY-MM (para buscar metas)
         function getMesAno(dataStr) {
             const data = new Date(dataStr + 'T00:00:00');
             return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
         }
 
-        // Calcular ano anterior
         function getAnoAnterior(dataStr) {
             const data = new Date(dataStr + 'T00:00:00');
             const anoAnterior = data.getFullYear() - 1;
@@ -803,12 +448,12 @@
                     atualizarGraficos();
                     document.getElementById('totalRegistros').textContent = `${cachedData.length} registros`;
                     document.getElementById('footerTotal').textContent = `Total: ${cachedData.length} registros`;
+                    setFreshness(document.querySelector('[data-gc-freshness]'), Date.now());
                     return;
                 }
 
                 if (!db.isConnected()) await db.connect();
 
-                // 1. Montar query do período atual
                 let sqlAtual = `
                     SELECT
                         r.representante,
@@ -838,13 +483,9 @@
 
                 sqlAtual += ' GROUP BY r.representante, r.desc_representante, r.rep_supervisor';
 
-                // 2. Montar query de metas
                 const mesAno = getMesAno(dataInicio);
-
-                // 3. Montar query do ano anterior
                 const anoAnt = getAnoAnterior(dataInicio);
 
-                // Executar as 3 queries em batch (1 round trip ao invés de 3)
                 const [resultAtual, resultMetas, resultAnoAnt] = await db.batch([
                     { sql: sqlAtual, args: paramsAtual },
                     { sql: 'SELECT representante, meta_faturamento, meta_peso, meta_clientes FROM metas_mensais WHERE ano_mes = ?', args: [mesAno] },
@@ -861,7 +502,6 @@
                     anoAnterior[a.representante] = a;
                 });
 
-                // 4. Combinar todos os dados
                 window.dadosCompletos = resultAtual.rows.map(row => {
                     const meta = metas[row.representante] || {};
                     const anoAnt = anoAnterior[row.representante] || {};
@@ -889,18 +529,14 @@
 
                 cache.set(cacheKey, window.dadosCompletos, CACHE_TTL.DASHBOARDS);
 
-                // Atualizar paginação
                 window.pagination.setData(window.dadosCompletos);
 
-                // Atualizar KPIs
                 atualizarKPIs();
-
-                // Atualizar gráficos
                 atualizarGraficos();
 
-                // Atualizar contador
                 document.getElementById('totalRegistros').textContent = `${window.dadosCompletos.length} registros`;
                 document.getElementById('footerTotal').textContent = `Total: ${window.dadosCompletos.length} registros`;
+                setFreshness(document.querySelector('[data-gc-freshness]'), Date.now());
 
             } catch (error) {
                 console.error('Erro ao atualizar dados:', error);
@@ -914,7 +550,7 @@
             if (dados.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" class="empty-state">
+                        <td colspan="8" class="gc-empty">
                             <div class="empty-state-icon">📭</div>
                             <div>Nenhum registro encontrado</div>
                         </td>
@@ -938,7 +574,6 @@
                 const percVsAnoFat = parseFloat(row.perc_vs_ano_ant_fat || 0);
                 const percVsAnoPeso = parseFloat(row.perc_vs_ano_ant_peso || 0);
 
-                // Classes de status
                 const statusFatClass = percMetaFat >= 100 ? 'status-acima' : percMetaFat >= 80 ? 'status-medio' : 'status-abaixo';
                 const statusPesoClass = percMetaPeso >= 100 ? 'status-acima' : percMetaPeso >= 80 ? 'status-medio' : 'status-abaixo';
 
