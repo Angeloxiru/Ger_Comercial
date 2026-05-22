@@ -237,7 +237,7 @@
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
         import { serializeDbResult, validateCacheStructure, buildDataCacheKey } from '../js/db-utils.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
-        import { setFreshness } from '../js/dashboard-shell.js';
+        import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Análise de Produtos');
@@ -775,11 +775,55 @@
             }
         };
 
-        // Inicializar - carrega filtros na primeira vez E ao voltar (pageshow para bfcache)
-        const initFiltros = (event) => {
-            // Se for evento pageshow e a página veio do cache (persisted)
+        // ========== URL STATE (FASE 2 — filtros na URL / drill-down / voltar com contexto) ==========
+        function setMultiSelectValues(selectId, values) {
+            const el = document.getElementById(selectId);
+            if (!el) return;
+            const list = Array.isArray(values) ? values : (values ? [values] : []);
+            const map = { filtroOrigem: 'origem', filtroFamilia: 'familia', filtroProduto: 'produto' };
+            const fs = window.filterSearches?.[map[selectId]];
+            if (fs && typeof fs.setSelected === 'function') {
+                fs.setSelected(list);
+            } else {
+                const wanted = new Set(list);
+                for (const opt of el.options) opt.selected = wanted.has(opt.value);
+            }
+        }
+
+        function snapshotFilters() {
+            return {
+                inicio: document.getElementById('dataInicio').value || null,
+                fim: document.getElementById('dataFim').value || null,
+                origem: Array.from(document.getElementById('filtroOrigem').selectedOptions).map(o => o.value),
+                familia: Array.from(document.getElementById('filtroFamilia').selectedOptions).map(o => o.value),
+                produto: Array.from(document.getElementById('filtroProduto').selectedOptions).map(o => o.value),
+            };
+        }
+
+        // Cascades: origem → (familia, produto) ; familia → produto
+        function hydrateFromURL() {
+            const p = urlFilters.read();
+            if (p.inicio) document.getElementById('dataInicio').value = p.inicio;
+            if (p.fim) document.getElementById('dataFim').value = p.fim;
+
+            if (p.origem) {
+                setMultiSelectValues('filtroOrigem', p.origem);
+                document.getElementById('filtroOrigem').dispatchEvent(new Event('change'));
+            }
+            if (p.familia) {
+                setMultiSelectValues('filtroFamilia', p.familia);
+                document.getElementById('filtroFamilia').dispatchEvent(new Event('change'));
+            }
+            if (p.produto) setMultiSelectValues('filtroProduto', p.produto);
+        }
+
+        function hasRequiredFilters(snap) {
+            return !!(snap.inicio && snap.fim);
+        }
+
+        async function initDashboardURL(event) {
+            // Se voltou do bfcache, destrói FilterSearch antigos pra evitar estado obsoleto
             if (event && event.type === 'pageshow' && event.persisted) {
-                // Destrói FilterSearch existentes para evitar estado obsoleto
                 if (window.filterSearches) {
                     Object.values(window.filterSearches).forEach(fs => {
                         if (fs && fs.destroy) fs.destroy();
@@ -787,12 +831,31 @@
                     window.filterSearches = null;
                 }
             }
+            await carregarFiltros();
+            hydrateFromURL();
+            if (hasRequiredFilters(snapshotFilters())) {
+                window.atualizarDados();
+            }
+        }
 
-            carregarFiltros();
+        const _atualizarDados = window.atualizarDados;
+        window.atualizarDados = async function() {
+            urlFilters.write(snapshotFilters());
+            return _atualizarDados();
         };
 
-        // Usa apenas pageshow para evitar dupla inicialização (load + pageshow disparam juntos)
-        window.addEventListener('pageshow', initFiltros);
+        const _limparFiltros = window.limparFiltros;
+        window.limparFiltros = function() {
+            _limparFiltros();
+            urlFilters.write({ inicio: null, fim: null, origem: null, familia: null, produto: null });
+        };
+
+        window.addEventListener('popstate', () => {
+            hydrateFromURL();
+            if (hasRequiredFilters(snapshotFilters())) _atualizarDados();
+        });
+
+        window.addEventListener('pageshow', initDashboardURL);
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {

@@ -253,7 +253,7 @@
         import { Pagination } from '../js/pagination.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
-        import { setFreshness } from '../js/dashboard-shell.js';
+        import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Performance Mensal');
@@ -822,10 +822,68 @@
         };
 
         // Usa apenas pageshow para evitar dupla inicialização
-        window.addEventListener('pageshow', () => {
-            inicializarDatas();
-            carregarFiltros();
+        // ========== URL STATE (FASE 2 — filtros na URL / drill-down / voltar com contexto) ==========
+        function setMultiSelectValues(selectId, values) {
+            const el = document.getElementById(selectId);
+            if (!el) return;
+            const wanted = new Set(Array.isArray(values) ? values : (values ? [values] : []));
+            for (const opt of el.options) opt.selected = wanted.has(opt.value);
+        }
+
+        function snapshotFilters() {
+            return {
+                inicio: document.getElementById('filtroDataInicio').value || null,
+                fim: document.getElementById('filtroDataFim').value || null,
+                supervisor: Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value).filter(v => v !== ''),
+                representante: Array.from(document.getElementById('filtroRepresentante').selectedOptions).map(o => o.value).filter(v => v !== ''),
+            };
+        }
+
+        function hydrateFromURL() {
+            const p = urlFilters.read();
+            if (p.inicio) document.getElementById('filtroDataInicio').value = p.inicio;
+            if (p.fim) document.getElementById('filtroDataFim').value = p.fim;
+            if (p.supervisor) {
+                setMultiSelectValues('filtroSupervisor', p.supervisor);
+                preencherRepresentantes();
+            }
+            if (p.representante) setMultiSelectValues('filtroRepresentante', p.representante);
+        }
+
+        function hasRequiredFilters(snap) {
+            return !!(snap.inicio && snap.fim);
+        }
+
+        async function initDashboardURL() {
+            const params = urlFilters.read();
+            if (!params.inicio) {
+                inicializarDatas();
+            }
+            await carregarFiltros();
+            hydrateFromURL();
+            if (hasRequiredFilters(snapshotFilters())) {
+                window.atualizarDados();
+            }
+        }
+
+        const _atualizarDados = window.atualizarDados;
+        window.atualizarDados = async function() {
+            urlFilters.write(snapshotFilters());
+            return _atualizarDados();
+        };
+
+        const _limparFiltros = window.limparFiltros;
+        window.limparFiltros = function() {
+            _limparFiltros();
+            urlFilters.write({ inicio: null, fim: null, supervisor: null, representante: null });
+        };
+
+        window.addEventListener('popstate', () => {
+            hydrateFromURL();
+            if (hasRequiredFilters(snapshotFilters())) _atualizarDados();
         });
+
+        window.addEventListener('pageshow', initDashboardURL);
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {

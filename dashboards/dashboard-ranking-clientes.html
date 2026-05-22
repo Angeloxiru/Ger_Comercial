@@ -310,7 +310,7 @@
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
         import { serializeDbResult, validateCacheStructure, buildDataCacheKey } from '../js/db-utils.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
-        import { setFreshness } from '../js/dashboard-shell.js';
+        import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
 
         // Badge "atualizado há X min" no header (princípio P5 da UX_INVESTIGATIVA)
         const freshnessEl = document.querySelector('[data-gc-freshness]');
@@ -377,16 +377,7 @@
             onPageChange: renderizarTabela
         });
 
-        // Definir datas padrão
-        window.addEventListener('load', () => {
-            const hoje = new Date();
-            const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-
-            document.getElementById('dataInicio').value = inicioMes.toISOString().split('T')[0];
-            document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
-
-            carregarFiltros();
-        });
+        // Datas padrão + inicialização movidas para initDashboardURL (FASE 2)
 
         // Variáveis globais para armazenar dados completos (necessário para hierarquia de filtros)
         let dadosCompletosClientes = [];
@@ -1183,7 +1174,96 @@
             }
         };
 
-        window.addEventListener('pageshow', carregarFiltros);
+        // ========== URL STATE (FASE 2 — filtros na URL / drill-down / voltar com contexto) ==========
+        function setMultiSelectValues(selectId, values) {
+            const el = document.getElementById(selectId);
+            if (!el) return;
+            const list = Array.isArray(values) ? values : (values ? [values] : []);
+            const fs = window.filterSearches?.[selectId];
+            if (fs && typeof fs.setSelected === 'function') {
+                fs.setSelected(list);
+            } else {
+                const wanted = new Set(list);
+                for (const opt of el.options) opt.selected = wanted.has(opt.value);
+            }
+        }
+
+        function snapshotFilters() {
+            return {
+                inicio: document.getElementById('dataInicio').value || null,
+                fim: document.getElementById('dataFim').value || null,
+                rota: Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value),
+                subrota: Array.from(document.getElementById('filtroSubRota').selectedOptions).map(o => o.value),
+                cidade: Array.from(document.getElementById('filtroCidade').selectedOptions).map(o => o.value),
+                supervisor: Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value),
+                representante: Array.from(document.getElementById('filtroRepresentante').selectedOptions).map(o => o.value),
+                modo: window.modoAtual || 'clientes',
+            };
+        }
+
+        // Cascades: rota → (subrota, cidade) ; supervisor → representante
+        function hydrateFromURL() {
+            const p = urlFilters.read();
+            if (p.inicio) document.getElementById('dataInicio').value = p.inicio;
+            if (p.fim) document.getElementById('dataFim').value = p.fim;
+            if (p.modo === 'clientes' || p.modo === 'grupos') window.alternarModo(p.modo);
+
+            if (p.rota) {
+                setMultiSelectValues('filtroRota', p.rota);
+                document.getElementById('filtroRota').dispatchEvent(new Event('change'));
+            }
+            if (p.subrota) setMultiSelectValues('filtroSubRota', p.subrota);
+            if (p.cidade) setMultiSelectValues('filtroCidade', p.cidade);
+
+            if (p.supervisor) {
+                setMultiSelectValues('filtroSupervisor', p.supervisor);
+                document.getElementById('filtroSupervisor').dispatchEvent(new Event('change'));
+            }
+            if (p.representante) setMultiSelectValues('filtroRepresentante', p.representante);
+        }
+
+        function hasRequiredFilters(snap) {
+            // Ranking exige período obrigatoriamente (validação já existente em atualizarDados)
+            return !!(snap.inicio && snap.fim);
+        }
+
+        async function initDashboardURL() {
+            // Defaults só se a URL não tiver datas próprias
+            const params = urlFilters.read();
+            if (!params.inicio && !document.getElementById('dataInicio').value) {
+                const hoje = new Date();
+                const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+                document.getElementById('dataInicio').value = inicioMes.toISOString().split('T')[0];
+                document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
+            }
+            await carregarFiltros();
+            hydrateFromURL();
+            if (hasRequiredFilters(snapshotFilters())) {
+                window.atualizarDados();
+            }
+        }
+
+        // Escreve URL ao atualizar dados
+        const _atualizarDados = window.atualizarDados;
+        window.atualizarDados = async function() {
+            urlFilters.write(snapshotFilters());
+            return _atualizarDados();
+        };
+
+        // Limpa URL ao limpar filtros
+        const _limparFiltros = window.limparFiltros;
+        window.limparFiltros = function() {
+            _limparFiltros();
+            urlFilters.write({ inicio: null, fim: null, rota: null, subrota: null, cidade: null, supervisor: null, representante: null, modo: null });
+        };
+
+        window.addEventListener('popstate', () => {
+            hydrateFromURL();
+            if (hasRequiredFilters(snapshotFilters())) _atualizarDados();
+        });
+
+        // Substitui o pageshow + load anterior
+        window.addEventListener('pageshow', initDashboardURL);
     </script>
 </body>
 </html>
