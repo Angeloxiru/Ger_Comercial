@@ -20,6 +20,7 @@ Sem build pipeline, sem framework SPA — por escolha deliberada
 | [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md) | Stack, camadas, ADRs vivos e o que **não** entra no projeto |
 | [`docs/UX_INVESTIGATIVA.md`](docs/UX_INVESTIGATIVA.md) | Princípios de UX do cockpit, padrões de tela, anti-padrões |
 | [`docs/MODELO_TEMPORAL.md`](docs/MODELO_TEMPORAL.md) | Períodos canônicos, comparativos, TTL de cache por classe de dado |
+| [`docs/HOMOLOGACAO.md`](docs/HOMOLOGACAO.md) | Como testar branches em homologação (Cloudflare Pages) sem encostar na produção |
 
 ## 🗺️ Roadmap (5 fases)
 
