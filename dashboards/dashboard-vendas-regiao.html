@@ -264,7 +264,7 @@
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
         import { serializeDbResult, validateCacheStructure, buildDataCacheKey } from '../js/db-utils.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
-        import { setFreshness } from '../js/dashboard-shell.js';
+        import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Vendas por Região');
@@ -1554,8 +1554,92 @@
             restaurarEstadoFiltros();
         };
 
-        // Usa apenas pageshow para evitar dupla inicialização (load + pageshow disparam juntos)
-        window.addEventListener('pageshow', initFiltros);
+        // ========== URL STATE (FASE 2 — filtros na URL / drill-down / voltar com contexto) ==========
+        function setMultiSelectValues(selectId, values) {
+            const el = document.getElementById(selectId);
+            if (!el) return;
+            const list = Array.isArray(values) ? values : (values ? [values] : []);
+            const map = { filtroRota: 'rota', filtroSubRota: 'subrota', filtroCidade: 'cidade' };
+            const fs = window.filterSearches?.[map[selectId]];
+            if (fs && typeof fs.setSelected === 'function') {
+                fs.setSelected(list);
+            } else {
+                const wanted = new Set(list);
+                for (const opt of el.options) opt.selected = wanted.has(opt.value);
+            }
+        }
+
+        function snapshotFilters() {
+            return {
+                inicio: document.getElementById('dataInicio').value || null,
+                fim: document.getElementById('dataFim').value || null,
+                rota: Array.from(document.getElementById('filtroRota').selectedOptions).map(o => o.value),
+                subrota: Array.from(document.getElementById('filtroSubRota').selectedOptions).map(o => o.value),
+                cidade: Array.from(document.getElementById('filtroCidade').selectedOptions).map(o => o.value),
+                modo: window.modoVisualizacao || 'itens',
+            };
+        }
+
+        // Cascade: rota → subrota → cidade
+        function hydrateFromURL() {
+            const p = urlFilters.read();
+            if (p.inicio) document.getElementById('dataInicio').value = p.inicio;
+            if (p.fim) document.getElementById('dataFim').value = p.fim;
+
+            if (p.rota) {
+                setMultiSelectValues('filtroRota', p.rota);
+                document.getElementById('filtroRota').dispatchEvent(new Event('change'));
+            }
+            if (p.subrota) {
+                setMultiSelectValues('filtroSubRota', p.subrota);
+                document.getElementById('filtroSubRota').dispatchEvent(new Event('change'));
+            }
+            if (p.cidade) setMultiSelectValues('filtroCidade', p.cidade);
+
+            return (p.modo === 'itens' || p.modo === 'clientes' || p.modo === 'roteiros') ? p.modo : null;
+        }
+
+        function hasAnyFilter(snap) {
+            return !!(snap.inicio || snap.fim
+                || snap.rota.length || snap.subrota.length || snap.cidade.length);
+        }
+
+        // Sobrescreve initFiltros: URL tem prioridade; senão, fallback pra sessionStorage existente
+        const _initFiltrosOriginal = initFiltros;
+        const initDashboardURL = async function(event) {
+            await _initFiltrosOriginal(event);
+            const modo = hydrateFromURL();
+            if (hasAnyFilter(snapshotFilters())) {
+                atualizarDados(modo || 'itens');
+            }
+        };
+
+        // Escreve URL ao atualizar dados
+        const _atualizarDadosOriginal = atualizarDados;
+        // Não reatribui declaração; envolve as 3 entradas window.*
+        function atualizarDadosComURL(modo) {
+            window.modoVisualizacao = modo;
+            urlFilters.write(snapshotFilters());
+            return _atualizarDadosOriginal(modo);
+        }
+        window.atualizarDadosItens = () => atualizarDadosComURL('itens');
+        window.atualizarDadosClientes = () => atualizarDadosComURL('clientes');
+        window.atualizarDadosRoteiros = () => atualizarDadosComURL('roteiros');
+
+        const _limparFiltros = window.limparFiltros;
+        window.limparFiltros = function() {
+            _limparFiltros();
+            urlFilters.write({ inicio: null, fim: null, rota: null, subrota: null, cidade: null, modo: null });
+        };
+
+        window.addEventListener('popstate', () => {
+            const modo = hydrateFromURL();
+            if (hasAnyFilter(snapshotFilters())) _atualizarDadosOriginal(modo || 'itens');
+        });
+
+        // Substitui o pageshow original
+        window.removeEventListener('pageshow', initFiltros);
+        window.addEventListener('pageshow', initDashboardURL);
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {

@@ -429,7 +429,7 @@
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
         import { serializeDbResult, validateCacheStructure, buildDataCacheKey } from '../js/db-utils.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
-        import { setFreshness } from '../js/dashboard-shell.js';
+        import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Categorias de Produtos');
@@ -1543,8 +1543,62 @@
             }
         };
 
-        // Inicializacao
-        const initFiltros = (event) => {
+        // ========== URL STATE (FASE 2 — filtros na URL / drill-down / voltar com contexto) ==========
+        function setMultiSelectValues(selectId, values) {
+            const el = document.getElementById(selectId);
+            if (!el) return;
+            const list = Array.isArray(values) ? values : (values ? [values] : []);
+            const map = { filtroSupervisor: 'supervisor', filtroRepresentante: 'representante' };
+            const fs = window.filterSearches?.[map[selectId]];
+            if (fs && typeof fs.setSelected === 'function') {
+                fs.setSelected(list);
+            } else {
+                const wanted = new Set(list);
+                for (const opt of el.options) opt.selected = wanted.has(opt.value);
+            }
+        }
+
+        function snapshotFilters() {
+            return {
+                inicio: document.getElementById('dataInicio').value || null,
+                fim: document.getElementById('dataFim').value || null,
+                supervisor: Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value),
+                representante: Array.from(document.getElementById('filtroRepresentante').selectedOptions).map(o => o.value),
+                grupoCli: document.getElementById('filtroGrupoCliente').value || null,
+                categorias: getCategoriasAtivas(),
+                modo: window.modoVisualizacao || 'resumido',
+            };
+        }
+
+        function hydrateFromURL() {
+            const p = urlFilters.read();
+            if (p.inicio) document.getElementById('dataInicio').value = p.inicio;
+            if (p.fim) document.getElementById('dataFim').value = p.fim;
+            if (p.grupoCli) document.getElementById('filtroGrupoCliente').value = p.grupoCli;
+
+            if (p.supervisor) {
+                setMultiSelectValues('filtroSupervisor', p.supervisor);
+                document.getElementById('filtroSupervisor').dispatchEvent(new Event('change'));
+            }
+            if (p.representante) setMultiSelectValues('filtroRepresentante', p.representante);
+
+            // Categorias (checkboxes) — atualiza marcação e estado visual .checked
+            if (p.categorias !== undefined) {
+                const want = new Set(Array.isArray(p.categorias) ? p.categorias : [p.categorias]);
+                document.querySelectorAll('.categoria-check input[type="checkbox"]').forEach(cb => {
+                    cb.checked = want.has(cb.value);
+                    cb.closest('.categoria-check').classList.toggle('checked', cb.checked);
+                });
+            }
+
+            return (p.modo === 'resumido' || p.modo === 'detalhado') ? p.modo : null;
+        }
+
+        function hasRequiredFilters(snap) {
+            return !!(snap.inicio && snap.fim);
+        }
+
+        async function initDashboardURL(event) {
             if (event && event.type === 'pageshow' && event.persisted) {
                 if (window.filterSearches) {
                     Object.values(window.filterSearches).forEach(fs => {
@@ -1553,10 +1607,34 @@
                     window.filterSearches = null;
                 }
             }
-            carregarFiltros();
+            await carregarFiltros();
+            const modo = hydrateFromURL();
+            if (hasRequiredFilters(snapshotFilters())) {
+                atualizarDadosComURL(modo || 'resumido');
+            }
+        }
+
+        const _atualizarDadosOriginal = atualizarDados;
+        function atualizarDadosComURL(modo) {
+            window.modoVisualizacao = modo;
+            urlFilters.write(snapshotFilters());
+            return _atualizarDadosOriginal(modo);
+        }
+        window.atualizarDadosResumido = () => atualizarDadosComURL('resumido');
+        window.atualizarDadosDetalhado = () => atualizarDadosComURL('detalhado');
+
+        const _limparFiltros = window.limparFiltros;
+        window.limparFiltros = function() {
+            _limparFiltros();
+            urlFilters.write({ inicio: null, fim: null, supervisor: null, representante: null, grupoCli: null, categorias: null, modo: null });
         };
 
-        window.addEventListener('pageshow', initFiltros);
+        window.addEventListener('popstate', () => {
+            const modo = hydrateFromURL();
+            if (hasRequiredFilters(snapshotFilters())) _atualizarDadosOriginal(modo || 'resumido');
+        });
+
+        window.addEventListener('pageshow', initDashboardURL);
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {

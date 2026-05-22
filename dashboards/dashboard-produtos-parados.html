@@ -264,7 +264,7 @@
         import { cache, CACHE_TTL } from '../js/cache.js';
         import { getRepresentantes } from '../js/shared-filters.js';
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
-        import { setFreshness } from '../js/dashboard-shell.js';
+        import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
 
         // Injetar estilos do FilterSearch
         injectFilterSearchStyles();
@@ -817,15 +817,62 @@
             }
         }
 
-        // Tornar funções globais
-        window.carregarDados = carregarDados;
-        window.aplicarFiltros = aplicarFiltros;
-        window.limparFiltros = limparFiltros;
+        // ========== URL STATE (FASE 2 — filtros na URL / drill-down / voltar com contexto) ==========
+        function snapshotFilters() {
+            return {
+                supervisor: document.getElementById('filterSupervisor').value || null,
+                representante: document.getElementById('filterRepresentante').value || null,
+                risco: document.getElementById('filterRisco').value || null,
+            };
+        }
+
+        function hydrateFromURL() {
+            const p = urlFilters.read();
+            if (p.supervisor) {
+                document.getElementById('filterSupervisor').value = p.supervisor;
+                // Re-popula representantes baseado no supervisor selecionado
+                atualizarFiltroRepresentantesInicial();
+            }
+            if (p.representante) document.getElementById('filterRepresentante').value = p.representante;
+            if (p.risco) document.getElementById('filterRisco').value = p.risco;
+        }
+
+        function hasAnyFilter(snap) {
+            return !!(snap.supervisor || snap.representante || snap.risco);
+        }
+
+        // Tornar funções globais (com wrappers de URL)
+        window.carregarDados = async function() {
+            urlFilters.write(snapshotFilters());
+            return carregarDados();
+        };
+        window.aplicarFiltros = function() {
+            urlFilters.write(snapshotFilters());
+            return aplicarFiltros();
+        };
+        window.limparFiltros = function() {
+            limparFiltros();
+            urlFilters.write({ supervisor: null, representante: null, risco: null });
+        };
         window.exportarPDF = exportarPDF;
         window.enviarWhatsApp = enviarWhatsApp;
 
-        // Carregar apenas os filtros ao iniciar (sem carregar dados)
-        carregarFiltros();
+        // Init: carrega filtros, hidrata da URL, e auto-busca se houver filtros.
+        (async () => {
+            await carregarFiltros();
+            hydrateFromURL();
+            if (hasAnyFilter(snapshotFilters())) {
+                await carregarDados();
+            }
+        })();
+
+        window.addEventListener('popstate', () => {
+            hydrateFromURL();
+            if (hasAnyFilter(snapshotFilters())) {
+                if (dadosCompletos.length > 0) aplicarFiltros();
+                else carregarDados();
+            }
+        });
     </script>
 </body>
 </html>
