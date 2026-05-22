@@ -1,6 +1,36 @@
-# Ger Comercial - Sistema de Gestao Comercial
+# Ger Comercial — Cockpit Investigativo Comercial
 
-Sistema web PWA (Progressive Web App) para gestao e analise de dados comerciais, construido em vanilla JavaScript com banco de dados Turso (LibSQL).
+> **O que este sistema é:** uma camada analítica e operacional sobre dados ERP/SAP
+> de vendas. Um cockpit investigativo para o supervisor / gerente comercial
+> responder rápido à pergunta do dia: *"Onde a equipe está agora e o que
+> precisa de atenção para vender mais?"*
+>
+> **O que este sistema não é:** um ERP, um CRUD administrativo, nem um
+> Power BI decorativo. Cada decisão de produto passa pelo filtro:
+> *"Isso ajuda a descobrir problemas da equipe e aumentar vendas mais rápido?"*
+
+PWA em vanilla JavaScript sobre Turso (LibSQL). Hospedado em GitHub Pages.
+Sem build pipeline, sem framework SPA — por escolha deliberada
+(ver [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md)).
+
+## 📐 Carta de princípios (leitura obrigatória antes de contribuir)
+
+| Documento | O que contém |
+|---|---|
+| [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md) | Stack, camadas, ADRs vivos e o que **não** entra no projeto |
+| [`docs/UX_INVESTIGATIVA.md`](docs/UX_INVESTIGATIVA.md) | Princípios de UX do cockpit, padrões de tela, anti-padrões |
+| [`docs/MODELO_TEMPORAL.md`](docs/MODELO_TEMPORAL.md) | Períodos canônicos, comparativos, TTL de cache por classe de dado |
+
+## 🗺️ Roadmap (5 fases)
+
+| Fase | Foco | Status |
+|---|---|---|
+| **FASE 0** | Segurança P0 (token Turso, hash de senha, proxy de leitura) | ⏳ pendente |
+| **FASE 1** | Shell unificado dos dashboards (`css/dashboard-shell.css` + `js/dashboard-shell.js`) | 🟡 fundação pronta — adoção incremental |
+| **FASE 2** | Investigação cruzada (filtros na URL, drill-down entre dashboards, saved views) | 🔜 |
+| **FASE 3** | Modelo temporal canônico (period-picker único + comparativos consistentes) | 🔜 |
+| **FASE 4** | Inteligência operacional (alertas contextuais, próxima ação sugerida) | 🔜 |
+| **FASE 5** | Polimento e doc viva contínua | 🔜 |
 
 ## Funcionalidades Principais
 
