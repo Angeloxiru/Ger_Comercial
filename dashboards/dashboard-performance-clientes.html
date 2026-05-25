@@ -630,6 +630,8 @@
             const numClientes = clientesUnicos.size;
             const ticketMedio = numClientes > 0 ? totalValor / numClientes : 0;
 
+            window._currentKPIs = { valor: totalValor, qtde: totalQtde, peso: totalPeso, registros: dados.length, ticket: ticketMedio, clientes: numClientes };
+
             document.getElementById('kpiValor').textContent = 'R$ ' + totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2});
             document.getElementById('kpiQtde').textContent = totalQtde.toLocaleString('pt-BR');
             document.getElementById('kpiPeso').textContent = totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg';
@@ -898,6 +900,7 @@
             mountComparison({
                 container: '#comparisonSlot',
                 getCurrentPeriod: () => ({ inicio: document.getElementById('dataInicio').value, fim: document.getElementById('dataFim').value }),
+                getCurrentKPIs: () => window._currentKPIs || { valor: 0, qtde: 0, peso: 0, registros: 0, ticket: 0, clientes: 0 },
                 fetchKPIs: async (inicio, fim) => {
                     if (!db.isConnected()) await db.connect();
                     const r = await db.execute('SELECT SUM(v.valor_liquido) as valor, SUM(v.qtde_faturada) as qtde, SUM(v.peso_liq) as peso, COUNT(*) as registros, COUNT(DISTINCT v.cliente) as clientes FROM vendas v WHERE v.emissao >= ? AND v.emissao <= ?', [inicio, fim]);

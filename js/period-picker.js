@@ -149,11 +149,13 @@ function resolve(target) {
  * @param {Object} opts
  * @param {string|HTMLElement} opts.container  Onde renderizar os botões de toggle
  * @param {() => {inicio: string, fim: string}} opts.getCurrentPeriod  Retorna o período atual
- * @param {(inicio: string, fim: string) => Promise<Object>} opts.fetchKPIs  Busca KPIs para um período.
- *        Deve retornar um objeto { kpiId: valorNumérico, ... } — ex: { valor: 150000, qtde: 5000 }
+ * @param {() => Object} opts.getCurrentKPIs  Retorna os KPIs ATUAIS já calculados pelo dashboard
+ *        (ex: { valor: 150000, qtde: 5000 }). NÃO re-busca do banco.
+ * @param {(inicio: string, fim: string) => Promise<Object>} opts.fetchKPIs  Busca KPIs APENAS para
+ *        o período comparativo. Deve retornar objeto com as mesmas chaves de getCurrentKPIs.
  * @param {Object<string, string>} opts.kpiElements  Mapa { kpiId: seletorOuId } — ex: { valor: '#kpiValor' }
  */
-export function mountComparison({ container, getCurrentPeriod, fetchKPIs, kpiElements }) {
+export function mountComparison({ container, getCurrentPeriod, getCurrentKPIs, fetchKPIs, kpiElements }) {
     const host = resolve(container);
     if (!host) return;
 
@@ -195,7 +197,7 @@ export function mountComparison({ container, getCurrentPeriod, fetchKPIs, kpiEle
             : periodoAnterior(period.inicio, period.fim);
 
         try {
-            const currentKPIs = await fetchKPIs(period.inicio, period.fim);
+            const currentKPIs = getCurrentKPIs();
             const prevKPIs = await fetchKPIs(comp.inicio, comp.fim);
 
             for (const [key, selector] of Object.entries(kpiElements)) {

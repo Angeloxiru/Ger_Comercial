@@ -623,6 +623,7 @@
                 inicio: document.getElementById('dataInicio').value,
                 fim: document.getElementById('dataFim').value,
             }),
+            getCurrentKPIs: () => window._currentKPIs || { valor: 0, qtde: 0, peso: 0, registros: 0 },
             fetchKPIs: fetchKPIsForPeriod,
             kpiElements: {
                 valor: '#kpiValor',
@@ -896,6 +897,8 @@
             const totalValor = dados.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
             const totalQtde = dados.reduce((sum, row) => sum + parseFloat(row.qtde || 0), 0);
             const totalPeso = dados.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
+
+            window._currentKPIs = { valor: totalValor, qtde: totalQtde, peso: totalPeso, registros: dados.length };
 
             document.getElementById('kpiValor').textContent = 'R$ ' + totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2});
             document.getElementById('kpiQtde').textContent = totalQtde.toLocaleString('pt-BR');

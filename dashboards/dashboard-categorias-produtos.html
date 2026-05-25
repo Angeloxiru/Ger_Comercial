@@ -1019,6 +1019,8 @@
             const totalValor = dados.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
             const valorKg = totalPeso > 0 ? totalValor / totalPeso : 0;
 
+            window._currentKPIs = { peso: totalPeso, valor: totalValor, valorKg };
+
             document.getElementById('kpiPeso').textContent = totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' kg';
             document.getElementById('kpiValor').textContent = 'R$ ' + totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2});
             document.getElementById('kpiValorKg').textContent = 'R$ ' + valorKg.toLocaleString('pt-BR', {minimumFractionDigits: 2});
@@ -1606,6 +1608,7 @@
             mountComparison({
                 container: '#comparisonSlot',
                 getCurrentPeriod: () => ({ inicio: document.getElementById('dataInicio').value, fim: document.getElementById('dataFim').value }),
+                getCurrentKPIs: () => window._currentKPIs || { peso: 0, valor: 0, valorKg: 0 },
                 fetchKPIs: async (inicio, fim) => {
                     if (!db.isConnected()) await db.connect();
                     const r = await db.execute('SELECT SUM(v.peso_liq) as peso, SUM(v.valor_liquido) as valor FROM vendas v WHERE v.emissao >= ? AND v.emissao <= ?', [inicio, fim]);

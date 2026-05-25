@@ -612,6 +612,8 @@
             const mediaMetaPeso = dados.reduce((sum, r) => sum + parseFloat(r.perc_meta_peso || 0), 0) / dados.length;
             const mediaGeral = (mediaMetaFat + mediaMetaPeso) / 2;
 
+            window._currentKPIs = { faturamento: totalFaturamento, peso: totalPeso, clientes: totalClientes };
+
             document.getElementById('kpiFaturamento').textContent = 'R$ ' + totalFaturamento.toLocaleString('pt-BR', {minimumFractionDigits: 2});
             document.getElementById('kpiPeso').textContent = totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 0});
             document.getElementById('kpiClientes').textContent = totalClientes.toLocaleString('pt-BR');
@@ -843,6 +845,7 @@
             mountComparison({
                 container: '#comparisonSlot',
                 getCurrentPeriod: () => ({ inicio: document.getElementById('filtroDataInicio').value, fim: document.getElementById('filtroDataFim').value }),
+                getCurrentKPIs: () => window._currentKPIs || { faturamento: 0, peso: 0, clientes: 0 },
                 fetchKPIs: async (inicio, fim) => {
                     if (!db.isConnected()) await db.connect();
                     const r = await db.execute('SELECT SUM(v.valor_liquido) as faturamento, SUM(v.peso_liq) as peso, COUNT(DISTINCT v.cliente) as clientes FROM vendas v WHERE v.emissao >= ? AND v.emissao <= ?', [inicio, fim]);
