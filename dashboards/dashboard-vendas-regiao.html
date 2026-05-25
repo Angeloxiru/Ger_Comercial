@@ -1616,7 +1616,7 @@
             if (hasAnyFilter(snapshotFilters())) {
                 atualizarDados(modo || 'itens');
             }
-            mountSavedViews('vendas-regiao', snapshotFilters, (params) => { urlFilters.write(params); const m = hydrateFromURL(); atualizarDadosComURL(m || 'itens'); });
+            mountSavedViews({ dashboard: 'vendas-regiao', container: '#savedViewsSlot', snapshotFn: snapshotFilters, applyFn: (params) => { urlFilters.write(params); const m = hydrateFromURL(); atualizarDadosComURL(m || 'itens'); } });
         };
 
         // Escreve URL ao atualizar dados

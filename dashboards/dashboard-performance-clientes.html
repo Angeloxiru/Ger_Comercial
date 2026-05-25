@@ -919,7 +919,7 @@
             if (hasRequiredFilters(snapshotFilters())) {
                 window.atualizarDados(modo || 'detalhado');
             }
-            mountSavedViews('performance-clientes', snapshotFilters, (params) => { urlFilters.write(params); const m = hydrateFromURL(); window.atualizarDados(m || 'detalhado'); });
+            mountSavedViews({ dashboard: 'performance-clientes', container: '#savedViewsSlot', snapshotFn: snapshotFilters, applyFn: (params) => { urlFilters.write(params); const m = hydrateFromURL(); window.atualizarDados(m || 'detalhado'); } });
         }
 
         const _atualizarDados = window.atualizarDados;

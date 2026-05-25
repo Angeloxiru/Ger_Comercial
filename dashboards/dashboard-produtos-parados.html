@@ -889,7 +889,7 @@
             if (hasAnyFilter(snapshotFilters())) {
                 await carregarDados();
             }
-            mountSavedViews('produtos-parados', snapshotFilters, (params) => { urlFilters.write(params); hydrateFromURL(); if (dadosCompletos.length > 0) aplicarFiltros(); else carregarDados(); });
+            mountSavedViews({ dashboard: 'produtos-parados', container: '#savedViewsSlot', snapshotFn: snapshotFilters, applyFn: (params) => { urlFilters.write(params); hydrateFromURL(); if (dadosCompletos.length > 0) aplicarFiltros(); else carregarDados(); } });
         })();
 
         window.addEventListener('popstate', () => {

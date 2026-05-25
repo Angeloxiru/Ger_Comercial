@@ -840,7 +840,7 @@
             if (hasRequiredFilters(snapshotFilters())) {
                 window.atualizarDados();
             }
-            mountSavedViews('analise-produtos', snapshotFilters, (params) => { urlFilters.write(params); hydrateFromURL(); window.atualizarDados(); });
+            mountSavedViews({ dashboard: 'analise-produtos', container: '#savedViewsSlot', snapshotFn: snapshotFilters, applyFn: (params) => { urlFilters.write(params); hydrateFromURL(); window.atualizarDados(); } });
         }
 
         const _atualizarDados = window.atualizarDados;
