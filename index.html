@@ -188,6 +188,13 @@
             border-color: rgba(255, 255, 255, 0.5);
         }
 
+        .version-tag {
+            font-size: 0.65em;
+            opacity: 0.5;
+            margin-top: 6px;
+            letter-spacing: 0.5px;
+        }
+
         .btn-alterar-senha {
             color: white;
             background: none;
@@ -341,6 +348,7 @@
                 <div class="user-info" id="userInfo">👤 Usuário</div>
                 <a href="#" class="btn-alterar-senha" onclick="abrirAlterarSenha(); return false;">Alterar Senha</a>
                 <button class="btn-logout" onclick="handleLogout()">🚪 Sair</button>
+                <div class="version-tag" id="versionTag"></div>
             </div>
         </div>
 
@@ -520,6 +528,14 @@
 
             // Aplicar controle de acesso aos cards
             authManager.applyAccessControl();
+
+            // Versão do sistema (lê de /Ger_Comercial/VERSION)
+            fetch('/Ger_Comercial/VERSION')
+                .then(r => r.ok ? r.text() : null)
+                .then(v => {
+                    if (v) document.getElementById('versionTag').textContent = 'v' + v.trim();
+                })
+                .catch(() => {});
 
             console.log('🔐 Controle de acesso aplicado com sucesso');
         });
