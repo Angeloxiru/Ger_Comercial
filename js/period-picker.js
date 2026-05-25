@@ -139,4 +139,106 @@ function resolve(target) {
     return typeof target === 'string' ? document.querySelector(target) : target;
 }
 
+// =========================================================================
+// COMPARISON TOGGLE — "vs período anterior" / "vs ano anterior"
+// =========================================================================
+
+/**
+ * Monta o toggle comparativo nos KPIs de um dashboard.
+ *
+ * @param {Object} opts
+ * @param {string|HTMLElement} opts.container  Onde renderizar os botões de toggle
+ * @param {() => {inicio: string, fim: string}} opts.getCurrentPeriod  Retorna o período atual
+ * @param {(inicio: string, fim: string) => Promise<Object>} opts.fetchKPIs  Busca KPIs para um período.
+ *        Deve retornar um objeto { kpiId: valorNumérico, ... } — ex: { valor: 150000, qtde: 5000 }
+ * @param {Object<string, string>} opts.kpiElements  Mapa { kpiId: seletorOuId } — ex: { valor: '#kpiValor' }
+ */
+export function mountComparison({ container, getCurrentPeriod, fetchKPIs, kpiElements }) {
+    const host = resolve(container);
+    if (!host) return;
+
+    host.classList.add('gc-comparison');
+    host.innerHTML = `
+        <button type="button" class="gc-btn gc-btn--ghost gc-comparison__btn" data-mode="anterior">📊 vs Anterior</button>
+        <button type="button" class="gc-btn gc-btn--ghost gc-comparison__btn" data-mode="ano">📊 vs Ano</button>
+    `;
+
+    let activeMode = null;
+
+    host.querySelectorAll('.gc-comparison__btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const mode = btn.dataset.mode;
+
+            // Toggle off
+            if (activeMode === mode) {
+                activeMode = null;
+                btn.classList.remove('active');
+                clearDeltas();
+                return;
+            }
+
+            // Toggle on (desativa o outro)
+            host.querySelectorAll('.gc-comparison__btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeMode = mode;
+
+            await runComparison(mode);
+        });
+    });
+
+    async function runComparison(mode) {
+        const period = getCurrentPeriod();
+        if (!period?.inicio || !period?.fim) return;
+
+        const comp = mode === 'ano'
+            ? periodoAnoAnterior(period.inicio, period.fim)
+            : periodoAnterior(period.inicio, period.fim);
+
+        try {
+            const currentKPIs = await fetchKPIs(period.inicio, period.fim);
+            const prevKPIs = await fetchKPIs(comp.inicio, comp.fim);
+
+            for (const [key, selector] of Object.entries(kpiElements)) {
+                const el = resolve(selector);
+                if (!el) continue;
+
+                const cur = currentKPIs[key] ?? 0;
+                const prev = prevKPIs[key] ?? 0;
+
+                // Remove delta anterior
+                const existing = el.parentElement.querySelector('.gc-kpi__delta');
+                if (existing) existing.remove();
+
+                if (prev === 0 && cur === 0) continue;
+
+                const pct = prev !== 0 ? ((cur - prev) / Math.abs(prev)) * 100 : (cur > 0 ? 100 : 0);
+                const arrow = pct >= 0 ? '▲' : '▼';
+                const cls = pct >= 0 ? 'gc-kpi__delta--up' : 'gc-kpi__delta--down';
+                const label = mode === 'ano' ? 'vs ano ant.' : 'vs anterior';
+
+                const delta = document.createElement('div');
+                delta.className = `gc-kpi__delta ${cls}`;
+                delta.textContent = `${arrow} ${Math.abs(pct).toFixed(1)}% ${label}`;
+                el.parentElement.appendChild(delta);
+            }
+        } catch (e) {
+            console.error('Comparação: erro ao buscar período', e);
+        }
+    }
+
+    function clearDeltas() {
+        for (const selector of Object.values(kpiElements)) {
+            const el = resolve(selector);
+            if (!el) continue;
+            const delta = el.parentElement.querySelector('.gc-kpi__delta');
+            if (delta) delta.remove();
+        }
+    }
+
+    return {
+        refresh: () => { if (activeMode) runComparison(activeMode); },
+        clear: clearDeltas,
+    };
+}
+
 export { PRESETS, DEFAULT_PRESETS };

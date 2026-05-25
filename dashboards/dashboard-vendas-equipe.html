@@ -217,6 +217,9 @@
 
         <!-- Seção do dashboard (30%) -->
         <div class="dashboard-section">
+            <!-- Toggle comparativo -->
+            <div id="comparisonSlot"></div>
+
             <!-- KPIs 2x2 -->
             <div class="kpi-grid-2col">
                 <div class="gc-kpi">
@@ -287,7 +290,7 @@
         import { validarPeriodo } from '../js/periodo-validator.js';
         import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
         import { mountSavedViews } from '../js/saved-views.js';
-        import { mountPeriodPicker } from '../js/period-picker.js';
+        import { mountPeriodPicker, mountComparison } from '../js/period-picker.js';
 
         // Badge "atualizado há X min" no header (princípio P5 da UX_INVESTIGATIVA)
         const freshnessEl = document.querySelector('[data-gc-freshness]');
@@ -568,6 +571,65 @@
             inputEnd: '#dataFim',
             presetsContainer: '#periodPresets',
             presets: ['30d', 'mes', 'trimestre', 'ano'],
+        });
+
+        // Comparativo "vs anterior" / "vs ano" — busca totais para um período qualquer
+        async function fetchKPIsForPeriod(inicio, fim) {
+            if (!db.isConnected()) await db.connect();
+            const supervisores = Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value);
+            const representantes = Array.from(document.getElementById('filtroRepresentante').selectedOptions).map(o => o.value);
+            const cidades = Array.from(document.getElementById('filtroCidade').selectedOptions).map(o => o.value);
+
+            let sql = `SELECT SUM(v.valor_liquido) as valor, SUM(v.qtde_faturada) as qtde,
+                               SUM(v.peso_liq) as peso, COUNT(*) as registros
+                        FROM vendas v LEFT JOIN tab_representante r ON v.representante = r.representante
+                        WHERE v.emissao >= ? AND v.emissao <= ?`;
+            const params = [inicio, fim];
+
+            if (supervisores.length > 0) {
+                sql += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`;
+                params.push(...supervisores);
+            }
+            if (representantes.length > 0) {
+                const codigos = window.todosRepresentantes
+                    .filter(r => representantes.includes(r.desc_representante))
+                    .map(r => r.representante);
+                if (codigos.length > 0) {
+                    sql += ` AND r.representante IN (${codigos.map(() => '?').join(',')})`;
+                    params.push(...codigos);
+                }
+            }
+            if (cidades.length > 0) {
+                sql += ` AND v.cidade IN (${cidades.map(() => '?').join(',')})`;
+                params.push(...cidades);
+            }
+            if (!window.bonificacaoAtiva) {
+                sql += " AND v.nat_oper NOT IN ('5910', '6910')";
+            }
+
+            const result = await db.execute(sql, params);
+            const row = result.rows?.[0] || {};
+            return {
+                valor: parseFloat(row.valor || 0),
+                qtde: parseFloat(row.qtde || 0),
+                peso: parseFloat(row.peso || 0),
+                registros: parseInt(row.registros || 0),
+            };
+        }
+
+        const comparison = mountComparison({
+            container: '#comparisonSlot',
+            getCurrentPeriod: () => ({
+                inicio: document.getElementById('dataInicio').value,
+                fim: document.getElementById('dataFim').value,
+            }),
+            fetchKPIs: fetchKPIsForPeriod,
+            kpiElements: {
+                valor: '#kpiValor',
+                qtde: '#kpiQtde',
+                peso: '#kpiPeso',
+                registros: '#kpiRegistros',
+            },
         });
 
         // Variável global para controlar modo de visualização

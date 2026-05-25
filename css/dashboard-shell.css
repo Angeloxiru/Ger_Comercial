@@ -301,6 +301,17 @@
 .gc-kpi__delta--up   { color: var(--gc-color-success); }
 .gc-kpi__delta--down { color: var(--gc-color-danger);  }
 
+/* Comparison toggle bar */
+.gc-comparison {
+  display: inline-flex;
+  gap: var(--gc-space-sm);
+  margin-bottom: var(--gc-space-sm);
+}
+.gc-comparison__btn.active {
+  background: var(--gc-color-primary);
+  color: #fff;
+}
+
 /* 8. TABELA OPERACIONAL */
 .gc-table-card {
   background: var(--gc-color-surface);

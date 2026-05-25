@@ -7,6 +7,16 @@ Versionamento: [Semver](https://semver.org/lang/pt-BR/)
 
 ---
 
+## [1.15.0] — 2026-05-25
+
+### Adicionado
+- **FASE 3 — Modelo temporal (passo 2): Toggle comparativo (piloto)**
+  - `mountComparison()` em `period-picker.js` — toggle universal "📊 vs Anterior" /
+    "📊 vs Ano" que compara KPIs com período anterior ou mesmo período do ano passado.
+  - Piloto implementado em Vendas/Equipe: busca totais do período comparativo e
+    mostra deltas (▲ +15.2% vs anterior / ▼ -3.1% vs ano ant.) abaixo de cada KPI.
+  - CSS `.gc-comparison` + `.gc-comparison__btn.active` no shell.
+
 ## [1.14.0] — 2026-05-25
 
 ### Adicionado
