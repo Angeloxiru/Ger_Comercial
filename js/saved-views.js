@@ -41,7 +41,7 @@ async function ensureTable() {
 
 function getUsername() {
     try {
-        const session = JSON.parse(localStorage.getItem('ger_comercial_session') || sessionStorage.getItem('ger_comercial_session') || 'null');
+        const session = JSON.parse(sessionStorage.getItem('ger_comercial_auth') || localStorage.getItem('ger_comercial_auth') || 'null');
         return session?.username || null;
     } catch { return null; }
 }
