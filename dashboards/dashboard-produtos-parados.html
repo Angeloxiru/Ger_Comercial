@@ -515,6 +515,27 @@
                     <td>R$ ${(item.valor_medio_perdido || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                 `;
 
+                // Drill-down: clique leva à Análise de Produtos com este produto + últimos 90 dias
+                if (item.desc_produto) {
+                    tr.classList.add('gc-row-clickable');
+                    tr.title = `Analisar vendas de "${item.desc_produto}"`;
+                    tr.addEventListener('click', () => {
+                        const hoje = new Date();
+                        const inicio90 = new Date(hoje);
+                        inicio90.setDate(hoje.getDate() - 90);
+                        const href = urlFilters.link(
+                            'dashboard-analise-produtos.html',
+                            {
+                                produto: item.desc_produto,
+                                inicio: inicio90.toISOString().split('T')[0],
+                                fim: hoje.toISOString().split('T')[0],
+                            },
+                            []
+                        );
+                        window.location.href = href;
+                    });
+                }
+
                 tbody.appendChild(tr);
             });
         }

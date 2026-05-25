@@ -170,6 +170,7 @@
             <button class="gc-btn gc-btn--secondary" onclick="limparFiltros()">🧹 Limpar Filtros</button>
             <button class="gc-btn gc-btn--primary" id="btnItens" onclick="atualizarDadosItens()">📦 Itens</button>
             <button class="gc-btn gc-btn--primary" id="btnClientes" onclick="atualizarDadosClientes()">👥 Clientes</button>
+            <a id="drillProdutosParados" class="gc-btn gc-btn--ghost" style="display: none;" title="Ver produtos parados deste representante">🛑 Produtos Parados</a>
         </div>
     </section>
 
@@ -488,6 +489,19 @@
         document.getElementById('filtroRepresentante').addEventListener('change', function() {
             const representantesSelecionados = Array.from(this.selectedOptions).map(o => o.value);
             const supervisoresSelecionados = Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value);
+
+            // Drill-down contextual: mostra botão "Produtos Parados" quando um rep está selecionado
+            const drillBtn = document.getElementById('drillProdutosParados');
+            if (representantesSelecionados.length > 0) {
+                drillBtn.style.display = '';
+                drillBtn.href = urlFilters.link(
+                    'dashboard-produtos-parados.html',
+                    { representante: representantesSelecionados[0] },
+                    []
+                );
+            } else {
+                drillBtn.style.display = 'none';
+            }
 
             // NÃO limpa cidades automaticamente
 

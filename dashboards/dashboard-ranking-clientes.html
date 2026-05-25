@@ -811,6 +811,19 @@
                         <td class="text-right">${parseFloat(row.qtde_total || 0).toLocaleString('pt-BR')}</td>
                         <td class="text-right">${parseFloat(row.peso_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                     `;
+                    // Drill-down: clique leva à Performance de Clientes com este cliente + período
+                    if (row.cod_cliente) {
+                        tr.classList.add('gc-row-clickable');
+                        tr.title = `Ver performance de ${row.razao_social || row.cod_cliente}`;
+                        tr.addEventListener('click', () => {
+                            const href = urlFilters.link(
+                                'dashboard-performance-clientes.html',
+                                { codCliente: row.cod_cliente, modo: 'detalhado' },
+                                ['inicio', 'fim']
+                            );
+                            window.location.href = href;
+                        });
+                    }
                 } else {
                     tr.innerHTML = `
                         <td class="rank">${medalha}${posicao}</td>
@@ -821,6 +834,19 @@
                         <td class="text-right">${parseFloat(row.peso_total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                         <td class="text-right">${parseInt(row.num_clientes || 0)}</td>
                     `;
+                    // Drill-down: clique em grupo leva à Performance de Clientes filtrada por grupo
+                    if (row.cod_grupo) {
+                        tr.classList.add('gc-row-clickable');
+                        tr.title = `Ver performance do grupo ${row.grupo_desc || row.cod_grupo}`;
+                        tr.addEventListener('click', () => {
+                            const href = urlFilters.link(
+                                'dashboard-performance-clientes.html',
+                                { codGrupo: row.cod_grupo, modo: 'detalhado' },
+                                ['inicio', 'fim']
+                            );
+                            window.location.href = href;
+                        });
+                    }
                 }
 
                 tbody.appendChild(tr);
