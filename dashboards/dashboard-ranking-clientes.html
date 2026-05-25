@@ -142,6 +142,7 @@
                     <label for="dataFim">📅 Fim *</label>
                     <input type="date" id="dataFim" required>
                 </div>
+                <div id="periodPresets" class="gc-quick-dates"></div>
             </div>
 
             <div class="gc-filter">
@@ -315,6 +316,15 @@
         import { validarPeriodo } from '../js/periodo-validator.js';
         import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
         import { mountSavedViews } from '../js/saved-views.js';
+        import { mountPeriodPicker } from '../js/period-picker.js';
+
+        mountPeriodPicker({
+            inputStart: '#dataInicio',
+            inputEnd: '#dataFim',
+            presetsContainer: '#periodPresets',
+            presets: ['30d', 'mes', 'mesAnterior', 'trimestre', 'ano'],
+            defaultPreset: 'mes',
+        });
 
         // Badge "atualizado há X min" no header (princípio P5 da UX_INVESTIGATIVA)
         const freshnessEl = document.querySelector('[data-gc-freshness]');

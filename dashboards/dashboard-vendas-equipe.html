@@ -120,19 +120,14 @@
     <!-- Seção de Filtros -->
     <section class="gc-filters">
         <div class="gc-filters__grid">
-            <!-- Período -->
+            <!-- Período (presets renderizados pelo period-picker) -->
             <div class="gc-filter">
                 <label class="gc-filter__label">📅 Período</label>
                 <div class="date-range">
                     <input type="date" id="dataInicio" class="gc-filter__input">
                     <input type="date" id="dataFim" class="gc-filter__input">
                 </div>
-                <div class="gc-quick-dates">
-                    <button class="gc-btn gc-btn--ghost" onclick="setQuickDate('31dias')">Últimos 31 Dias</button>
-                    <button class="gc-btn gc-btn--ghost" onclick="setQuickDate('mes')">Mês Atual</button>
-                    <button class="gc-btn gc-btn--ghost" onclick="setQuickDate('trimestre')">Trimestre</button>
-                    <button class="gc-btn gc-btn--ghost" onclick="setQuickDate('ano')">Ano Atual</button>
-                </div>
+                <div id="periodPresets" class="gc-quick-dates"></div>
             </div>
 
             <!-- Supervisor -->
@@ -292,6 +287,7 @@
         import { validarPeriodo } from '../js/periodo-validator.js';
         import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
         import { mountSavedViews } from '../js/saved-views.js';
+        import { mountPeriodPicker } from '../js/period-picker.js';
 
         // Badge "atualizado há X min" no header (princípio P5 da UX_INVESTIGATIVA)
         const freshnessEl = document.querySelector('[data-gc-freshness]');
@@ -566,34 +562,13 @@
             document.getElementById('btnBonifNao').classList.add('active');
         };
 
-        // Datas rápidas
-        window.setQuickDate = function(period) {
-            const hoje = new Date();
-            let inicio, fim;
-            switch (period) {
-                case '31dias':
-                    inicio = new Date(hoje);
-                    inicio.setDate(hoje.getDate() - 31);
-                    fim = hoje;
-                    break;
-                case 'mes':
-                    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-                    fim = hoje;
-                    break;
-                case 'trimestre':
-                    const mesAtual = hoje.getMonth();
-                    const inicioTrimestre = Math.floor(mesAtual / 3) * 3;
-                    inicio = new Date(hoje.getFullYear(), inicioTrimestre, 1);
-                    fim = hoje;
-                    break;
-                case 'ano':
-                    inicio = new Date(hoje.getFullYear(), 0, 1);
-                    fim = hoje;
-                    break;
-            }
-            document.getElementById('dataInicio').value = inicio.toISOString().split('T')[0];
-            document.getElementById('dataFim').value = fim.toISOString().split('T')[0];
-        };
+        // Period Picker — presets canônicos (renderizados pelo componente compartilhado)
+        const periodPicker = mountPeriodPicker({
+            inputStart: '#dataInicio',
+            inputEnd: '#dataFim',
+            presetsContainer: '#periodPresets',
+            presets: ['30d', 'mes', 'trimestre', 'ano'],
+        });
 
         // Variável global para controlar modo de visualização
         window.modoVisualizacao = 'itens'; // 'itens' ou 'clientes'

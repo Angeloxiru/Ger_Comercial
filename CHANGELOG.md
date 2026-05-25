@@ -7,6 +7,17 @@ Versionamento: [Semver](https://semver.org/lang/pt-BR/)
 
 ---
 
+## [1.14.0] — 2026-05-25
+
+### Adicionado
+- **FASE 3 — Modelo temporal canônico (passo 1): Period Picker**
+  - `js/period-picker.js` — componente compartilhado com presets canônicos
+    (Hoje, 7d, 30d, Semana, Mês, Mês anterior, Trimestre, Ano).
+  - Funções `periodoAnterior()` e `periodoAnoAnterior()` exportadas (base
+    para o toggle comparativo do passo 2).
+  - Substituídas as funções `setQuickDate()` inline de 7 dashboards pelo
+    componente padronizado. Ranking de Clientes ganhou presets (não tinha).
+
 ## [1.13.0] — 2026-05-25
 
 ### Adicionado

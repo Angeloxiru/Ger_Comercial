@@ -119,12 +119,7 @@
                     <input type="date" id="dataInicio" class="gc-filter__input">
                     <input type="date" id="dataFim" class="gc-filter__input">
                 </div>
-                <div class="gc-quick-dates">
-                    <button class="gc-btn gc-btn--ghost" onclick="setQuickDate('31dias')">Últimos 31 Dias</button>
-                    <button class="gc-btn gc-btn--ghost" onclick="setQuickDate('mes')">Mês Atual</button>
-                    <button class="gc-btn gc-btn--ghost" onclick="setQuickDate('trimestre')">Trimestre</button>
-                    <button class="gc-btn gc-btn--ghost" onclick="setQuickDate('ano')">Ano Atual</button>
-                </div>
+                <div id="periodPresets" class="gc-quick-dates"></div>
             </div>
 
             <!-- Códigos de busca direta -->
@@ -281,6 +276,7 @@
         import { validarPeriodo } from '../js/periodo-validator.js';
         import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
         import { mountSavedViews } from '../js/saved-views.js';
+        import { mountPeriodPicker } from '../js/period-picker.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Performance de Clientes');
@@ -436,35 +432,12 @@
             }
         });
 
-        window.setQuickDate = function(period) {
-            const hoje = new Date();
-            let inicio, fim;
-
-            switch (period) {
-                case '31dias':
-                    inicio = new Date(hoje);
-                    inicio.setDate(hoje.getDate() - 31);
-                    fim = hoje;
-                    break;
-                case 'mes':
-                    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-                    fim = hoje;
-                    break;
-                case 'trimestre':
-                    const mesAtual = hoje.getMonth();
-                    const inicioTrimestre = Math.floor(mesAtual / 3) * 3;
-                    inicio = new Date(hoje.getFullYear(), inicioTrimestre, 1);
-                    fim = hoje;
-                    break;
-                case 'ano':
-                    inicio = new Date(hoje.getFullYear(), 0, 1);
-                    fim = hoje;
-                    break;
-            }
-
-            document.getElementById('dataInicio').value = inicio.toISOString().split('T')[0];
-            document.getElementById('dataFim').value = fim.toISOString().split('T')[0];
-        };
+        const periodPicker = mountPeriodPicker({
+            inputStart: '#dataInicio',
+            inputEnd: '#dataFim',
+            presetsContainer: '#periodPresets',
+            presets: ['30d', 'mes', 'trimestre', 'ano'],
+        });
 
         window.limparFiltros = function() {
             document.getElementById('dataInicio').value = '';
