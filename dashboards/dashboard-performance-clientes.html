@@ -206,6 +206,7 @@
 
         <!-- DASHBOARD (30%) -->
         <div class="dashboard-section">
+            <div id="comparisonSlot"></div>
             <!-- KPIs 3x2 -->
             <div class="kpi-grid-3col">
                 <div class="gc-kpi">
@@ -276,7 +277,7 @@
         import { validarPeriodo } from '../js/periodo-validator.js';
         import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
         import { mountSavedViews } from '../js/saved-views.js';
-        import { mountPeriodPicker } from '../js/period-picker.js';
+        import { mountPeriodPicker, mountComparison } from '../js/period-picker.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Performance de Clientes');
@@ -893,6 +894,19 @@
                 window.atualizarDados(modo || 'detalhado');
             }
             mountSavedViews({ dashboard: 'performance-clientes', container: '#savedViewsSlot', snapshotFn: snapshotFilters, applyFn: (params) => { urlFilters.write(params); const m = hydrateFromURL(); window.atualizarDados(m || 'detalhado'); } });
+
+            mountComparison({
+                container: '#comparisonSlot',
+                getCurrentPeriod: () => ({ inicio: document.getElementById('dataInicio').value, fim: document.getElementById('dataFim').value }),
+                fetchKPIs: async (inicio, fim) => {
+                    if (!db.isConnected()) await db.connect();
+                    const r = await db.execute('SELECT SUM(v.valor_liquido) as valor, SUM(v.qtde_faturada) as qtde, SUM(v.peso_liq) as peso, COUNT(*) as registros, COUNT(DISTINCT v.cliente) as clientes FROM vendas v WHERE v.emissao >= ? AND v.emissao <= ?', [inicio, fim]);
+                    const row = r.rows?.[0] || {};
+                    const valor = parseFloat(row.valor || 0), registros = parseInt(row.registros || 0), clientes = parseInt(row.clientes || 0);
+                    return { valor, qtde: parseFloat(row.qtde || 0), peso: parseFloat(row.peso || 0), registros, ticket: clientes > 0 ? valor / clientes : 0, clientes };
+                },
+                kpiElements: { valor: '#kpiValor', qtde: '#kpiQtde', peso: '#kpiPeso', registros: '#kpiRegistros', ticket: '#kpiTicket', clientes: '#kpiClientes' },
+            });
         }
 
         const _atualizarDados = window.atualizarDados;

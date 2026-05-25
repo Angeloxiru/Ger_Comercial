@@ -201,6 +201,7 @@
 
         <!-- Seção Dashboard (30%) -->
         <div class="dashboard-section">
+            <div id="comparisonSlot"></div>
             <!-- KPIs em Grid 2x2 -->
             <div class="kpi-grid-2col">
                 <div class="gc-kpi">
@@ -253,7 +254,7 @@
         import { validarPeriodo } from '../js/periodo-validator.js';
         import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
         import { mountSavedViews } from '../js/saved-views.js';
-        import { mountPeriodPicker } from '../js/period-picker.js';
+        import { mountPeriodPicker, mountComparison } from '../js/period-picker.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Performance Mensal');
@@ -838,6 +839,18 @@
                 window.atualizarDados();
             }
             mountSavedViews({ dashboard: 'performance-mensal', container: '#savedViewsSlot', snapshotFn: snapshotFilters, applyFn: (params) => { urlFilters.write(params); hydrateFromURL(); window.atualizarDados(); } });
+
+            mountComparison({
+                container: '#comparisonSlot',
+                getCurrentPeriod: () => ({ inicio: document.getElementById('filtroDataInicio').value, fim: document.getElementById('filtroDataFim').value }),
+                fetchKPIs: async (inicio, fim) => {
+                    if (!db.isConnected()) await db.connect();
+                    const r = await db.execute('SELECT SUM(v.valor_liquido) as faturamento, SUM(v.peso_liq) as peso, COUNT(DISTINCT v.cliente) as clientes FROM vendas v WHERE v.emissao >= ? AND v.emissao <= ?', [inicio, fim]);
+                    const row = r.rows?.[0] || {};
+                    return { faturamento: parseFloat(row.faturamento || 0), peso: parseFloat(row.peso || 0), clientes: parseInt(row.clientes || 0) };
+                },
+                kpiElements: { faturamento: '#kpiFaturamento', peso: '#kpiPeso', clientes: '#kpiClientes' },
+            });
         }
 
         const _atualizarDados = window.atualizarDados;
