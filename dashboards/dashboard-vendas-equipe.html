@@ -108,6 +108,9 @@
         </div>
     </header>
 
+    <!-- Saved Views -->
+    <div id="savedViewsSlot"></div>
+
     <!-- Alerta de Configuração -->
     <div id="configAlert" class="gc-alert gc-alert--warning" style="display: none;">
         <strong>⚠️ Configuração Necessária!</strong><br>
@@ -288,6 +291,7 @@
         import { serializeDbResult, validateCacheStructure, buildDataCacheKey } from '../js/db-utils.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
         import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
+        import { mountSavedViews } from '../js/saved-views.js';
 
         // Badge "atualizado há X min" no header (princípio P5 da UX_INVESTIGATIVA)
         const freshnessEl = document.querySelector('[data-gc-freshness]');
@@ -1171,6 +1175,19 @@
             if (hasAnyFilter(snapshotFilters())) {
                 atualizarDados(modo || 'itens');
             }
+
+            // Saved Views — monta barra de visões salvas
+            mountSavedViews({
+                dashboard: 'vendas-equipe',
+                container: '#savedViewsSlot',
+                snapshotFn: snapshotFilters,
+                applyFn: (params) => {
+                    // Escreve params na URL e re-hidrata (reusa o mesmo fluxo de URL state)
+                    urlFilters.write(params);
+                    const m = hydrateFromURL();
+                    atualizarDados(m || 'itens');
+                },
+            });
         }
 
         // Limpa também a URL ao limpar filtros.

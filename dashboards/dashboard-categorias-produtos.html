@@ -222,6 +222,9 @@
         </div>
     </header>
 
+    <!-- Saved Views -->
+    <div id="savedViewsSlot"></div>
+
     <!-- Alerta de Configuracao -->
     <div id="configAlert" class="gc-alert gc-alert--warning" style="display: none;">
         <strong>⚠️ Configuracao Necessaria!</strong><br>
@@ -430,6 +433,7 @@
         import { serializeDbResult, validateCacheStructure, buildDataCacheKey } from '../js/db-utils.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
         import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
+        import { mountSavedViews } from '../js/saved-views.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Categorias de Produtos');
@@ -1612,6 +1616,17 @@
             if (hasRequiredFilters(snapshotFilters())) {
                 atualizarDadosComURL(modo || 'resumido');
             }
+
+            mountSavedViews({
+                dashboard: 'categorias-produtos',
+                container: '#savedViewsSlot',
+                snapshotFn: snapshotFilters,
+                applyFn: (params) => {
+                    urlFilters.write(params);
+                    const m = hydrateFromURL();
+                    atualizarDadosComURL(m || 'resumido');
+                },
+            });
         }
 
         const _atualizarDadosOriginal = atualizarDados;

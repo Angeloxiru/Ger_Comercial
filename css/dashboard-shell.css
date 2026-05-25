@@ -463,3 +463,37 @@
   .gc-filters__actions { width: 100%; min-width: 0; }
   .gc-layout-7030 { margin: var(--gc-space-md); gap: var(--gc-space-md); }
 }
+
+/* 13. SAVED VIEWS — barra de visões salvas do usuário */
+.gc-saved-views {
+  display: flex;
+  align-items: center;
+  gap: var(--gc-space-sm);
+  padding: var(--gc-space-sm) var(--gc-space-xl);
+  background: var(--gc-color-surface);
+  border-bottom: 1px solid var(--gc-color-border-soft);
+  font-size: 0.85em;
+}
+
+.gc-saved-views__select {
+  padding: 6px var(--gc-space-md);
+  border: 1px solid var(--gc-color-border);
+  border-radius: var(--gc-radius-sm);
+  font-size: 1em;
+  font-family: inherit;
+  background: var(--gc-color-surface);
+  cursor: pointer;
+  min-width: 200px;
+}
+
+.gc-saved-views__select:focus {
+  outline: none;
+  border-color: var(--gc-color-primary);
+  box-shadow: 0 0 0 2px rgba(252, 3, 3, 0.1);
+}
+
+.gc-saved-views__save,
+.gc-saved-views__delete {
+  padding: 6px 10px !important;
+  font-size: 1em !important;
+}

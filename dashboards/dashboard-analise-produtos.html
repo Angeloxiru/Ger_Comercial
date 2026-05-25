@@ -78,6 +78,9 @@
         </div>
     </header>
 
+    <!-- Saved Views -->
+    <div id="savedViewsSlot"></div>
+
     <!-- Alerta de Configuração -->
     <div id="configAlert" class="gc-alert gc-alert--warning" style="display: none;">
         <strong>⚠️ Configuração Necessária!</strong><br>
@@ -238,6 +241,7 @@
         import { serializeDbResult, validateCacheStructure, buildDataCacheKey } from '../js/db-utils.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
         import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
+        import { mountSavedViews } from '../js/saved-views.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Análise de Produtos');
@@ -836,6 +840,7 @@
             if (hasRequiredFilters(snapshotFilters())) {
                 window.atualizarDados();
             }
+            mountSavedViews('analise-produtos', snapshotFilters, (params) => { urlFilters.write(params); hydrateFromURL(); window.atualizarDados(); });
         }
 
         const _atualizarDados = window.atualizarDados;

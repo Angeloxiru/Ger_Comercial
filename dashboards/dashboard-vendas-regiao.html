@@ -131,6 +131,9 @@
         </div>
     </header>
 
+    <!-- Saved Views -->
+    <div id="savedViewsSlot"></div>
+
     <!-- Alerta -->
     <div id="configAlert" class="gc-alert gc-alert--warning" style="display: none;">
         <strong>⚠️ Configuração Necessária!</strong><br>
@@ -265,6 +268,7 @@
         import { serializeDbResult, validateCacheStructure, buildDataCacheKey } from '../js/db-utils.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
         import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
+        import { mountSavedViews } from '../js/saved-views.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Vendas por Região');
@@ -1612,6 +1616,7 @@
             if (hasAnyFilter(snapshotFilters())) {
                 atualizarDados(modo || 'itens');
             }
+            mountSavedViews('vendas-regiao', snapshotFilters, (params) => { urlFilters.write(params); const m = hydrateFromURL(); atualizarDadosComURL(m || 'itens'); });
         };
 
         // Escreve URL ao atualizar dados

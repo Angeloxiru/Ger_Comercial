@@ -103,6 +103,9 @@
         </div>
     </header>
 
+    <!-- Saved Views -->
+    <div id="savedViewsSlot"></div>
+
     <!-- Alerta de Configuração -->
     <div id="configAlert" class="gc-alert gc-alert--warning" style="display: none;">
         <strong>⚠️ Configuração Necessária!</strong><br>
@@ -254,6 +257,7 @@
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
         import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
+        import { mountSavedViews } from '../js/saved-views.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Performance Mensal');
@@ -864,6 +868,7 @@
             if (hasRequiredFilters(snapshotFilters())) {
                 window.atualizarDados();
             }
+            mountSavedViews({ dashboard: 'performance-mensal', container: '#savedViewsSlot', snapshotFn: snapshotFilters, applyFn: (params) => { urlFilters.write(params); hydrateFromURL(); window.atualizarDados(); } });
         }
 
         const _atualizarDados = window.atualizarDados;

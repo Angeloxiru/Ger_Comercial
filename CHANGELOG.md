@@ -7,6 +7,15 @@ Versionamento: [Semver](https://semver.org/lang/pt-BR/)
 
 ---
 
+## [1.13.0] — 2026-05-25
+
+### Adicionado
+- **FASE 2 — Investigação cruzada (passo 4): Saved Views**
+  - `js/saved-views.js` — módulo com CRUD na tabela `user_views` (Turso, auto-criada) + componente UI montável.
+  - Barra "⭐ Visões salvas" em todos os 9 dashboards de dados: salvar combinação de filtros com nome, carregar com 1 clique, excluir.
+  - CSS `.gc-saved-views` no shell compartilhado.
+  - SW v10 cacheando o novo módulo.
+
 ## [1.12.1] — 2026-05-25
 
 ### Adicionado

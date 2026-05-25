@@ -141,6 +141,9 @@
         </div>
     </header>
 
+    <!-- Saved Views -->
+    <div id="savedViewsSlot"></div>
+
     <!-- Filtros -->
     <section class="gc-filters">
         <div class="gc-filters__grid">
@@ -265,6 +268,7 @@
         import { getRepresentantes } from '../js/shared-filters.js';
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
         import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
+        import { mountSavedViews } from '../js/saved-views.js';
 
         // Injetar estilos do FilterSearch
         injectFilterSearchStyles();
@@ -885,6 +889,7 @@
             if (hasAnyFilter(snapshotFilters())) {
                 await carregarDados();
             }
+            mountSavedViews('produtos-parados', snapshotFilters, (params) => { urlFilters.write(params); hydrateFromURL(); if (dadosCompletos.length > 0) aplicarFiltros(); else carregarDados(); });
         })();
 
         window.addEventListener('popstate', () => {

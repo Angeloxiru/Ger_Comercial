@@ -305,6 +305,9 @@
         </div>
     </header>
 
+    <!-- Saved Views -->
+    <div id="savedViewsSlot"></div>
+
     <!-- Alerta -->
     <div id="configAlert" class="gc-alert gc-alert--warning" style="display: none;">
         <strong>⚠️ Configuração Necessária!</strong><br>
@@ -505,6 +508,7 @@
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
         import { serializeDbResult, validateCacheStructure, buildDataCacheKey } from '../js/db-utils.js';
         import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
+        import { mountSavedViews } from '../js/saved-views.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Clientes Sem Compras');
@@ -1531,6 +1535,7 @@
             if (hasAnyFilter(snapshotFilters())) {
                 window.buscarClientes();
             }
+            mountSavedViews('clientes-semcompras', snapshotFilters, (params) => { urlFilters.write(params); hydrateFromURL(); _buscarClientes(); });
         };
 
         const _buscarClientes = window.buscarClientes;

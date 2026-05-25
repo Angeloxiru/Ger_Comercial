@@ -126,6 +126,9 @@
         </div>
     </header>
 
+    <!-- Saved Views -->
+    <div id="savedViewsSlot"></div>
+
     <!-- Filtros -->
     <section class="gc-filters">
         <div class="gc-filters__grid">
@@ -311,6 +314,7 @@
         import { serializeDbResult, validateCacheStructure, buildDataCacheKey } from '../js/db-utils.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
         import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
+        import { mountSavedViews } from '../js/saved-views.js';
 
         // Badge "atualizado há X min" no header (princípio P5 da UX_INVESTIGATIVA)
         const freshnessEl = document.querySelector('[data-gc-freshness]');
@@ -1267,6 +1271,7 @@
             if (hasRequiredFilters(snapshotFilters())) {
                 window.atualizarDados();
             }
+            mountSavedViews({ dashboard: 'ranking-clientes', container: '#savedViewsSlot', snapshotFn: snapshotFilters, applyFn: (params) => { urlFilters.write(params); hydrateFromURL(); window.atualizarDados(); } });
         }
 
         // Escreve URL ao atualizar dados
