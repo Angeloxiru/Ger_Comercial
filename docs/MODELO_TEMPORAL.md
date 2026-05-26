@@ -122,12 +122,30 @@ quando o custo for baixo, sob demanda no proxy).
 
 ---
 
-## 6. Implementação esperada (FASE 3)
+## 6. Implementação — FASE 3 (concluída v1.16.0)
 
-- `js/period-picker.js`: componente único de seleção de período +
-  comparativo. Emite evento `period-change` com
-  `{ start, end, prevStart, prevEnd, ytdStart, ytdEnd }`.
-- `js/dashboard-shell.js` injeta esse picker no header de cada
-  dashboard que opte por usá-lo. Adoção é incremental.
-- Toda query de dashboard que lê `vendas` passa a aceitar dois ranges
-  (atual + comparativo) e calcular o delta no client.
+### Módulos criados
+- **`js/period-picker.js`**: presets canônicos (`mountPeriodPicker`) +
+  comparativo (`mountComparison`). Funções utilitárias exportadas:
+  `periodoAnterior(inicio, fim)`, `periodoAnoAnterior(inicio, fim)`.
+- **`js/cache.js`**: `getSmartTTL(dataFim)` retorna 24h se período
+  fechado, 10min se em curso.
+
+### Arquitetura do comparativo
+- `getCurrentKPIs()`: lê os KPIs já calculados pelo dashboard (sem re-fetch).
+- `fetchKPIs(inicioComp, fimComp)`: busca totais do período comparativo
+  **com os mesmos filtros** do dashboard (supervisor, representante, etc).
+- Delta renderizado como `gc-kpi__delta` (▲ verde / ▼ vermelho).
+
+### Dashboards cobertos
+| Dashboard | Period Picker | Comparativo | Smart TTL |
+|-----------|:---:|:---:|:---:|
+| Vendas por Equipe | ✅ | ✅ | ✅ |
+| Ranking de Clientes | ✅ | ✅ | ✅ |
+| Performance Mensal | ✅ | ✅ | ✅ |
+| Análise de Produtos | ✅ | ✅ | ✅ |
+| Performance de Clientes | ✅ | ✅ | ✅ |
+| Categorias de Produtos | ✅ | ✅ | ✅ |
+| Vendas por Região | ✅ | — (KPIs dinâmicos) | ✅ |
+| Produtos Parados | — (sem período) | — | TTL fixo 6h |
+| Clientes Sem Compras | — (sem período) | — | TTL fixo 6h |
