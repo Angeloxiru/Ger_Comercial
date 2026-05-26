@@ -7,6 +7,16 @@ Versionamento: [Semver](https://semver.org/lang/pt-BR/)
 
 ---
 
+## [1.16.0] — 2026-05-26
+
+### Adicionado
+- **FASE 3 — Modelo temporal (passo 3): Cache TTL inteligente**
+  - `getSmartTTL(dataFim)` em `cache.js`: período fechado (passado) → 24h;
+    período em curso (hoje/futuro) → 10 min.
+  - `CACHE_TTL.DASHBOARDS_CLOSED` (24h) e `CACHE_TTL.DASHBOARDS_CURRENT` (10min).
+  - Aplicado nos 7 dashboards com período. Clientes Sem Compras e Produtos
+    Parados mantêm TTL fixo (sem período).
+
 ## [1.15.0] — 2026-05-25
 
 ### Adicionado

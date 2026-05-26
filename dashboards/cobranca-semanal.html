@@ -246,7 +246,7 @@
     <script type="module">
         import { db } from '../js/db.js';
         import { config } from '../js/config.js';
-        import { cache, CACHE_TTL } from '../js/cache.js';
+        import { cache, CACHE_TTL, getSmartTTL } from '../js/cache.js';
         import { buildDataCacheKey } from '../js/db-utils.js';
         import { getRepresentantes } from '../js/shared-filters.js';
         import { Pagination } from '../js/pagination.js';
@@ -502,7 +502,7 @@
                     };
                 });
 
-                cache.set(cacheKey, window.dadosCompletos, CACHE_TTL.DASHBOARDS);
+                cache.set(cacheKey, window.dadosCompletos, getSmartTTL(dataFim));
 
                 window.pagination.setData(window.dadosCompletos);
 

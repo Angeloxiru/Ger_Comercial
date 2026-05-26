@@ -256,7 +256,7 @@
     <script type="module">
         import { db } from '../js/db.js';
         import { config } from '../js/config.js';
-        import { cache, CACHE_TTL } from '../js/cache.js';
+        import { cache, CACHE_TTL, getSmartTTL } from '../js/cache.js';
         import { Pagination, injectPaginationStyles } from '../js/pagination.js';
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
@@ -628,7 +628,7 @@
 
                 const result = await db.execute(sql, params);
                 window.dadosCompletos = result.rows;
-                cache.set(cacheKey, result.rows, CACHE_TTL.DASHBOARDS);
+                cache.set(cacheKey, result.rows, getSmartTTL(dataFim));
                 mostrarResultados(result.rows);
 
             } catch (error) {
