@@ -848,7 +848,19 @@
                 getCurrentKPIs: () => window._currentKPIs || { faturamento: 0, peso: 0, clientes: 0 },
                 fetchKPIs: async (inicio, fim) => {
                     if (!db.isConnected()) await db.connect();
-                    const r = await db.execute('SELECT SUM(v.valor_liquido) as faturamento, SUM(v.peso_liq) as peso, COUNT(DISTINCT v.cliente) as clientes FROM vendas v WHERE v.emissao >= ? AND v.emissao <= ?', [inicio, fim]);
+                    const supervisores = Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value).filter(v => v !== '');
+                    const representantes = Array.from(document.getElementById('filtroRepresentante').selectedOptions).map(o => o.value).filter(v => v !== '');
+                    let sql = 'SELECT SUM(v.valor_liquido) as faturamento, SUM(v.peso_liq) as peso, COUNT(DISTINCT v.cliente) as clientes FROM vendas v LEFT JOIN tab_representante r ON v.representante = r.representante WHERE v.emissao >= ? AND v.emissao <= ?';
+                    const params = [inicio, fim];
+                    if (supervisores.length > 0) {
+                        sql += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`;
+                        params.push(...supervisores);
+                    }
+                    if (representantes.length > 0) {
+                        sql += ` AND r.desc_representante IN (${representantes.map(() => '?').join(',')})`;
+                        params.push(...representantes);
+                    }
+                    const r = await db.execute(sql, params);
                     const row = r.rows?.[0] || {};
                     return { faturamento: parseFloat(row.faturamento || 0), peso: parseFloat(row.peso || 0), clientes: parseInt(row.clientes || 0) };
                 },

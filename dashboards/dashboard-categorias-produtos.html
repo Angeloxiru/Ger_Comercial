@@ -1611,7 +1611,15 @@
                 getCurrentKPIs: () => window._currentKPIs || { peso: 0, valor: 0, valorKg: 0 },
                 fetchKPIs: async (inicio, fim) => {
                     if (!db.isConnected()) await db.connect();
-                    const r = await db.execute('SELECT SUM(v.peso_liq) as peso, SUM(v.valor_liquido) as valor FROM vendas v WHERE v.emissao >= ? AND v.emissao <= ?', [inicio, fim]);
+                    const supervisores = Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value);
+                    const representantes = Array.from(document.getElementById('filtroRepresentante').selectedOptions).map(o => o.value);
+                    const categoriasAtivas = getCategoriasAtivas();
+                    let sql = 'SELECT SUM(v.peso_liq) as peso, SUM(v.valor_liquido) as valor FROM vendas v LEFT JOIN tab_representante r ON v.representante = r.representante INNER JOIN tab_produto p ON v.produto = p.produto WHERE v.emissao >= ? AND v.emissao <= ?';
+                    const params = [inicio, fim];
+                    if (supervisores.length > 0) { sql += ` AND r.rep_supervisor IN (${supervisores.map(() => '?').join(',')})`; params.push(...supervisores); }
+                    if (representantes.length > 0) { sql += ` AND r.desc_representante IN (${representantes.map(() => '?').join(',')})`; params.push(...representantes); }
+                    if (categoriasAtivas.length > 0) { sql += ` AND (${buildCategoriasWhere(categoriasAtivas)})`; }
+                    const r = await db.execute(sql, params);
                     const row = r.rows?.[0] || {};
                     const peso = parseFloat(row.peso || 0), valor = parseFloat(row.valor || 0);
                     return { peso, valor, valorKg: peso > 0 ? valor / peso : 0 };
