@@ -1,0 +1,71 @@
+# Changelog — Ger Comercial
+
+Versionamento: [Semver](https://semver.org/lang/pt-BR/)
+- **MAJOR** (1.x.x) — redesign grande ou mudança que quebra compatibilidade
+- **MINOR** (x.Y.x) — funcionalidade nova
+- **PATCH** (x.x.Z) — correção de bug ou ajuste pequeno
+
+---
+
+## [1.16.0] — 2026-05-26
+
+### Adicionado
+- **FASE 3 — Modelo temporal (passo 3): Cache TTL inteligente**
+  - `getSmartTTL(dataFim)` em `cache.js`: período fechado (passado) → 24h;
+    período em curso (hoje/futuro) → 10 min.
+  - `CACHE_TTL.DASHBOARDS_CLOSED` (24h) e `CACHE_TTL.DASHBOARDS_CURRENT` (10min).
+  - Aplicado nos 7 dashboards com período. Clientes Sem Compras e Produtos
+    Parados mantêm TTL fixo (sem período).
+
+## [1.15.0] — 2026-05-25
+
+### Adicionado
+- **FASE 3 — Modelo temporal (passo 2): Toggle comparativo (piloto)**
+  - `mountComparison()` em `period-picker.js` — toggle universal "📊 vs Anterior" /
+    "📊 vs Ano" que compara KPIs com período anterior ou mesmo período do ano passado.
+  - Piloto implementado em Vendas/Equipe: busca totais do período comparativo e
+    mostra deltas (▲ +15.2% vs anterior / ▼ -3.1% vs ano ant.) abaixo de cada KPI.
+  - CSS `.gc-comparison` + `.gc-comparison__btn.active` no shell.
+
+## [1.14.0] — 2026-05-25
+
+### Adicionado
+- **FASE 3 — Modelo temporal canônico (passo 1): Period Picker**
+  - `js/period-picker.js` — componente compartilhado com presets canônicos
+    (Hoje, 7d, 30d, Semana, Mês, Mês anterior, Trimestre, Ano).
+  - Funções `periodoAnterior()` e `periodoAnoAnterior()` exportadas (base
+    para o toggle comparativo do passo 2).
+  - Substituídas as funções `setQuickDate()` inline de 7 dashboards pelo
+    componente padronizado. Ranking de Clientes ganhou presets (não tinha).
+
+## [1.13.0] — 2026-05-25
+
+### Adicionado
+- **FASE 2 — Investigação cruzada (passo 4): Saved Views**
+  - `js/saved-views.js` — módulo com CRUD na tabela `user_views` (Turso, auto-criada) + componente UI montável.
+  - Barra "⭐ Visões salvas" em todos os 9 dashboards de dados: salvar combinação de filtros com nome, carregar com 1 clique, excluir.
+  - CSS `.gc-saved-views` no shell compartilhado.
+  - SW v10 cacheando o novo módulo.
+
+## [1.12.1] — 2026-05-25
+
+### Adicionado
+- **FASE 2 — Investigação cruzada (passos 1-3)**
+  - Filtros na URL em todos os 9 dashboards de dados (`?inicio=...&supervisor=...&modo=...`). Link compartilhável, botão Voltar preserva contexto, abrir em nova aba funciona.
+  - Links contextuais de drill-down: Ranking→Performance de Clientes, Vendas/Equipe→Produtos Parados, Produtos Parados→Análise de Produtos.
+  - "Voltar com contexto" automático via URL state.
+- Sistema de versionamento semver com indicador visual na tela.
+
+### Corrigido
+- Tags Chart.js restauradas em Vendas por Região (removidas acidentalmente na migração).
+- Redeploy forçado dos 4 dashboards que retornavam 5xx no CF Pages.
+
+## [1.12.0] — 2026-05-22
+
+### Adicionado
+- **FASE 1 — Shell compartilhado**
+  - `css/dashboard-shell.css` — design tokens + componentes `gc-*` (header, filtros, KPI, tabela, loading, botões).
+  - `js/dashboard-shell.js` — `setFreshness()`, `urlFilters`, `mountHeader()`, helpers de export.
+  - Migração dos 10 dashboards para o shell compartilhado (redução média de ~20% por arquivo).
+  - Service Worker v9 com cache dos novos assets do shell.
+- Ambiente de homologação via Cloudflare Pages (`ger-comercial.pages.dev`).

@@ -6,56 +6,14 @@
     <meta name="description" content="Configurações - Ger Comercial">
     <meta name="theme-color" content="#fc0303">
     <title>Configurações - Ger Comercial</title>
+
+    <!-- Shell compartilhado: tokens + componentes gc-* (header, botões, alertas). Ver docs/ARQUITETURA.md (ADR-006). -->
+    <link rel="stylesheet" href="../css/dashboard-shell.css">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-            background: #f8f9fa;
-            min-height: 100vh;
-        }
-
-        .header {
-            background: #fc0303;
-            color: white;
-            padding: 20px 30px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .header h1 {
-            font-size: 1.6em;
-            font-weight: 600;
-        }
-
-        .btn-back {
-            background: white;
-            color: #fc0303;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
-            text-decoration: none;
-        }
-
-        .btn-back:hover {
-            background: #f8f9fa;
-        }
+        /* Estilos específicos da UI de Configurações/Administração — o que NÃO é genérico do shell.
+           Esta tela é admin (não dashboard analítico), então mantém estrutura própria de tabelas,
+           modais, formulários e importação de dados. Apenas o header é unificado via gc-header. */
 
         .btn-logout {
             background: rgba(255, 255, 255, 0.2);
@@ -169,12 +127,6 @@
         .badge-inactive {
             background: #f8d7da;
             color: #721c24;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
         }
 
         .permissions-cell {
@@ -932,18 +884,16 @@
     <link rel="stylesheet" href="../css/mobile.css">
     <script src="../js/mobile.js"></script>
 </head>
-<body>
-    <div class="header">
-        <div class="header-left">
-            <button onclick="window.location.href='../index.html'" class="btn-back">
-                ← Voltar
-            </button>
-            <h1>⚙️ Configurações</h1>
+<body class="gc-page">
+    <header class="gc-header">
+        <div class="gc-header__left">
+            <a href="../index.html" class="gc-btn-back">← Voltar</a>
+            <h1 class="gc-header__title">⚙️ Configurações</h1>
         </div>
-        <div class="header-right">
+        <div class="gc-header__right">
             <span id="userInfo" style="font-size: 0.9em;"></span>
         </div>
-    </div>
+    </header>
 
     <div class="container">
         <div class="users-container">
@@ -1265,7 +1215,7 @@
 
         // Display user info in header
         if (currentUser) {
-            const headerRight = document.querySelector('.header-right');
+            const headerRight = document.querySelector('.gc-header__right');
             headerRight.innerHTML = `
                 <span style="margin-right: 15px;">👤 ${currentUser.fullName || currentUser.username}</span>
                 <button onclick="authManager.logout()" class="btn-logout">Sair</button>

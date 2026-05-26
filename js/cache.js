@@ -200,12 +200,29 @@ class CacheManager {
 
 // Configurações de TTL por tipo de dado
 export const CACHE_TTL = {
-    FILTERS: 21600000,     // 6 horas - Filtros mudam pouco
-    DASHBOARDS: 21600000,  // 6 horas - Dados de vendas
-    KPIS: 600000,          // 10 minutos - KPIs
-    CHARTS: 900000,        // 15 minutos - Gráficos
-    REPORTS: 1800000       // 30 minutos - Relatórios
+    FILTERS: 21600000,           // 6 horas - Lookups (rotas/reps/clientes/produtos)
+    DASHBOARDS: 21600000,        // 6 horas - Fallback genérico
+    DASHBOARDS_CLOSED: 86400000, // 24 horas - Período fechado (meses passados)
+    DASHBOARDS_CURRENT: 600000,  // 10 minutos - Período em curso (mês/semana atual)
+    KPIS: 600000,                // 10 minutos - KPIs
+    CHARTS: 900000,              // 15 minutos - Gráficos
+    REPORTS: 1800000             // 30 minutos - Relatórios
 };
+
+/**
+ * Retorna o TTL adequado baseado no período consultado.
+ * Período fechado (dataFim no passado) → 24h.
+ * Período em curso (dataFim é hoje ou futuro) → 10min.
+ * @param {string} dataFim - Data fim no formato ISO (YYYY-MM-DD)
+ * @returns {number} TTL em milissegundos
+ */
+export function getSmartTTL(dataFim) {
+    if (!dataFim) return CACHE_TTL.DASHBOARDS;
+    const fim = new Date(dataFim + 'T23:59:59');
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    return fim < hoje ? CACHE_TTL.DASHBOARDS_CLOSED : CACHE_TTL.DASHBOARDS_CURRENT;
+}
 
 // Exporta instância singleton
 export const cache = new CacheManager();

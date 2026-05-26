@@ -32,6 +32,7 @@ yarn-error.log*
 # Build outputs
 dist/
 build/
+_site/         # Output do build.sh (Cloudflare Pages homologação)
 
 # Temporary files
 *.tmp

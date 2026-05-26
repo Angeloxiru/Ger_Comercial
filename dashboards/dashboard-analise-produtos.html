@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Dashboard de Análise de Produtos - Ger Comercial">
+    <!-- redeploy marker: 2026-05-22 fase 1 fix -->
     <meta name="theme-color" content="#fc0303">
     <title>Análise de Produtos - Ger Comercial</title>
 
@@ -11,440 +12,50 @@
     <link rel="manifest" href="/Ger_Comercial/manifest.json">
     <link rel="apple-touch-icon" href="/Ger_Comercial/icon-192.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/Ger_Comercial/icon-192.png">
+    <!-- Shell compartilhado: tokens + componentes gc-* (header, filtros, KPI, tabela, loading). Ver docs/ARQUITETURA.md (ADR-006). -->
+    <link rel="stylesheet" href="../css/dashboard-shell.css">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* Estilos específicos de "Análise de Produtos" — o que NÃO é genérico do shell. */
 
-        body {
-            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-            background: #f8f9fa;
-            min-height: 100vh;
-        }
+        /* Range de datas */
+        .date-range { display: grid; grid-template-columns: 1fr; gap: var(--gc-space-sm); }
 
-        .header {
-            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
-            color: white;
-            padding: 20px 30px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .header-logo img {
-            height: 60px;
-            width: auto;
-        }
-
-        .header h1 {
-            font-size: 1.6em;
-            font-weight: 600;
-        }
-
-        .btn-voltar {
-            background: white;
-            color: #fc0303;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .btn-voltar:hover {
-            background: #f8f9fa;
-        }
-
-        .filters-section {
-            background: white;
-            padding: 16px;
-            margin: 20px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            display: flex;
-            gap: 16px;
-            align-items: flex-start;
-        }
-
-        .filters-grid {
-            flex: 1;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
-        }
-
-        .filters-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            min-width: 160px;
-        }
-
-        .btn-limpar {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            font-size: 0.9em;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn-limpar:hover {
-            background: #5a6268;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .filter-group label {
-            color: #495057;
-            font-weight: 500;
-            margin-bottom: 6px;
-            font-size: 0.9em;
-        }
-
-        .filter-group input,
-        .filter-group select {
-            padding: 10px 12px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            font-size: 0.95em;
-            transition: all 0.2s;
-            background: white;
-        }
-
-        .filter-group input:focus,
-        .filter-group select:focus {
-            outline: none;
-            border-color: #fc0303;
-            box-shadow: 0 0 0 3px rgba(252, 3, 3, 0.1);
-        }
-
-        .filter-group select {
-            cursor: pointer;
-        }
-
-        .filter-group select option:checked {
-            background: #03ff1c;
-            color: #000;
-        }
-
-        .date-range {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 8px;
-        }
-
-        .quick-dates {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-
-        .quick-date-btn {
-            background: #e9ecef;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .quick-date-btn:hover {
-            background: #fc0303;
-            color: white;
-        }
-
-        .btn-atualizar {
-            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            font-size: 0.9em;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn-atualizar:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(252, 3, 3, 0.3);
-        }
-
-        .btn-atualizar:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* NOVO LAYOUT: 70% Tabela / 30% Dashboard */
-        .main-content {
-            display: grid;
-            grid-template-columns: 70% 30%;
-            gap: 20px;
-            margin: 20px;
-            min-height: calc(100vh - 400px);
-        }
-
-        /* SEÇÃO DA TABELA (70%) */
-        .table-section {
-            display: flex;
-            flex-direction: column;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-
-        .table-header {
-            background: linear-gradient(135deg, #fc0303 0%, #b50909 100%);
-            padding: 16px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
-        }
-
-        .table-title {
-            font-size: 1.1em;
-            font-weight: 600;
-        }
-
-        .table-stats {
-            font-weight: 500;
-            font-size: 0.9em;
-        }
-
-        .table-container {
-            flex: 1;
-            overflow-y: auto;
-            max-height: calc(25 * 44px + 50px); /* 25 linhas + header */
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        thead {
-            background: #f8f9fa;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        th {
-            padding: 12px 16px;
-            text-align: left;
-            font-weight: 600;
-            color: #495057;
-            font-size: 0.9em;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        th.text-right,
-        td.text-right {
-            text-align: right;
-        }
-
-        tbody tr {
-            border-bottom: 1px solid #f1f3f5;
-            transition: background 0.15s;
-        }
-
-        tbody tr:hover {
-            background: #f8f9fa;
-        }
-
-        td {
-            padding: 12px 16px;
-            color: #212529;
-            font-size: 0.9em;
-        }
-
-        .table-footer {
-            padding: 16px 20px;
-            background: #f8f9fa;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            border-top: 2px solid #dee2e6;
-        }
-
-        .total-value {
-            color: #212529;
-            font-weight: 700;
-            font-size: 1.1em;
-        }
-
-        .btn-export {
-            background: #fc0303;
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 6px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9em;
-        }
-
-        .btn-export:hover {
-            background: #b50909;
-            transform: translateY(-1px);
-        }
-
-        /* SEÇÃO DO DASHBOARD (30%) */
-        .dashboard-section {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .kpi-card {
-            background: white;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 2px solid transparent;
-            transition: all 0.2s;
-        }
-
-        .kpi-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            border-color: #fc0303;
-        }
-
-        .kpi-icon {
-            font-size: 2em;
-            line-height: 1;
-            margin-bottom: 8px;
-        }
-
-        .kpi-label {
-            color: #6c757d;
-            font-size: 0.75em;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 6px;
-        }
-
-        .kpi-value {
-            color: #212529;
-            font-size: 1.5em;
-            font-weight: 700;
-            line-height: 1.2;
-        }
+        /* Coluna direita: KPIs em grid 2x2 + 2 gráficos */
+        .dashboard-section { display: flex; flex-direction: column; gap: var(--gc-space-lg); }
+        .kpi-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gc-space-md); }
 
         .chart-card {
-            background: white;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            background: var(--gc-color-surface);
+            border-radius: var(--gc-radius-md);
+            padding: var(--gc-space-lg);
+            box-shadow: var(--gc-shadow-sm);
         }
-
         .chart-title {
-            color: #495057;
+            color: var(--gc-color-text-muted);
             font-size: 0.9em;
             font-weight: 600;
-            margin-bottom: 12px;
+            margin-bottom: var(--gc-space-md);
             text-align: center;
         }
+        .chart-container { position: relative; height: 250px; }
 
-        .chart-container {
-            position: relative;
-            height: 250px;
-        }
+        /* Altura específica desta tabela: 25 linhas + cabeçalho sticky */
+        .gc-table-container { max-height: calc(25 * 44px + 50px); }
 
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 40px;
-            color: #fc0303;
-            font-weight: 500;
-        }
+        /* Rodapé da tabela: total + botões de export */
+        .total-value { color: var(--gc-color-text); font-weight: 700; font-size: 1.1em; }
 
-        .loading.active {
-            display: block;
-        }
+        /* Compat: classes legadas usadas pelo JS ou por colunas */
+        .text-right { text-align: right; }
 
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #fc0303;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 12px;
-        }
+        /* Empty state icon */
+        .empty-state-icon { font-size: 3em; margin-bottom: var(--gc-space-lg); opacity: 0.5; }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            color: #6c757d;
-            font-size: 0.9em;
-        }
-
-        .alert {
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin: 20px;
-            font-size: 0.9em;
-        }
-
-        .alert-warning {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            color: #856404;
-        }
-
-        .empty-state {
-            padding: 60px 20px;
-            text-align: center;
-            color: #6c757d;
-        }
-
-        .empty-state-icon {
-            font-size: 3em;
-            margin-bottom: 16px;
-            opacity: 0.5;
+        /* Paginação */
+        #paginationContainer {
+            padding: var(--gc-space-md) var(--gc-space-xl);
+            border-top: 1px solid var(--gc-color-border);
         }
     </style>
 
@@ -452,91 +63,92 @@
     <link rel="stylesheet" href="../css/mobile.css">
     <script src="../js/mobile.js"></script>
 </head>
-<body>
-    <!-- Header -->
-    <div class="header">
-        <div class="header-left">
-            <div class="header-logo">
+<body class="gc-page">
+    <!-- Header (shell). Slot data-gc-freshness é populado por setFreshness() após cada carga de dados. -->
+    <header class="gc-header">
+        <div class="gc-header__left">
+            <div class="gc-header__logo">
                 <img src="https://static.wixstatic.com/media/ce3165_c01db19c0ef64e2abb8c894c7ecc6f95~mv2.png/v1/fill/w_161,h_69,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/logomarca-Germani-2023-Branca-borda-dour.png" alt="Logo Germani Alimentos">
             </div>
-            <h1>📦 Análise de Produtos</h1>
+            <h1 class="gc-header__title">📦 Análise de Produtos</h1>
         </div>
-        <a href=".." class="btn-voltar">← Voltar</a>
-    </div>
+        <div class="gc-header__right">
+            <span class="gc-freshness" data-gc-freshness hidden></span>
+            <a href=".." class="gc-btn-back">← Voltar</a>
+        </div>
+    </header>
+
+    <!-- Saved Views -->
+    <div id="savedViewsSlot"></div>
 
     <!-- Alerta de Configuração -->
-    <div id="configAlert" class="alert alert-warning" style="display: none;">
+    <div id="configAlert" class="gc-alert gc-alert--warning" style="display: none;">
         <strong>⚠️ Configuração Necessária!</strong><br>
         Configure suas credenciais do Turso no arquivo <code>js/config.js</code>
     </div>
 
     <!-- Seção de Filtros -->
-    <div class="filters-section">
-        <div class="filters-grid">
+    <section class="gc-filters">
+        <div class="gc-filters__grid">
             <!-- Período -->
-            <div class="filter-group">
-                <label>📅 Período</label>
+            <div class="gc-filter">
+                <label class="gc-filter__label">📅 Período</label>
                 <div class="date-range">
-                    <input type="date" id="dataInicio">
-                    <input type="date" id="dataFim">
+                    <input type="date" id="dataInicio" class="gc-filter__input">
+                    <input type="date" id="dataFim" class="gc-filter__input">
                 </div>
-                <div class="quick-dates">
-                    <button class="quick-date-btn" onclick="setQuickDate('31dias')">Últimos 31 Dias</button>
-                    <button class="quick-date-btn" onclick="setQuickDate('mes')">Mês Atual</button>
-                    <button class="quick-date-btn" onclick="setQuickDate('trimestre')">Trimestre</button>
-                    <button class="quick-date-btn" onclick="setQuickDate('ano')">Ano Atual</button>
-                </div>
+                <div id="periodPresets" class="gc-quick-dates"></div>
             </div>
 
             <!-- Origem -->
-            <div class="filter-group">
-                <label>🏭 Origem</label>
-                <select id="filtroOrigem" multiple size="3">
+            <div class="gc-filter">
+                <label class="gc-filter__label">🏭 Origem</label>
+                <select id="filtroOrigem" class="gc-filter__select" multiple size="3">
                     <option value="">Carregando...</option>
                 </select>
             </div>
 
             <!-- Família -->
-            <div class="filter-group">
-                <label>📂 Família</label>
-                <select id="filtroFamilia" multiple size="3">
+            <div class="gc-filter">
+                <label class="gc-filter__label">📂 Família</label>
+                <select id="filtroFamilia" class="gc-filter__select" multiple size="3">
                     <option value="">Carregando...</option>
                 </select>
             </div>
 
             <!-- Produto -->
-            <div class="filter-group">
-                <label>📦 Produto</label>
-                <select id="filtroProduto" multiple size="3">
+            <div class="gc-filter">
+                <label class="gc-filter__label">📦 Produto</label>
+                <select id="filtroProduto" class="gc-filter__select" multiple size="3">
                     <option value="">Carregando...</option>
                 </select>
             </div>
         </div>
 
-        <div class="filters-buttons">
-            <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar Filtros</button>
-            <button class="btn-atualizar" id="btnAtualizar" onclick="atualizarDados()">🔄 Atualizar Dados</button>
+        <div class="gc-filters__actions">
+            <button class="gc-btn gc-btn--secondary" onclick="limparFiltros()">🧹 Limpar Filtros</button>
+            <button class="gc-btn gc-btn--primary" id="btnAtualizar" onclick="atualizarDados()">🔄 Atualizar Dados</button>
         </div>
-    </div>
+    </section>
 
     <!-- Loading -->
-    <div class="loading" id="loading">
-        <div class="spinner"></div>
-        <div class="loading-text">Carregando dados do banco...</div>
-        <div class="loading-text" style="font-size: 0.8em; margin-top: 8px;">Isso pode levar alguns segundos</div>
+    <div class="gc-loading" id="loading">
+        <div class="gc-spinner"></div>
+        <div>Carregando dados do banco...</div>
+        <div style="font-size: 0.8em; margin-top: 8px; color: var(--gc-color-text-faded);">Isso pode levar alguns segundos</div>
     </div>
 
-    <!-- NOVO LAYOUT: 70% Tabela / 30% Dashboard -->
-    <div class="main-content" id="mainContent" style="display: none;">
-        <!-- SEÇÃO DA TABELA (70%) -->
-        <div class="table-section">
-            <div class="table-header">
-                <div class="table-title">📊 Resultados da Consulta</div>
-                <div class="table-stats" id="tableStats">0 registros</div>
+    <!-- Layout 70/30: tabela à esquerda, KPIs + gráficos à direita -->
+    <div class="gc-layout-7030" id="mainContent" style="display: none;">
+        <!-- Seção da tabela (70%) -->
+        <div class="gc-table-card">
+            <div class="gc-table-card__header">
+                <div class="gc-table-card__title">📊 Resultados da Consulta</div>
+                <div class="gc-table-card__stats" id="tableStats">0 registros</div>
             </div>
 
-            <div class="table-container" id="tableContainer">
-                <table>
+            <div class="gc-table-container" id="tableContainer">
+                <table class="gc-table">
                     <thead>
                         <tr>
                             <th>Cliente</th>
@@ -555,37 +167,38 @@
             <!-- Paginação -->
             <div id="paginationContainer"></div>
 
-            <div class="table-footer">
+            <div class="gc-table-card__footer">
                 <div class="total-value" id="totalValue">Total: R$ 0,00</div>
-                <button class="btn-export" onclick="exportarDados()">
+                <button class="gc-btn gc-btn--accent" onclick="exportarDados()">
                     📊 Exportar Excel
                 </button>
             </div>
         </div>
 
-        <!-- SEÇÃO DO DASHBOARD (30%) -->
+        <!-- Seção do dashboard (30%) -->
         <div class="dashboard-section">
+            <div id="comparisonSlot"></div>
             <!-- KPIs 2x2 -->
-            <div class="kpi-grid">
-                <div class="kpi-card">
-                    <div class="kpi-icon">💰</div>
-                    <div class="kpi-label">Valor Total</div>
-                    <div class="kpi-value" id="kpiValor">R$ 0,00</div>
+            <div class="kpi-grid-2col">
+                <div class="gc-kpi">
+                    <div class="gc-kpi__icon">💰</div>
+                    <div class="gc-kpi__label">Valor Total</div>
+                    <div class="gc-kpi__value" id="kpiValor">R$ 0,00</div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon">📦</div>
-                    <div class="kpi-label">Quantidade</div>
-                    <div class="kpi-value" id="kpiQtde">0</div>
+                <div class="gc-kpi">
+                    <div class="gc-kpi__icon">📦</div>
+                    <div class="gc-kpi__label">Quantidade</div>
+                    <div class="gc-kpi__value" id="kpiQtde">0</div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon">⚖️</div>
-                    <div class="kpi-label">Peso Total</div>
-                    <div class="kpi-value" id="kpiPeso">0 kg</div>
+                <div class="gc-kpi">
+                    <div class="gc-kpi__icon">⚖️</div>
+                    <div class="gc-kpi__label">Peso Total</div>
+                    <div class="gc-kpi__value" id="kpiPeso">0 kg</div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-icon">📊</div>
-                    <div class="kpi-label">Total Registros</div>
-                    <div class="kpi-value" id="kpiRegistros">0</div>
+                <div class="gc-kpi">
+                    <div class="gc-kpi__icon">📊</div>
+                    <div class="gc-kpi__label">Total Registros</div>
+                    <div class="gc-kpi__value" id="kpiRegistros">0</div>
                 </div>
             </div>
 
@@ -608,21 +221,24 @@
     </div>
 
     <!-- Estado vazio inicial -->
-    <div class="empty-state" id="emptyState">
+    <div class="gc-empty" id="emptyState">
         <div class="empty-state-icon">📊</div>
-        <div style="font-size: 1.1em; margin-bottom: 8px; color: #495057;">Selecione os filtros e clique em Atualizar</div>
+        <div style="font-size: 1.1em; margin-bottom: 8px; color: var(--gc-color-text-muted);">Selecione os filtros e clique em Atualizar</div>
         <p>Configure os filtros acima para visualizar os dados de vendas por produto</p>
     </div>
 
     <script type="module">
         import { db } from '../js/db.js';
         import { config } from '../js/config.js';
-        import { cache, CACHE_TTL } from '../js/cache.js';
+        import { cache, CACHE_TTL, getSmartTTL } from '../js/cache.js';
         import { Pagination, injectPaginationStyles } from '../js/pagination.js';
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
         import { initDashboard, registerCleanup, preventStaleCache } from '../js/dashboard-isolation.js';
         import { serializeDbResult, validateCacheStructure, buildDataCacheKey } from '../js/db-utils.js';
         import { validarPeriodo } from '../js/periodo-validator.js';
+        import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
+        import { mountSavedViews } from '../js/saved-views.js';
+        import { mountPeriodPicker, mountComparison } from '../js/period-picker.js';
 
         // Inicializa isolamento do dashboard
         initDashboard('Análise de Produtos');
@@ -796,10 +412,6 @@
         document.getElementById('filtroOrigem').addEventListener('change', function() {
             const origensSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
 
-            // NÃO limpa seleções anteriores automaticamente
-            // document.getElementById('filtroFamilia').selectedIndex = -1;
-            // document.getElementById('filtroProduto').selectedIndex = -1;
-
             if (origensSelecionadas.length === 0) {
                 // Se nenhuma origem: mostra todas (filtra null/undefined e duplicatas)
                 preencherSelect('filtroFamilia', window.todasFamilias
@@ -832,9 +444,6 @@
         document.getElementById('filtroFamilia').addEventListener('change', function() {
             const familiasSelecionadas = Array.from(this.selectedOptions).map(o => o.value);
             const origensSelecionadas = Array.from(document.getElementById('filtroOrigem').selectedOptions).map(o => o.value);
-
-            // NÃO limpa produtos automaticamente
-            // document.getElementById('filtroProduto').selectedIndex = -1;
 
             if (familiasSelecionadas.length === 0) {
                 // Se nenhuma família selecionada: filtra apenas por origem (se houver)
@@ -871,36 +480,13 @@
             }
         });
 
-        // Datas rápidas
-        window.setQuickDate = function(period) {
-            const hoje = new Date();
-            let inicio, fim;
-
-            switch (period) {
-                case '31dias':
-                    inicio = new Date(hoje);
-                    inicio.setDate(hoje.getDate() - 31);
-                    fim = hoje;
-                    break;
-                case 'mes':
-                    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-                    fim = hoje;
-                    break;
-                case 'trimestre':
-                    const mesAtual = hoje.getMonth();
-                    const inicioTrimestre = Math.floor(mesAtual / 3) * 3;
-                    inicio = new Date(hoje.getFullYear(), inicioTrimestre, 1);
-                    fim = hoje;
-                    break;
-                case 'ano':
-                    inicio = new Date(hoje.getFullYear(), 0, 1);
-                    fim = hoje;
-                    break;
-            }
-
-            document.getElementById('dataInicio').value = inicio.toISOString().split('T')[0];
-            document.getElementById('dataFim').value = fim.toISOString().split('T')[0];
-        };
+        // Period Picker — presets canônicos
+        const periodPicker = mountPeriodPicker({
+            inputStart: '#dataInicio',
+            inputEnd: '#dataFim',
+            presetsContainer: '#periodPresets',
+            presets: ['30d', 'mes', 'trimestre', 'ano'],
+        });
 
         // Limpar filtros
         window.limparFiltros = function() {
@@ -946,7 +532,7 @@
             if (!validarPeriodo(dataInicio, dataFim)) return;
 
             try {
-                document.getElementById('loading').classList.add('active');
+                document.getElementById('loading').classList.add('is-active');
                 document.getElementById('btnAtualizar').disabled = true;
                 document.getElementById('emptyState').style.display = 'none';
 
@@ -960,6 +546,7 @@
                     atualizarKPIs(cachedData);
                     atualizarGraficos(cachedData);
                     document.getElementById('mainContent').style.display = 'grid';
+                    setFreshness(document.querySelector('[data-gc-freshness]'), Date.now());
                     return;
                 }
 
@@ -998,7 +585,7 @@
 
                 const result = await db.execute(sql, params);
                 window.dadosCompletos = result.rows;
-                cache.set(cacheKey, result.rows, CACHE_TTL.DASHBOARDS);
+                cache.set(cacheKey, result.rows, getSmartTTL(dataFim));
 
                 // Configurar paginação
                 window.pagination.setData(result.rows);
@@ -1009,12 +596,13 @@
                 atualizarGraficos(result.rows);
 
                 document.getElementById('mainContent').style.display = 'grid';
+                setFreshness(document.querySelector('[data-gc-freshness]'), Date.now());
 
             } catch (error) {
                 console.error('Erro ao buscar dados:', error);
                 alert('Erro ao buscar dados: ' + error.message);
             } finally {
-                document.getElementById('loading').classList.remove('active');
+                document.getElementById('loading').classList.remove('is-active');
                 document.getElementById('btnAtualizar').disabled = false;
             }
         };
@@ -1025,7 +613,7 @@
             tbody.innerHTML = '';
 
             if (pageData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #6c757d;">Nenhum resultado encontrado</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--gc-color-text-faded);">Nenhum resultado encontrado</td></tr>';
                 return;
             }
 
@@ -1054,6 +642,8 @@
             const totalValor = dados.reduce((sum, row) => sum + parseFloat(row.valor || 0), 0);
             const totalQtde = dados.reduce((sum, row) => sum + parseFloat(row.qtde || 0), 0);
             const totalPeso = dados.reduce((sum, row) => sum + parseFloat(row.peso || 0), 0);
+
+            window._currentKPIs = { valor: totalValor, qtde: totalQtde, peso: totalPeso, registros: dados.length };
 
             document.getElementById('kpiValor').textContent = 'R$ ' + totalValor.toLocaleString('pt-BR', {minimumFractionDigits: 2});
             document.getElementById('kpiQtde').textContent = totalQtde.toLocaleString('pt-BR');
@@ -1165,11 +755,55 @@
             }
         };
 
-        // Inicializar - carrega filtros na primeira vez E ao voltar (pageshow para bfcache)
-        const initFiltros = (event) => {
-            // Se for evento pageshow e a página veio do cache (persisted)
+        // ========== URL STATE (FASE 2 — filtros na URL / drill-down / voltar com contexto) ==========
+        function setMultiSelectValues(selectId, values) {
+            const el = document.getElementById(selectId);
+            if (!el) return;
+            const list = Array.isArray(values) ? values : (values ? [values] : []);
+            const map = { filtroOrigem: 'origem', filtroFamilia: 'familia', filtroProduto: 'produto' };
+            const fs = window.filterSearches?.[map[selectId]];
+            if (fs && typeof fs.setSelected === 'function') {
+                fs.setSelected(list);
+            } else {
+                const wanted = new Set(list);
+                for (const opt of el.options) opt.selected = wanted.has(opt.value);
+            }
+        }
+
+        function snapshotFilters() {
+            return {
+                inicio: document.getElementById('dataInicio').value || null,
+                fim: document.getElementById('dataFim').value || null,
+                origem: Array.from(document.getElementById('filtroOrigem').selectedOptions).map(o => o.value),
+                familia: Array.from(document.getElementById('filtroFamilia').selectedOptions).map(o => o.value),
+                produto: Array.from(document.getElementById('filtroProduto').selectedOptions).map(o => o.value),
+            };
+        }
+
+        // Cascades: origem → (familia, produto) ; familia → produto
+        function hydrateFromURL() {
+            const p = urlFilters.read();
+            if (p.inicio) document.getElementById('dataInicio').value = p.inicio;
+            if (p.fim) document.getElementById('dataFim').value = p.fim;
+
+            if (p.origem) {
+                setMultiSelectValues('filtroOrigem', p.origem);
+                document.getElementById('filtroOrigem').dispatchEvent(new Event('change'));
+            }
+            if (p.familia) {
+                setMultiSelectValues('filtroFamilia', p.familia);
+                document.getElementById('filtroFamilia').dispatchEvent(new Event('change'));
+            }
+            if (p.produto) setMultiSelectValues('filtroProduto', p.produto);
+        }
+
+        function hasRequiredFilters(snap) {
+            return !!(snap.inicio && snap.fim);
+        }
+
+        async function initDashboardURL(event) {
+            // Se voltou do bfcache, destrói FilterSearch antigos pra evitar estado obsoleto
             if (event && event.type === 'pageshow' && event.persisted) {
-                // Destrói FilterSearch existentes para evitar estado obsoleto
                 if (window.filterSearches) {
                     Object.values(window.filterSearches).forEach(fs => {
                         if (fs && fs.destroy) fs.destroy();
@@ -1177,12 +811,53 @@
                     window.filterSearches = null;
                 }
             }
+            await carregarFiltros();
+            hydrateFromURL();
+            if (hasRequiredFilters(snapshotFilters())) {
+                window.atualizarDados();
+            }
+            mountSavedViews({ dashboard: 'analise-produtos', container: '#savedViewsSlot', snapshotFn: snapshotFilters, applyFn: (params) => { urlFilters.write(params); hydrateFromURL(); window.atualizarDados(); } });
 
-            carregarFiltros();
+            mountComparison({
+                container: '#comparisonSlot',
+                getCurrentPeriod: () => ({ inicio: document.getElementById('dataInicio').value, fim: document.getElementById('dataFim').value }),
+                getCurrentKPIs: () => window._currentKPIs || { valor: 0, qtde: 0, peso: 0, registros: 0 },
+                fetchKPIs: async (inicio, fim) => {
+                    if (!db.isConnected()) await db.connect();
+                    const origens = Array.from(document.getElementById('filtroOrigem').selectedOptions).map(o => o.value);
+                    const familias = Array.from(document.getElementById('filtroFamilia').selectedOptions).map(o => o.value);
+                    const produtos = Array.from(document.getElementById('filtroProduto').selectedOptions).map(o => o.value);
+                    let sql = 'SELECT SUM(v.valor_liquido) as valor, SUM(v.qtde_faturada) as qtde, SUM(v.peso_liq) as peso, COUNT(*) as registros FROM vendas v INNER JOIN tab_produto p ON v.produto = p.produto WHERE v.emissao >= ? AND v.emissao <= ?';
+                    const params = [inicio, fim];
+                    if (origens.length > 0) { sql += ` AND p.desc_origem IN (${origens.map(() => '?').join(',')})`; params.push(...origens); }
+                    if (familias.length > 0) { sql += ` AND p.desc_familia IN (${familias.map(() => '?').join(',')})`; params.push(...familias); }
+                    if (produtos.length > 0) { sql += ` AND p.desc_produto IN (${produtos.map(() => '?').join(',')})`; params.push(...produtos); }
+                    const r = await db.execute(sql, params);
+                    const row = r.rows?.[0] || {};
+                    return { valor: parseFloat(row.valor || 0), qtde: parseFloat(row.qtde || 0), peso: parseFloat(row.peso || 0), registros: parseInt(row.registros || 0) };
+                },
+                kpiElements: { valor: '#kpiValor', qtde: '#kpiQtde', peso: '#kpiPeso', registros: '#kpiRegistros' },
+            });
+        }
+
+        const _atualizarDados = window.atualizarDados;
+        window.atualizarDados = async function() {
+            urlFilters.write(snapshotFilters());
+            return _atualizarDados();
         };
 
-        // Usa apenas pageshow para evitar dupla inicialização (load + pageshow disparam juntos)
-        window.addEventListener('pageshow', initFiltros);
+        const _limparFiltros = window.limparFiltros;
+        window.limparFiltros = function() {
+            _limparFiltros();
+            urlFilters.write({ inicio: null, fim: null, origem: null, familia: null, produto: null });
+        };
+
+        window.addEventListener('popstate', () => {
+            hydrateFromURL();
+            if (hasRequiredFilters(snapshotFilters())) _atualizarDados();
+        });
+
+        window.addEventListener('pageshow', initDashboardURL);
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {

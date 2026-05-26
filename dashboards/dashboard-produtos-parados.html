@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Dashboard de Produtos Parados - Ger Comercial">
+    <!-- redeploy marker: 2026-05-22 fase 1 fix -->
     <meta name="theme-color" content="#fc0303">
     <title>Produtos Parados - Ger Comercial</title>
 
@@ -16,305 +17,68 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <!-- Shell compartilhado -->
+    <link rel="stylesheet" href="../css/dashboard-shell.css">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* Estilos específicos de "Produtos Parados" — o que NÃO é genérico do shell. */
 
-        body {
-            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-            background: #f8f9fa;
-            min-height: 100vh;
-        }
-
-        .header {
-            background: #fc0303;
-            color: white;
-            padding: 20px 30px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .header-logo img {
-            height: 60px;
-            width: auto;
-        }
-
-        .header h1 {
-            font-size: 1.6em;
-            font-weight: 600;
-        }
-
-        .btn-voltar {
-            background: white;
-            color: #fc0303;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
-            text-decoration: none;
-        }
-
-        .btn-voltar:hover {
-            background: #f8f9fa;
-        }
-
-        .filters-section {
-            background: white;
-            padding: 16px;
-            margin: 20px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            display: flex;
-            gap: 16px;
-            align-items: flex-start;
-        }
-
-        .filters-grid {
-            flex: 1;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
-        }
-
-        .filters-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            min-width: 160px;
-        }
-
-        .btn-limpar {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            font-size: 0.9em;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn-limpar:hover {
-            background: #5a6268;
-        }
-
-        .filter-group label {
-            color: #495057;
-            font-weight: 500;
-            margin-bottom: 6px;
-            font-size: 0.9em;
-            display: block;
-        }
-
-        .filter-group select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            font-size: 0.95em;
-            transition: all 0.2s;
-            background: white;
-            cursor: pointer;
-        }
-
-        .filter-group select:focus {
-            outline: none;
-            border-color: #fc0303;
-            box-shadow: 0 0 0 3px rgba(252, 3, 3, 0.1);
-        }
-
-        .btn-atualizar {
-            background: #fc0303;
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            font-size: 0.9em;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn-atualizar:hover {
-            background: #b50909;
-        }
-
-        .btn-atualizar:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
+        /* Botão WhatsApp (cor própria do serviço) */
         .btn-whatsapp {
             background: #25D366;
             color: white;
             border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
+            padding: 10px var(--gc-space-lg);
+            border-radius: var(--gc-radius-sm);
             font-size: 0.9em;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: background 0.2s;
             white-space: nowrap;
+            font-family: inherit;
         }
+        .btn-whatsapp:hover { background: #1da851; }
+        .btn-whatsapp:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .btn-whatsapp:hover {
-            background: #1da851;
-        }
-
-        .btn-whatsapp:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .btn-export {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            font-size: 0.9em;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn-export:hover {
-            background: #c82333;
-        }
-
-        .btn-export:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 70% 30%;
-            gap: 20px;
-            margin: 0 20px 20px 20px;
-        }
-
-        .left-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .right-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .card-title {
-            color: #212529;
-            font-size: 1.1em;
-            font-weight: 600;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .kpis-grid {
+        /* KPIs em grid 4 colunas (não 2x2 como outros dashboards) */
+        .kpis-grid-4col {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 20px;
+            gap: var(--gc-space-lg);
+            margin: 0 var(--gc-space-xl) var(--gc-space-xl);
         }
 
-        .kpi-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #fc0303;
-        }
+        /* Borda esquerda vermelha nos KPI cards (variante deste dashboard) */
+        .gc-kpi { border-left: 4px solid var(--gc-color-primary); }
 
-        .kpi-label {
-            color: #6c757d;
-            font-size: 0.85em;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            font-weight: 500;
+        /* Card genérico para gráficos */
+        .card {
+            background: var(--gc-color-surface);
+            border-radius: var(--gc-radius-md);
+            padding: 24px;
+            box-shadow: var(--gc-shadow-sm);
         }
-
-        .kpi-value {
-            color: #212529;
-            font-size: 2em;
-            font-weight: 700;
-        }
-
-        .kpi-change {
-            font-size: 0.85em;
-            margin-top: 8px;
-        }
-
-        .kpi-change.positive {
-            color: #28a745;
-        }
-
-        .kpi-change.negative {
-            color: #dc3545;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            max-height: 600px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9em;
-        }
-
-        thead {
-            position: sticky;
-            top: 0;
-            background: #f8f9fa;
-            z-index: 10;
-        }
-
-        th {
-            text-align: left;
-            padding: 12px;
+        .card-title {
+            color: var(--gc-color-text);
+            font-size: 1.1em;
             font-weight: 600;
-            color: #495057;
-            border-bottom: 2px solid #dee2e6;
-            white-space: nowrap;
+            margin-bottom: var(--gc-space-lg);
+            display: flex;
+            align-items: center;
+            gap: var(--gc-space-sm);
         }
 
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #f1f3f5;
+        /* Painéis 70/30 customizados (left/right) */
+        .left-panel, .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: var(--gc-space-xl);
         }
 
-        tr:hover {
-            background: #f8f9fa;
-        }
+        /* Container da tabela */
+        .gc-table-container { overflow-x: auto; max-height: 600px; }
 
+        /* Badges de nível de risco */
         .badge {
             display: inline-block;
             padding: 4px 10px;
@@ -322,97 +86,40 @@
             font-size: 0.8em;
             font-weight: 600;
         }
+        .badge-extremo { background: #8b0000; color: white; }
+        .badge-muito-alto { background: #dc3545; color: white; }
+        .badge-alto { background: #fd7e14; color: white; }
+        .badge-moderado { background: #ffc107; color: #000; }
+        .badge-baixo { background: #28a745; color: white; }
+        .badge-minimo { background: #20c997; color: white; }
 
-        .badge-extremo {
-            background: #8b0000;
-            color: white;
-        }
+        .chart-container { position: relative; height: 300px; }
 
-        .badge-muito-alto {
-            background: #dc3545;
-            color: white;
-        }
-
-        .badge-alto {
-            background: #fd7e14;
-            color: white;
-        }
-
-        .badge-moderado {
-            background: #ffc107;
-            color: #000;
-        }
-
-        .badge-baixo {
-            background: #28a745;
-            color: white;
-        }
-
-        .badge-minimo {
-            background: #20c997;
-            color: white;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 300px;
-        }
-
+        /* Loading e empty state internos do card */
         .loading {
             display: none;
             text-align: center;
             padding: 40px;
-            color: #6c757d;
+            color: var(--gc-color-text-faded);
         }
-
-        .loading.show {
-            display: block;
-        }
+        .loading.show { display: block; }
 
         .empty-state {
             display: none;
             text-align: center;
-            padding: 60px 20px;
-            color: #6c757d;
+            padding: 60px var(--gc-space-xl);
+            color: var(--gc-color-text-faded);
         }
-
-        .empty-state.show {
-            display: block;
-        }
-
-        .empty-state-icon {
-            font-size: 4em;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
+        .empty-state.show { display: block; }
+        .empty-state-icon { font-size: 4em; margin-bottom: var(--gc-space-lg); opacity: 0.5; }
 
         @media (max-width: 1200px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-
-            .kpis-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .gc-layout-7030 { grid-template-columns: 1fr; }
+            .kpis-grid-4col { grid-template-columns: repeat(2, 1fr); }
         }
 
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .kpis-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .filters-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .filters-buttons {
-                min-width: 100%;
-            }
+            .kpis-grid-4col { grid-template-columns: 1fr; }
         }
     </style>
 
@@ -420,37 +127,43 @@
     <link rel="stylesheet" href="../css/mobile.css">
     <script src="../js/mobile.js"></script>
 </head>
-<body>
-    <div class="header">
-        <div class="header-left">
-            <div class="header-logo">
+<body class="gc-page">
+    <header class="gc-header">
+        <div class="gc-header__left">
+            <div class="gc-header__logo">
                 <img src="https://static.wixstatic.com/media/ce3165_c01db19c0ef64e2abb8c894c7ecc6f95~mv2.png/v1/fill/w_161,h_69,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/logomarca-Germani-2023-Branca-borda-dour.png" alt="Logo Germani Alimentos">
             </div>
-            <h1>🛑 Produtos Parados</h1>
+            <h1 class="gc-header__title">🛑 Produtos Parados</h1>
         </div>
-        <a href=".." class="btn-voltar">← Voltar</a>
-    </div>
+        <div class="gc-header__right">
+            <span class="gc-freshness" data-gc-freshness hidden></span>
+            <a href=".." class="gc-btn-back">← Voltar</a>
+        </div>
+    </header>
+
+    <!-- Saved Views -->
+    <div id="savedViewsSlot"></div>
 
     <!-- Filtros -->
-    <div class="filters-section">
-        <div class="filters-grid">
-            <div class="filter-group">
-                <label for="filterSupervisor">Supervisor</label>
-                <select id="filterSupervisor">
+    <section class="gc-filters">
+        <div class="gc-filters__grid">
+            <div class="gc-filter">
+                <label class="gc-filter__label" for="filterSupervisor">Supervisor</label>
+                <select id="filterSupervisor" class="gc-filter__select">
                     <option value="">Todos os Supervisores</option>
                 </select>
             </div>
 
-            <div class="filter-group">
-                <label for="filterRepresentante">Representante</label>
-                <select id="filterRepresentante" onchange="aplicarFiltros()">
+            <div class="gc-filter">
+                <label class="gc-filter__label" for="filterRepresentante">Representante</label>
+                <select id="filterRepresentante" class="gc-filter__select" onchange="aplicarFiltros()">
                     <option value="">Todos os Representantes</option>
                 </select>
             </div>
 
-            <div class="filter-group">
-                <label for="filterRisco">Nível de Risco</label>
-                <select id="filterRisco" onchange="aplicarFiltros()">
+            <div class="gc-filter">
+                <label class="gc-filter__label" for="filterRisco">Nível de Risco</label>
+                <select id="filterRisco" class="gc-filter__select" onchange="aplicarFiltros()">
                     <option value="">Todos os Níveis</option>
                     <option value="EXTREMO">⚫ Extremo (6+ sem)</option>
                     <option value="MUITO ALTO">🔴 Muito Alto (5 sem)</option>
@@ -462,39 +175,39 @@
             </div>
         </div>
 
-        <div class="filters-buttons">
-            <button class="btn-limpar" onclick="limparFiltros()">🧹 Limpar</button>
-            <button class="btn-atualizar" onclick="carregarDados()" id="btnAtualizar">🔄 Atualizar</button>
-            <button class="btn-export" onclick="exportarPDF()" id="btnPDF" style="display: none;">📄 PDF</button>
+        <div class="gc-filters__actions">
+            <button class="gc-btn gc-btn--secondary" onclick="limparFiltros()">🧹 Limpar</button>
+            <button class="gc-btn gc-btn--primary" onclick="carregarDados()" id="btnAtualizar">🔄 Atualizar</button>
+            <button class="gc-btn gc-btn--accent" onclick="exportarPDF()" id="btnPDF" style="display: none;">📄 PDF</button>
             <button class="btn-whatsapp" onclick="enviarWhatsApp()" id="btnWhatsApp" style="display: none;">📱 WhatsApp</button>
         </div>
-    </div>
+    </section>
 
-    <!-- KPIs -->
-    <div class="kpis-grid" style="margin: 0 20px;">
-        <div class="kpi-card">
-            <div class="kpi-label">Total de Produtos Parados</div>
-            <div class="kpi-value" id="kpiTotalProdutos">-</div>
+    <!-- KPIs (4 colunas em linha) -->
+    <div class="kpis-grid-4col">
+        <div class="gc-kpi">
+            <div class="gc-kpi__label">Total de Produtos Parados</div>
+            <div class="gc-kpi__value" id="kpiTotalProdutos">-</div>
         </div>
 
-        <div class="kpi-card">
-            <div class="kpi-label">Valor Total em Risco</div>
-            <div class="kpi-value" id="kpiValorRisco">-</div>
+        <div class="gc-kpi">
+            <div class="gc-kpi__label">Valor Total em Risco</div>
+            <div class="gc-kpi__value" id="kpiValorRisco">-</div>
         </div>
 
-        <div class="kpi-card">
-            <div class="kpi-label">Representantes Afetados</div>
-            <div class="kpi-value" id="kpiRepresentantes">-</div>
+        <div class="gc-kpi">
+            <div class="gc-kpi__label">Representantes Afetados</div>
+            <div class="gc-kpi__value" id="kpiRepresentantes">-</div>
         </div>
 
-        <div class="kpi-card">
-            <div class="kpi-label">Média de Semanas Parado</div>
-            <div class="kpi-value" id="kpiMediaSemanas">-</div>
+        <div class="gc-kpi">
+            <div class="gc-kpi__label">Média de Semanas Parado</div>
+            <div class="gc-kpi__value" id="kpiMediaSemanas">-</div>
         </div>
     </div>
 
     <!-- Conteúdo Principal -->
-    <div class="main-content">
+    <div class="gc-layout-7030">
         <!-- Painel Esquerdo: Tabela -->
         <div class="left-panel">
             <div class="card">
@@ -510,8 +223,8 @@
                     <p>Escolha um supervisor e/ou representante e clique em "🔄 Atualizar" para ver os produtos parados.</p>
                 </div>
 
-                <div class="table-container" id="tableContainer" style="display: none;">
-                    <table id="tableData">
+                <div class="gc-table-container" id="tableContainer" style="display: none;">
+                    <table class="gc-table" id="tableData">
                         <thead>
                             <tr>
                                 <th>Risco</th>
@@ -531,7 +244,7 @@
             </div>
         </div>
 
-        <!-- Painel Direito: Gráficos e Resumo -->
+        <!-- Painel Direito: Gráficos -->
         <div class="right-panel">
             <div class="card">
                 <div class="card-title">🔥 Top 10 Produtos Mais Paralisados</div>
@@ -554,6 +267,8 @@
         import { cache, CACHE_TTL } from '../js/cache.js';
         import { getRepresentantes } from '../js/shared-filters.js';
         import { FilterSearch, injectFilterSearchStyles } from '../js/filter-search.js';
+        import { setFreshness, urlFilters } from '../js/dashboard-shell.js';
+        import { mountSavedViews } from '../js/saved-views.js';
 
         // Injetar estilos do FilterSearch
         injectFilterSearchStyles();
@@ -670,61 +385,13 @@
                 // Atualizar interface
                 aplicarFiltros();
                 mostrarLoading(false);
+                setFreshness(document.querySelector('[data-gc-freshness]'), Date.now());
 
             } catch (error) {
                 console.error('❌ Erro ao carregar dados:', error);
                 alert('Erro ao carregar dados. Verifique o console para mais detalhes.');
                 mostrarLoading(false);
             }
-        }
-
-        // Popular filtros
-        function popularFiltros() {
-            // Supervisores únicos
-            const supervisores = [...new Set(dadosCompletos.map(d => d.rep_supervisor).filter(s => s))].sort();
-            const selectSupervisor = document.getElementById('filterSupervisor');
-            const selectRepresentante = document.getElementById('filterRepresentante');
-
-            // Destruir instâncias anteriores do FilterSearch para recriar com dados novos
-            if (filterSearchInstances.filterSupervisor) {
-                filterSearchInstances.filterSupervisor.destroy();
-                filterSearchInstances.filterSupervisor = null;
-            }
-            if (filterSearchInstances.filterRepresentante) {
-                filterSearchInstances.filterRepresentante.destroy();
-                filterSearchInstances.filterRepresentante = null;
-            }
-
-            // Limpar e popular supervisores
-            selectSupervisor.innerHTML = '';
-            const optSupervisorDefault = document.createElement('option');
-            optSupervisorDefault.value = '';
-            optSupervisorDefault.textContent = 'Todos os Supervisores';
-            selectSupervisor.appendChild(optSupervisorDefault);
-
-            supervisores.forEach(s => {
-                const opt = document.createElement('option');
-                opt.value = s;
-                opt.textContent = s;
-                selectSupervisor.appendChild(opt);
-            });
-
-            // Popular representantes (inicialmente todos)
-            atualizarFiltroRepresentantes();
-
-            // Criar novas instâncias do FilterSearch DEPOIS de popular as opções
-            filterSearchInstances.filterSupervisor = new FilterSearch('filterSupervisor', {
-                placeholder: 'Digite para buscar supervisor...'
-            });
-
-            filterSearchInstances.filterRepresentante = new FilterSearch('filterRepresentante', {
-                placeholder: 'Digite para buscar representante...'
-            });
-
-            // IMPORTANTE: Remover event listener antigo (se existir) e adicionar novo
-            // Isso garante que não temos múltiplos listeners duplicados
-            selectSupervisor.removeEventListener('change', atualizarFiltroRepresentantes);
-            selectSupervisor.addEventListener('change', atualizarFiltroRepresentantes);
         }
 
         // Atualizar filtro de representantes baseado no supervisor selecionado
@@ -735,7 +402,6 @@
             // Filtrar representantes do supervisor selecionado
             let representantes;
             if (supervisorSelecionado) {
-                // Se há supervisor selecionado, mostrar apenas seus representantes
                 representantes = [...new Set(
                     dadosCompletos
                         .filter(d => d.rep_supervisor === supervisorSelecionado)
@@ -743,7 +409,6 @@
                         .filter(r => r)
                 )].sort();
             } else {
-                // Se não há supervisor, mostrar todos os representantes
                 representantes = [...new Set(dadosCompletos.map(d => d.desc_representante).filter(r => r))].sort();
             }
 
@@ -753,7 +418,6 @@
                 filterSearchInstances.filterRepresentante = null;
             }
 
-            // Limpar e popular representantes
             selectRepresentante.innerHTML = '';
             const optRepresentanteDefault = document.createElement('option');
             optRepresentanteDefault.value = '';
@@ -769,12 +433,10 @@
                 selectRepresentante.appendChild(opt);
             });
 
-            // Recriar instância do FilterSearch de representante
             filterSearchInstances.filterRepresentante = new FilterSearch('filterRepresentante', {
                 placeholder: 'Digite para buscar representante...'
             });
 
-            // Aplicar filtros automaticamente após atualizar representantes
             aplicarFiltros();
         }
 
@@ -803,7 +465,6 @@
             const btnWhatsApp = document.getElementById('btnWhatsApp');
             const btnPDF = document.getElementById('btnPDF');
 
-            // Mostrar/ocultar empty state e botões de exportação
             if (dadosFiltrados.length === 0) {
                 document.getElementById('emptyTable').classList.add('show');
                 document.getElementById('tableContainer').style.display = 'none';
@@ -817,7 +478,6 @@
             }
         }
 
-        // Atualizar KPIs
         function atualizarKPIs() {
             const totalProdutos = dadosFiltrados.length;
             const valorTotal = dadosFiltrados.reduce((sum, item) => sum + (item.valor_medio_perdido || 0), 0);
@@ -832,7 +492,6 @@
             document.getElementById('kpiMediaSemanas').textContent = mediaSemanas + ' sem';
         }
 
-        // Atualizar tabela
         function atualizarTabela() {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
@@ -860,22 +519,39 @@
                     <td>R$ ${(item.valor_medio_perdido || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                 `;
 
+                // Drill-down: clique leva à Análise de Produtos com este produto + últimos 90 dias
+                if (item.desc_produto) {
+                    tr.classList.add('gc-row-clickable');
+                    tr.title = `Analisar vendas de "${item.desc_produto}"`;
+                    tr.addEventListener('click', () => {
+                        const hoje = new Date();
+                        const inicio90 = new Date(hoje);
+                        inicio90.setDate(hoje.getDate() - 90);
+                        const href = urlFilters.link(
+                            'dashboard-analise-produtos.html',
+                            {
+                                produto: item.desc_produto,
+                                inicio: inicio90.toISOString().split('T')[0],
+                                fim: hoje.toISOString().split('T')[0],
+                            },
+                            []
+                        );
+                        window.location.href = href;
+                    });
+                }
+
                 tbody.appendChild(tr);
             });
         }
 
-        // Atualizar gráficos
         function atualizarGraficos() {
             atualizarGraficoTopProdutos();
             atualizarGraficoRisco();
         }
 
-        // Gráfico Top 10 Produtos
         function atualizarGraficoTopProdutos() {
-            // Agrupar por produto (filtrar produtos sem nome)
             const produtosAgrupados = {};
             dadosFiltrados.forEach(item => {
-                // Ignorar produtos sem descrição
                 if (!item.desc_produto) return;
 
                 if (!produtosAgrupados[item.desc_produto]) {
@@ -889,7 +565,6 @@
                 produtosAgrupados[item.desc_produto].valorTotal += (item.valor_medio_perdido || 0);
             });
 
-            // Ordenar e pegar top 10
             const top10 = Object.values(produtosAgrupados)
                 .sort((a, b) => b.qtdReps - a.qtdReps)
                 .slice(0, 10);
@@ -914,27 +589,22 @@
                     }]
                 },
                 options: {
-                    indexAxis: 'y', // Barras horizontais
+                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            display: false
-                        }
+                        legend: { display: false }
                     },
                     scales: {
                         x: {
                             beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
+                            ticks: { stepSize: 1 }
                         }
                     }
                 }
             });
         }
 
-        // Gráfico de Risco
         function atualizarGraficoRisco() {
             const riscos = {
                 'EXTREMO': 0,
@@ -969,21 +639,17 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
+                        legend: { position: 'bottom' }
                     }
                 }
             });
         }
 
-        // Limpar filtros
         function limparFiltros() {
             document.getElementById('filterSupervisor').value = '';
             document.getElementById('filterRepresentante').value = '';
             document.getElementById('filterRisco').value = '';
 
-            // Limpar campos de busca do FilterSearch
             if (filterSearchInstances.filterSupervisor) {
                 filterSearchInstances.filterSupervisor.clear();
             }
@@ -991,17 +657,14 @@
                 filterSearchInstances.filterRepresentante.clear();
             }
 
-            // Atualizar lista de representantes (mostrar todos novamente)
             atualizarFiltroRepresentantes();
         }
 
-        // Mostrar/ocultar loading
         function mostrarLoading(show) {
             document.getElementById('loadingTable').classList.toggle('show', show);
             document.getElementById('btnAtualizar').disabled = show;
         }
 
-        // Formatar data
         function formatarData(data) {
             if (!data) return '-';
             try {
@@ -1011,7 +674,6 @@
             }
         }
 
-        // Exportar PDF
         function exportarPDF() {
             if (dadosFiltrados.length === 0) {
                 alert('Não há dados para exportar');
@@ -1022,7 +684,6 @@
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('landscape');
 
-                // Cabeçalho
                 doc.setFontSize(18);
                 doc.setTextColor(252, 3, 3);
                 doc.text('Produtos Parados - Germani Alimentos', 14, 20);
@@ -1032,7 +693,6 @@
                 doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
                 doc.text(`Total de produtos: ${dadosFiltrados.length}`, 14, 34);
 
-                // Preparar dados da tabela
                 const tableData = dadosFiltrados.map(row => [
                     row.nivel_risco || '-',
                     row.rep_supervisor || '-',
@@ -1055,12 +715,8 @@
                         fontStyle: 'bold',
                         fontSize: 9
                     },
-                    bodyStyles: {
-                        fontSize: 8
-                    },
-                    alternateRowStyles: {
-                        fillColor: [248, 249, 250]
-                    },
+                    bodyStyles: { fontSize: 8 },
+                    alternateRowStyles: { fillColor: [248, 249, 250] },
                     columnStyles: {
                         0: { cellWidth: 25 },
                         3: { cellWidth: 60 }
@@ -1071,7 +727,7 @@
                 const fileName = `produtos_parados_${dataAtual}.pdf`;
                 doc.save(fileName);
 
-                return fileName; // Retorna o nome do arquivo para uso no WhatsApp
+                return fileName;
             } catch (error) {
                 console.error('Erro ao exportar PDF:', error);
                 alert('Erro ao exportar PDF: ' + error.message);
@@ -1079,7 +735,6 @@
             }
         }
 
-        // Enviar por WhatsApp (nova versão dinâmica)
         async function enviarWhatsApp() {
             if (dadosFiltrados.length === 0) {
                 alert('Não há dados para enviar');
@@ -1087,12 +742,10 @@
             }
 
             try {
-                // Buscar telefone do representante se houver filtro aplicado
                 let telefoneDestino = '';
                 const representanteFiltrado = document.getElementById('filterRepresentante').value;
 
                 if (representanteFiltrado) {
-                    // Buscar telefone do representante no banco
                     const result = await db.execute(`
                         SELECT rep_fone
                         FROM tab_representante
@@ -1101,28 +754,23 @@
                     `, [representanteFiltrado]);
 
                     if (result.rows && result.rows.length > 0 && result.rows[0].rep_fone) {
-                        // Limpar telefone (remover caracteres especiais)
                         telefoneDestino = result.rows[0].rep_fone.replace(/\D/g, '');
 
-                        // Garantir código do país (Brasil)
                         if (telefoneDestino.length === 11 && !telefoneDestino.startsWith('55')) {
                             telefoneDestino = '55' + telefoneDestino;
                         }
                     }
                 }
 
-                // Preparar dados do relatório
                 const totalProdutos = dadosFiltrados.length;
                 const valorTotal = dadosFiltrados.reduce((sum, item) => sum + (item.valor_medio_perdido || 0), 0);
 
-                // Agrupar por nível de risco
                 const porRisco = {};
                 dadosFiltrados.forEach(item => {
                     const risco = item.nivel_risco || 'INDEFINIDO';
                     porRisco[risco] = (porRisco[risco] || 0) + 1;
                 });
 
-                // Montar mensagem formatada em texto (sem emojis para evitar problemas de encoding)
                 let mensagem = `*Atencao aos Produtos sem Venda*\n\n`;
                 mensagem += `Data: ${new Date().toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric'})} - ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}\n\n`;
 
@@ -1150,19 +798,16 @@
 
                 mensagem += `\n*TOP 10 PRODUTOS CRITICOS*\n`;
 
-                // Ordenar por nível de risco (EXTREMO primeiro) e depois por valor médio
                 const ordemRisco = ['EXTREMO', 'MUITO ALTO', 'ALTO', 'MODERADO', 'BAIXO', 'MÍNIMO'];
                 const top10 = dadosFiltrados
                     .sort((a, b) => {
                         const riscoA = ordemRisco.indexOf(a.nivel_risco);
                         const riscoB = ordemRisco.indexOf(b.nivel_risco);
 
-                        // Se os riscos são diferentes, ordena por risco (menor índice = maior risco)
                         if (riscoA !== riscoB) {
                             return riscoA - riscoB;
                         }
 
-                        // Se os riscos são iguais, ordena por valor médio (maior primeiro)
                         return (b.valor_medio_perdido || 0) - (a.valor_medio_perdido || 0);
                     })
                     .slice(0, 10);
@@ -1178,7 +823,6 @@
                 mensagem += `\n========================================\n`;
                 mensagem += `*Acao recomendada:* Contatar clientes e reativar vendas`;
 
-                // Abrir WhatsApp
                 const mensagemEncoded = encodeURIComponent(mensagem);
                 let whatsappURL;
 
@@ -1198,15 +842,63 @@
             }
         }
 
-        // Tornar funções globais
-        window.carregarDados = carregarDados;
-        window.aplicarFiltros = aplicarFiltros;
-        window.limparFiltros = limparFiltros;
+        // ========== URL STATE (FASE 2 — filtros na URL / drill-down / voltar com contexto) ==========
+        function snapshotFilters() {
+            return {
+                supervisor: document.getElementById('filterSupervisor').value || null,
+                representante: document.getElementById('filterRepresentante').value || null,
+                risco: document.getElementById('filterRisco').value || null,
+            };
+        }
+
+        function hydrateFromURL() {
+            const p = urlFilters.read();
+            if (p.supervisor) {
+                document.getElementById('filterSupervisor').value = p.supervisor;
+                // Re-popula representantes baseado no supervisor selecionado
+                atualizarFiltroRepresentantesInicial();
+            }
+            if (p.representante) document.getElementById('filterRepresentante').value = p.representante;
+            if (p.risco) document.getElementById('filterRisco').value = p.risco;
+        }
+
+        function hasAnyFilter(snap) {
+            return !!(snap.supervisor || snap.representante || snap.risco);
+        }
+
+        // Tornar funções globais (com wrappers de URL)
+        window.carregarDados = async function() {
+            urlFilters.write(snapshotFilters());
+            return carregarDados();
+        };
+        window.aplicarFiltros = function() {
+            urlFilters.write(snapshotFilters());
+            return aplicarFiltros();
+        };
+        window.limparFiltros = function() {
+            limparFiltros();
+            urlFilters.write({ supervisor: null, representante: null, risco: null });
+        };
         window.exportarPDF = exportarPDF;
         window.enviarWhatsApp = enviarWhatsApp;
 
-        // Carregar apenas os filtros ao iniciar (sem carregar dados)
-        carregarFiltros();
+        // Init: carrega filtros, hidrata da URL, e auto-busca se houver filtros.
+        (async () => {
+            await carregarFiltros();
+            hydrateFromURL();
+            if (hasAnyFilter(snapshotFilters())) {
+                await carregarDados();
+            }
+            mountSavedViews({ dashboard: 'produtos-parados', container: '#savedViewsSlot', snapshotFn: snapshotFilters, applyFn: (params) => { urlFilters.write(params); hydrateFromURL(); if (dadosCompletos.length > 0) aplicarFiltros(); else carregarDados(); } });
+        })();
+
+        window.addEventListener('popstate', () => {
+            hydrateFromURL();
+            if (hasAnyFilter(snapshotFilters())) {
+                if (dadosCompletos.length > 0) aplicarFiltros();
+                else carregarDados();
+            }
+        });
     </script>
 </body>
 </html>
