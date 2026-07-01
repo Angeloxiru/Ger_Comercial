@@ -180,6 +180,25 @@ self.addEventListener('message', (event) => {
         })
     );
   }
+
+  // Limpar todo o cache do Service Worker ao fazer logout
+  if (event.data && event.data.action === 'clearAllCache') {
+    console.log('🧹 Service Worker: Limpando todos os caches...');
+    event.waitUntil(
+      caches.keys()
+        .then((cacheNames) => {
+          return Promise.all(
+            cacheNames.map((cacheName) => {
+              console.log(`🗑️ Service Worker: Deletando cache: ${cacheName}`);
+              return caches.delete(cacheName);
+            })
+          );
+        })
+        .then(() => {
+          console.log('✅ Service Worker: Todos os caches foram deletados');
+        })
+    );
+  }
 });
 
 console.log('🎉 Service Worker carregado com sucesso!');
