@@ -68,6 +68,22 @@
             opacity: 0.95;
         }
 
+        .header-last-billing {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header-last-billing .label {
+            opacity: 0.85;
+        }
+
+        .header-last-billing .date {
+            font-weight: 600;
+        }
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -343,6 +359,10 @@
             <div class="header-content">
                 <h1>📊 Dashboard Germani Alimentos</h1>
                 <p>Sistema Integrado de Gerenciamento</p>
+                <div class="header-last-billing">
+                    <span class="label">📅 Último Faturamento:</span>
+                    <span class="date" id="lastBillingDate">Carregando...</span>
+                </div>
             </div>
             <div class="header-user">
                 <div class="user-info" id="userInfo">👤 Usuário</div>
@@ -514,6 +534,38 @@
         import { authManager } from './js/auth.js';
         import { db } from './js/db.js';
 
+        // Função para carregar última data de faturamento
+        async function carregarUltimoFaturamento() {
+            try {
+                if (!db.isConnected()) await db.connect();
+
+                const result = await db.execute(
+                    'SELECT MAX(emissao) as ultima_emissao FROM vendas WHERE emissao IS NOT NULL'
+                );
+
+                if (result.rows && result.rows.length > 0) {
+                    const dataStr = result.rows[0].ultima_emissao || result.rows[0][0];
+
+                    if (dataStr) {
+                        // Converter formato ISO (YYYY-MM-DD) para DD/MM/AAAA
+                        const [ano, mes, dia] = dataStr.split('-');
+                        const dataFormatada = `${dia}/${mes}/${ano}`;
+
+                        const elemento = document.getElementById('lastBillingDate');
+                        if (elemento) {
+                            elemento.textContent = dataFormatada;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Erro ao carregar último faturamento:', error.message);
+                const elemento = document.getElementById('lastBillingDate');
+                if (elemento) {
+                    elemento.textContent = 'Indisponível';
+                }
+            }
+        }
+
         // Verificar autenticação ao carregar a página
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🔍 Verificando autenticação...');
@@ -538,6 +590,9 @@
 
             // Aplicar controle de acesso aos cards
             authManager.applyAccessControl();
+
+            // Carregar última data de faturamento
+            carregarUltimoFaturamento();
 
             // Versão do sistema (lê de /Ger_Comercial/VERSION)
             fetch('/Ger_Comercial/VERSION')
