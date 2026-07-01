@@ -6,6 +6,7 @@
  */
 
 import { DatabaseManager } from './db.js';
+import { cache } from './cache.js';
 
 class AuthManager {
     constructor() {
@@ -268,10 +269,48 @@ class AuthManager {
 
     /**
      * Realiza o logout do usuário
+     * Limpa todos os dados em cache (localStorage, sessionStorage, cookies, Service Worker)
      */
-    logout() {
+    async logout() {
+        console.log('🚀 Iniciando logout...');
+
+        // 1. Limpar sessão (localStorage, sessionStorage, cookies)
         this.clearSession();
-        console.log('✅ Logout realizado');
+        console.log('✅ Sessão limpa');
+
+        // 2. Limpar cache de dados (CacheManager)
+        cache.clear();
+        console.log('✅ Cache de dados limpo');
+
+        // 3. Limpar cache do Service Worker (RUNTIME_CACHE)
+        if ('serviceWorker' in navigator) {
+            try {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const registration of registrations) {
+                    if (registration.active) {
+                        registration.active.postMessage({
+                            action: 'clearAllCache'
+                        });
+                        console.log('✅ Cache do Service Worker limpo');
+                    }
+                }
+            } catch (error) {
+                console.error('⚠️ Erro ao limpar cache do Service Worker:', error);
+            }
+        }
+
+        // 4. Limpar IndexedDB (se existir)
+        try {
+            const databases = await indexedDB.databases();
+            for (const db of databases) {
+                indexedDB.deleteDatabase(db.name);
+                console.log(`✅ IndexedDB "${db.name}" deletado`);
+            }
+        } catch (error) {
+            console.error('⚠️ Erro ao limpar IndexedDB:', error);
+        }
+
+        console.log('✅ Logout realizado com sucesso');
 
         // Redirecionar para login (replace para não adicionar ao histórico)
         window.location.replace('/Ger_Comercial/login.html');
