@@ -7,6 +7,34 @@ Versionamento: [Semver](https://semver.org/lang/pt-BR/)
 
 ---
 
+## [1.16.2] — 2026-09-02
+
+### Corrigido
+- **Login não funcionava no Firefox (e vazava a senha na URL)**
+  - O handler de `keypress` do `login.html` disparava
+    `loginForm.dispatchEvent(new Event('submit'))`. Esse evento não é
+    cancelável (`cancelable` é `false` por padrão), então o `preventDefault()`
+    do handler virava no-op e o Firefox executava o **envio nativo** do
+    formulário. O `<form>` não tinha `method`, ou seja, GET para a própria URL:
+    a página navegava para `login.html?username=...&password=...`, a consulta
+    em andamento ao Turso era abortada pelo unload e o erro aparecia como
+    `NetworkError when attempting to fetch resource`.
+  - O Chrome não reproduzia porque já removeu o envio nativo disparado por
+    evento não confiável: lá só o handler JavaScript rodava.
+  - Removido o dispatch manual. O Enter continua funcionando pelo
+    `<button type="submit">`, que dispara um evento confiável e cancelável.
+  - `<form>` recebeu `method="post"`, `action="#"` e `onsubmit="return false;"`
+    como barreira extra contra envio nativo.
+  - Credenciais que já estejam na query string são removidas do histórico no
+    carregamento da página, via `history.replaceState`.
+- `login.html` apontava para `logo-germani.png`, arquivo inexistente no
+  repositório (404). Passa a usar o mesmo logo hospedado dos dashboards.
+
+### Segurança
+- Usuários que logaram pelo Firefox tiveram a senha gravada em texto puro no
+  histórico do navegador. Recomenda-se trocar essas senhas e limpar o
+  histórico das máquinas afetadas.
+
 ## [1.16.1] — 2026-09-02
 
 ### Alterado

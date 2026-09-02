@@ -319,6 +319,14 @@ Acesse `Settings > Secrets and variables > Actions` e adicione:
 
 > A partir da **v1.12.1** o projeto adotou [semver](https://semver.org/lang/pt-BR/) e o historico oficial passou a ser mantido em [`CHANGELOG.md`](CHANGELOG.md). As entradas `v4.x` abaixo sao do esquema de versionamento anterior e ficam preservadas como historico.
 
+### v1.16.2 - Correcao do login no Firefox (2026-09-02)
+- Login nao completava no Firefox: o Enter disparava `new Event('submit')`, que nao e cancelavel, e o Firefox executava o envio nativo do formulario (GET), abortando a consulta ao Turso e gravando usuario e senha na URL e no historico
+- Removido o dispatch manual de submit; o Enter passa a usar o `<button type="submit">` nativo
+- `<form>` com `method="post"` e `onsubmit="return false;"` como barreira extra
+- Credenciais presentes na query string sao removidas do historico no carregamento
+- Corrigido 404 do logo no `login.html`
+- **Acao recomendada:** trocar a senha de quem logou pelo Firefox e limpar o historico dessas maquinas
+
 ### v1.16.1 - Revisao do manual de utilizacao (2026-09-02)
 - Manual (`manual.html`) revisado e alinhado ao sistema atual, agora com 15 capitulos
 - Novo capitulo: Categorias de Produtos
