@@ -1,8 +1,8 @@
 // Service Worker para Ger Comercial - Germani Alimentos
-// Versao: 1.8.0 - Fase 3 comparativo fix
+// Versao: 1.16.1 - Revisao do manual de utilizacao
 
-const CACHE_NAME = 'ger-comercial-v11';
-const RUNTIME_CACHE = 'ger-comercial-runtime-v11';
+const CACHE_NAME = 'ger-comercial-v12';
+const RUNTIME_CACHE = 'ger-comercial-runtime-v12';
 
 // Arquivos essenciais para funcionar offline
 const ESSENTIAL_FILES = [

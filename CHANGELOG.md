@@ -7,6 +7,33 @@ Versionamento: [Semver](https://semver.org/lang/pt-BR/)
 
 ---
 
+## [1.16.1] — 2026-09-02
+
+### Alterado
+- **Manual de utilização (`manual.html`) revisado e alinhado ao sistema atual**
+  - Novo capítulo "Categorias de Produtos" (dashboard existia desde a v4.1 do
+    esquema antigo e nunca havia sido documentado).
+  - "Cobrança Semanal" renomeado para "Performance Mensal", com filtros, KPIs
+    (Faturamento, Peso, Positivados, % Média Meta) e colunas de meta / ano
+    anterior corrigidos.
+  - Novo capítulo de recursos compartilhados: Period Picker com presets,
+    comparativo "vs Anterior" / "vs Ano", Visões Salvas, filtros na URL,
+    drill-down entre dashboards, indicador "🕒 atualizado há…" e TTL de cache
+    inteligente (24h fechado / 10min em curso).
+  - Configurações: importação de `vendas` (Excel, série EP) e `metas_mensais`,
+    template Excel com macro para `tab_cliente`, flag de período estendido e a
+    seção de Agendamentos de Relatórios por e-mail.
+  - Login: tabela de permissões com os 10 ids reais, limite de período
+    (100 dias / 366 dias) e passo a passo de "Alterar Senha".
+  - Navegação: cards atuais da home, Último Faturamento, etiqueta de versão e
+    limpeza de cache no logout.
+  - Correções de conteúdo em Vendas por Região (modo Roteiros), Vendas por
+    Equipe (bonificação), Análise de Produtos (saída por cliente), Performance
+    de Clientes, Ranking de Clientes (Curva ABC) e Clientes Sem Compras
+    (não usa filtro de período).
+  - Rodapé passa a exibir a versão semver do sistema.
+- Service Worker v11 → v12 para renovar a cópia offline do manual.
+
 ## [1.16.0] — 2026-05-26
 
 ### Adicionado
