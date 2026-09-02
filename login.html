@@ -229,7 +229,7 @@
     <div class="login-container">
         <!-- Logo e Título -->
         <div class="logo-container">
-            <img src="logo-germani.png" alt="Germani Alimentos" onerror="this.style.display='none'">
+            <img src="https://static.wixstatic.com/media/ce3165_c01db19c0ef64e2abb8c894c7ecc6f95~mv2.png/v1/fill/w_161,h_69,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/logomarca-Germani-2023-Branca-borda-dour.png" alt="Germani Alimentos" onerror="this.style.display='none'">
             <h1>Ger Comercial</h1>
             <p>Sistema de Gerenciamento Comercial</p>
         </div>
@@ -238,7 +238,7 @@
         <div id="alert" class="alert"></div>
 
         <!-- Formulário de Login -->
-        <form id="loginForm">
+        <form id="loginForm" method="post" action="#" onsubmit="return false;">
             <div class="form-group">
                 <label for="username">Usuário</label>
                 <input
@@ -278,6 +278,13 @@
     <!-- Script principal -->
     <script type="module">
         import { authManager } from './js/auth.js';
+
+        // Remove credenciais da URL antes de qualquer coisa.
+        // Versoes anteriores enviavam o formulario por GET no Firefox, o que
+        // gravava usuario e senha na barra de endereco e no historico.
+        if (window.location.search) {
+            history.replaceState(null, '', window.location.pathname);
+        }
 
         // Verificar se já está autenticado
         if (authManager.redirectIfAuthenticated()) {
@@ -364,14 +371,11 @@
             alertBox.classList.remove('show');
         });
 
-        // Permitir Enter em qualquer campo
-        [usernameInput, passwordInput].forEach(input => {
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    loginForm.dispatchEvent(new Event('submit'));
-                }
-            });
-        });
+        // O Enter ja e tratado nativamente pelo <button type="submit"> do
+        // formulario, que dispara um evento de submit confiavel e cancelavel.
+        // Nao disparar new Event('submit') manualmente: esse evento nao e
+        // cancelavel, o preventDefault() vira no-op e o Firefox executa o
+        // envio nativo do formulario, abortando a consulta em andamento.
 
         console.log('🔐 Página de login carregada');
     </script>
