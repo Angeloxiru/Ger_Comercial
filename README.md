@@ -27,9 +27,9 @@ Sem build pipeline, sem framework SPA — por escolha deliberada
 | Fase | Foco | Status |
 |---|---|---|
 | **FASE 0** | Segurança P0 (token Turso, hash de senha, proxy de leitura) | ⏳ pendente |
-| **FASE 1** | Shell unificado dos dashboards (`css/dashboard-shell.css` + `js/dashboard-shell.js`) | 🟡 fundação pronta — adoção incremental |
-| **FASE 2** | Investigação cruzada (filtros na URL, drill-down entre dashboards, saved views) | 🔜 |
-| **FASE 3** | Modelo temporal canônico (period-picker único + comparativos consistentes) | 🔜 |
+| **FASE 1** | Shell unificado dos dashboards (`css/dashboard-shell.css` + `js/dashboard-shell.js`) | ✅ concluída (v1.12.0) |
+| **FASE 2** | Investigação cruzada (filtros na URL, drill-down entre dashboards, saved views) | ✅ concluída (v1.13.0) |
+| **FASE 3** | Modelo temporal canônico (period-picker único + comparativos consistentes + TTL inteligente) | ✅ concluída (v1.16.0) |
 | **FASE 4** | Inteligência operacional (alertas contextuais, próxima ação sugerida) | 🔜 |
 | **FASE 5** | Polimento e doc viva contínua | 🔜 |
 
@@ -49,7 +49,21 @@ Sem build pipeline, sem framework SPA — por escolha deliberada
 | **Clientes sem Compras** | Mapa interativo de clientes inativos por grau de risco |
 | **Categorias de Produtos** | Analise por categoria (Biscoitos, Catterino, Cereais, Massas, Instantaneo) com peso, valor e R$/KG |
 
-> **Limite de periodo:** Todos os dashboards com filtro de data aceitam no maximo **100 dias** por consulta para proteger o limite de leituras do Turso.
+> **Limite de periodo:** Todos os dashboards com filtro de data aceitam no maximo **100 dias** por consulta para proteger o limite de leituras do Turso. Usuarios com a flag `periodo_estendido` marcada em Configuracoes podem consultar ate **366 dias**.
+
+### Recursos Compartilhados (shell)
+
+Disponiveis em todos os dashboards de dados:
+
+| Recurso | Descricao |
+|---------|-----------|
+| **Period Picker** | Presets canonicos (Hoje, 7d, 30d, Semana, Mes, Mes anterior, Trimestre, Ano) |
+| **Comparativo** | Toggle "vs Anterior" / "vs Ano" com delta percentual nos KPIs (6 dashboards) |
+| **Visoes Salvas** | Combinacoes de filtros salvas por usuario na tabela `user_views` |
+| **Filtros na URL** | Link compartilhavel, botao Voltar preserva contexto |
+| **Drill-down** | Ranking -> Performance de Clientes, Vendas/Equipe -> Produtos Parados, Produtos Parados -> Analise de Produtos |
+| **Indicador de frescor** | "atualizado ha X" no header, com timestamp exato no hover |
+| **Cache TTL inteligente** | Periodo fechado 24h, periodo em curso 10 min |
 
 ### Agendamento de Relatorios por Email
 
@@ -103,6 +117,7 @@ Ger_Comercial/
 ├── icon-192.png / icon-512.png         # Icones PWA
 │
 ├── css/
+│   ├── dashboard-shell.css             # Design tokens e componentes gc-*
 │   └── mobile.css                      # Estilos responsivos mobile
 │
 ├── js/
@@ -117,7 +132,11 @@ Ger_Comercial/
 │   ├── debug-filters.js               # Debug de filtros
 │   ├── dashboard-isolation.js          # Isolamento de contexto
 │   ├── mobile.js                       # Interacoes mobile (toggle, scroll-to-top)
-│   └── periodo-validator.js            # Validacao de periodo (max 100 dias)
+│   ├── dashboard-shell.js              # Header, freshness, urlFilters, helpers de export
+│   ├── period-picker.js                # Presets de periodo e toggle comparativo
+│   ├── saved-views.js                  # CRUD e UI das visoes salvas
+│   ├── shared-filters.js               # Filtros compartilhados entre dashboards
+│   └── periodo-validator.js            # Validacao de periodo (100 / 366 dias)
 │
 ├── dashboards/                         # 10 dashboards analiticos
 │   ├── dashboard-vendas-regiao.html
@@ -270,7 +289,10 @@ Acesse `Settings > Secrets and variables > Actions` e adicione:
 
 | Documento | Conteudo |
 |-----------|----------|
-| `manual.html` | Manual completo do usuario (interativo) |
+| `manual.html` | Manual completo do usuario (interativo) - 15 capitulos, revisado em set/2026 |
+| `CHANGELOG.md` | Historico de versoes (semver, fonte oficial da versao atual) |
+| `docs/ARQUITETURA.md` | Stack, camadas e ADRs |
+| `docs/MODELO_TEMPORAL.md` | Periodos canonicos, comparativos e TTL de cache |
 | `docs/GUIA_RAPIDO.md` | Guia rapido de inicio |
 | `docs/AUTENTICACAO.md` | Sistema de autenticacao |
 | `docs/ANALISE_GRAFICOS.md` | Guia de graficos |
@@ -294,6 +316,17 @@ Acesse `Settings > Secrets and variables > Actions` e adicione:
 ---
 
 ## Changelog
+
+> A partir da **v1.12.1** o projeto adotou [semver](https://semver.org/lang/pt-BR/) e o historico oficial passou a ser mantido em [`CHANGELOG.md`](CHANGELOG.md). As entradas `v4.x` abaixo sao do esquema de versionamento anterior e ficam preservadas como historico.
+
+### v1.16.1 - Revisao do manual de utilizacao (2026-09-02)
+- Manual (`manual.html`) revisado e alinhado ao sistema atual, agora com 15 capitulos
+- Novo capitulo: Categorias de Produtos
+- "Cobranca Semanal" renomeado para "Performance Mensal", com filtros, KPIs e colunas corrigidos
+- Novo capitulo de recursos compartilhados: period picker, comparativo, visoes salvas, filtros na URL, drill-down, indicador de frescor e cache TTL inteligente
+- Configuracoes: importacao de `vendas` e `metas_mensais`, template com macro, periodo estendido e agendamentos por e-mail
+- Login: permissoes reais, limite de periodo (100 / 366 dias) e alteracao de senha
+- Rodape do manual passa a exibir a versao semver do sistema
 
 ### v4.2.0 - Bonificacao em Vendas por Equipe + Melhorias (2026-02-17)
 - **Vendas por Equipe**: Novo filtro "Bonificacao" (Sim/Nao) para cruzar dados de bonificacao (nat_oper 5910/6910)
