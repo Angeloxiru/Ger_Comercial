@@ -7,6 +7,16 @@ Versionamento: [Semver](https://semver.org/lang/pt-BR/)
 
 ---
 
+## [1.17.0] — 2026-11-06
+
+### Adicionado
+- Card **Prospecção** na página inicial (`index.html`), abrindo
+  `https://vendas.svoltagf2.com.br` em nova aba. Ocupa a posição do card
+  Mapa de Vendas, que passou para a linha de baixo.
+- Manual de utilização atualizado com o novo card.
+
+---
+
 ## [1.16.2] — 2026-09-02
 
 ### Corrigido

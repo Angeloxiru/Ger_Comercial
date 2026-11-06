@@ -49,6 +49,14 @@ Sem build pipeline, sem framework SPA — por escolha deliberada
 | **Clientes sem Compras** | Mapa interativo de clientes inativos por grau de risco |
 | **Categorias de Produtos** | Analise por categoria (Biscoitos, Catterino, Cereais, Massas, Instantaneo) com peso, valor e R$/KG |
 
+### Sistemas Externos (abrem em nova aba)
+
+| Card | Destino |
+|------|---------|
+| **Repositores** | `repositores.svoltagf2.com.br`: rotas e performance dos repositores |
+| **Prospeccao** | `vendas.svoltagf2.com.br`: base de novos clientes para prospectar |
+| **Mapa de Vendas** | Google Apps Script: mapa com os ultimos 2 meses acumulados |
+
 > **Limite de periodo:** Todos os dashboards com filtro de data aceitam no maximo **100 dias** por consulta para proteger o limite de leituras do Turso. Usuarios com a flag `periodo_estendido` marcada em Configuracoes podem consultar ate **366 dias**.
 
 ### Recursos Compartilhados (shell)
@@ -318,6 +326,10 @@ Acesse `Settings > Secrets and variables > Actions` e adicione:
 ## Changelog
 
 > A partir da **v1.12.1** o projeto adotou [semver](https://semver.org/lang/pt-BR/) e o historico oficial passou a ser mantido em [`CHANGELOG.md`](CHANGELOG.md). As entradas `v4.x` abaixo sao do esquema de versionamento anterior e ficam preservadas como historico.
+
+### v1.17.0 - Card Prospeccao (2026-11-06)
+- Novo card externo **Prospeccao** na pagina inicial, apontando para `vendas.svoltagf2.com.br` (abre em nova aba)
+- O card ocupa a posicao em que estava o Mapa de Vendas; o Mapa de Vendas desceu para a linha de baixo
 
 ### v1.16.2 - Correcao do login no Firefox (2026-09-02)
 - Login nao completava no Firefox: o Enter disparava `new Event('submit')`, que nao e cancelavel, e o Firefox executava o envio nativo do formulario (GET), abortando a consulta ao Turso e gravando usuario e senha na URL e no historico
